@@ -1,0 +1,39 @@
+{
+ "_comment": "Режимы карты. kind: political (цвета соседей различаются), bins (классы по порогам), diverging (две стороны от нуля), politics и income (категории). Палитры заданы ниже, порядок цветов — от меньшего к большему.",
+ "palettes": {
+  "political": ["#2e66a9", "#9e4623", "#187657", "#936409", "#9b4063", "#066309", "#6b64ac", "#a74f51"],
+  "sequential": ["#104281", "#184f95", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4", "#cde2fb"],
+  "diverging_negative": ["#e66767", "#b4565a", "#7a4547"],
+  "diverging_neutral": "#383835",
+  "diverging_positive": ["#2f5784", "#3f78c0", "#6da7ec"],
+  "no_data": "#3a3d42",
+  "territory": "#2a2d31"
+ },
+ "modes": [
+  {"id": "political", "name": "Политическая", "short_name": "Политическая", "kind": "political", "hotkey": "F1"},
+  {"id": "gdp_per_capita", "name": "ВВП на душу", "short_name": "ВВП на душу", "kind": "bins", "indicator": "gdp_per_capita_usd", "thresholds": [1000, 2500, 5000, 10000, 20000, 40000], "hotkey": "F2"},
+  {"id": "growth", "name": "Рост ВВП", "short_name": "Рост", "kind": "diverging", "indicator": "gdp_growth_pct", "thresholds": [-5, -3, -1, 1, 3, 5], "hotkey": "F3"},
+  {"id": "unemployment", "name": "Безработица", "short_name": "Безработица", "kind": "bins", "indicator": "unemployment_pct", "thresholds": [3, 5, 7.5, 10, 15, 20], "hotkey": "F4"},
+  {"id": "inflation", "name": "Инфляция", "short_name": "Инфляция", "kind": "bins", "indicator": "inflation_pct", "thresholds": [2, 4, 7, 12, 25, 50], "hotkey": "F5"},
+  {"id": "debt", "name": "Госдолг", "short_name": "Госдолг", "kind": "bins", "indicator": "gov_debt_pct_gdp", "thresholds": [20, 40, 60, 80, 100, 130], "hotkey": "F6"},
+  {"id": "population", "name": "Население", "short_name": "Население", "kind": "bins", "indicator": "population", "thresholds": [1000000, 5000000, 20000000, 50000000, 100000000, 300000000], "hotkey": "F7"},
+  {"id": "life_expectancy", "name": "Продолжительность жизни", "short_name": "Жизнь", "kind": "bins", "indicator": "life_expectancy", "thresholds": [60, 65, 70, 75, 80, 83], "hotkey": "F8"},
+  {"id": "system", "name": "Политическая система", "short_name": "Строй", "kind": "politics", "hotkey": "F9"},
+  {"id": "income", "name": "Уровень дохода", "short_name": "Доход", "kind": "income", "hotkey": "F10"}
+ ],
+ "politics_colors": {
+  "parliamentary_republic": "#86b6ef",
+  "semi_presidential": "#3987e5",
+  "presidential_republic": "#1c5cab",
+  "constitutional_monarchy": "#d95926",
+  "absolute_monarchy": "#9e4623",
+  "one_party_state": "#199e70",
+  "military_regime": "#187657"
+ },
+ "income_groups": [
+  {"id": "low", "name": "Низкий доход", "color": "#184f95"},
+  {"id": "lower_middle", "name": "Ниже среднего", "color": "#2a78d6"},
+  {"id": "upper_middle", "name": "Выше среднего", "color": "#5598e7"},
+  {"id": "high", "name": "Высокий доход", "color": "#9ec5f4"}
+ ]
+}

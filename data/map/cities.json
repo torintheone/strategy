@@ -1,0 +1,5396 @@
+{
+ "built": "2026-10-28",
+ "cities": [
+  {
+   "name": "Кабул",
+   "country": "AFG",
+   "x": 1440.1,
+   "y": -1023.9,
+   "population": 3277000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Кандагар",
+   "country": "AFG",
+   "x": 1387.8,
+   "y": -942.8,
+   "population": 715542,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Герат",
+   "country": "AFG",
+   "x": 1295.5,
+   "y": -1018.7,
+   "population": 481009,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Луанда",
+   "country": "AGO",
+   "x": 299.4,
+   "y": 270.3,
+   "population": 5172900,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Уамбо",
+   "country": "AGO",
+   "x": 354.4,
+   "y": 389.1,
+   "population": 1100000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Бенгела",
+   "country": "AGO",
+   "x": 301.6,
+   "y": 384.0,
+   "population": 151226,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Тирана",
+   "country": "ALB",
+   "x": 396.3,
+   "y": -1207.2,
+   "population": 895350,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Андорра-ла-Велья",
+   "country": "AND",
+   "x": 30.1,
+   "y": -1237.8,
+   "population": 53998,
+   "capital": true,
+   "rank": 6
+  },
+  {
+   "name": "Дубай",
+   "country": "ARE",
+   "x": 1200.1,
+   "y": -760.3,
+   "population": 1379000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Абу-Даби",
+   "country": "ARE",
+   "x": 1183.7,
+   "y": -738.0,
+   "population": 603492,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Буэнос-Айрес",
+   "country": "ARG",
+   "x": -1215.2,
+   "y": 1026.1,
+   "population": 12795000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Кордова",
+   "country": "ARG",
+   "x": -1357.3,
+   "y": 936.8,
+   "population": 1452000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Росарио",
+   "country": "ARG",
+   "x": -1273.2,
+   "y": 980.3,
+   "population": 1203000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Ереван",
+   "country": "ARM",
+   "x": 896.7,
+   "y": -1177.1,
+   "population": 1102000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Сент-Джонс",
+   "country": "ATG",
+   "x": -1377.6,
+   "y": -520.7,
+   "population": 35499,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Сидней",
+   "country": "AUS",
+   "x": 3157.1,
+   "y": 1007.2,
+   "population": 4630000,
+   "capital": false,
+   "rank": 0
+  },
+  {
+   "name": "Мельбурн",
+   "country": "AUS",
+   "x": 2962.8,
+   "y": 1113.9,
+   "population": 4170000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Брисбен",
+   "country": "AUS",
+   "x": 3293.5,
+   "y": 824.5,
+   "population": 1860000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Перт",
+   "country": "AUS",
+   "x": 2443.0,
+   "y": 952.4,
+   "population": 1532000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Аделаида",
+   "country": "AUS",
+   "x": 2878.8,
+   "y": 1035.3,
+   "population": 1145000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Канберра",
+   "country": "AUS",
+   "x": 3091.7,
+   "y": 1044.9,
+   "population": 327700,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Вена",
+   "country": "AUT",
+   "x": 311.6,
+   "y": -1381.4,
+   "population": 2400000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Баку",
+   "country": "AZE",
+   "x": 1003.1,
+   "y": -1182.8,
+   "population": 2122300,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Бужумбура",
+   "country": "BDI",
+   "x": 667.5,
+   "y": 103.5,
+   "population": 331700,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Брюссель",
+   "country": "BEL",
+   "x": 80.7,
+   "y": -1444.7,
+   "population": 1743000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Котону",
+   "country": "BEN",
+   "x": 57.1,
+   "y": -196.1,
+   "population": 762000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Порто-Ново",
+   "country": "BEN",
+   "x": 59.4,
+   "y": -198.5,
+   "population": 300000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Параку",
+   "country": "BEN",
+   "x": 59.2,
+   "y": -285.7,
+   "population": 188853,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Уагадугу",
+   "country": "BFA",
+   "x": -34.4,
+   "y": -377.8,
+   "population": 1149000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Бобо-Диуласо",
+   "country": "BFA",
+   "x": -96.7,
+   "y": -341.6,
+   "population": 360106,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Дакка",
+   "country": "BGD",
+   "x": 1973.7,
+   "y": -716.3,
+   "population": 12797394,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Читтагонг",
+   "country": "BGD",
+   "x": 2013.7,
+   "y": -675.5,
+   "population": 4529000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Кхулна",
+   "country": "BGD",
+   "x": 1961.2,
+   "y": -690.5,
+   "population": 1553000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "София",
+   "country": "BGR",
+   "x": 462.1,
+   "y": -1242.6,
+   "population": 1185000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Манама",
+   "country": "BHR",
+   "x": 1094.0,
+   "y": -789.4,
+   "population": 563920,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Нассау",
+   "country": "BHS",
+   "x": -1680.3,
+   "y": -756.0,
+   "population": 227940,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Фрипорт",
+   "country": "BHS",
+   "x": -1700.1,
+   "y": -798.0,
+   "population": 25383,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сараево",
+   "country": "BIH",
+   "x": 361.4,
+   "y": -1272.5,
+   "population": 696731,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Баня-Лука",
+   "country": "BIH",
+   "x": 335.6,
+   "y": -1296.2,
+   "population": 221738,
+   "capital": false,
+   "rank": 7
+  },
+  {
+   "name": "Минск",
+   "country": "BLR",
+   "x": 500.5,
+   "y": -1515.7,
+   "population": 1805000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Брест",
+   "country": "BLR",
+   "x": 437.1,
+   "y": -1474.3,
+   "population": 300715,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Бельмопан",
+   "country": "BLZ",
+   "x": -1976.4,
+   "y": -524.7,
+   "population": 15220,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Санта-Крус-де-ла-Сьерра",
+   "country": "BOL",
+   "x": -1405.9,
+   "y": 539.6,
+   "population": 2102998,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Ла-Пас",
+   "country": "BOL",
+   "x": -1520.2,
+   "y": 502.0,
+   "population": 1590000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Сукре",
+   "country": "BOL",
+   "x": -1446.0,
+   "y": 578.1,
+   "population": 224838,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Сан-Паулу",
+   "country": "BRA",
+   "x": -1018.5,
+   "y": 711.4,
+   "population": 18845000,
+   "capital": false,
+   "rank": 0
+  },
+  {
+   "name": "Рио-де-Жанейро",
+   "country": "BRA",
+   "x": -946.3,
+   "y": 692.8,
+   "population": 11748000,
+   "capital": false,
+   "rank": 0
+  },
+  {
+   "name": "Белу-Оризонти",
+   "country": "BRA",
+   "x": -970.7,
+   "y": 604.0,
+   "population": 5575000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Порту-Алегри",
+   "country": "BRA",
+   "x": -1089.6,
+   "y": 898.7,
+   "population": 3917000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Бразилиа",
+   "country": "BRA",
+   "x": -1070.7,
+   "y": 480.6,
+   "population": 3716996,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Ресифи",
+   "country": "BRA",
+   "x": -790.8,
+   "y": 247.1,
+   "population": 3651000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Форталеза",
+   "country": "BRA",
+   "x": -877.1,
+   "y": 114.9,
+   "population": 3602319,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Салвадор",
+   "country": "BRA",
+   "x": -865.0,
+   "y": 395.8,
+   "population": 3484000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Куритиба",
+   "country": "BRA",
+   "x": -1070.1,
+   "y": 765.7,
+   "population": 3084000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Кампинас",
+   "country": "BRA",
+   "x": -1031.3,
+   "y": 692.1,
+   "population": 2791000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Белен",
+   "country": "BRA",
+   "x": -1103.1,
+   "y": 44.4,
+   "population": 2167000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Гояния",
+   "country": "BRA",
+   "x": -1099.2,
+   "y": 508.7,
+   "population": 2022000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Манаус",
+   "country": "BRA",
+   "x": -1364.4,
+   "y": 95.0,
+   "population": 1753000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Вила-Велья",
+   "country": "BRA",
+   "x": -889.9,
+   "y": 617.5,
+   "population": 1209091,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Масейо",
+   "country": "BRA",
+   "x": -807.6,
+   "y": 294.1,
+   "population": 1186000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Натал",
+   "country": "BRA",
+   "x": -800.0,
+   "y": 177.0,
+   "population": 1088000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сан-Луис",
+   "country": "BRA",
+   "x": -1006.9,
+   "y": 77.1,
+   "population": 1038000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Флорианополис",
+   "country": "BRA",
+   "x": -1043.7,
+   "y": 828.1,
+   "population": 1023000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Бриджтаун",
+   "country": "BRB",
+   "x": -1339.7,
+   "y": -399.8,
+   "population": 191152,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Бандар-Сери-Бегаван",
+   "country": "BRN",
+   "x": 2610.8,
+   "y": -149.6,
+   "population": 296500,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Тхимпху",
+   "country": "BTN",
+   "x": 1929.0,
+   "y": -825.1,
+   "population": 98676,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Габороне",
+   "country": "BWA",
+   "x": 563.8,
+   "y": 743.2,
+   "population": 208411,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Франсистаун",
+   "country": "BWA",
+   "x": 605.5,
+   "y": 641.2,
+   "population": 89979,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Махалапье",
+   "country": "BWA",
+   "x": 586.8,
+   "y": 698.0,
+   "population": 50744,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Банги",
+   "country": "CAF",
+   "x": 421.7,
+   "y": -133.8,
+   "population": 831925,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Бамбари",
+   "country": "CAF",
+   "x": 469.2,
+   "y": -176.5,
+   "population": 62098,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Обо",
+   "country": "CAF",
+   "x": 601.7,
+   "y": -165.4,
+   "population": 12887,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Торонто",
+   "country": "CAN",
+   "x": -1563.2,
+   "y": -1268.8,
+   "population": 5213000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Монреаль",
+   "country": "CAN",
+   "x": -1429.9,
+   "y": -1314.5,
+   "population": 3678000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Ванкувер",
+   "country": "CAN",
+   "x": -2324.6,
+   "y": -1407.5,
+   "population": 2313328,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Оттава",
+   "country": "CAN",
+   "x": -1471.9,
+   "y": -1312.4,
+   "population": 1145000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Калгари",
+   "country": "CAN",
+   "x": -2122.3,
+   "y": -1450.6,
+   "population": 1110000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Эдмонтон",
+   "country": "CAN",
+   "x": -2067.3,
+   "y": -1507.7,
+   "population": 1058000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Женева",
+   "country": "CHE",
+   "x": 118.7,
+   "y": -1332.2,
+   "population": 1240000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Цюрих",
+   "country": "CHE",
+   "x": 163.8,
+   "y": -1361.3,
+   "population": 1108000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Берн",
+   "country": "CHE",
+   "x": 143.6,
+   "y": -1349.8,
+   "population": 275329,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Сантьяго",
+   "country": "CHL",
+   "x": -1479.3,
+   "y": 994.2,
+   "population": 5720000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Консепсьон",
+   "country": "CHL",
+   "x": -1501.5,
+   "y": 1087.2,
+   "population": 889725,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Вальпараисо",
+   "country": "CHL",
+   "x": -1502.4,
+   "y": 983.0,
+   "population": 854000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Шанхай",
+   "country": "CHN",
+   "x": 2570.1,
+   "y": -931.8,
+   "population": 14987000,
+   "capital": false,
+   "rank": 0
+  },
+  {
+   "name": "Пекин",
+   "country": "CHN",
+   "x": 2348.3,
+   "y": -1170.4,
+   "population": 11106000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Гуанчжоу",
+   "country": "CHN",
+   "x": 2479.0,
+   "y": -699.4,
+   "population": 8829000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Шэньчжэнь",
+   "country": "CHN",
+   "x": 2501.5,
+   "y": -682.0,
+   "population": 7581000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Ухань",
+   "country": "CHN",
+   "x": 2425.7,
+   "y": -913.8,
+   "population": 7243000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Гонконг",
+   "country": "CHN",
+   "x": 2504.9,
+   "y": -674.7,
+   "population": 7206000,
+   "capital": false,
+   "rank": 0
+  },
+  {
+   "name": "Тяньцзинь",
+   "country": "CHN",
+   "x": 2376.4,
+   "y": -1149.2,
+   "population": 7180000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Чунцин",
+   "country": "CHN",
+   "x": 2273.3,
+   "y": -885.0,
+   "population": 6461000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Шэньян",
+   "country": "CHN",
+   "x": 2461.0,
+   "y": -1219.8,
+   "population": 4787000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Дунгуань",
+   "country": "CHN",
+   "x": 2489.0,
+   "y": -696.6,
+   "population": 4528000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Чэнду",
+   "country": "CHN",
+   "x": 2208.2,
+   "y": -916.3,
+   "population": 4123000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Сиань",
+   "country": "CHN",
+   "x": 2269.7,
+   "y": -1017.2,
+   "population": 4009000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Нанкин",
+   "country": "CHN",
+   "x": 2503.8,
+   "y": -955.2,
+   "population": 3679000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Гуйян",
+   "country": "CHN",
+   "x": 2304.9,
+   "y": -799.4,
+   "population": 3662000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Харбин",
+   "country": "CHN",
+   "x": 2456.5,
+   "y": -1320.8,
+   "population": 3621000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Урумчи",
+   "country": "CHN",
+   "x": 1722.4,
+   "y": -1271.4,
+   "population": 3575000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Чанчунь",
+   "country": "CHN",
+   "x": 2464.1,
+   "y": -1273.0,
+   "population": 3183000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Далянь",
+   "country": "CHN",
+   "x": 2469.3,
+   "y": -1143.6,
+   "population": 3167000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Цзыбо",
+   "country": "CHN",
+   "x": 2426.8,
+   "y": -1086.4,
+   "population": 3061000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Ханчжоу",
+   "country": "CHN",
+   "x": 2554.8,
+   "y": -904.4,
+   "population": 3007000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Куньмин",
+   "country": "CHN",
+   "x": 2230.6,
+   "y": -755.6,
+   "population": 2931000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Тайюань",
+   "country": "CHN",
+   "x": 2299.2,
+   "y": -1115.5,
+   "population": 2913000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Циндао",
+   "country": "CHN",
+   "x": 2483.5,
+   "y": -1067.1,
+   "population": 2866000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Цзинань",
+   "country": "CHN",
+   "x": 2406.8,
+   "y": -1083.0,
+   "population": 2798000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Чжэнчжоу",
+   "country": "CHN",
+   "x": 2363.1,
+   "y": -1030.4,
+   "population": 2636000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Фучжоу",
+   "country": "CHN",
+   "x": 2581.6,
+   "y": -784.9,
+   "population": 2606000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Чанша",
+   "country": "CHN",
+   "x": 2423.6,
+   "y": -846.0,
+   "population": 2604000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Ланьчжоу",
+   "country": "CHN",
+   "x": 2142.6,
+   "y": -1066.1,
+   "population": 2561000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Сямэнь",
+   "country": "CHN",
+   "x": 2571.0,
+   "y": -737.6,
+   "population": 2519000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Цзиньси",
+   "country": "CHN",
+   "x": 2425.3,
+   "y": -1192.1,
+   "population": 2426000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Шицзячжуан",
+   "country": "CHN",
+   "x": 2336.4,
+   "y": -1120.2,
+   "population": 2417000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Гирин",
+   "country": "CHN",
+   "x": 2488.1,
+   "y": -1272.6,
+   "population": 2396000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Вэньчжоу",
+   "country": "CHN",
+   "x": 2590.3,
+   "y": -840.9,
+   "population": 2350000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Наньчан",
+   "country": "CHN",
+   "x": 2480.9,
+   "y": -859.8,
+   "population": 2350000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Наньчун",
+   "country": "CHN",
+   "x": 2250.8,
+   "y": -919.5,
+   "population": 2174000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Наньнин",
+   "country": "CHN",
+   "x": 2372.1,
+   "y": -689.9,
+   "population": 2167000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Цзаочжуан",
+   "country": "CHN",
+   "x": 2442.7,
+   "y": -1033.9,
+   "population": 2145000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Яньтай",
+   "country": "CHN",
+   "x": 2485.2,
+   "y": -1106.2,
+   "population": 2116000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сюйчжоу",
+   "country": "CHN",
+   "x": 2442.3,
+   "y": -1017.3,
+   "population": 2091000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Линьи",
+   "country": "CHN",
+   "x": 2455.8,
+   "y": -1039.4,
+   "population": 2082000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Баотоу",
+   "country": "CHN",
+   "x": 2205.8,
+   "y": -1189.5,
+   "population": 2036000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Хэфэй",
+   "country": "CHN",
+   "x": 2474.6,
+   "y": -949.6,
+   "population": 2035000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сучжоу",
+   "country": "CHN",
+   "x": 2446.3,
+   "y": -999.5,
+   "population": 1964000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Наньян",
+   "country": "CHN",
+   "x": 2360.9,
+   "y": -981.8,
+   "population": 1944000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Нинбо",
+   "country": "CHN",
+   "x": 2588.5,
+   "y": -893.9,
+   "population": 1923000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Уси",
+   "country": "CHN",
+   "x": 2541.7,
+   "y": -942.0,
+   "population": 1749000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Хух-Хото",
+   "country": "CHN",
+   "x": 2240.3,
+   "y": -1194.0,
+   "population": 1726000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Дацин",
+   "country": "CHN",
+   "x": 2409.7,
+   "y": -1341.5,
+   "population": 1693000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сучжоу",
+   "country": "CHN",
+   "x": 2551.8,
+   "y": -934.1,
+   "population": 1650000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Цицикар",
+   "country": "CHN",
+   "x": 2376.5,
+   "y": -1360.4,
+   "population": 1641000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Аньшань",
+   "country": "CHN",
+   "x": 2461.9,
+   "y": -1201.7,
+   "population": 1639000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Ханьдань",
+   "country": "CHN",
+   "x": 2356.3,
+   "y": -1080.4,
+   "population": 1631000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Шаньтоу",
+   "country": "CHN",
+   "x": 2550.2,
+   "y": -706.0,
+   "population": 1601000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Чжаньцзян",
+   "country": "CHN",
+   "x": 2430.1,
+   "y": -642.2,
+   "population": 1590000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Нэйцзян",
+   "country": "CHN",
+   "x": 2240.2,
+   "y": -885.4,
+   "population": 1466000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Цюаньчжоу",
+   "country": "CHN",
+   "x": 2577.7,
+   "y": -750.7,
+   "population": 1463000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Хуайнань",
+   "country": "CHN",
+   "x": 2458.9,
+   "y": -971.4,
+   "population": 1451000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Мяньян",
+   "country": "CHN",
+   "x": 2214.7,
+   "y": -938.9,
+   "population": 1396000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Чифэн",
+   "country": "CHN",
+   "x": 2364.0,
+   "y": -1231.9,
+   "population": 1277000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Хуайань",
+   "country": "CHN",
+   "x": 2489.9,
+   "y": -997.9,
+   "population": 1264000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Тяньшуй",
+   "country": "CHN",
+   "x": 2203.9,
+   "y": -1026.2,
+   "population": 1225000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Люпаньшуй",
+   "country": "CHN",
+   "x": 2264.0,
+   "y": -799.8,
+   "population": 1221000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Юйлинь",
+   "country": "CHN",
+   "x": 2413.8,
+   "y": -684.3,
+   "population": 1127000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Анькан",
+   "country": "CHN",
+   "x": 2291.0,
+   "y": -972.8,
+   "population": 1100000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Синин",
+   "country": "CHN",
+   "x": 2094.2,
+   "y": -1081.5,
+   "population": 1048000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Цзямусы",
+   "country": "CHN",
+   "x": 2508.1,
+   "y": -1347.7,
+   "population": 1020000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Хэнъян",
+   "country": "CHN",
+   "x": 2428.7,
+   "y": -808.1,
+   "population": 1016000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Баошань",
+   "country": "CHN",
+   "x": 2153.6,
+   "y": -757.0,
+   "population": 1000000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Абиджан",
+   "country": "CIV",
+   "x": -91.8,
+   "y": -163.0,
+   "population": 3802000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Буаке",
+   "country": "CIV",
+   "x": -114.0,
+   "y": -235.4,
+   "population": 567481,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Ямусукро",
+   "country": "CIV",
+   "x": -119.6,
+   "y": -208.8,
+   "population": 206499,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Дуала",
+   "country": "CMR",
+   "x": 220.6,
+   "y": -124.5,
+   "population": 1906000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Яунде",
+   "country": "CMR",
+   "x": 261.7,
+   "y": -118.6,
+   "population": 1611000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Баменда",
+   "country": "CMR",
+   "x": 230.4,
+   "y": -182.5,
+   "population": 445299,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Киншаса",
+   "country": "COD",
+   "x": 348.0,
+   "y": 132.6,
+   "population": 7843000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Лубумбаши",
+   "country": "COD",
+   "x": 619.1,
+   "y": 356.7,
+   "population": 1352000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Мбужи-Майи",
+   "country": "COD",
+   "x": 535.5,
+   "y": 188.3,
+   "population": 1295000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Браззавиль",
+   "country": "COG",
+   "x": 347.3,
+   "y": 130.5,
+   "population": 1355000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Пуэнт-Нуар",
+   "country": "COG",
+   "x": 269.9,
+   "y": 146.1,
+   "population": 659084,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Кайес",
+   "country": "COG",
+   "x": 301.8,
+   "y": 128.1,
+   "population": 62521,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Богота",
+   "country": "COL",
+   "x": -1683.3,
+   "y": -140.9,
+   "population": 7772000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Медельин",
+   "country": "COL",
+   "x": -1714.9,
+   "y": -192.2,
+   "population": 3297000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Кали",
+   "country": "COL",
+   "x": -1739.4,
+   "y": -104.3,
+   "population": 2254000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Барранкилья",
+   "country": "COL",
+   "x": -1687.3,
+   "y": -335.0,
+   "population": 1798000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Морони",
+   "country": "COM",
+   "x": 974.2,
+   "y": 357.5,
+   "population": 128698,
+   "capital": true,
+   "rank": 6
+  },
+  {
+   "name": "Прая",
+   "country": "CPV",
+   "x": -526.5,
+   "y": -454.6,
+   "population": 113364,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Сан-Хосе",
+   "country": "CRI",
+   "x": -1899.7,
+   "y": -303.8,
+   "population": 1284000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Лимон",
+   "country": "CRI",
+   "x": -1875.7,
+   "y": -305.8,
+   "population": 85001,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Гавана",
+   "country": "CUB",
+   "x": -1801.9,
+   "y": -699.0,
+   "population": 2174000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Сантьяго-де-Куба",
+   "country": "CUB",
+   "x": -1675.3,
+   "y": -607.3,
+   "population": 555865,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Никосия",
+   "country": "CYP",
+   "x": 692.2,
+   "y": -1041.7,
+   "population": 224300,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Прага",
+   "country": "CZE",
+   "x": 271.3,
+   "y": -1426.9,
+   "population": 1162000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Берлин",
+   "country": "DEU",
+   "x": 246.3,
+   "y": -1484.2,
+   "population": 3406000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Франкфурт-на-Майне",
+   "country": "DEU",
+   "x": 162.7,
+   "y": -1427.2,
+   "population": 2895000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Гамбург",
+   "country": "DEU",
+   "x": 182.1,
+   "y": -1507.7,
+   "population": 1757000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Мюнхен",
+   "country": "DEU",
+   "x": 220.5,
+   "y": -1379.7,
+   "population": 1275000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Джибути",
+   "country": "DJI",
+   "x": 972.3,
+   "y": -354.2,
+   "population": 923000,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Розо",
+   "country": "DMA",
+   "x": -1373.2,
+   "y": -466.2,
+   "population": 23336,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Копенгаген",
+   "country": "DNK",
+   "x": 224.4,
+   "y": -1555.4,
+   "population": 1085000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Нуук",
+   "country": "DNK",
+   "x": -849.6,
+   "y": -1728.6,
+   "population": 14798,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Сисимиут",
+   "country": "DNK",
+   "x": -856.1,
+   "y": -1777.6,
+   "population": 5227,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Санто-Доминго",
+   "country": "DOM",
+   "x": -1551.4,
+   "y": -561.1,
+   "population": 2154000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Сантьяго-де-лос-Трейнта-Кабальерос",
+   "country": "DOM",
+   "x": -1563.9,
+   "y": -591.7,
+   "population": 1550753,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Алжир",
+   "country": "DZA",
+   "x": 62.7,
+   "y": -1085.4,
+   "population": 3354000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Оран",
+   "country": "DZA",
+   "x": -12.9,
+   "y": -1056.7,
+   "population": 798000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Константина",
+   "country": "DZA",
+   "x": 136.0,
+   "y": -1074.4,
+   "population": 605179,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Гуаякиль",
+   "country": "ECU",
+   "x": -1818.0,
+   "y": 68.0,
+   "population": 2514000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Кито",
+   "country": "ECU",
+   "x": -1786.4,
+   "y": 6.5,
+   "population": 1701000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Куэнка",
+   "country": "ECU",
+   "x": -1796.6,
+   "y": 88.9,
+   "population": 286878,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Каир",
+   "country": "EGY",
+   "x": 665.0,
+   "y": -898.8,
+   "population": 11893000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Александрия",
+   "country": "EGY",
+   "x": 633.9,
+   "y": -931.3,
+   "population": 4165000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Порт-Саид",
+   "country": "EGY",
+   "x": 683.3,
+   "y": -932.9,
+   "population": 623864,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Асмэра",
+   "country": "ERI",
+   "x": 870.8,
+   "y": -467.1,
+   "population": 620802,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Асэб",
+   "country": "ERI",
+   "x": 960.4,
+   "y": -397.1,
+   "population": 105496,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Мадрид",
+   "country": "ESP",
+   "x": -74.1,
+   "y": -1182.9,
+   "population": 5567000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Барселона",
+   "country": "ESP",
+   "x": 43.6,
+   "y": -1208.7,
+   "population": 4920000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Севилья",
+   "country": "ESP",
+   "x": -122.5,
+   "y": -1102.8,
+   "population": 1212045,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Таллин",
+   "country": "EST",
+   "x": 426.3,
+   "y": -1635.4,
+   "population": 394024,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Аддис-Абеба",
+   "country": "ETH",
+   "x": 875.4,
+   "y": -276.4,
+   "population": 3100000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Дыре-Дауа",
+   "country": "ETH",
+   "x": 946.2,
+   "y": -293.3,
+   "population": 252279,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Бахр-Дар",
+   "country": "ETH",
+   "x": 842.4,
+   "y": -354.3,
+   "population": 206748,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Хельсинки",
+   "country": "FIN",
+   "x": 426.7,
+   "y": -1650.6,
+   "population": 1115000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Тампере",
+   "country": "FIN",
+   "x": 401.1,
+   "y": -1677.0,
+   "population": 259279,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Вааса",
+   "country": "FIN",
+   "x": 358.8,
+   "y": -1708.0,
+   "population": 57014,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сува",
+   "country": "FJI",
+   "x": 3963.9,
+   "y": 551.0,
+   "population": 175399,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Париж",
+   "country": "FRA",
+   "x": 44.2,
+   "y": -1397.6,
+   "population": 9904000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Лион",
+   "country": "FRA",
+   "x": 93.6,
+   "y": -1321.3,
+   "population": 1423000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Марсель",
+   "country": "FRA",
+   "x": 106.1,
+   "y": -1258.2,
+   "population": 1400000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Лилль",
+   "country": "FRA",
+   "x": 57.5,
+   "y": -1440.4,
+   "population": 1044000,
+   "capital": false,
+   "rank": 6
+  },
+  {
+   "name": "Паликир",
+   "country": "FSM",
+   "x": 3586.3,
+   "y": -211.8,
+   "population": 4645,
+   "capital": true,
+   "rank": 6
+  },
+  {
+   "name": "Либревиль",
+   "country": "GAB",
+   "x": 215.2,
+   "y": -11.8,
+   "population": 578156,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Порт-Жантиль",
+   "country": "GAB",
+   "x": 199.8,
+   "y": 22.1,
+   "population": 116836,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Франсвиль",
+   "country": "GAB",
+   "x": 309.0,
+   "y": 50.1,
+   "population": 42967,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Лондон",
+   "country": "GBR",
+   "x": -2.2,
+   "y": -1460.4,
+   "population": 8567000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Бирмингем",
+   "country": "GBR",
+   "x": -35.3,
+   "y": -1483.1,
+   "population": 2285000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Манчестер",
+   "country": "GBR",
+   "x": -41.0,
+   "y": -1506.6,
+   "population": 2230000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Глазго",
+   "country": "GBR",
+   "x": -75.8,
+   "y": -1559.7,
+   "population": 1160000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Тбилиси",
+   "country": "GEO",
+   "x": 893.4,
+   "y": -1217.7,
+   "population": 1100000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Батуми",
+   "country": "GEO",
+   "x": 831.1,
+   "y": -1214.4,
+   "population": 155542,
+   "capital": false,
+   "rank": 6
+  },
+  {
+   "name": "Сухум",
+   "country": "GEO",
+   "x": 811.1,
+   "y": -1251.2,
+   "population": 81546,
+   "capital": false,
+   "rank": 6
+  },
+  {
+   "name": "Аккра",
+   "country": "GHA",
+   "x": -5.0,
+   "y": -170.1,
+   "population": 2121000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Конакри",
+   "country": "GIN",
+   "x": -309.3,
+   "y": -291.6,
+   "population": 1494000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Нзерекоре",
+   "country": "GIN",
+   "x": -200.1,
+   "y": -237.5,
+   "population": 168121,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Канкан",
+   "country": "GIN",
+   "x": -210.2,
+   "y": -317.6,
+   "population": 114009,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Банжул",
+   "country": "GMB",
+   "x": -372.6,
+   "y": -410.5,
+   "population": 43094,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Бисау",
+   "country": "GNB",
+   "x": -351.3,
+   "y": -362.4,
+   "population": 403339,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Малабо",
+   "country": "GNQ",
+   "x": 199.7,
+   "y": -114.9,
+   "population": 155963,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Афины",
+   "country": "GRC",
+   "x": 484.5,
+   "y": -1118.4,
+   "population": 3242000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Салоники",
+   "country": "GRC",
+   "x": 459.5,
+   "y": -1190.7,
+   "population": 828000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Сент-Джорджес",
+   "country": "GRD",
+   "x": -1390.1,
+   "y": -368.1,
+   "population": 33734,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Гватемала",
+   "country": "GTM",
+   "x": -2028.1,
+   "y": -445.7,
+   "population": 1024000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Кесальтенанго",
+   "country": "GTM",
+   "x": -2049.4,
+   "y": -452.0,
+   "population": 575263,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Джорджтаун",
+   "country": "GUY",
+   "x": -1319.2,
+   "y": -208.3,
+   "population": 264350,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Тегусигальпа",
+   "country": "HND",
+   "x": -1956.1,
+   "y": -430.1,
+   "population": 946000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Загреб",
+   "country": "HRV",
+   "x": 310.2,
+   "y": -1322.0,
+   "population": 722526,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Порт-о-Пренс",
+   "country": "HTI",
+   "x": -1605.1,
+   "y": -563.2,
+   "population": 1998000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Будапешт",
+   "country": "HUN",
+   "x": 365.3,
+   "y": -1364.3,
+   "population": 1679000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Джакарта",
+   "country": "IDN",
+   "x": 2424.2,
+   "y": 189.0,
+   "population": 9125000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Сурабая",
+   "country": "IDN",
+   "x": 2555.9,
+   "y": 221.9,
+   "population": 2845000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Бандунг",
+   "country": "IDN",
+   "x": 2439.2,
+   "y": 212.7,
+   "population": 2394000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Медан",
+   "country": "IDN",
+   "x": 2242.7,
+   "y": -109.8,
+   "population": 2115000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Палембанг",
+   "country": "IDN",
+   "x": 2382.1,
+   "y": 91.3,
+   "population": 1749000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Семаранг",
+   "country": "IDN",
+   "x": 2503.8,
+   "y": 213.2,
+   "population": 1396000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Макасар",
+   "country": "IDN",
+   "x": 2712.5,
+   "y": 157.4,
+   "population": 1262000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Мумбаи",
+   "country": "IND",
+   "x": 1614.5,
+   "y": -577.4,
+   "population": 18978000,
+   "capital": false,
+   "rank": 0
+  },
+  {
+   "name": "Дели",
+   "country": "IND",
+   "x": 1653.5,
+   "y": -859.5,
+   "population": 15926000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Калькутта",
+   "country": "IND",
+   "x": 1936.4,
+   "y": -680.3,
+   "population": 14787000,
+   "capital": false,
+   "rank": 0
+  },
+  {
+   "name": "Ченнаи",
+   "country": "IND",
+   "x": 1804.0,
+   "y": -399.5,
+   "population": 7163000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Бангалор",
+   "country": "IND",
+   "x": 1743.3,
+   "y": -395.9,
+   "population": 6787000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Хайдарабад",
+   "country": "IND",
+   "x": 1746.6,
+   "y": -529.2,
+   "population": 6376000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Амаравати",
+   "country": "IND",
+   "x": 1796.1,
+   "y": -503.2,
+   "population": 5800000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Ахмадабад",
+   "country": "IND",
+   "x": 1588.3,
+   "y": -696.0,
+   "population": 5375000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Пуна",
+   "country": "IND",
+   "x": 1638.7,
+   "y": -562.9,
+   "population": 4672000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Сурат",
+   "country": "IND",
+   "x": 1603.6,
+   "y": -642.2,
+   "population": 3842000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Канпур",
+   "country": "IND",
+   "x": 1735.5,
+   "y": -795.9,
+   "population": 3162000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Джайпур",
+   "country": "IND",
+   "x": 1635.0,
+   "y": -809.3,
+   "population": 2917000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Лакхнау",
+   "country": "IND",
+   "x": 1745.6,
+   "y": -807.3,
+   "population": 2695000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Нагпур",
+   "country": "IND",
+   "x": 1741.4,
+   "y": -641.3,
+   "population": 2454000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Патна",
+   "country": "IND",
+   "x": 1845.4,
+   "y": -771.8,
+   "population": 2158000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Индаур",
+   "country": "IND",
+   "x": 1662.0,
+   "y": -686.8,
+   "population": 2026000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Вадодара",
+   "country": "IND",
+   "x": 1605.3,
+   "y": -674.9,
+   "population": 1756000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Бхопал",
+   "country": "IND",
+   "x": 1692.7,
+   "y": -702.5,
+   "population": 1727000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Коимбатур",
+   "country": "IND",
+   "x": 1735.6,
+   "y": -336.2,
+   "population": 1696000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Лудхияна",
+   "country": "IND",
+   "x": 1608.0,
+   "y": -923.6,
+   "population": 1649000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Агра",
+   "country": "IND",
+   "x": 1680.9,
+   "y": -816.4,
+   "population": 1592000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Вишакхапатнам",
+   "country": "IND",
+   "x": 1852.4,
+   "y": -539.0,
+   "population": 1529000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Кочин",
+   "country": "IND",
+   "x": 1721.8,
+   "y": -306.3,
+   "population": 1519000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Насик",
+   "country": "IND",
+   "x": 1630.3,
+   "y": -606.6,
+   "population": 1473000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Мератх",
+   "country": "IND",
+   "x": 1661.2,
+   "y": -868.9,
+   "population": 1398000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Фаридабад",
+   "country": "IND",
+   "x": 1657.0,
+   "y": -852.7,
+   "population": 1394000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Варанаси",
+   "country": "IND",
+   "x": 1801.3,
+   "y": -763.2,
+   "population": 1352000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Газиабад",
+   "country": "IND",
+   "x": 1657.4,
+   "y": -859.2,
+   "population": 1341000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Асансол",
+   "country": "IND",
+   "x": 1899.2,
+   "y": -715.2,
+   "population": 1328000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Джамшедпур",
+   "country": "IND",
+   "x": 1887.9,
+   "y": -688.9,
+   "population": 1300000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Мадурай",
+   "country": "IND",
+   "x": 1764.9,
+   "y": -303.4,
+   "population": 1294000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Джабалпур",
+   "country": "IND",
+   "x": 1748.8,
+   "y": -700.3,
+   "population": 1285000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Раджкот",
+   "country": "IND",
+   "x": 1553.1,
+   "y": -674.9,
+   "population": 1260000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Дханбад",
+   "country": "IND",
+   "x": 1886.1,
+   "y": -718.6,
+   "population": 1246000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Амритсар",
+   "country": "IND",
+   "x": 1581.4,
+   "y": -943.7,
+   "population": 1212000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Праяградж",
+   "country": "IND",
+   "x": 1775.3,
+   "y": -766.8,
+   "population": 1201000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сринагар",
+   "country": "IND",
+   "x": 1560.8,
+   "y": -1012.3,
+   "population": 1140000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Виджаявада",
+   "country": "IND",
+   "x": 1798.4,
+   "y": -502.8,
+   "population": 1137000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Аурангабад",
+   "country": "IND",
+   "x": 1664.8,
+   "y": -603.5,
+   "population": 1113000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Бхилаи",
+   "country": "IND",
+   "x": 1792.7,
+   "y": -642.7,
+   "population": 1097000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Солапур",
+   "country": "IND",
+   "x": 1688.0,
+   "y": -537.3,
+   "population": 1057000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Ранчи",
+   "country": "IND",
+   "x": 1865.1,
+   "y": -706.0,
+   "population": 1044000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Нью-Дели",
+   "country": "IND",
+   "x": 1653.4,
+   "y": -857.4,
+   "population": 317797,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Дублин",
+   "country": "IRL",
+   "x": -114.1,
+   "y": -1502.8,
+   "population": 1059000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Тегеран",
+   "country": "IRN",
+   "x": 1063.8,
+   "y": -1055.6,
+   "population": 7873000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Мешхед",
+   "country": "IRN",
+   "x": 1228.2,
+   "y": -1072.0,
+   "population": 2469000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Исфахан",
+   "country": "IRN",
+   "x": 1086.3,
+   "y": -973.4,
+   "population": 1628000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Тебриз",
+   "country": "IRN",
+   "x": 944.7,
+   "y": -1121.2,
+   "population": 1413000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Шираз",
+   "country": "IRN",
+   "x": 1120.8,
+   "y": -886.8,
+   "population": 1240000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Багдад",
+   "country": "IRQ",
+   "x": 929.8,
+   "y": -991.2,
+   "population": 5054000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Мосул",
+   "country": "IRQ",
+   "x": 889.2,
+   "y": -1074.0,
+   "population": 1316000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Басра",
+   "country": "IRQ",
+   "x": 1015.3,
+   "y": -911.9,
+   "population": 870000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Рейкьявик",
+   "country": "ISL",
+   "x": -360.7,
+   "y": -1727.7,
+   "population": 166212,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Тель-Авив",
+   "country": "ISR",
+   "x": 732.8,
+   "y": -956.0,
+   "population": 3112000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Иерусалим",
+   "country": "ISR",
+   "x": 743.1,
+   "y": -947.5,
+   "population": 1029300,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Рим",
+   "country": "ITA",
+   "x": 248.7,
+   "y": -1222.1,
+   "population": 3339000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Милан",
+   "country": "ITA",
+   "x": 178.9,
+   "y": -1313.7,
+   "population": 2945000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Неаполь",
+   "country": "ITA",
+   "x": 285.7,
+   "y": -1194.5,
+   "population": 2250000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Турин",
+   "country": "ITA",
+   "x": 149.5,
+   "y": -1303.6,
+   "population": 1652000,
+   "capital": false,
+   "rank": 6
+  },
+  {
+   "name": "Флоренция",
+   "country": "ITA",
+   "x": 221.3,
+   "y": -1270.8,
+   "population": 1500000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Кингстон",
+   "country": "JAM",
+   "x": -1706.0,
+   "y": -546.4,
+   "population": 937700,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Амман",
+   "country": "JOR",
+   "x": 757.8,
+   "y": -952.4,
+   "population": 1060000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Токио",
+   "country": "JPN",
+   "x": 2890.9,
+   "y": -1056.0,
+   "population": 35676000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Осака",
+   "country": "JPN",
+   "x": 2816.3,
+   "y": -1030.3,
+   "population": 11294000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Нагоя",
+   "country": "JPN",
+   "x": 2840.4,
+   "y": -1041.4,
+   "population": 3230000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Фукуока",
+   "country": "JPN",
+   "x": 2727.8,
+   "y": -998.3,
+   "population": 2792000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Саппоро",
+   "country": "JPN",
+   "x": 2793.8,
+   "y": -1252.7,
+   "population": 2544000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Сендай",
+   "country": "JPN",
+   "x": 2874.0,
+   "y": -1126.6,
+   "population": 2250000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Хиросима",
+   "country": "JPN",
+   "x": 2758.9,
+   "y": -1020.3,
+   "population": 2045000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Киото",
+   "country": "JPN",
+   "x": 2818.1,
+   "y": -1038.0,
+   "population": 1805000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Алма-Ата",
+   "country": "KAZ",
+   "x": 1517.7,
+   "y": -1259.1,
+   "population": 1209000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Шымкент",
+   "country": "KAZ",
+   "x": 1382.7,
+   "y": -1233.1,
+   "population": 465392,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Караганда",
+   "country": "KAZ",
+   "x": 1373.7,
+   "y": -1422.1,
+   "population": 451800,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Нур-Султан",
+   "country": "KAZ",
+   "x": 1327.7,
+   "y": -1452.9,
+   "population": 345604,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Найроби",
+   "country": "KEN",
+   "x": 837.6,
+   "y": 39.3,
+   "population": 3010000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Момбаса",
+   "country": "KEN",
+   "x": 902.1,
+   "y": 123.7,
+   "population": 882000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Элдорет",
+   "country": "KEN",
+   "x": 802.6,
+   "y": -15.9,
+   "population": 353381,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Бишкек",
+   "country": "KGZ",
+   "x": 1476.3,
+   "y": -1247.5,
+   "population": 837000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Пномпень",
+   "country": "KHM",
+   "x": 2364.3,
+   "y": -352.9,
+   "population": 1466000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Баттамбанг",
+   "country": "KHM",
+   "x": 2319.1,
+   "y": -399.8,
+   "population": 154773,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сиемреап",
+   "country": "KHM",
+   "x": 2332.5,
+   "y": -407.8,
+   "population": 109398,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Южная Тарава",
+   "country": "KIR",
+   "x": 3936.6,
+   "y": -41.0,
+   "population": 28802,
+   "capital": true,
+   "rank": 6
+  },
+  {
+   "name": "Бастер",
+   "country": "KNA",
+   "x": -1396.2,
+   "y": -526.2,
+   "population": 21887,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Сеул",
+   "country": "KOR",
+   "x": 2599.2,
+   "y": -1107.2,
+   "population": 9796000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Пусан",
+   "country": "KOR",
+   "x": 2677.3,
+   "y": -1039.8,
+   "population": 3480000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Инчхон",
+   "country": "KOR",
+   "x": 2593.3,
+   "y": -1104.7,
+   "population": 2550000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Тэджон",
+   "country": "KOR",
+   "x": 2626.4,
+   "y": -1073.8,
+   "population": 1468000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Кванджу",
+   "country": "KOR",
+   "x": 2632.6,
+   "y": -1041.9,
+   "population": 1440000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Эль-Кувейт",
+   "country": "KWT",
+   "x": 1024.1,
+   "y": -879.4,
+   "population": 2063000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Вьентьян",
+   "country": "LAO",
+   "x": 2280.1,
+   "y": -546.1,
+   "population": 754000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Бейрут",
+   "country": "LBN",
+   "x": 741.7,
+   "y": -1006.0,
+   "population": 1846000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Монровия",
+   "country": "LBR",
+   "x": -245.0,
+   "y": -193.4,
+   "population": 1041000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Триполи",
+   "country": "LBY",
+   "x": 276.7,
+   "y": -978.7,
+   "population": 2189000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Бенгази",
+   "country": "LBY",
+   "x": 422.8,
+   "y": -957.1,
+   "population": 1180000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Мисурата",
+   "country": "LBY",
+   "x": 317.8,
+   "y": -964.4,
+   "population": 386120,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Кастри",
+   "country": "LCA",
+   "x": -1368.3,
+   "y": -427.0,
+   "population": 37963,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Вадуц",
+   "country": "LIE",
+   "x": 182.7,
+   "y": -1355.2,
+   "population": 36281,
+   "capital": true,
+   "rank": 7
+  },
+  {
+   "name": "Коломбо",
+   "country": "LKA",
+   "x": 1810.9,
+   "y": -212.2,
+   "population": 217000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Шри-Джаяварденепура-Котте",
+   "country": "LKA",
+   "x": 1813.0,
+   "y": -211.3,
+   "population": 115826,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Канди",
+   "country": "LKA",
+   "x": 1828.6,
+   "y": -222.9,
+   "population": 111701,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Масеру",
+   "country": "LSO",
+   "x": 586.8,
+   "y": 877.9,
+   "population": 361324,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Вильнюс",
+   "country": "LTU",
+   "x": 456.5,
+   "y": -1533.3,
+   "population": 542366,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Люксембург",
+   "country": "LUX",
+   "x": 115.4,
+   "y": -1415.6,
+   "population": 107260,
+   "capital": true,
+   "rank": 6
+  },
+  {
+   "name": "Рига",
+   "country": "LVA",
+   "x": 425.6,
+   "y": -1583.0,
+   "population": 742572,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Касабланка",
+   "country": "MAR",
+   "x": -159.4,
+   "y": -998.5,
+   "population": 3181000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Рабат",
+   "country": "MAR",
+   "x": -142.7,
+   "y": -1010.2,
+   "population": 1705000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Фес",
+   "country": "MAR",
+   "x": -104.4,
+   "y": -1011.1,
+   "population": 1002000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Монако",
+   "country": "MCO",
+   "x": 145.7,
+   "y": -1269.7,
+   "population": 36371,
+   "capital": true,
+   "rank": 6
+  },
+  {
+   "name": "Кишинёв",
+   "country": "MDA",
+   "x": 554.5,
+   "y": -1352.0,
+   "population": 688134,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Антананариву",
+   "country": "MDG",
+   "x": 1053.2,
+   "y": 574.3,
+   "population": 1697000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Фианаранцуа",
+   "country": "MDG",
+   "x": 1035.8,
+   "y": 649.0,
+   "population": 184184,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Махадзанга",
+   "country": "MDG",
+   "x": 1035.8,
+   "y": 477.3,
+   "population": 154657,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Мале",
+   "country": "MDV",
+   "x": 1670.4,
+   "y": -127.7,
+   "population": 112927,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Мехико",
+   "country": "MEX",
+   "x": -2194.1,
+   "y": -590.1,
+   "population": 19028000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Гвадалахара",
+   "country": "MEX",
+   "x": -2278.7,
+   "y": -626.5,
+   "population": 4198000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Монтеррей",
+   "country": "MEX",
+   "x": -2174.7,
+   "y": -773.1,
+   "population": 3712000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Пуэбла-де-Сарагоса",
+   "country": "MEX",
+   "x": -2175.9,
+   "y": -578.4,
+   "population": 2195000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Тихуана",
+   "country": "MEX",
+   "x": -2462.6,
+   "y": -967.8,
+   "population": 1553000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Леон-де-лос-Альдама",
+   "country": "MEX",
+   "x": -2239.4,
+   "y": -640.7,
+   "population": 1488000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Торреон",
+   "country": "MEX",
+   "x": -2242.5,
+   "y": -770.2,
+   "population": 1144000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Маджуро",
+   "country": "MHL",
+   "x": 3885.5,
+   "y": -217.5,
+   "population": 25400,
+   "capital": true,
+   "rank": 6
+  },
+  {
+   "name": "Скопье",
+   "country": "MKD",
+   "x": 426.7,
+   "y": -1224.8,
+   "population": 494087,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Бамако",
+   "country": "MLI",
+   "x": -180.0,
+   "y": -386.2,
+   "population": 1494000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Сегу",
+   "country": "MLI",
+   "x": -140.6,
+   "y": -410.0,
+   "population": 122952,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Гао",
+   "country": "MLI",
+   "x": -1.1,
+   "y": -495.2,
+   "population": 116967,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Валлетта",
+   "country": "MLT",
+   "x": 299.9,
+   "y": -1061.8,
+   "population": 368250,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Янгон",
+   "country": "MMR",
+   "x": 2143.6,
+   "y": -510.7,
+   "population": 4088000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Мандалай",
+   "country": "MMR",
+   "x": 2110.2,
+   "y": -664.9,
+   "population": 1300000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Нейпьидо",
+   "country": "MMR",
+   "x": 2125.3,
+   "y": -599.7,
+   "population": 930000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Подгорица",
+   "country": "MNE",
+   "x": 382.4,
+   "y": -1236.9,
+   "population": 145850,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Улан-Батор",
+   "country": "MNG",
+   "x": 2040.2,
+   "y": -1374.5,
+   "population": 885000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Эрдэнэт",
+   "country": "MNG",
+   "x": 1969.3,
+   "y": -1402.1,
+   "population": 79647,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Чойбалсан",
+   "country": "MNG",
+   "x": 2182.6,
+   "y": -1378.1,
+   "population": 33376,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Мапуту",
+   "country": "MOZ",
+   "x": 705.6,
+   "y": 781.2,
+   "population": 1446000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Бейра",
+   "country": "MOZ",
+   "x": 770.9,
+   "y": 601.2,
+   "population": 530604,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Нампула",
+   "country": "MOZ",
+   "x": 879.3,
+   "y": 461.2,
+   "population": 388526,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Нуакшот",
+   "country": "MRT",
+   "x": -354.9,
+   "y": -549.6,
+   "population": 742144,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Нуадибу",
+   "country": "MRT",
+   "x": -375.9,
+   "y": -633.2,
+   "population": 86738,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Атар",
+   "country": "MRT",
+   "x": -287.9,
+   "y": -621.9,
+   "population": 44265,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Порт-Луи",
+   "country": "MUS",
+   "x": 1270.0,
+   "y": 611.5,
+   "population": 595491,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Лилонгве",
+   "country": "MWI",
+   "x": 757.9,
+   "y": 426.5,
+   "population": 646750,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Блантайр",
+   "country": "MWI",
+   "x": 781.8,
+   "y": 480.9,
+   "population": 584877,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Мзузу",
+   "country": "MWI",
+   "x": 766.8,
+   "y": 350.1,
+   "population": 110201,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Джорджтаун",
+   "country": "MYS",
+   "x": 2278.2,
+   "y": -165.8,
+   "population": 2500000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Куала-Лумпур",
+   "country": "MYS",
+   "x": 2312.5,
+   "y": -97.1,
+   "population": 1448000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Кучинг",
+   "country": "MYS",
+   "x": 2510.2,
+   "y": -46.9,
+   "population": 570407,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Виндхук",
+   "country": "NAM",
+   "x": 374.4,
+   "y": 682.5,
+   "population": 268132,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Уолфиш-Бей",
+   "country": "NAM",
+   "x": 317.5,
+   "y": 693.9,
+   "population": 52058,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Свакопмунд",
+   "country": "NAM",
+   "x": 318.5,
+   "y": 685.4,
+   "population": 29491,
+   "capital": false,
+   "rank": 6
+  },
+  {
+   "name": "Ниамей",
+   "country": "NER",
+   "x": 47.5,
+   "y": -412.4,
+   "population": 915000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Маради",
+   "country": "NER",
+   "x": 159.3,
+   "y": -411.6,
+   "population": 232555,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Зиндер",
+   "country": "NER",
+   "x": 201.6,
+   "y": -420.9,
+   "population": 230358,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Лагос",
+   "country": "NGA",
+   "x": 76.9,
+   "y": -197.4,
+   "population": 9466000,
+   "capital": false,
+   "rank": 0
+  },
+  {
+   "name": "Кано",
+   "country": "NGA",
+   "x": 191.8,
+   "y": -366.5,
+   "population": 3140000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Ибадан",
+   "country": "NGA",
+   "x": 89.0,
+   "y": -226.0,
+   "population": 2628000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Абуджа",
+   "country": "NGA",
+   "x": 170.4,
+   "y": -277.9,
+   "population": 1576000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Кадуна",
+   "country": "NGA",
+   "x": 167.9,
+   "y": -321.6,
+   "population": 1442000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Бенин-Сити",
+   "country": "NGA",
+   "x": 127.5,
+   "y": -194.2,
+   "population": 1190000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Порт-Харкорт",
+   "country": "NGA",
+   "x": 159.2,
+   "y": -147.4,
+   "population": 1020000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Манагуа",
+   "country": "NIC",
+   "x": -1942.1,
+   "y": -371.2,
+   "population": 920000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Гаага",
+   "country": "NLD",
+   "x": 78.8,
+   "y": -1473.9,
+   "population": 1406000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Амстердам",
+   "country": "NLD",
+   "x": 90.5,
+   "y": -1480.2,
+   "population": 1031000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Виллемстад",
+   "country": "NLD",
+   "x": -1553.6,
+   "y": -372.5,
+   "population": 146813,
+   "capital": false,
+   "rank": 7
+  },
+  {
+   "name": "Осло",
+   "country": "NOR",
+   "x": 184.4,
+   "y": -1645.3,
+   "population": 835000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Берген",
+   "country": "NOR",
+   "x": 90.9,
+   "y": -1654.9,
+   "population": 213585,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Тронхейм",
+   "country": "NOR",
+   "x": 172.5,
+   "y": -1714.0,
+   "population": 147139,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Катманду",
+   "country": "NPL",
+   "x": 1834.1,
+   "y": -832.1,
+   "population": 895000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Окленд",
+   "country": "NZL",
+   "x": 3591.7,
+   "y": 1087.7,
+   "population": 1377200,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Веллингтон",
+   "country": "NZL",
+   "x": 3496.0,
+   "y": 1206.5,
+   "population": 393400,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Манукау",
+   "country": "NZL",
+   "x": 3591.1,
+   "y": 1091.8,
+   "population": 375600,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Маскат",
+   "country": "OMN",
+   "x": 1279.7,
+   "y": -713.1,
+   "population": 734697,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Карачи",
+   "country": "PAK",
+   "x": 1456.4,
+   "y": -749.8,
+   "population": 12130000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Лахор",
+   "country": "PAK",
+   "x": 1571.0,
+   "y": -941.4,
+   "population": 6577000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Мултан",
+   "country": "PAK",
+   "x": 1519.5,
+   "y": -903.0,
+   "population": 1522000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Гуджранвала",
+   "country": "PAK",
+   "x": 1562.9,
+   "y": -958.3,
+   "population": 1513000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Хайдарабад",
+   "country": "PAK",
+   "x": 1483.6,
+   "y": -764.6,
+   "population": 1459000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Пешавар",
+   "country": "PAK",
+   "x": 1493.1,
+   "y": -1009.7,
+   "population": 1303000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Исламабад",
+   "country": "PAK",
+   "x": 1529.6,
+   "y": -1001.3,
+   "population": 780000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Панама",
+   "country": "PAN",
+   "x": -1799.3,
+   "y": -274.4,
+   "population": 1281000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Давид",
+   "country": "PAN",
+   "x": -1866.1,
+   "y": -258.1,
+   "population": 110037,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Лима",
+   "country": "PER",
+   "x": -1734.9,
+   "y": 367.9,
+   "population": 8012000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Арекипа",
+   "country": "PER",
+   "x": -1595.9,
+   "y": 499.7,
+   "population": 815000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Трухильо",
+   "country": "PER",
+   "x": -1789.5,
+   "y": 248.5,
+   "population": 765171,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Манила",
+   "country": "PHL",
+   "x": 2710.4,
+   "y": -445.2,
+   "population": 11100000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Давао",
+   "country": "PHL",
+   "x": 2848.2,
+   "y": -217.7,
+   "population": 1402000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Генерал-Сантос",
+   "country": "PHL",
+   "x": 2840.7,
+   "y": -187.2,
+   "population": 950530,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Мелекеок",
+   "country": "PLW",
+   "x": 3051.0,
+   "y": -229.2,
+   "population": 7026,
+   "capital": true,
+   "rank": 6
+  },
+  {
+   "name": "Порт-Морсби",
+   "country": "PNG",
+   "x": 3327.6,
+   "y": 289.5,
+   "population": 283733,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Лаэ",
+   "country": "PNG",
+   "x": 3333.8,
+   "y": 206.2,
+   "population": 131052,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Маунт-Хаген",
+   "country": "PNG",
+   "x": 3273.5,
+   "y": 179.6,
+   "population": 59064,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Варшава",
+   "country": "POL",
+   "x": 386.8,
+   "y": -1477.9,
+   "population": 1707000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Краков",
+   "country": "POL",
+   "x": 374.4,
+   "y": -1426.3,
+   "population": 756000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Гданьск",
+   "country": "POL",
+   "x": 337.1,
+   "y": -1526.0,
+   "population": 740000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Пхеньян",
+   "country": "PRK",
+   "x": 2551.6,
+   "y": -1146.2,
+   "population": 3300000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Вонсан",
+   "country": "PRK",
+   "x": 2583.5,
+   "y": -1149.9,
+   "population": 329207,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Синыйджу",
+   "country": "PRK",
+   "x": 2508.0,
+   "y": -1174.5,
+   "population": 288112,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Лиссабон",
+   "country": "PRT",
+   "x": -185.9,
+   "y": -1138.3,
+   "population": 2812000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Фуншал",
+   "country": "PRT",
+   "x": -354.8,
+   "y": -971.9,
+   "population": 204767,
+   "capital": false,
+   "rank": 6
+  },
+  {
+   "name": "Понта-Делгада",
+   "country": "PRT",
+   "x": -524.8,
+   "y": -1112.0,
+   "population": 61526,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Асунсьон",
+   "country": "PRY",
+   "x": -1251.2,
+   "y": 762.1,
+   "population": 1870000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Сьюдад-дель-Эсте",
+   "country": "PRY",
+   "x": -1184.5,
+   "y": 768.6,
+   "population": 320872,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Доха",
+   "country": "QAT",
+   "x": 1118.6,
+   "y": -761.9,
+   "population": 1450000,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Бухарест",
+   "country": "ROU",
+   "x": 511.0,
+   "y": -1287.5,
+   "population": 1942000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Яссы",
+   "country": "ROU",
+   "x": 529.2,
+   "y": -1356.0,
+   "population": 325914,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Констанца",
+   "country": "ROU",
+   "x": 561.1,
+   "y": -1281.6,
+   "population": 303399,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Москва",
+   "country": "RUS",
+   "x": 671.6,
+   "y": -1557.0,
+   "population": 10452000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Санкт-Петербург",
+   "country": "RUS",
+   "x": 520.0,
+   "y": -1645.7,
+   "population": 4553000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Новосибирск",
+   "country": "RUS",
+   "x": 1491.1,
+   "y": -1541.0,
+   "population": 1389000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Екатеринбург",
+   "country": "RUS",
+   "x": 1071.0,
+   "y": -1580.9,
+   "population": 1313000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Нижний Новгород",
+   "country": "RUS",
+   "x": 781.4,
+   "y": -1569.7,
+   "population": 1278000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Самара",
+   "country": "RUS",
+   "x": 916.3,
+   "y": -1499.6,
+   "population": 1137000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Омск",
+   "country": "RUS",
+   "x": 1319.8,
+   "y": -1540.1,
+   "population": 1135000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Казань",
+   "country": "RUS",
+   "x": 877.2,
+   "y": -1557.0,
+   "population": 1115000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Челябинск",
+   "country": "RUS",
+   "x": 1103.0,
+   "y": -1543.8,
+   "population": 1091000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Ростов-на-Дону",
+   "country": "RUS",
+   "x": 761.8,
+   "y": -1357.7,
+   "population": 1052000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Уфа",
+   "country": "RUS",
+   "x": 1009.4,
+   "y": -1535.7,
+   "population": 1018000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Кигали",
+   "country": "RWA",
+   "x": 683.8,
+   "y": 59.8,
+   "population": 860000,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Эр-Рияд",
+   "country": "SAU",
+   "x": 1017.7,
+   "y": -743.1,
+   "population": 4465000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Джидда",
+   "country": "SAU",
+   "x": 862.5,
+   "y": -651.5,
+   "population": 3012000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Мекка",
+   "country": "SAU",
+   "x": 876.0,
+   "y": -649.0,
+   "population": 1385000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Медина",
+   "country": "SAU",
+   "x": 861.6,
+   "y": -739.0,
+   "population": 1010000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Хартум",
+   "country": "SDN",
+   "x": 727.2,
+   "y": -474.8,
+   "population": 4754000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Омдурман",
+   "country": "SDN",
+   "x": 726.0,
+   "y": -475.6,
+   "population": 2395159,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Порт-Судан",
+   "country": "SDN",
+   "x": 823.3,
+   "y": -595.2,
+   "population": 489725,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Дакар",
+   "country": "SEN",
+   "x": -391.4,
+   "y": -448.6,
+   "population": 2604000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Каолак",
+   "country": "SEN",
+   "x": -361.0,
+   "y": -431.5,
+   "population": 277812,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Каэди",
+   "country": "SEN",
+   "x": -301.4,
+   "y": -491.7,
+   "population": 21656,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сингапур",
+   "country": "SGP",
+   "x": 2363.0,
+   "y": -39.7,
+   "population": 5183700,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Хониара",
+   "country": "SLB",
+   "x": 3616.2,
+   "y": 288.7,
+   "population": 76328,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Фритаун",
+   "country": "SLE",
+   "x": -299.6,
+   "y": -259.2,
+   "population": 827000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Сан-Сальвадор",
+   "country": "SLV",
+   "x": -2002.2,
+   "y": -418.3,
+   "population": 1433000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Сан-Марино",
+   "country": "SMR",
+   "x": 244.5,
+   "y": -1274.8,
+   "population": 29579,
+   "capital": true,
+   "rank": 7
+  },
+  {
+   "name": "Могадишо",
+   "country": "SOM",
+   "x": 1032.0,
+   "y": -63.4,
+   "population": 1100000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Белград",
+   "country": "SRB",
+   "x": 399.7,
+   "y": -1297.3,
+   "population": 1099000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Нови-Сад",
+   "country": "SRB",
+   "x": 386.4,
+   "y": -1308.1,
+   "population": 225457,
+   "capital": false,
+   "rank": 7
+  },
+  {
+   "name": "Сан-Томе",
+   "country": "STP",
+   "x": 153.2,
+   "y": -10.2,
+   "population": 88219,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Парамарибо",
+   "country": "SUR",
+   "x": -1252.2,
+   "y": -178.7,
+   "population": 254169,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Коттика",
+   "country": "SUR",
+   "x": -1232.8,
+   "y": -118.0,
+   "population": 29210,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Братислава",
+   "country": "SVK",
+   "x": 326.1,
+   "y": -1380.1,
+   "population": 423737,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Любляна",
+   "country": "SVN",
+   "x": 280.9,
+   "y": -1328.4,
+   "population": 314807,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Стокгольм",
+   "country": "SWE",
+   "x": 312.2,
+   "y": -1633.7,
+   "population": 1264000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Мальмё",
+   "country": "SWE",
+   "x": 233.1,
+   "y": -1553.2,
+   "population": 269349,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сундсвалль",
+   "country": "SWE",
+   "x": 289.7,
+   "y": -1694.6,
+   "population": 73389,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Мбабане",
+   "country": "SWZ",
+   "x": 673.1,
+   "y": 791.7,
+   "population": 90138,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Лобамба",
+   "country": "SWZ",
+   "x": 674.2,
+   "y": 796.1,
+   "population": 9782,
+   "capital": false,
+   "rank": 6
+  },
+  {
+   "name": "Виктория",
+   "country": "SYC",
+   "x": 1259.8,
+   "y": 141.5,
+   "population": 33576,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Алеппо",
+   "country": "SYR",
+   "x": 766.5,
+   "y": -1070.9,
+   "population": 2738000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Дамаск",
+   "country": "SYR",
+   "x": 759.6,
+   "y": -995.7,
+   "population": 2466000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Нджамена",
+   "country": "TCD",
+   "x": 338.8,
+   "y": -370.0,
+   "population": 989000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Абеше",
+   "country": "TCD",
+   "x": 467.4,
+   "y": -422.1,
+   "population": 158317,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Мунду",
+   "country": "TCD",
+   "x": 364.2,
+   "y": -261.6,
+   "population": 156705,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Ломе",
+   "country": "TGO",
+   "x": 27.7,
+   "y": -187.9,
+   "population": 1452000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Атакпаме",
+   "country": "TGO",
+   "x": 25.4,
+   "y": -230.5,
+   "population": 80683,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Бангкок",
+   "country": "THA",
+   "x": 2255.9,
+   "y": -419.5,
+   "population": 6704000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Чиангмай",
+   "country": "THA",
+   "x": 2194.7,
+   "y": -570.9,
+   "population": 397211,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Накхонратчасима",
+   "country": "THA",
+   "x": 2285.4,
+   "y": -457.1,
+   "population": 334984,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Душанбе",
+   "country": "TJK",
+   "x": 1399.4,
+   "y": -1133.9,
+   "population": 1086244,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Ашхабад",
+   "country": "TKM",
+   "x": 1192.3,
+   "y": -1117.5,
+   "population": 727700,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Туркменабад",
+   "country": "TKM",
+   "x": 1289.4,
+   "y": -1148.6,
+   "population": 234817,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Мары",
+   "country": "TKM",
+   "x": 1265.3,
+   "y": -1108.0,
+   "population": 178708,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Дили",
+   "country": "TLS",
+   "x": 2842.4,
+   "y": 261.9,
+   "population": 234331,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Нукуалофа",
+   "country": "TON",
+   "x": -3858.4,
+   "y": 640.3,
+   "population": 42620,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Порт-оф-Спейн",
+   "country": "TTO",
+   "x": -1388.3,
+   "y": -325.6,
+   "population": 294934,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Тунис",
+   "country": "TUN",
+   "x": 209.3,
+   "y": -1086.4,
+   "population": 2412500,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Сус",
+   "country": "TUN",
+   "x": 219.6,
+   "y": -1059.9,
+   "population": 327004,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Стамбул",
+   "country": "TUR",
+   "x": 580.9,
+   "y": -1201.4,
+   "population": 10061000,
+   "capital": false,
+   "rank": 0
+  },
+  {
+   "name": "Анкара",
+   "country": "TUR",
+   "x": 663.1,
+   "y": -1170.4,
+   "population": 3716000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Измир",
+   "country": "TUR",
+   "x": 552.8,
+   "y": -1130.6,
+   "population": 2587000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Бурса",
+   "country": "TUR",
+   "x": 585.5,
+   "y": -1177.6,
+   "population": 1492000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Адана",
+   "country": "TUR",
+   "x": 725.2,
+   "y": -1091.7,
+   "population": 1293000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Фунафути",
+   "country": "TUV",
+   "x": 4056.7,
+   "y": 260.6,
+   "population": 4749,
+   "capital": true,
+   "rank": 6
+  },
+  {
+   "name": "Дар-эс-Салам",
+   "country": "TZA",
+   "x": 890.5,
+   "y": 208.2,
+   "population": 2930000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Мванза",
+   "country": "TZA",
+   "x": 749.0,
+   "y": 77.2,
+   "population": 493944,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Занзибар",
+   "country": "TZA",
+   "x": 889.6,
+   "y": 188.7,
+   "population": 403658,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Кампала",
+   "country": "UGA",
+   "x": 741.4,
+   "y": -9.8,
+   "population": 1420000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Мбале",
+   "country": "UGA",
+   "x": 777.5,
+   "y": -33.4,
+   "population": 402368,
+   "capital": false,
+   "rank": 7
+  },
+  {
+   "name": "Джинджа",
+   "country": "UGA",
+   "x": 755.5,
+   "y": -13.5,
+   "population": 301619,
+   "capital": false,
+   "rank": 7
+  },
+  {
+   "name": "Киев",
+   "country": "UKR",
+   "x": 570.7,
+   "y": -1435.2,
+   "population": 2709000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Харьков",
+   "country": "UKR",
+   "x": 680.4,
+   "y": -1424.9,
+   "population": 1461000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Днепр",
+   "country": "UKR",
+   "x": 664.9,
+   "y": -1388.2,
+   "population": 1050000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Монтевидео",
+   "country": "URY",
+   "x": -1167.3,
+   "y": 1033.2,
+   "population": 1513000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Дурасно",
+   "country": "URY",
+   "x": -1183.2,
+   "y": 993.1,
+   "population": 34037,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Нью-Йорк",
+   "country": "USA",
+   "x": -1485.0,
+   "y": -1192.1,
+   "population": 19040000,
+   "capital": false,
+   "rank": 0
+  },
+  {
+   "name": "Лос-Анджелес",
+   "country": "USA",
+   "x": -2467.0,
+   "y": -1009.3,
+   "population": 12500000,
+   "capital": false,
+   "rank": 0
+  },
+  {
+   "name": "Чикаго",
+   "country": "USA",
+   "x": -1749.1,
+   "y": -1220.4,
+   "population": 8990000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Майами",
+   "country": "USA",
+   "x": -1738.1,
+   "y": -776.5,
+   "population": 5585000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Филадельфия",
+   "country": "USA",
+   "x": -1516.1,
+   "y": -1172.3,
+   "population": 5492000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Даллас",
+   "country": "USA",
+   "x": -2033.7,
+   "y": -976.8,
+   "population": 4798000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Атланта",
+   "country": "USA",
+   "x": -1763.3,
+   "y": -1004.9,
+   "population": 4506000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Бостон",
+   "country": "USA",
+   "x": -1411.9,
+   "y": -1233.4,
+   "population": 4467000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Хьюстон",
+   "country": "USA",
+   "x": -2031.0,
+   "y": -892.2,
+   "population": 4459000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Вашингтон",
+   "country": "USA",
+   "x": -1563.7,
+   "y": -1143.0,
+   "population": 4338000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Детройт",
+   "country": "USA",
+   "x": -1650.5,
+   "y": -1233.4,
+   "population": 4101000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Финикс",
+   "country": "USA",
+   "x": -2344.9,
+   "y": -996.8,
+   "population": 3551000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Сан-Франциско",
+   "country": "USA",
+   "x": -2502.6,
+   "y": -1112.6,
+   "population": 3450000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Сиэтл",
+   "country": "USA",
+   "x": -2340.9,
+   "y": -1366.0,
+   "population": 3074000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Сан-Диего",
+   "country": "USA",
+   "x": -2460.8,
+   "y": -976.8,
+   "population": 2916000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Миннеаполис",
+   "country": "USA",
+   "x": -1818.9,
+   "y": -1301.3,
+   "population": 2616000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Сан-Хуан",
+   "country": "USA",
+   "x": -1467.8,
+   "y": -560.2,
+   "population": 2478905,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Тампа",
+   "country": "USA",
+   "x": -1771.0,
+   "y": -838.8,
+   "population": 2314000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Денвер",
+   "country": "USA",
+   "x": -2120.8,
+   "y": -1165.4,
+   "population": 2313000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Балтимор",
+   "country": "USA",
+   "x": -1552.0,
+   "y": -1153.7,
+   "population": 2255000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сент-Луис",
+   "country": "USA",
+   "x": -1835.3,
+   "y": -1135.9,
+   "population": 2199000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Кливленд",
+   "country": "USA",
+   "x": -1632.3,
+   "y": -1211.0,
+   "population": 1890000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Портленд",
+   "country": "USA",
+   "x": -2383.6,
+   "y": -1315.0,
+   "population": 1875000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Питтсбург",
+   "country": "USA",
+   "x": -1609.1,
+   "y": -1183.7,
+   "population": 1838000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Лас-Вегас",
+   "country": "USA",
+   "x": -2376.6,
+   "y": -1070.3,
+   "population": 1823000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Сан-Бернардино",
+   "country": "USA",
+   "x": -2447.0,
+   "y": -1012.9,
+   "population": 1745000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Сан-Хосе",
+   "country": "USA",
+   "x": -2497.8,
+   "y": -1100.0,
+   "population": 1668000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Цинциннати",
+   "country": "USA",
+   "x": -1712.2,
+   "y": -1150.0,
+   "population": 1636000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Сакраменто",
+   "country": "USA",
+   "x": -2471.4,
+   "y": -1134.3,
+   "population": 1604000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Сан-Антонио",
+   "country": "USA",
+   "x": -2101.6,
+   "y": -882.8,
+   "population": 1473000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Канзас-Сити",
+   "country": "USA",
+   "x": -1918.6,
+   "y": -1148.6,
+   "population": 1469000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Форт-Уэрт",
+   "country": "USA",
+   "x": -2045.0,
+   "y": -974.5,
+   "population": 1440454,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Индианаполис",
+   "country": "USA",
+   "x": -1740.6,
+   "y": -1165.7,
+   "population": 1436000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Милуоки",
+   "country": "USA",
+   "x": -1738.2,
+   "y": -1252.1,
+   "population": 1388000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Орландо",
+   "country": "USA",
+   "x": -1743.6,
+   "y": -854.9,
+   "population": 1350000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Роли",
+   "country": "USA",
+   "x": -1625.7,
+   "y": -1059.6,
+   "population": 1163515,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Остин",
+   "country": "USA",
+   "x": -2077.9,
+   "y": -904.9,
+   "population": 1161000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Мемфис",
+   "country": "USA",
+   "x": -1867.5,
+   "y": -1040.5,
+   "population": 1081000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Норфолк",
+   "country": "USA",
+   "x": -1567.7,
+   "y": -1087.7,
+   "population": 1047869,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Бриджпорт",
+   "country": "USA",
+   "x": -1465.3,
+   "y": -1203.4,
+   "population": 1018000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Буффало",
+   "country": "USA",
+   "x": -1561.3,
+   "y": -1247.7,
+   "population": 1016000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Ташкент",
+   "country": "UZB",
+   "x": 1385.9,
+   "y": -1206.9,
+   "population": 2184000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Самарканд",
+   "country": "UZB",
+   "x": 1353.0,
+   "y": -1163.5,
+   "population": 708000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Андижан",
+   "country": "UZB",
+   "x": 1451.7,
+   "y": -1193.1,
+   "population": 650000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Кингстаун",
+   "country": "VCT",
+   "x": -1375.4,
+   "y": -401.2,
+   "population": 49485,
+   "capital": true,
+   "rank": 4
+  },
+  {
+   "name": "Каракас",
+   "country": "VEN",
+   "x": -1510.6,
+   "y": -321.0,
+   "population": 2985000,
+   "capital": true,
+   "rank": 1
+  },
+  {
+   "name": "Маракайбо",
+   "country": "VEN",
+   "x": -1617.1,
+   "y": -328.0,
+   "population": 2072000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Валенсия",
+   "country": "VEN",
+   "x": -1535.2,
+   "y": -312.8,
+   "population": 1770000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Хошимин",
+   "country": "VNM",
+   "x": 2407.4,
+   "y": -329.5,
+   "population": 5314000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Ханой",
+   "country": "VNM",
+   "x": 2331.6,
+   "y": -637.2,
+   "population": 4378000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Хайфон",
+   "country": "VNM",
+   "x": 2351.3,
+   "y": -631.2,
+   "population": 1969000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Дананг",
+   "country": "VNM",
+   "x": 2417.2,
+   "y": -489.0,
+   "population": 1000000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Порт-Вила",
+   "country": "VUT",
+   "x": 3742.9,
+   "y": 539.1,
+   "population": 44040,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Апиа",
+   "country": "WSM",
+   "x": -3853.7,
+   "y": 422.2,
+   "population": 61916,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Сана",
+   "country": "YEM",
+   "x": 988.7,
+   "y": -467.8,
+   "population": 2008000,
+   "capital": true,
+   "rank": 2
+  },
+  {
+   "name": "Аден",
+   "country": "YEM",
+   "x": 1012.1,
+   "y": -390.1,
+   "population": 1000000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Таиз",
+   "country": "YEM",
+   "x": 988.6,
+   "y": -415.1,
+   "population": 751000,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Йоханнесбург",
+   "country": "ZAF",
+   "x": 606.3,
+   "y": 787.4,
+   "population": 3435000,
+   "capital": false,
+   "rank": 1
+  },
+  {
+   "name": "Кейптаун",
+   "country": "ZAF",
+   "x": 384.9,
+   "y": 1007.2,
+   "population": 3215000,
+   "capital": true,
+   "rank": 0
+  },
+  {
+   "name": "Дурбан",
+   "country": "ZAF",
+   "x": 659.8,
+   "y": 893.4,
+   "population": 2729000,
+   "capital": false,
+   "rank": 2
+  },
+  {
+   "name": "Претория",
+   "country": "ZAF",
+   "x": 611.7,
+   "y": 774.0,
+   "population": 1338000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Порт-Элизабет",
+   "country": "ZAF",
+   "x": 534.4,
+   "y": 1008.6,
+   "population": 1021000,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Блумфонтейн",
+   "country": "ZAF",
+   "x": 560.5,
+   "y": 872.3,
+   "population": 463064,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Лусака",
+   "country": "ZMB",
+   "x": 632.5,
+   "y": 469.6,
+   "population": 1328000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Китве-Нкана",
+   "country": "ZMB",
+   "x": 634.5,
+   "y": 391.0,
+   "population": 404901,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Кабве",
+   "country": "ZMB",
+   "x": 637.6,
+   "y": 440.2,
+   "population": 188979,
+   "capital": false,
+   "rank": 4
+  },
+  {
+   "name": "Хараре",
+   "country": "ZWE",
+   "x": 690.2,
+   "y": 541.6,
+   "population": 1572000,
+   "capital": true,
+   "rank": 3
+  },
+  {
+   "name": "Булавайо",
+   "country": "ZWE",
+   "x": 631.2,
+   "y": 611.6,
+   "population": 699385,
+   "capital": false,
+   "rank": 3
+  },
+  {
+   "name": "Читунгвиза",
+   "country": "ZWE",
+   "x": 691.1,
+   "y": 547.1,
+   "population": 340360,
+   "capital": false,
+   "rank": 4
+  }
+ ]
+}

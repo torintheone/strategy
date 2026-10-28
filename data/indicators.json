@@ -1,0 +1,27 @@
+{
+ "_comment": "Описание показателей: название, единицы и формат вывода. format: people, money_big, money, percent, percent_signed, percent_gdp, years, number1, number2.",
+ "indicators": [
+  {"id": "population", "name": "Население", "format": "people", "description": "Все жители страны."},
+  {"id": "gdp_usd", "name": "ВВП", "format": "money_big", "description": "Валовой внутренний продукт: стоимость всего, что произведено в стране за год, в текущих долларах США."},
+  {"id": "gdp_per_capita_usd", "name": "ВВП на душу", "format": "money", "description": "ВВП, делённый на население, в текущих долларах США."},
+  {"id": "gdp_ppp_per_capita", "name": "ВВП на душу по ППС", "format": "money", "description": "ВВП на душу с поправкой на разницу цен между странами (по паритету покупательной способности)."},
+  {"id": "gdp_growth_pct", "name": "Рост ВВП", "format": "percent_signed", "description": "Изменение реального ВВП за год, без учёта инфляции."},
+  {"id": "inflation_pct", "name": "Инфляция", "format": "percent", "description": "Рост потребительских цен за год."},
+  {"id": "unemployment_pct", "name": "Безработица", "format": "percent", "description": "Доля безработных в рабочей силе (оценка МОТ)."},
+  {"id": "gov_debt_pct_gdp", "name": "Госдолг", "format": "percent_gdp", "description": "Долг государства в процентах ВВП."},
+  {"id": "tax_revenue_pct_gdp", "name": "Налоговые доходы", "format": "percent_gdp", "description": "Налоги, собранные центральным правительством, в процентах ВВП."},
+  {"id": "exports_pct_gdp", "name": "Экспорт", "format": "percent_gdp", "description": "Экспорт товаров и услуг в процентах ВВП."},
+  {"id": "imports_pct_gdp", "name": "Импорт", "format": "percent_gdp", "description": "Импорт товаров и услуг в процентах ВВП."},
+  {"id": "agriculture_pct_gdp", "name": "Сельское хозяйство", "format": "percent_gdp", "description": "Добавленная стоимость сельского, лесного и рыбного хозяйства в процентах ВВП."},
+  {"id": "industry_pct_gdp", "name": "Промышленность", "format": "percent_gdp", "description": "Добавленная стоимость промышленности, включая строительство, в процентах ВВП."},
+  {"id": "life_expectancy", "name": "Продолжительность жизни", "format": "years", "description": "Ожидаемая продолжительность жизни при рождении."},
+  {"id": "fertility_rate", "name": "Рождаемость", "format": "number2", "unit": "детей на женщину", "description": "Сколько детей в среднем рожает женщина за жизнь."},
+  {"id": "urban_pct", "name": "Городское население", "format": "percent", "description": "Доля жителей городов."},
+  {"id": "age_0_14_pct", "name": "Дети до 15 лет", "format": "percent", "description": "Доля населения в возрасте 0–14 лет."},
+  {"id": "age_65_plus_pct", "name": "Старше 65 лет", "format": "percent", "description": "Доля населения в возрасте 65 лет и старше."},
+  {"id": "labor_force", "name": "Рабочая сила", "format": "people", "description": "Работающие и ищущие работу люди старше 15 лет."},
+  {"id": "military_pct_gdp", "name": "Военные расходы", "format": "percent_gdp", "description": "Расходы на армию в процентах ВВП."},
+  {"id": "electricity_access_pct", "name": "Доступ к электричеству", "format": "percent", "description": "Доля населения, у которого есть электричество."},
+  {"id": "gini", "name": "Неравенство (Джини)", "format": "number1", "description": "Индекс Джини: 0 — все доходы равны, 100 — всё у одного человека."}
+ ]
+}

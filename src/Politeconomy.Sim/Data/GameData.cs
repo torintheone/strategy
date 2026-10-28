@@ -1,0 +1,83 @@
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
+
+namespace Politeconomy.Sim.Data;
+
+/// <summary>Всё содержимое папки data/, прочитанное с диска. Не меняется во время партии.</summary>
+public sealed class GameData
+{
+    public required string Directory { get; init; }
+    public required CountriesFile Countries { get; init; }
+    public required PoliticsFile Politics { get; init; }
+    public required ScenarioFile Scenario { get; init; }
+    public required BalanceFile Balance { get; init; }
+    public required IndicatorsFile Indicators { get; init; }
+    public required MapModesFile MapModes { get; init; }
+    public required WorldMapFile Map { get; init; }
+    public required CitiesFile Cities { get; init; }
+
+    public IndicatorDef Indicator(string id) =>
+        Indicators.Indicators.FirstOrDefault(i => i.Id == id)
+        ?? throw new KeyNotFoundException($"Нет показателя «{id}» в data/indicators.json");
+
+    /// <summary>Читает все файлы. Бросает <see cref="DataException"/> с понятным текстом, если файл не читается.</summary>
+    public static GameData Load(string directory)
+    {
+        var ctx = DataJsonContext.Default;
+        return new GameData
+        {
+            Directory = directory,
+            Countries = Read(directory, "countries.json", ctx.CountriesFile),
+            Politics = Read(directory, "politics.json", ctx.PoliticsFile),
+            Scenario = Read(directory, "scenario.json", ctx.ScenarioFile),
+            Balance = Read(directory, "balance.json", ctx.BalanceFile),
+            Indicators = Read(directory, "indicators.json", ctx.IndicatorsFile),
+            MapModes = Read(directory, "map_modes.json", ctx.MapModesFile),
+            Map = Read(directory, Path.Combine("map", "world.json"), ctx.WorldMapFile),
+            Cities = Read(directory, Path.Combine("map", "cities.json"), ctx.CitiesFile),
+        };
+    }
+
+    static T Read<T>(string directory, string file, JsonTypeInfo<T> type)
+    {
+        var path = Path.Combine(directory, file);
+        if (!File.Exists(path))
+            throw new DataException($"Не найден файл данных {path}");
+        try
+        {
+            using var stream = File.OpenRead(path);
+            return JsonSerializer.Deserialize(stream, type)
+                ?? throw new DataException($"Файл {file} пустой");
+        }
+        catch (JsonException e)
+        {
+            throw new DataException($"Ошибка в файле {file}: {e.Message}", e);
+        }
+    }
+}
+
+public sealed class DataException(string message, Exception? inner = null) : Exception(message, inner);
+
+/// <summary>Поиск папки data/ рядом с программой или выше по дереву каталогов.</summary>
+public static class DataDirectory
+{
+    public const string MarkerFile = "countries.json";
+
+    public static string? Find(params string[] startPoints)
+    {
+        foreach (var start in startPoints)
+        {
+            if (string.IsNullOrWhiteSpace(start))
+                continue;
+            var dir = new DirectoryInfo(start);
+            while (dir != null)
+            {
+                var candidate = Path.Combine(dir.FullName, "data");
+                if (File.Exists(Path.Combine(candidate, MarkerFile)))
+                    return candidate;
+                dir = dir.Parent;
+            }
+        }
+        return null;
+    }
+}
