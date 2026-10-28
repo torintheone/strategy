@@ -11,7 +11,7 @@
   GeoNames: города от 15 тыс. жителей              -> tools/sources/geonames_cities.json
   BIS: ключевые ставки центробанков                -> tools/sources/bis_policy_rates.json
 
-Запуск:  python tools/fetch_sources.py [--only imf,wb,geonames]
+Запуск:  python tools/fetch_sources.py [--only imf,wb,bis,geonames]
 """
 
 from __future__ import annotations
@@ -57,6 +57,14 @@ IMF_INDICATORS = [
     "NID_NGDP",      # инвестиции, % ВВП
     "NGSD_NGDP",     # национальные сбережения, % ВВП
 ]
+IMF_CORE = {"GGXWDG_NGDP", "NGDP_RPCH", "PCPIPCH"}
+# В DataMapper у части рядов WEO другие коды. Если ряд пуст, ищем замену в списке индикаторов по словам в названии.
+IMF_SEARCH = {
+    "GGXONLB_NGDP": ["primary"],
+    "NID_NGDP": ["investment"],
+    "NGSD_NGDP": ["saving"],
+}
+IMF_INDICATORS_URL = "https://www.imf.org/external/datamapper/api/v1/indicators"
 
 WB_URL = "https://api.worldbank.org/v2/country/all/indicator/{code}?format=json&per_page=20000&date={first}:{last}"
 WB_INDICATORS = [
@@ -69,8 +77,9 @@ WB_INDICATORS = [
     "NV.IND.MANF.ZS", "NY.GDP.TOTL.RT.ZS", "NY.GDP.PETR.RT.ZS", "NY.GDP.NGAS.RT.ZS", "NY.GDP.COAL.RT.ZS",
     "NY.GDP.MINR.RT.ZS", "NE.GCF.TOTL.ZS", "NE.CON.PRVT.ZS", "NE.CON.GOVT.ZS", "SL.AGR.EMPL.ZS",
     "SL.IND.EMPL.ZS", "SL.SRV.EMPL.ZS", "ST.INT.RCPT.CD", "SP.POP.GROW", "FI.RES.TOTL.CD",
-    "PA.NUS.FCRF", "FR.INR.RINR", "FR.INR.LEND",
+    "PA.NUS.FCRF", "FR.INR.RINR", "FR.INR.LEND", "GC.XPN.INTP.RV.ZS",
 ]
+WB_CORE = set(WB_INDICATORS[:25])  # без них не собрать мир; остальные — для калибровки, их можно оценить
 
 BIS_URL = "https://stats.bis.org/api/v1/data/WS_CBPOL/M./all?startPeriod={start}&detail=dataonly"
 
@@ -118,23 +127,49 @@ def write(name: str, obj: dict) -> None:
     print(f"  записан {path.relative_to(ROOT)} ({path.stat().st_size // 1024} КБ)", flush=True)
 
 
+def imf_series(code: str) -> dict[str, dict[str, float]]:
+    raw = json.loads(get(IMF_URL.format(indicator=code)))
+    series = raw.get("values", {}).get(code, {})
+    return {
+        country: {y: round(float(v), 4) for y, v in years.items() if v is not None and FIRST_YEAR <= int(y) <= LAST_YEAR}
+        for country, years in series.items()
+    }
+
+
 def fetch_imf() -> None:
     print("МВФ, World Economic Outlook", flush=True)
     data: dict[str, dict[str, dict[str, float]]] = {}
+    aliases: dict[str, str] = {}
+    catalog: dict[str, dict] | None = None
     for ind in IMF_INDICATORS:
-        raw = json.loads(get(IMF_URL.format(indicator=ind)))
-        series = raw.get("values", {}).get(ind, {})
-        data[ind] = {
-            country: {y: round(float(v), 4) for y, v in years.items() if v is not None and FIRST_YEAR <= int(y) <= LAST_YEAR}
-            for country, years in series.items()
-        }
+        data[ind] = imf_series(ind)
         print(f"  {ind}: стран {len(data[ind])}", flush=True)
+        if data[ind] or ind not in IMF_SEARCH:
+            continue
+        if catalog is None:
+            catalog = json.loads(get(IMF_INDICATORS_URL)).get("indicators", {})
+        words = IMF_SEARCH[ind]
+        candidates = [code for code, info in catalog.items()
+                      if all(w in (info.get("label") or "").lower() for w in words)]
+        for code in candidates:
+            print(f"    кандидат {code}: {catalog[code].get('label')} ({catalog[code].get('unit')}, {catalog[code].get('source')})", flush=True)
+        for code in candidates:
+            unit = (catalog[code].get("unit") or "").lower()
+            if "gdp" not in unit:
+                continue
+            series = imf_series(code)
+            if len(series) >= 100:
+                data[ind] = series
+                aliases[ind] = code
+                print(f"  {ind} ← {code}: стран {len(series)}", flush=True)
+                break
         if not data[ind]:
             print(f"  внимание: МВФ вернул пустой ряд {ind}", flush=True)
-    if not data.get("GGXWDG_NGDP"):
-        raise RuntimeError("МВФ не вернул госдолг")
+    for ind in IMF_CORE:
+        if not data.get(ind):
+            raise RuntimeError(f"МВФ не вернул {ind}")
     write("imf_weo.json", {"source": "IMF World Economic Outlook, DataMapper API", "url": IMF_URL.format(indicator="<код>"),
-                           "retrieved": dt.date.today().isoformat(), "values": data})
+                           "retrieved": dt.date.today().isoformat(), "aliases": aliases, "values": data})
 
 
 def fetch_bis() -> None:
@@ -164,18 +199,26 @@ def fetch_wb() -> None:
     print("Всемирный банк, World Development Indicators", flush=True)
     data: dict[str, dict[str, dict[str, float]]] = {}
     for code in WB_INDICATORS:
-        raw = json.loads(get(WB_URL.format(code=code, first=FIRST_YEAR, last=2025)))
-        rows = raw[1] if len(raw) > 1 and raw[1] else []
         series: dict[str, dict[str, float]] = {}
-        for row in rows:
-            iso3 = row.get("countryiso3code")
-            if row.get("value") is None or not iso3:
-                continue
-            series.setdefault(iso3, {})[row["date"]] = round(float(row["value"]), 6)
+        for attempt in range(3):
+            # API иногда отвечает сообщением об ошибке вместо данных — тогда ждём и спрашиваем снова
+            raw = json.loads(get(WB_URL.format(code=code, first=FIRST_YEAR, last=2025)))
+            rows = raw[1] if isinstance(raw, list) and len(raw) > 1 and raw[1] else []
+            for row in rows:
+                iso3 = row.get("countryiso3code")
+                if row.get("value") is None or not iso3:
+                    continue
+                series.setdefault(iso3, {})[row["date"]] = round(float(row["value"]), 6)
+            if series:
+                break
+            print(f"  {code}: пустой ответ {str(raw)[:200]}, повтор", flush=True)
+            time.sleep(10 * (attempt + 1))
         data[code] = series
         print(f"  {code}: стран {len(series)}", flush=True)
         if not series:
-            raise RuntimeError(f"Всемирный банк вернул пустой ряд {code}")
+            if code in WB_CORE:
+                raise RuntimeError(f"Всемирный банк вернул пустой ряд {code}")
+            print(f"  внимание: Всемирный банк вернул пустой ряд {code}", flush=True)
     write("wb_wdi.json", {"source": "World Bank, World Development Indicators API (CC BY 4.0)",
                           "url": WB_URL.format(code="<код>", first=FIRST_YEAR, last=2025),
                           "retrieved": dt.date.today().isoformat(), "values": data})
