@@ -98,7 +98,7 @@ public partial class MapOverlay : Control
         foreach (var country in _countriesBySize)
         {
             var text = _names.GetValueOrDefault(country.Id, country.Id).ToUpperInvariant();
-            var size = Math.Min(MaxLabelSize, Mathf.Sqrt(country.MainArea) * Zoom * LabelScale * 0.82f);
+            var size = Math.Min(MaxLabelSize, Mathf.Sqrt(country.MainArea) * Zoom * LabelScale * 0.9f);
             PlaceLabel(xf, screen, text, country.LabelX, country.LabelY, size, country.MainBounds.Width * Zoom * 0.95f,
                 UiTheme.MapCountryFont, new Color(UiTheme.TextPrimary, alpha), 5);
         }
