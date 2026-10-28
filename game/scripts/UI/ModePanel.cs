@@ -5,7 +5,7 @@ using Politeconomy.Sim.Views;
 namespace Politeconomy.Game.UI;
 
 /// <summary>Левый нижний угол: легенда текущего режима карты и кнопки режимов.</summary>
-public partial class ModePanel : PanelContainer
+public partial class ModePanel : GlassPanel
 {
     Label _title = null!;
     VBoxContainer _legend = null!;
@@ -17,15 +17,16 @@ public partial class ModePanel : PanelContainer
     {
         SetAnchorsPreset(LayoutPreset.BottomLeft);
         GrowVertical = GrowDirection.Begin;
-        OffsetLeft = 16;
-        OffsetBottom = -16;
-        OffsetTop = -16;
+        OffsetLeft = 12;
+        OffsetBottom = -12;
+        OffsetTop = -12;
         CustomMinimumSize = new Vector2(470, 0);
         MouseFilter = MouseFilterEnum.Stop;
+        InitGlass(radius: 14, padH: 16, padV: 14);
 
         var column = new VBoxContainer();
         column.AddThemeConstantOverride("separation", 8);
-        AddChild(column);
+        Body.AddChild(column);
 
         _title = UiTheme.Text("", 15, UiTheme.SemiBold);
         column.AddChild(_title);
@@ -70,18 +71,13 @@ public partial class ModePanel : PanelContainer
             _legend.AddChild(UiTheme.Text("Серым — территории с особым статусом.", 13, null, UiTheme.TextMuted));
             return;
         }
-        if (view.Indicator != null)
-            _legend.AddChild(UiTheme.Text("≈ — оценка там, где в источниках нет данных", 12, null, UiTheme.TextMuted));
         foreach (var e in entries)
         {
             var row = new HBoxContainer();
             row.AddThemeConstantOverride("separation", 8);
-            row.AddChild(new ColorRect
-            {
-                Color = UiTheme.Hex(e.Color),
-                CustomMinimumSize = new Vector2(22, 14),
-                SizeFlagsVertical = SizeFlags.ShrinkCenter,
-            });
+            var swatch = new Panel { CustomMinimumSize = new Vector2(22, 12), SizeFlagsVertical = SizeFlags.ShrinkCenter };
+            swatch.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.Hex(e.Color), new Color(1, 1, 1, 0.1f), 4, 0, 0));
+            row.AddChild(swatch);
             row.AddChild(UiTheme.Text(e.Text, 13, null, UiTheme.TextSecondary));
             _legend.AddChild(row);
         }

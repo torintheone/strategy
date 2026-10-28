@@ -5,44 +5,100 @@ using Politeconomy.Sim.Geo;
 namespace Politeconomy.Game.Map;
 
 /// <summary>
-/// Заливка регионов и линии границ. Каждый регион — отдельная сетка треугольников, цвет меняется через Modulate,
-/// поэтому смена режима карты или захват региона ничего не перестраивает.
+/// Карта в мировых координатах: океан внутри контура проекции, сетка меридианов, свечение побережья,
+/// заливка регионов и сглаженные линии границ. Каждый регион — отдельная сетка треугольников, цвет меняется
+/// через Modulate и плавно перетекает при смене режима карты или захвате региона.
 /// </summary>
 public partial class MapView : Node2D
 {
+    const float ColorFadeSeconds = 0.35f;
+
     readonly Dictionary<string, MeshInstance2D> _fills = new(StringComparer.Ordinal);
+    readonly Dictionary<string, (Color From, Color To, float T)> _fades = new(StringComparer.Ordinal);
+    readonly List<MapLines> _lines = [];
     MapHighlight _highlight = null!;
 
     public void Build(WorldMap map)
     {
+        var outline = EqualEarth.Outline(map.Scale);
+        var ocean = new MeshInstance2D { Name = "Ocean", Mesh = FanMesh(outline) };
+        var oceanMaterial = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/map_ocean.gdshader") };
+        oceanMaterial.SetShaderParameter("half_size", new Vector2(map.Width / 2, map.Height / 2));
+        ocean.Material = oceanMaterial;
+        AddChild(ocean);
+
+        AddLines(MapLines.Create("Graticule", EqualEarth.Graticule(map.Scale), 1f, 1f, UiTheme.MapGraticule));
+        AddLines(MapLines.Create("RimGlow", [outline], 0f, 22f, UiTheme.MapRimGlow, glow: true, rings: true));
+        AddLines(MapLines.Create("Rim", [outline], 1.2f, 1f, UiTheme.MapRim, rings: true));
+        AddLines(MapLines.Create("CoastGlow", map.CoastLines, 0f, 12f, UiTheme.MapCoastGlow, glow: true));
+
+        var land = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/map_land.gdshader") };
+        land.SetShaderParameter("map_height", map.Height);
+        var fills = new Node2D { Name = "Regions" };
+        AddChild(fills);
         foreach (var region in map.Regions)
         {
-            var fill = new MeshInstance2D { Mesh = FillMesh(region), Name = region.Id };
-            AddChild(fill);
+            // Прозрачный до первой раскраски: первый цвет ставится сразу, следующие — плавным переходом.
+            var fill = new MeshInstance2D { Mesh = FillMesh(region), Name = region.Id, Material = land, Modulate = new Color(1, 1, 1, 0) };
+            fills.AddChild(fill);
             _fills[region.Id] = fill;
         }
-        // Сначала тонкие границы регионов, поверх — побережье и границы стран.
-        AddChild(new MeshInstance2D { Mesh = LineMesh(map.InternalLines), Modulate = UiTheme.MapRegionBorder, Name = "RegionBorders" });
-        AddChild(new MeshInstance2D { Mesh = LineMesh(map.CoastLines), Modulate = UiTheme.MapCoast, Name = "Coast" });
-        AddChild(new MeshInstance2D { Mesh = LineMesh(map.BorderLines), Modulate = UiTheme.MapBorder, Name = "CountryBorders" });
+
+        // Границы регионов проявляются при приближении; поверх — побережье и границы стран.
+        AddLines(MapLines.Create("RegionBorders", map.InternalLines, 0.8f, 0.9f, UiTheme.MapRegionBorder, fadeFrom: 0.3f, fadeTo: 0.75f));
+        AddLines(MapLines.Create("Coast", map.CoastLines, 1.1f, 0.9f, UiTheme.MapCoast));
+        AddLines(MapLines.Create("CountryBorders", map.BorderLines, 1.5f, 1f, UiTheme.MapBorder));
+
         _highlight = new MapHighlight { Name = "Highlight" };
         AddChild(_highlight);
+        _highlight.Setup(id => _fills.TryGetValue(id, out var f) ? f.Mesh : null);
     }
 
-    public void SetColor(string regionId, Color color)
+    void AddLines(MapLines layer)
     {
-        if (_fills.TryGetValue(regionId, out var fill))
+        AddChild(layer);
+        _lines.Add(layer);
+    }
+
+    /// <summary>Новый цвет региона: плавный переход за доли секунды или сразу.</summary>
+    public void SetColor(string regionId, Color color, bool animate = true)
+    {
+        if (!_fills.TryGetValue(regionId, out var fill))
+            return;
+        if (!animate || fill.Modulate.A == 0)
+        {
+            _fades.Remove(regionId);
             fill.Modulate = color;
+            return;
+        }
+        _fades[regionId] = (fill.Modulate, color, 0);
     }
 
-    public void SetHighlight(MapRegion? hoveredRegion, MapCountry? hoveredCountry, MapRegion? selectedRegion, MapCountry? selectedCountry, float zoom)
+    public void SetZoom(float zoom)
     {
-        _highlight.HoveredRegion = hoveredRegion;
-        _highlight.HoveredCountry = hoveredCountry;
-        _highlight.SelectedRegion = selectedRegion;
-        _highlight.SelectedCountry = selectedCountry;
-        _highlight.Zoom = zoom;
-        _highlight.QueueRedraw();
+        foreach (var layer in _lines)
+            layer.SetZoom(zoom);
+        _highlight.SetZoom(zoom);
+    }
+
+    public void SetHighlight(MapRegion? hoveredRegion, MapCountry? hoveredCountry, MapRegion? selectedRegion, MapCountry? selectedCountry) =>
+        _highlight.Set(hoveredRegion, hoveredCountry, selectedRegion, selectedCountry);
+
+    public override void _Process(double delta)
+    {
+        if (_fades.Count == 0)
+            return;
+        foreach (var id in _fades.Keys.ToList())
+        {
+            var (from, to, t) = _fades[id];
+            t = Mathf.Min(1, t + (float)delta / ColorFadeSeconds);
+            var eased = 1 - (1 - t) * (1 - t) * (1 - t);
+            _fills[id].Modulate = from.Lerp(to, eased);
+            if (t >= 1)
+                _fades.Remove(id);
+            else
+                _fades[id] = (from, to, t);
+        }
     }
 
     static ArrayMesh FillMesh(MapRegion region)
@@ -60,36 +116,38 @@ public partial class MapView : Node2D
             foreach (var t in p.Triangles)
                 indices[k++] = offset + t;
         }
-        var colors = new Color[vertexCount];
-        Array.Fill(colors, Colors.White);
-        return BuildMesh(Godot.Mesh.PrimitiveType.Triangles, vertices, colors, indices);
+        return BuildMesh(vertices, indices);
     }
 
-    /// <summary>Ломаные линии одной сеткой отрезков: на экране всегда толщиной в пиксель.</summary>
-    static ArrayMesh LineMesh(IReadOnlyList<float[]> lines)
+    /// <summary>Выпуклый контур проекции — веером треугольников от центра.</summary>
+    static ArrayMesh FanMesh(float[] ring)
     {
-        var points = new List<Vector2>();
-        foreach (var line in lines)
-            for (var i = 0; i + 3 < line.Length; i += 2)
-            {
-                points.Add(new Vector2(line[i], line[i + 1]));
-                points.Add(new Vector2(line[i + 2], line[i + 3]));
-            }
-        var colors = new Color[points.Count];
-        Array.Fill(colors, Colors.White);
-        return BuildMesh(Godot.Mesh.PrimitiveType.Lines, points.ToArray(), colors, null);
+        var n = ring.Length / 2;
+        var vertices = new Vector2[n + 1];
+        vertices[0] = Vector2.Zero;
+        for (var i = 0; i < n; i++)
+            vertices[i + 1] = new Vector2(ring[i * 2], ring[i * 2 + 1]);
+        var indices = new List<int>();
+        for (var i = 1; i <= n; i++)
+        {
+            indices.Add(0);
+            indices.Add(i);
+            indices.Add(i % n + 1);
+        }
+        return BuildMesh(vertices, indices.ToArray());
     }
 
-    static ArrayMesh BuildMesh(Godot.Mesh.PrimitiveType type, Vector2[] vertices, Color[] colors, int[]? indices)
+    static ArrayMesh BuildMesh(Vector2[] vertices, int[] indices)
     {
+        var colors = new Color[vertices.Length];
+        Array.Fill(colors, Colors.White);
         var arrays = new Godot.Collections.Array();
-        arrays.Resize((int)Godot.Mesh.ArrayType.Max);
-        arrays[(int)Godot.Mesh.ArrayType.Vertex] = vertices;
-        arrays[(int)Godot.Mesh.ArrayType.Color] = colors;
-        if (indices != null)
-            arrays[(int)Godot.Mesh.ArrayType.Index] = indices;
+        arrays.Resize((int)Mesh.ArrayType.Max);
+        arrays[(int)Mesh.ArrayType.Vertex] = vertices;
+        arrays[(int)Mesh.ArrayType.Color] = colors;
+        arrays[(int)Mesh.ArrayType.Index] = indices;
         var mesh = new ArrayMesh();
-        mesh.AddSurfaceFromArrays(type, arrays);
+        mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
         return mesh;
     }
 }

@@ -150,7 +150,6 @@ public sealed class MapModeView
     {
         if (stat is null)
             return $"{Indicator!.Name}: нет данных";
-        var prefix = stat.IsEstimate ? "≈" : "";
-        return $"{Indicator!.Name}: {prefix}{Fmt.Value(Indicator.Format, stat.Value, Indicator.Unit)}";
+        return $"{Indicator!.Name}: {Fmt.Value(Indicator.Format, stat.Value, Indicator.Unit)}";
     }
 }

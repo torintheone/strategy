@@ -25,22 +25,22 @@ public class TextTests
     }
 
     [Fact]
-    public void ExplainsSourcesAndEstimates()
+    public void ExplainShowsValueMeaningAndFactorsWithoutSources()
     {
-        var def = TestData.Game.Indicator("gov_debt_pct_gdp");
-        var real = Explain.Stat(def, new StatValue(17.9, 2024, "wb:GC.DOD.TOTL.GD.ZS"));
-        Assert.Contains("Всемирный банк", real);
-        Assert.Contains("2024", real);
+        var def = TestData.Game.Indicator("inflation_pct");
+        var stat = new StatValue(8.7, 2026, StatSources.Model, Factors: [new StatFactor("Инфляционные ожидания", 7.9, "percent")]);
+        var text = Explain.Stat(def, stat);
+        Assert.StartsWith("Инфляция: 8,7%", text);
+        Assert.Contains(def.Description, text);
+        Assert.Contains("Инфляционные ожидания: 7,9%", text);
 
-        var estimate = Explain.Stat(def, new StatValue(54.4, null, StatSources.Fill, "медиана: группа дохода", 24));
-        Assert.Contains("Оценка", estimate);
-        Assert.Contains("24", estimate);
-
-        var old = Explain.Stat(def, new StatValue(40, 2015, "wb:X"));
-        Assert.Contains("устарели", old);
-
-        var imf = Explain.Stat(def, new StatValue(62.7, 2025, "imf:GGXWDG_NGDP"));
-        Assert.Contains("МВФ", imf);
-        Assert.Contains("Natural Earth", Explain.Source(new StatValue(326000, 2017, "natural_earth")));
+        foreach (var hidden in new[] { new StatValue(54.4, null, StatSources.Fill, "медиана: группа дохода", 24), new StatValue(40, 2015, "wb:X") })
+        {
+            var plain = Explain.Stat(def, hidden);
+            Assert.DoesNotContain("Источник", plain);
+            Assert.DoesNotContain("Оценка", plain);
+            Assert.DoesNotContain("устарели", plain);
+            Assert.DoesNotContain("2015", plain);
+        }
     }
 }

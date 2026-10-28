@@ -101,6 +101,14 @@ public partial class Main : Node
 
     void BuildMap()
     {
+        // Фон за пределами карты мира — экранный, с виньеткой.
+        var backdrop = new CanvasLayer { Layer = -10, Name = "Backdrop" };
+        AddChild(backdrop);
+        var back = new ColorRect { MouseFilter = Control.MouseFilterEnum.Ignore };
+        back.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        back.Material = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/backdrop.gdshader") };
+        backdrop.AddChild(back);
+
         _mapView = new MapView { Name = "Map" };
         AddChild(_mapView);
         _mapView.Build(_map);
@@ -116,6 +124,8 @@ public partial class Main : Node
         _overlay = new MapOverlay();
         overlayLayer.AddChild(_overlay);
         _overlay.Setup(_map, _data);
+        _mapView.SetZoom(_camera.ZoomLevel);
+        _overlay.Zoom = _camera.ZoomLevel;
     }
 
     void BuildInterface(Theme theme)
@@ -219,11 +229,11 @@ public partial class Main : Node
     {
         _overlay.Zoom = _camera.ZoomLevel;
         _overlay.QueueRedraw();
-        UpdateHighlight();
+        _mapView.SetZoom(_camera.ZoomLevel);
     }
 
     void UpdateHighlight() =>
-        _mapView.SetHighlight(_hoveredRegion, _hoveredCountry, _selectedRegion, _selectedCountry, _camera.ZoomLevel);
+        _mapView.SetHighlight(_hoveredRegion, _hoveredCountry, _selectedRegion, _selectedCountry);
 
     public override void _UnhandledInput(InputEvent e)
     {
@@ -243,11 +253,14 @@ public partial class Main : Node
                     _dragging = true;
                     _dragMoved = false;
                     _dragStart = button.Position;
+                    _camera.StartDrag();
                 }
                 else
                 {
                     if (!_dragMoved && button.ButtonIndex == MouseButton.Left)
                         ClickAt(button.Position);
+                    else if (_dragMoved)
+                        _camera.ReleaseDrag();
                     _dragging = false;
                 }
                 break;

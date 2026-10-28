@@ -105,7 +105,7 @@ public sealed class MapCountry
     public required IReadOnlyList<string> Neighbors { get; init; }
     public required IReadOnlyList<float[]> Outline { get; init; }
     public required Rect Bounds { get; init; }
-    /// <summary>Площадь и рамка самого большого куска страны — для размера подписи.</summary>
+    /// <summary>Площадь и рамка куска страны, на котором стоит подпись (иначе самого большого), — для размера подписи.</summary>
     public required float MainArea { get; init; }
     public required Rect MainBounds { get; init; }
     public required IReadOnlyList<MapRegion> Regions { get; init; }
@@ -117,6 +117,8 @@ public sealed record MapTerritory(string Id, string Name, string Note, float Lab
 public sealed class WorldMap
 {
     public required float Width { get; init; }
+    /// <summary>Масштаб проекции Equal Earth: сколько единиц карты в единице проекции.</summary>
+    public required double Scale { get; init; }
     public required float MinY { get; init; }
     public required float MaxY { get; init; }
     public required IReadOnlyList<MapRegion> Regions { get; init; }
@@ -196,7 +198,11 @@ public sealed class WorldMap
             if (own.Count == 0)
                 throw new DataException($"У страны {c.Id} на карте нет ни одного региона");
             var bounds = own.Skip(1).Aggregate(own[0].Bounds, (acc, r) => acc.Union(r.Bounds));
-            var main = outline.Count > 0 ? outline.MaxBy(RingArea)! : own.MaxBy(r => r.Area)!.Main.Vertices;
+            // Подпись Дании стоит на Ютландии, а не на Гренландии: размер подписи — по куску под ней.
+            var labelX = (float)c.Label[0];
+            var labelY = (float)c.Label[1];
+            var main = outline.Where(r => RingContains(r, labelX, labelY)).OrderBy(RingArea).FirstOrDefault()
+                       ?? (outline.Count > 0 ? outline.MaxBy(RingArea)! : own.MaxBy(r => r.Area)!.Main.Vertices);
             countries.Add(new MapCountry
             {
                 Id = c.Id,
@@ -214,6 +220,7 @@ public sealed class WorldMap
         return new WorldMap
         {
             Width = (float)file.Width,
+            Scale = file.Scale,
             MinY = (float)file.MinY,
             MaxY = (float)file.MaxY,
             Regions = regions,
@@ -223,6 +230,20 @@ public sealed class WorldMap
             BorderLines = file.Lines.Border.Select(l => l.ToArray()).ToList(),
             InternalLines = file.Lines.Internal.Select(l => l.ToArray()).ToList(),
         };
+    }
+
+    /// <summary>Лежит ли точка внутри кольца (правило чётности пересечений).</summary>
+    public static bool RingContains(float[] ring, float x, float y)
+    {
+        var inside = false;
+        var n = ring.Length / 2;
+        for (int i = 0, j = n - 1; i < n; j = i++)
+        {
+            float xi = ring[i * 2], yi = ring[i * 2 + 1], xj = ring[j * 2], yj = ring[j * 2 + 1];
+            if ((yi > y) != (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+                inside = !inside;
+        }
+        return inside;
     }
 
     /// <summary>Площадь кольца по формуле шнурования.</summary>

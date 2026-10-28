@@ -109,4 +109,26 @@ public class MapTests
         var political = new MapModeView(data, Map, data.MapModes.Modes.First(m => m.Kind == "political"));
         Assert.Equal(political.PoliticalColor("DEU"), political.ColorOf(Map.Region(region.Id)!, snapshot));
     }
+
+    [Fact]
+    public void LabelSizeComesFromThePieceUnderTheLabel()
+    {
+        var map = WorldMap.From(TestData.Game.Map);
+        var denmark = map.Country("DNK")!;
+        // Подпись Дании стоит на Ютландии: её размер не должен считаться по Гренландии.
+        Assert.True(denmark.MainBounds.Width < 400, $"ширина куска под подписью {denmark.MainBounds.Width}");
+        Assert.True(map.Country("RUS")!.MainBounds.Width > 2000);
+    }
+
+    [Fact]
+    public void EqualEarthMatchesMapWidth()
+    {
+        var map = WorldMap.From(TestData.Game.Map);
+        var (x, y) = EqualEarth.Project(180, 0, map.Scale);
+        Assert.Equal(map.Width / 2, x, 1f);
+        Assert.Equal(0, y, 1e-3f);
+        var (_, north) = EqualEarth.Project(0, 60, map.Scale);
+        Assert.True(north < 0, "север вверху (ось y вниз)");
+        Assert.True(EqualEarth.Graticule(map.Scale).Count > 10);
+    }
 }

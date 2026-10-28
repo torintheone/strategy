@@ -7,7 +7,7 @@ using Politeconomy.Sim.Text;
 namespace Politeconomy.Game.UI;
 
 /// <summary>Досье страны справа: выбранный регион, общие сведения, показатели с подсказками «почему» и список регионов.</summary>
-public partial class CountryPanel : PanelContainer
+public partial class CountryPanel : GlassPanel
 {
     static readonly (string Title, string[] Stats)[] Sections =
     [
@@ -18,7 +18,7 @@ public partial class CountryPanel : PanelContainer
         ("Бюджет", ["budget_balance_pct_gdp", "gov_revenue_pct_gdp", "gov_spending_pct_gdp", "tax_revenue_pct_gdp", "military_pct_gdp"]),
         ("Структура экономики", ["agriculture_pct_gdp", "industry_pct_gdp", "manufacturing_pct_gdp", "services_pct_gdp",
             "resource_rents_pct_gdp", "tourism_pct_gdp", "employment_agriculture_pct", "employment_industry_pct", "employment_services_pct"]),
-        ("Ориентиры прогноза МВФ", ["gdp_growth_trend_pct", "inflation_anchor_pct", "unemployment_natural_pct"]),
+        ("Прогноз", ["gdp_growth_trend_pct", "inflation_anchor_pct", "unemployment_natural_pct"]),
         ("Население", ["population", "labor_force", "life_expectancy", "fertility_rate", "urban_pct", "age_0_14_pct",
             "age_65_plus_pct", "gini", "electricity_access_pct"]),
     ];
@@ -52,22 +52,23 @@ public partial class CountryPanel : PanelContainer
         _data = data;
         _regions = data.Regions.Regions.ToDictionary(r => r.Id, StringComparer.Ordinal);
         SetAnchorsPreset(LayoutPreset.RightWide);
-        OffsetLeft = -420;
-        OffsetRight = -16;
-        OffsetTop = 68;
-        OffsetBottom = -16;
+        OffsetLeft = -432;
+        OffsetRight = -12;
+        OffsetTop = 78;
+        OffsetBottom = -12;
         MouseFilter = MouseFilterEnum.Stop;
+        InitGlass(radius: 16, padH: 20, padV: 18);
 
         var column = new VBoxContainer();
         column.AddThemeConstantOverride("separation", 10);
-        AddChild(column);
+        Body.AddChild(column);
 
         var header = new HBoxContainer();
         column.AddChild(header);
         var titles = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         titles.AddThemeConstantOverride("separation", 0);
         header.AddChild(titles);
-        _name = UiTheme.Text("", 26, UiTheme.SerifBold);
+        _name = UiTheme.Text("", 28, UiTheme.SerifBold);
         _name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         titles.AddChild(_name);
         _official = UiTheme.Text("", 13, null, UiTheme.TextMuted);
@@ -87,7 +88,7 @@ public partial class CountryPanel : PanelContainer
         _regionBox = new VBoxContainer();
         _regionBox.AddThemeConstantOverride("separation", 0);
         var regionPanel = new PanelContainer();
-        regionPanel.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.PanelRaised, UiTheme.PanelBorder, 4, 10, 8));
+        regionPanel.AddThemeStyleboxOverride("panel", UiTheme.Box(new Color(1, 1, 1, 0.05f), UiTheme.PanelBorder, 10, 12, 9));
         regionPanel.AddChild(_regionBox);
         column.AddChild(regionPanel);
         _regionTitle = UiTheme.Text("", 16, UiTheme.SemiBold);
@@ -104,8 +105,14 @@ public partial class CountryPanel : PanelContainer
         _facts.AddThemeConstantOverride("v_separation", 4);
         column.AddChild(_facts);
 
-        _play = new Button { Text = "Играть за эту страну", FocusMode = FocusModeEnum.None };
-        _play.AddThemeColorOverride("font_color", UiTheme.Accent);
+        _play = new Button { Text = "Играть за эту страну", FocusMode = FocusModeEnum.None, CustomMinimumSize = new Vector2(0, 38) };
+        _play.AddThemeColorOverride("font_color", UiTheme.Ocean);
+        _play.AddThemeColorOverride("font_hover_color", UiTheme.Ocean);
+        _play.AddThemeColorOverride("font_pressed_color", UiTheme.Ocean);
+        _play.AddThemeFontOverride("font", UiTheme.SemiBold);
+        _play.AddThemeStyleboxOverride("normal", UiTheme.Box(UiTheme.Accent, null, 10, 14, 8));
+        _play.AddThemeStyleboxOverride("hover", UiTheme.Box(UiTheme.AccentLight, null, 10, 14, 8));
+        _play.AddThemeStyleboxOverride("pressed", UiTheme.Box(UiTheme.AccentLight, null, 10, 14, 8));
         _play.Pressed += () =>
         {
             if (_countryId != null)
@@ -128,7 +135,7 @@ public partial class CountryPanel : PanelContainer
         foreach (var (title, stats) in Sections)
         {
             body.AddChild(new HSeparator());
-            body.AddChild(UiTheme.Text(title.ToUpperInvariant(), 12, UiTheme.SemiBold, UiTheme.TextMuted));
+            body.AddChild(UiTheme.Text(title.ToUpperInvariant(), 12, UiTheme.MapCountryFont, UiTheme.Accent));
             foreach (var id in stats)
                 AddRow(body, id);
         }
@@ -139,10 +146,6 @@ public partial class CountryPanel : PanelContainer
         _regionList.AddThemeConstantOverride("separation", 0);
         body.AddChild(_regionList);
         body.AddChild(new HSeparator());
-        var note = UiTheme.Text("≈ — оценка: в источниках нет данных по стране. Наведите курсор на строку, чтобы увидеть источник и год.",
-            12, null, UiTheme.TextMuted);
-        note.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-        body.AddChild(note);
     }
 
     void AddRow(VBoxContainer body, string statId)
@@ -152,7 +155,7 @@ public partial class CountryPanel : PanelContainer
         var label = UiTheme.Text(def.Name, 14, null, UiTheme.TextSecondary);
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         row.AddChild(label);
-        var value = UiTheme.Text("", 14, UiTheme.Medium);
+        var value = UiTheme.Text("", 14, UiTheme.Numbers);
         value.HorizontalAlignment = HorizontalAlignment.Right;
         row.AddChild(value);
         body.AddChild(row);
@@ -181,13 +184,16 @@ public partial class CountryPanel : PanelContainer
             AddFact("Строй", _data.Politics.Systems.GetValueOrDefault(WorldFactory.SystemId(country.System), "—"),
                 politics is null ? null : PoliticsTooltip(politics));
             AddFact("Доход", _data.MapModes.IncomeGroups.FirstOrDefault(g => g.Id == WorldFactory.IncomeId(country.Income))?.Name ?? "—",
-                "Группа дохода по классификации Всемирного банка на 2026 финансовый год (ВНД на душу населения за 2024 год).");
+                "Уровень дохода на душу населения: низкий, ниже среднего, выше среднего или высокий.");
             if (snapshot.Currencies.GetValueOrDefault(id) is { } currency)
                 AddFact("Валюта", CurrencyText(currency), CurrencyTooltip(currency));
             FillRegionList(id);
         }
+        var appearing = !Visible;
         Visible = true;
         Refresh(snapshot);
+        if (appearing)
+            AnimateIn(new Vector2(1, 0.1f));
     }
 
     void FillRegionList(string countryId)
@@ -213,7 +219,7 @@ public partial class CountryPanel : PanelContainer
             button.Pressed += () => RegionChosen?.Invoke(regionId);
             var row = new HBoxContainer();
             row.AddChild(button);
-            var pop = UiTheme.Text((r.PopulationSource == "estimate" ? "≈" : "") + Fmt.People(r.Population), 13, null, UiTheme.TextMuted);
+            var pop = UiTheme.Text(Fmt.People(r.Population), 13, null, UiTheme.TextMuted);
             pop.HorizontalAlignment = HorizontalAlignment.Right;
             row.AddChild(pop);
             _regionList.AddChild(row);
@@ -245,9 +251,6 @@ public partial class CountryPanel : PanelContainer
         };
         if (!string.IsNullOrEmpty(r.Capital))
             lines.Add("Главный город: " + r.Capital);
-        lines.Add(r.PopulationSource == "estimate"
-            ? "Население оценено по средней плотности страны: в GeoNames данных нет."
-            : "Население по GeoNames, приведено к населению страны по Всемирному банку.");
         return string.Join('\n', lines);
     }
 
@@ -256,8 +259,6 @@ public partial class CountryPanel : PanelContainer
         var text = "Тип системы задаёт, кто формирует правительство и как меняется власть.";
         if (!string.IsNullOrEmpty(p.Note))
             text += "\n\nОсобенность: " + p.Note;
-        if (!p.Reviewed)
-            text += "\n\nЧерновик классификации, ещё не проверен.";
         return text;
     }
 
@@ -290,7 +291,7 @@ public partial class CountryPanel : PanelContainer
         {
             _regionTitle.Text = region.Name;
             var capital = string.IsNullOrEmpty(region.Capital) ? "" : $" · {region.Capital}";
-            _regionLine.Text = $"{(region.PopulationSource == "estimate" ? "≈" : "")}{Fmt.People(region.Population)} жителей · " +
+            _regionLine.Text = $"{Fmt.People(region.Population)} жителей · " +
                                $"{Fmt.Number(region.AreaKm2, 0)}{Fmt.Nbsp}км²{capital}";
             _regionLine.TooltipText = RegionTooltip(region);
             _regionLine.MouseFilter = MouseFilterEnum.Stop;
@@ -304,8 +305,7 @@ public partial class CountryPanel : PanelContainer
         {
             var def = _data.Indicator(id);
             var stat = country.Stat(id);
-            value.Text = stat == null ? "—" : (stat.IsEstimate ? "≈" : "") + Fmt.Value(def.Format, stat.Value, def.Unit);
-            value.AddThemeColorOverride("font_color", stat is { IsEstimate: false } ? UiTheme.TextPrimary : UiTheme.TextMuted);
+            value.Text = stat == null ? "—" : Fmt.Value(def.Format, stat.Value, def.Unit);
             row.TooltipText = Explain.Stat(def, stat);
         }
     }

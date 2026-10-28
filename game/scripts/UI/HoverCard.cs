@@ -3,7 +3,7 @@ using Godot;
 namespace Politeconomy.Game.UI;
 
 /// <summary>Карточка у курсора: страна под мышью и её значение в текущем режиме карты.</summary>
-public partial class HoverCard : PanelContainer
+public partial class HoverCard : GlassPanel
 {
     Label _title = null!;
     Label _line = null!;
@@ -12,10 +12,10 @@ public partial class HoverCard : PanelContainer
     {
         MouseFilter = MouseFilterEnum.Ignore;
         Visible = false;
-        AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.PanelRaised, UiTheme.PanelBorder, 4, 10, 6));
+        InitGlass(radius: 10, padH: 12, padV: 8, tint: 0.86f);
         var column = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
-        column.AddThemeConstantOverride("separation", 0);
-        AddChild(column);
+        column.AddThemeConstantOverride("separation", 1);
+        Body.AddChild(column);
         _title = UiTheme.Text("", 15, UiTheme.SemiBold);
         _line = UiTheme.Text("", 13, null, UiTheme.TextSecondary);
         column.AddChild(_title);
@@ -27,6 +27,7 @@ public partial class HoverCard : PanelContainer
         _title.Text = title;
         _line.Text = line;
         _line.Visible = line.Length > 0;
+        var appearing = !Visible;
         Visible = true;
         ResetSize();
         var view = GetViewportRect().Size;
@@ -36,5 +37,7 @@ public partial class HoverCard : PanelContainer
         if (pos.Y + Size.Y > view.Y - 8)
             pos.Y = mouse.Y - Size.Y - 12;
         Position = pos;
+        if (appearing)
+            AnimateIn(Vector2.Zero, 0.12f, 0.96f);
     }
 }
