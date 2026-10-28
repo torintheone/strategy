@@ -41,7 +41,7 @@ public partial class ClassTable : VBoxContainer
             dot.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.Hex(c.Color), null, 4, 0, 0));
             dot.MouseFilter = MouseFilterEnum.Ignore;
             row.AddChild(dot);
-            var name = UiTheme.Text(c.Name, 13, null, UiTheme.TextSecondary);
+            var name = UiTheme.Text(c.ShortName ?? c.Name, 13, null, UiTheme.TextSecondary);
             name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             name.ClipText = true;
             name.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;

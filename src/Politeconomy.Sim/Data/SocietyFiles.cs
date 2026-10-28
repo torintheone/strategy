@@ -17,4 +17,5 @@ public sealed record ClassRecord(
     double Property,
     double JobRisk,
     double Inflation,
-    string Color);
+    string Color,
+    string? ShortName = null);
