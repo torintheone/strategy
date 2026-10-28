@@ -10,8 +10,9 @@
   GeoNames: население и русские названия регионов -> tools/sources/geonames_admin.json
   GeoNames: города от 15 тыс. жителей              -> tools/sources/geonames_cities.json
   BIS: ключевые ставки центробанков                -> tools/sources/bis_policy_rates.json
+  Всемирный банк: прогноз населения до 2050 года   -> tools/sources/wb_projections.json
 
-Запуск:  python tools/fetch_sources.py [--only imf,wb,bis,geonames]
+Запуск:  python tools/fetch_sources.py [--only imf,wb,bis,projections,geonames]
 """
 
 from __future__ import annotations
@@ -79,6 +80,17 @@ WB_INDICATORS = [
     "NY.GDP.MINR.RT.ZS", "NE.GDI.TOTL.ZS", "NE.CON.PRVT.ZS", "NE.CON.GOVT.ZS", "SL.AGR.EMPL.ZS",
     "SL.IND.EMPL.ZS", "SL.SRV.EMPL.ZS", "ST.INT.RCPT.CD", "SP.POP.GROW", "FI.RES.TOTL.CD",
     "PA.NUS.FCRF", "FR.INR.RINR", "FR.INR.LEND", "GC.XPN.INTP.RV.ZS",
+]
+# Демография и классы (этап 2): возрастная структура по пятилетним группам и полу, смертность, миграция,
+# занятость и образование рабочей силы, распределение доходов.
+AGE_GROUPS = ["0004", "0509", "1014", "1519", "2024", "2529", "3034", "3539", "4044", "4549", "5054", "5559",
+              "6064", "6569", "7074", "7579", "80UP"]
+WB_INDICATORS += [f"SP.POP.{g}.{sex}.5Y" for sex in ("FE", "MA") for g in AGE_GROUPS]
+WB_INDICATORS += [
+    "SP.POP.TOTL.FE.IN", "SP.POP.TOTL.MA.IN", "SP.DYN.LE00.FE.IN", "SP.DYN.LE00.MA.IN", "SP.DYN.IMRT.IN",
+    "SP.DYN.CBRT.IN", "SP.DYN.CDRT.IN", "SM.POP.NETM", "SP.ADO.TFRT", "SP.DYN.AMRT.FE", "SP.DYN.AMRT.MA",
+    "SL.EMP.SELF.ZS", "SL.EMP.VULN.ZS", "SL.EMP.WORK.ZS", "SL.TLF.CACT.ZS", "SL.TLF.ADVN.ZS", "SL.TLF.INTM.ZS",
+    "SL.TLF.BASC.ZS", "SE.TER.ENRR", "SI.DST.10TH.10", "SI.DST.FRST.20", "SI.POV.DDAY",
 ]
 WB_CORE = set(WB_INDICATORS[:25])  # без них не собрать мир; остальные — для калибровки, их можно оценить
 
@@ -225,6 +237,38 @@ def fetch_wb() -> None:
                           "retrieved": dt.date.today().isoformat(), "values": data})
 
 
+PROJECTION_URL = ("https://api.worldbank.org/v2/country/all/indicator/{code}?source=40&format=json&per_page=20000"
+                  "&date=2025:2050")
+PROJECTION_INDICATORS = ["SP.POP.TOTL", "SP.DYN.TFRT.IN", "SP.DYN.LE00.IN", "SP.POP.65UP.TO.ZS", "SP.POP.1564.TO.ZS"]
+
+
+def fetch_projections() -> None:
+    """Прогноз населения до 2050 года (Всемирный банк, база Population estimates and projections, по данным ООН)."""
+    print("Прогноз населения до 2050 года", flush=True)
+    data: dict[str, dict[str, dict[str, float]]] = {}
+    for code in PROJECTION_INDICATORS:
+        series: dict[str, dict[str, float]] = {}
+        for attempt in range(3):
+            raw = json.loads(get(PROJECTION_URL.format(code=code)))
+            rows = raw[1] if isinstance(raw, list) and len(raw) > 1 and raw[1] else []
+            for row in rows:
+                iso3 = row.get("countryiso3code")
+                if row.get("value") is None or not iso3 or int(row["date"]) % 5 != 0:
+                    continue
+                series.setdefault(iso3, {})[row["date"]] = round(float(row["value"]), 6)
+            if series:
+                break
+            print(f"  {code}: пустой ответ {str(raw)[:300]}, повтор", flush=True)
+            time.sleep(10 * (attempt + 1))
+        data[code] = series
+        print(f"  {code}: стран {len(series)}", flush=True)
+    if not data.get("SP.POP.TOTL"):
+        raise RuntimeError("нет прогноза населения")
+    write("wb_projections.json", {"source": "World Bank, Population estimates and projections (source 40), based on UN WPP",
+                                  "url": PROJECTION_URL.format(code="<код>"),
+                                  "retrieved": dt.date.today().isoformat(), "values": data})
+
+
 def fetch_geonames() -> None:
     print("GeoNames: регионы", flush=True)
     ne = json.loads(get(NE_ADMIN1))
@@ -282,9 +326,9 @@ def fetch_geonames() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--only", default="imf,wb,bis,geonames", help="какие источники скачать, через запятую")
+    parser.add_argument("--only", default="imf,wb,bis,projections,geonames", help="какие источники скачать, через запятую")
     args = parser.parse_args()
-    jobs = {"imf": fetch_imf, "wb": fetch_wb, "bis": fetch_bis, "geonames": fetch_geonames}
+    jobs = {"imf": fetch_imf, "wb": fetch_wb, "bis": fetch_bis, "projections": fetch_projections, "geonames": fetch_geonames}
     failed = []
     for name in args.only.split(","):
         try:
