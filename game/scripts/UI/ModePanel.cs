@@ -59,8 +59,8 @@ public partial class ModePanel : GlassPanel
     public void Show(MapModeView view)
     {
         _title.Text = "Карта: " + view.Mode.Name;
-        if (_buttons.TryGetValue(view.Mode.Id, out var button))
-            button.SetPressedNoSignal(true);
+        foreach (var (id, button) in _buttons)
+            button.SetPressedNoSignal(id == view.Mode.Id);
         foreach (var child in _legend.GetChildren())
             child.QueueFree();
 

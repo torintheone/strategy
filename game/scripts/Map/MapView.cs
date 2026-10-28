@@ -28,9 +28,9 @@ public partial class MapView : Node2D
         AddChild(ocean);
 
         AddLines(MapLines.Create("Graticule", EqualEarth.Graticule(map.Scale), 1f, 1f, UiTheme.MapGraticule));
-        AddLines(MapLines.Create("RimGlow", [outline], 0f, 22f, UiTheme.MapRimGlow, glow: true, rings: true));
+        // Свечение только по гладкому контуру карты: на изрезанных берегах широкая мягкая линия даёт «бахрому».
+        AddLines(MapLines.Create("RimGlow", [outline], 0f, 18f, UiTheme.MapRimGlow, glow: true, rings: true));
         AddLines(MapLines.Create("Rim", [outline], 1.2f, 1f, UiTheme.MapRim, rings: true));
-        AddLines(MapLines.Create("CoastGlow", map.CoastLines, 0f, 12f, UiTheme.MapCoastGlow, glow: true));
 
         var land = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/map_land.gdshader") };
         land.SetShaderParameter("map_height", map.Height);
@@ -52,6 +52,7 @@ public partial class MapView : Node2D
         _highlight = new MapHighlight { Name = "Highlight" };
         AddChild(_highlight);
         _highlight.Setup(id => _fills.TryGetValue(id, out var f) ? f.Mesh : null);
+        _highlight.ZIndex = 1;
     }
 
     void AddLines(MapLines layer)

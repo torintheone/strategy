@@ -27,7 +27,6 @@ public static class UiTheme
     public static readonly Color MapGraticule = Color.FromHtml("#96b4dc0f");
     public static readonly Color MapRimGlow = Color.FromHtml("#5a8cc82e");
     public static readonly Color MapRim = Color.FromHtml("#8cafd747");
-    public static readonly Color MapCoastGlow = Color.FromHtml("#6ea0dc26");
     public static readonly Color MapRegionBorder = Color.FromHtml("#080b1047");
     public static readonly Color MapCoast = Color.FromHtml("#06090ebf");
     public static readonly Color MapBorder = Color.FromHtml("#06080cd0");

@@ -142,7 +142,7 @@ public partial class MapOverlay : Control
     {
         if (exactSize < MinLabelSize - 1.5f || text.Length == 0 || ink.A < 0.02f)
             return;
-        ink.A *= Mathf.Clamp((exactSize - (MinLabelSize - 1.5f)) / 3f, 0, 1);
+        ink.A *= Mathf.Clamp((exactSize - (MinLabelSize - 1.5f)) / 1.5f, 0, 1);
         var size = Math.Max(MinLabelSize, (int)exactSize);
         var center = xf * new Vector2(x, y);
         if (!screen.Grow(400).HasPoint(center))

@@ -89,9 +89,9 @@ public partial class TopBar : GlassPanel
 
     void AddChip(HBoxContainer row, string id, string caption)
     {
-        var box = new VBoxContainer { MouseFilter = MouseFilterEnum.Stop, CustomMinimumSize = new Vector2(92, 0) };
+        var box = new VBoxContainer { MouseFilter = MouseFilterEnum.Stop, CustomMinimumSize = new Vector2(112, 0) };
         box.AddThemeConstantOverride("separation", -1);
-        box.AddChild(UiTheme.Text(caption.ToUpperInvariant(), 10, UiTheme.MapCountryFont, UiTheme.TextMuted));
+        box.AddChild(UiTheme.Text(caption.ToUpperInvariant(), 10, UiTheme.SemiBold, UiTheme.TextMuted));
         var value = UiTheme.Text("—", 16, UiTheme.Numbers);
         box.AddChild(value);
         row.AddChild(box);

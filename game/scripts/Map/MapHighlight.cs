@@ -5,8 +5,8 @@ using Politeconomy.Sim.Geo;
 namespace Politeconomy.Game.Map;
 
 /// <summary>
-/// Подсветка: регион под курсором светлеет, у страны под курсором — светлый контур, у выбранной — золотой
-/// контур со свечением. Контуры — сглаженные линии постоянной толщины; сетки кешируются по стране и региону.
+/// Подсветка: регион под курсором светлеет, у страны под курсором — светлый контур, выбранная страна
+/// чуть тонируется золотом и обводится золотым контуром. Контуры — сглаженные линии постоянной толщины; сетки кешируются по стране и региону.
 /// Подсветка проявляется плавно.
 /// </summary>
 public partial class MapHighlight : Node2D
@@ -19,9 +19,10 @@ public partial class MapHighlight : Node2D
 
     MeshInstance2D _hoverFill = null!;
     MeshInstance2D _selectedFill = null!;
+    Node2D _countryFill = null!;
     MapLines _hoverCountry = null!;
     MapLines _hoverRegion = null!;
-    MapLines _selectedGlow = null!;
+    MapLines _selectedHalo = null!;
     MapLines _selectedCountry = null!;
     MapLines _selectedRegion = null!;
     float _hoverAlpha;
@@ -32,27 +33,29 @@ public partial class MapHighlight : Node2D
     public void Setup(Func<string, Mesh?> fillOf)
     {
         _fillOf = fillOf;
+        _countryFill = new Node2D { Name = "SelectedCountryFill" };
         _selectedFill = new MeshInstance2D { Name = "SelectedFill" };
         _hoverFill = new MeshInstance2D { Name = "HoverFill" };
+        AddChild(_countryFill);
         AddChild(_selectedFill);
         AddChild(_hoverFill);
         _hoverCountry = Layer("HoverCountry", 1.6f, 1f, new Color(1, 1, 1, 0.45f));
-        _selectedGlow = Layer("SelectedGlow", 0f, 14f, new Color(UiTheme.Accent, 0.45f), glow: true);
+        _selectedHalo = Layer("SelectedHalo", 4.5f, 1.5f, new Color(UiTheme.Ocean, 0.55f));
         _selectedCountry = Layer("SelectedCountry", 2.2f, 1f, UiTheme.Accent);
         _selectedRegion = Layer("SelectedRegion", 1.6f, 1f, UiTheme.AccentLight);
         _hoverRegion = Layer("HoverRegion", 1.3f, 1f, new Color(1, 1, 1, 0.85f));
     }
 
-    MapLines Layer(string name, float width, float feather, Color color, bool glow = false)
+    MapLines Layer(string name, float width, float feather, Color color)
     {
-        var layer = MapLines.Create(name, [], width, feather, color, glow);
+        var layer = MapLines.Create(name, [], width, feather, color);
         AddChild(layer);
         return layer;
     }
 
     public void SetZoom(float zoom)
     {
-        foreach (var layer in new[] { _hoverCountry, _hoverRegion, _selectedGlow, _selectedCountry, _selectedRegion })
+        foreach (var layer in new[] { _hoverCountry, _hoverRegion, _selectedHalo, _selectedCountry, _selectedRegion })
             layer.SetZoom(zoom);
     }
 
@@ -73,8 +76,13 @@ public partial class MapHighlight : Node2D
             _selectedKey = selectedKey;
             _selectedAlpha = 0;
             var country = selectedCountry != null ? CountryRings(selectedCountry) : null;
-            _selectedGlow.Mesh = country;
+            _selectedHalo.Mesh = country;
             _selectedCountry.Mesh = country;
+            foreach (var child in _countryFill.GetChildren())
+                child.QueueFree();
+            if (selectedCountry != null)
+                foreach (var r in selectedCountry.Regions)
+                    _countryFill.AddChild(new MeshInstance2D { Mesh = _fillOf(r.Id) });
             _selectedRegion.Mesh = selectedRegion != null ? RegionRings(selectedRegion) : null;
             _selectedFill.Mesh = selectedRegion != null ? _fillOf(selectedRegion.Id) : null;
         }
@@ -99,7 +107,8 @@ public partial class MapHighlight : Node2D
         _hoverCountry.Modulate = new Color(1, 1, 1, hover);
         _hoverRegion.Modulate = new Color(1, 1, 1, hover);
         _selectedFill.Modulate = new Color(UiTheme.AccentLight, 0.16f * selected);
-        _selectedGlow.Modulate = new Color(1, 1, 1, selected);
+        _countryFill.Modulate = new Color(UiTheme.AccentLight, 0.1f * selected);
+        _selectedHalo.Modulate = new Color(1, 1, 1, selected);
         _selectedCountry.Modulate = new Color(1, 1, 1, selected);
         _selectedRegion.Modulate = new Color(1, 1, 1, selected);
     }
