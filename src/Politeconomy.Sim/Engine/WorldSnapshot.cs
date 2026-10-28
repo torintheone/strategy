@@ -26,7 +26,12 @@ public sealed class WorldSnapshot
     {
         var countries = new Dictionary<string, CountrySnapshot>(world.Countries.Count, StringComparer.Ordinal);
         foreach (var c in world.Countries)
-            countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal));
+        {
+            double[]? ages = null;
+            if (world.Demography?.Countries.GetValueOrDefault(c.Id) is { } d)
+                ages = [.. d.Male, .. d.Female];
+            countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal), ages);
+        }
         var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var r in world.Regions)
             if (r.IsOccupied)
@@ -58,11 +63,13 @@ public sealed class WorldSnapshot
 
 public sealed record CurrencySnapshot(string Code, bool Floating, string? Anchor, int Users, string? Bank);
 
+/// <summary>Страна в снимке. Ages — численность по пятилетним группам: сначала 17 групп мужчин, затем 17 женщин.</summary>
 public sealed record CountrySnapshot(
     string Id,
     PoliticalSystem System,
     IncomeGroup Income,
-    IReadOnlyDictionary<string, StatValue> Stats)
+    IReadOnlyDictionary<string, StatValue> Stats,
+    IReadOnlyList<double>? Ages = null)
 {
     public StatValue? Stat(string id) => Stats.GetValueOrDefault(id);
 }

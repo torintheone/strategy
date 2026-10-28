@@ -42,13 +42,13 @@ public static class EconomyModel
     /// Затем уровни (ВВП, цены, курсы, долг, население) и наблюдаемые показатели возвращаются к данным,
     /// а скрытые величины остаются разогретыми. Отчёт показывает, куда модель успела уйти от данных.
     /// </summary>
-    public static WarmupReport Warmup(World world, int months)
+    public static WarmupReport Warmup(World world, int months, IReadOnlyList<ISimSystem>? systems = null)
     {
         if (world.Economy is null)
             Setup(world);
         var warmed = world.Economy!;
         warmed.Warmup = true;
-        var monthly = Systems().Where(s => s.Frequency == SimFrequency.Monthly).ToList();
+        var monthly = (systems ?? Systems()).Where(s => s.Frequency == SimFrequency.Monthly).ToList();
         for (var m = 0; m < months; m++)
             foreach (var system in monthly)
                 system.Run(world);

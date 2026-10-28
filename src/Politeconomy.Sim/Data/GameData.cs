@@ -20,11 +20,19 @@ public sealed class GameData
     public required CurrenciesFile Currencies { get; init; }
     public required IndustriesFile Industries { get; init; }
     public required BudgetFile Budget { get; init; }
+    public required PopulationFile Population { get; init; }
+    /// <summary>Ориентиры для проверок правдоподобия (прогноз ООН); в игре не используются.</summary>
+    public BenchmarksFile? Benchmarks { get; init; }
 
     /// <summary>Коэффициенты модели экономики; если раздела нет в balance.json — значения по умолчанию.</summary>
     public EconomyBalance Economy => Balance.Economy ?? DefaultEconomy;
 
     static readonly EconomyBalance DefaultEconomy = new();
+
+    /// <summary>Коэффициенты демографии; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public DemographyBalance Demography => Balance.Demography ?? DefaultDemography;
+
+    static readonly DemographyBalance DefaultDemography = new();
 
     public IndicatorDef Indicator(string id) =>
         Indicators.Indicators.FirstOrDefault(i => i.Id == id)
@@ -50,6 +58,10 @@ public sealed class GameData
             Currencies = Read(directory, "currencies.json", ctx.CurrenciesFile),
             Industries = Read(directory, "industries.json", ctx.IndustriesFile),
             Budget = Read(directory, "budget.json", ctx.BudgetFile),
+            Population = Read(directory, "population.json", ctx.PopulationFile),
+            Benchmarks = File.Exists(Path.Combine(directory, "benchmarks", "population.json"))
+                ? Read(directory, Path.Combine("benchmarks", "population.json"), ctx.BenchmarksFile)
+                : null,
         };
     }
 

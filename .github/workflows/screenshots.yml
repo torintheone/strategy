@@ -82,7 +82,7 @@ jobs:
             "$GODOT" --path game --rendering-driver opengl3 --resolution 1920x1080 --position 0,0 \
             -- --screenshots "$RUNNER_TEMP/shots" 2>&1 | tee shots.log
           ls -la "$RUNNER_TEMP/shots"
-          test "$(ls "$RUNNER_TEMP/shots" | wc -l)" -ge 7
+          test "$(ls "$RUNNER_TEMP/shots" | wc -l)" -ge 8
 
       - uses: actions/upload-artifact@v4
         with:

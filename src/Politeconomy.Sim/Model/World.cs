@@ -87,6 +87,9 @@ public sealed class World
     /// <summary>Состояние экономики всех стран; создаётся <see cref="Economy.EconomyModel.Setup"/>.</summary>
     public Economy.WorldEconomy? Economy { get; set; }
 
+    /// <summary>Население по возрастам и полу; создаётся <see cref="Demography.DemographyModel.Setup"/>.</summary>
+    public Demography.WorldDemography? Demography { get; set; }
+
     readonly Dictionary<string, Country> _byId = new(StringComparer.Ordinal);
     readonly Dictionary<string, Region> _regionsById = new(StringComparer.Ordinal);
 

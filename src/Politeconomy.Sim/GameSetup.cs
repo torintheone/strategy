@@ -1,4 +1,5 @@
 using Politeconomy.Sim.Data;
+using Politeconomy.Sim.Demography;
 using Politeconomy.Sim.Economy;
 using Politeconomy.Sim.Engine;
 using Politeconomy.Sim.Model;
@@ -14,13 +15,25 @@ public static class GameSetup
     public static Start NewGame(GameData data, ulong? seed = null)
     {
         var world = WorldFactory.Create(data, seed);
+        DemographyModel.Setup(world);
         EconomyModel.Setup(world);
-        var report = data.Scenario.WarmupMonths > 0 ? EconomyModel.Warmup(world, data.Scenario.WarmupMonths) : null;
-        return new Start(new Simulation(world, EconomyModel.Systems()), report);
+        WarmupReport? report = null;
+        if (data.Scenario.WarmupMonths > 0)
+        {
+            // В разогреве живёт и население (рабочая сила растёт, как в данных), потом и оно возвращается к данным.
+            report = EconomyModel.Warmup(world, data.Scenario.WarmupMonths, Systems());
+            var economy = world.Economy;
+            DemographyModel.Setup(world);
+            world.Economy = economy;
+        }
+        return new Start(new Simulation(world, Systems()), report);
     }
 
+    /// <summary>Все системы модели: экономика, затем демография (порядок внутри месяца — по фазам).</summary>
+    public static IReadOnlyList<ISimSystem> Systems() => [.. EconomyModel.Systems(), .. DemographyModel.Systems()];
+
     /// <summary>Подключить системы модели к миру из сохранения.</summary>
-    public static Simulation Resume(World world) => new(world, EconomyModel.Systems());
+    public static Simulation Resume(World world) => new(world, Systems());
 
     public static Simulation Load(GameData data, string path) => Resume(SaveGame.Read(data, path));
 }

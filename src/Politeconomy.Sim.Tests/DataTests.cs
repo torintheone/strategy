@@ -110,5 +110,7 @@ public class DataTests
         Currencies = d.Currencies,
         Industries = d.Industries,
         Budget = d.Budget,
+        Population = d.Population,
+        Benchmarks = d.Benchmarks,
     };
 }

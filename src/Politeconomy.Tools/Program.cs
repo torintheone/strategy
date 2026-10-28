@@ -107,6 +107,7 @@ int Run(string mode)
         return 0;
 
     PrintExtremes(history);
+    failures += PopulationCheck(history, data);
     failures += GrowthCheck(history);
     failures += RangeCheck(world);
     Console.WriteLine(failures == 0 ? "Все проверки пройдены." : $"Нарушений: {failures}");
@@ -129,6 +130,43 @@ static int WarmupCheck(WarmupReport report, bool strict)
     if (failed && strict)
         Console.Error.WriteLine("ОШИБКА разогрев уводит показатели от данных больше чем на 10%");
     return failed && strict ? 1 : 0;
+}
+
+// Население 10 крупнейших стран к 2050 году в пределах ±15% от прогноза ООН (критерий этапа 2).
+static int PopulationCheck(List<(int Year, double WorldGdp, Dictionary<string, Dictionary<string, double>> Stats)> history, GameData data)
+{
+    const int year = 2050;
+    var at = history.FirstOrDefault(h => h.Year == year);
+    if (at.Stats is null || data.Benchmarks is null)
+        return 0;
+    var start = history[0];
+    var top = start.Stats.OrderByDescending(kv => kv.Value["population"]).Take(10).Select(kv => kv.Key).ToList();
+    Console.WriteLine();
+    Console.WriteLine($"Население в {year} году: модель и прогноз ООН, млн человек");
+    var failures = 0;
+    double modelWorld = 0, unWorld = 0;
+    foreach (var (id, years) in data.Benchmarks.Population)
+    {
+        if (!years.TryGetValue(year.ToString(), out var un) || !at.Stats.TryGetValue(id, out var s))
+            continue;
+        modelWorld += s["population"];
+        unWorld += un;
+    }
+    foreach (var id in top)
+    {
+        if (!data.Benchmarks.Population.TryGetValue(id, out var years) || !years.TryGetValue(year.ToString(), out var un))
+            continue;
+        var model = at.Stats[id]["population"];
+        var deviation = model / un - 1;
+        var ok = Math.Abs(deviation) <= 0.15;
+        if (!ok)
+            failures++;
+        Console.WriteLine($"  {id}  модель {model / 1e6,7:F0}  ООН {un / 1e6,7:F0}  отклонение {deviation,6:P1}{(ok ? "" : "  ВНЕ ±15%")}");
+    }
+    Console.WriteLine($"  Мир (страны с прогнозом): модель {modelWorld / 1e9:F2} млрд, ООН {unWorld / 1e9:F2} млрд, отклонение {modelWorld / unWorld - 1:P1}");
+    if (failures > 0)
+        Console.Error.WriteLine($"ОШИБКА население {failures} из 10 крупнейших стран к {year} году отличается от прогноза ООН больше чем на 15%");
+    return failures > 0 ? 1 : 0;
 }
 
 // Мировой рост в среднем 1–5% в год (реальный ВВП в ценах и курсах старта).
@@ -256,6 +294,10 @@ int Trace()
         var e = world.Economy![id];
         var y = e.NominalGdp;
         Console.WriteLine($"{month,3} {e.RealGdp / e.RealGdp0,8:F3} {y / e.RealGdp0,7:F3} {e.Gap * 100,7:F2} {e.PotentialGrowth * 100,6:F2} {e.Unemployment * 100,6:F1} {e.Inflation * 100,6:F1} {e.Expectations * 100,6:F1} {e.PolicyRate * 100,6:F1} {e.ExchangeRate,6:F3} {e.DebtRatio * 100,6:F1} {e.TotalRevenue / y * 100,7:F1} {e.TotalSpending / y * 100,7:F1} {e.Interest / y * 100,5:F1} {e.BalanceRatio * 100,7:F1} {e.CurrentAccount * 100,7:F1} {e.EffectiveRate * 100,5:F1} {e.MarketRate * 100,6:F1} {Fmt.Rating(e.Rating),5}");
+        if (args.Contains("--detail"))
+            Console.WriteLine($"     q={e.RealExchangeRate:F3} нефть={world.Economy!.OilPrice:F2} добыча/ВВП={e.ResourceGdp / y * 100:F1}% " +
+                string.Join(" ", data.Budget.Revenues.Select((r, k) => $"{r.Id}={e.Revenue[k] / y * 100:F1}")) +
+                $" население={e.Population / 1e6:F1}млн РС={e.LaborForce / 1e6:F1}млн");
     }
     Line(0);
     if (sim is not null)

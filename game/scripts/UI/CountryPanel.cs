@@ -19,8 +19,9 @@ public partial class CountryPanel : GlassPanel
         ("Структура экономики", ["agriculture_pct_gdp", "industry_pct_gdp", "manufacturing_pct_gdp", "services_pct_gdp",
             "resource_rents_pct_gdp", "tourism_pct_gdp", "employment_agriculture_pct", "employment_industry_pct", "employment_services_pct"]),
         ("Прогноз", ["gdp_growth_trend_pct", "inflation_anchor_pct", "unemployment_natural_pct"]),
-        ("Население", ["population", "labor_force", "life_expectancy", "fertility_rate", "urban_pct", "age_0_14_pct",
-            "age_65_plus_pct", "gini", "electricity_access_pct"]),
+        ("Население", ["population", "population_growth_pct", "median_age", "life_expectancy", "fertility_rate", "birth_rate",
+            "death_rate", "net_migration_rate", "age_0_14_pct", "age_65_plus_pct", "urban_pct", "labor_force", "gini",
+            "electricity_access_pct"]),
     ];
 
     GameData _data = null!;
@@ -38,6 +39,9 @@ public partial class CountryPanel : GlassPanel
     Label _regionsHeader = null!;
     VBoxContainer _regionList = null!;
     readonly Dictionary<string, (Control Row, Label Value)> _rows = new();
+    AgePyramid _pyramid = null!;
+    ScrollContainer _scroll = null!;
+    readonly Dictionary<string, Control> _sectionHeaders = new();
     string? _countryId;
     string? _regionId;
 
@@ -122,7 +126,7 @@ public partial class CountryPanel : GlassPanel
         _playing = UiTheme.Text("Вы управляете этой страной", 14, UiTheme.Medium, UiTheme.Accent);
         column.AddChild(_playing);
 
-        var scroll = new ScrollContainer
+        var scroll = _scroll = new ScrollContainer
         {
             SizeFlagsVertical = SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
@@ -135,7 +139,14 @@ public partial class CountryPanel : GlassPanel
         foreach (var (title, stats) in Sections)
         {
             body.AddChild(new HSeparator());
-            body.AddChild(UiTheme.Text(title.ToUpperInvariant(), 12, UiTheme.MapCountryFont, UiTheme.Accent));
+            var sectionHeader = UiTheme.Text(title.ToUpperInvariant(), 12, UiTheme.MapCountryFont, UiTheme.Accent);
+            body.AddChild(sectionHeader);
+            _sectionHeaders[title] = sectionHeader;
+            if (title == "Население")
+            {
+                _pyramid = new AgePyramid();
+                body.AddChild(_pyramid);
+            }
             foreach (var id in stats)
                 AddRow(body, id);
         }
@@ -146,6 +157,13 @@ public partial class CountryPanel : GlassPanel
         _regionList.AddThemeConstantOverride("separation", 0);
         body.AddChild(_regionList);
         body.AddChild(new HSeparator());
+    }
+
+    /// <summary>Прокрутить досье к разделу (например, «Население»).</summary>
+    public void ScrollToSection(string title)
+    {
+        if (_sectionHeaders.TryGetValue(title, out var header))
+            _scroll.ScrollVertical = (int)header.Position.Y - 8;
     }
 
     void AddRow(VBoxContainer body, string statId)
@@ -301,6 +319,7 @@ public partial class CountryPanel : GlassPanel
                 _regionControl.Text = "Под контролем: " + _data.Countries.Countries.First(c => c.Id == controller).Name;
         }
 
+        _pyramid.Show(country.Ages);
         foreach (var (id, (row, value)) in _rows)
         {
             var def = _data.Indicator(id);

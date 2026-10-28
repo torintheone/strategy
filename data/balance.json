@@ -149,5 +149,25 @@
    "wealth_floor": -6,
    "size_floor": -3
   }
+ },
+ "demography": {
+  "_comment": "Население по пятилетним группам и полу. Рождаемость и продолжительность жизни идут по прогнозу (отличие страны от прогноза на старте затухает за 10 лет), безработица снижает рождаемость. Смертность по возрастам — модель Силера (MODEL.md, «Демография»).",
+  "sex_ratio_at_birth": 1.05,
+  "sex_ratio_overrides": {"CHN": 1.11, "IND": 1.09, "VNM": 1.12, "AZE": 1.12, "ARM": 1.1, "GEO": 1.07, "ALB": 1.08, "PAK": 1.06},
+  "fertility_schedule": [0.06, 0.2, 0.28, 0.24, 0.15, 0.06, 0.01],
+  "fertility_unemployment": 0.015,
+  "fertility_floor": 1.6,
+  "fertility_speed": 0.03,
+  "life_gain_min": 0.1,
+  "life_gain_extra": 0.25,
+  "child_decline": 1.0,
+  "background": 0.0003,
+  "senescence": 0.000037,
+  "senescence_slope": 0.09,
+  "infant_male_excess": 1.15,
+  "migration_half_life_years": 30,
+  "migration_profile": [0.06, 0.05, 0.04, 0.07, 0.14, 0.16, 0.14, 0.1, 0.08, 0.05, 0.04, 0.03, 0.02, 0.01, 0.005, 0.003, 0.002],
+  "older_participation": 0.1,
+  "urban_max": 98
  }
 }

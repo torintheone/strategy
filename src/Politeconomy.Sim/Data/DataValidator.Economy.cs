@@ -86,6 +86,39 @@ public static partial class DataValidator
                 add("budget.json", $"доли расходов для группы {group} дают {spending:F3}, а не 1");
         }
 
+        // --- population.json
+        var population = data.Population.Countries.ToDictionary(r => r.Id, StringComparer.Ordinal);
+        foreach (var c in data.Countries.Countries)
+        {
+            if (!population.TryGetValue(c.Id, out var r))
+            {
+                add("population.json", $"нет демографии страны {c.Id}");
+                continue;
+            }
+            if (r.Female.Count != 17 || r.Male.Count != 17)
+                add("population.json", $"{c.Id}: нужно 17 возрастных групп у каждого пола");
+            else if (r.Female.Concat(r.Male).Any(x => x < 0 || double.IsNaN(x)))
+                add("population.json", $"{c.Id}: численность группы отрицательная или не число");
+            else if (c.Stats.TryGetValue("population", out var pop) && Math.Abs(r.Female.Sum() + r.Male.Sum() - pop.Value) > 0.02 * pop.Value)
+                add("population.json", $"{c.Id}: сумма возрастных групп не совпадает с населением страны");
+            if (r.Fertility is < 0.5 or > 9)
+                add("population.json", $"{c.Id}: рождаемость {r.Fertility} вне 0,5…9");
+            if (r.LifeExpectancyFemale is < 30 or > 95 || r.LifeExpectancyMale is < 30 or > 95)
+                add("population.json", $"{c.Id}: продолжительность жизни вне 30…95 лет");
+            if (r.InfantMortality is < 0.5 or > 200)
+                add("population.json", $"{c.Id}: младенческая смертность {r.InfantMortality} вне 0,5…200 на 1000");
+            if (r.Path is { } path && (path.Years.Count != path.Fertility.Count || path.Years.Count != path.LifeExpectancy.Count
+                                        || path.Years.Zip(path.Years.Skip(1)).Any(t => t.Second <= t.First)))
+                add("population.json", $"{c.Id}: прогноз — годы должны расти, рядов столько же, сколько лет");
+        }
+        var d = data.Demography;
+        if (d.FertilitySchedule.Count != 7 || Math.Abs(d.FertilitySchedule.Sum() - 1) > 0.01)
+            add("balance.json", "demography.fertility_schedule: 7 долей, сумма 1");
+        if (d.MigrationProfile.Count != 17 || Math.Abs(d.MigrationProfile.Sum() - 1) > 0.01)
+            add("balance.json", "demography.migration_profile: 17 долей, сумма 1");
+        if (data.Balance.Demography is null)
+            add("balance.json", "нет раздела demography с коэффициентами населения");
+
         // --- balance.json, раздел economy
         var e = data.Economy;
         if (data.Balance.Economy is null)

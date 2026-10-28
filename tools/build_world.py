@@ -552,6 +552,93 @@ def check_currencies(countries: list[dict]) -> None:
     print(f"  валют: {len(used)}, из них описаны в currencies.json: {len(used & set(known))}, остальные плавающие")
 
 
+# ---------- демография ----------
+
+AGE_GROUPS = ["0004", "0509", "1014", "1519", "2024", "2529", "3034", "3539", "4044", "4549", "5054", "5559",
+              "6064", "6569", "7074", "7579", "80UP"]
+# Похожие страны для государств без данных Всемирного банка.
+DEMOGRAPHY_DONORS = {"TWN": "KOR", "SOL": "SOM", "CYN": "CYP"}
+
+
+def build_population(records: list[dict], countries: list[dict], wb: dict, projections: dict) -> tuple[dict, dict]:
+    """Половозрастная структура, рождаемость, смертность, миграция и прогноз для data/population.json."""
+    by_id = {c["id"]: c for c in countries}
+    wb_of = {r["id"]: r["_wb"] for r in records}
+
+    def last(code: str, iso: str | None, min_year: int = 2015) -> float | None:
+        hit = latest(series(wb, code, iso), min_year) if iso else None
+        return hit[0] if hit else None
+
+    def structure(iso: str | None) -> tuple[list[float], list[float]] | None:
+        if not iso:
+            return None
+        out = []
+        for sex in ("FE", "MA"):
+            total = last(f"SP.POP.TOTL.{sex}.IN", iso)
+            shares = [last(f"SP.POP.{g}.{sex}.5Y", iso) for g in AGE_GROUPS]
+            if total is None or any(x is None for x in shares):
+                return None
+            norm = sum(shares)
+            out.append([total * x / norm for x in shares])
+        return out[0], out[1]
+
+    result = []
+    for c in countries:
+        cid = c["id"]
+        iso = wb_of.get(cid)
+        donor = wb_of.get(DEMOGRAPHY_DONORS.get(cid, ""), DEMOGRAPHY_DONORS.get(cid))
+        ages = structure(iso) or structure(donor)
+        if ages is None:
+            raise SystemExit(f"Нет возрастной структуры для {cid}")
+        female, male = ages
+        scale = c["stats"]["population"]["value"] / (sum(female) + sum(male))
+        female = [round(x * scale) for x in female]
+        male = [round(x * scale) for x in male]
+
+        def value(code: str, fallback: float) -> float:
+            v = last(code, iso)
+            if v is None and donor:
+                v = last(code, donor)
+            return fallback if v is None else v
+
+        e0 = c["stats"]["life_expectancy"]["value"]
+        e_f = value("SP.DYN.LE00.FE.IN", e0 + 2.5)
+        e_m = value("SP.DYN.LE00.MA.IN", e0 - 2.5)
+        shift = e0 - (e_f + e_m) / 2  # подгоняем к общей продолжительности жизни страны
+        urban = series(wb, "SP.URB.TOTL.IN.ZS", iso) if iso else {}
+        years = sorted(y for y in urban if 2015 <= y <= LATEST_YEAR)
+        change = (urban[years[-1]] - urban[years[-6]]) / 5 if len(years) >= 6 else 0.3
+        entry = {
+            "id": cid, "year": LATEST_YEAR, "female": female, "male": male,
+            "fertility": c["stats"]["fertility_rate"]["value"],
+            "adolescent_fertility": round(value("SP.ADO.TFRT", 40), 3),
+            "life_expectancy_female": round(e_f + shift, 3), "life_expectancy_male": round(e_m + shift, 3),
+            "infant_mortality": round(value("SP.DYN.IMRT.IN", 20), 3),
+            "net_migration": round(average(series(wb, "SM.POP.NETM", iso), 2015)[0]) if iso and series(wb, "SM.POP.NETM", iso) else 0,
+            "urban_pct": c["stats"]["urban_pct"]["value"], "urban_change": round(change, 4),
+        }
+        proj = projections.get("SP.POP.TOTL", {}).get(iso or "")
+        if proj:
+            years_p = [y for y in range(2025, 2051, 5)
+                       if str(y) in projections["SP.DYN.TFRT.IN"].get(iso, {}) and str(y) in projections["SP.DYN.LE00.IN"].get(iso, {})]
+            if len(years_p) >= 2:
+                entry["path"] = {"years": years_p,
+                                 "fertility": [projections["SP.DYN.TFRT.IN"][iso][str(y)] for y in years_p],
+                                 "life_expectancy": [projections["SP.DYN.LE00.IN"][iso][str(y)] for y in years_p]}
+        result.append(entry)
+
+    benchmarks = {}
+    for c in countries:
+        iso = wb_of.get(c["id"])
+        values = projections.get("SP.POP.TOTL", {}).get(iso or "")
+        if values:
+            benchmarks[c["id"]] = {y: round(v) for y, v in sorted(values.items())}
+    return ({"groups": ["0–4", "5–9", "10–14", "15–19", "20–24", "25–29", "30–34", "35–39", "40–44", "45–49", "50–54",
+                        "55–59", "60–64", "65–69", "70–74", "75–79", "80+"], "countries": result},
+            {"source": "ООН, World Population Prospects 2024, средний вариант (через базу Всемирного банка)",
+             "population": benchmarks})
+
+
 # ---------- регионы и карта ----------
 
 def resolve_owners(admin0: dict, un: set[str], extras: list[dict]):
@@ -909,6 +996,7 @@ def main() -> None:
     wb = load_snapshot("wb_wdi.json")
     imf = load_snapshot("imf_weo.json")
     bis = load_snapshot("bis_policy_rates.json")
+    projections = load_snapshot("wb_projections.json")["values"]
     geonames = load_snapshot("geonames_admin.json")["admin"]
     print(f"  членов ООН: {len(un)}, других государств: {len(extras)}")
 
@@ -961,6 +1049,11 @@ def main() -> None:
         "snapshots": {"wb": wb["retrieved"], "imf": imf["retrieved"], "bis": bis["retrieved"]},
         "countries": countries,
     })
+    population, benchmarks = build_population(records, countries, wb["values"], projections)
+    print(f"  демография: стран {len(population['countries'])}, с прогнозом {sum(1 for c in population['countries'] if 'path' in c)}")
+    write_json(DATA / "population.json", {"built": built, **population}, compact=True)
+    (DATA / "benchmarks").mkdir(exist_ok=True)
+    write_json(DATA / "benchmarks" / "population.json", benchmarks)
     write_json(DATA / "regions.json", {
         "built": built,
         "sources": {"geonames": "GeoNames (CC BY 4.0), население приведено к населению страны",

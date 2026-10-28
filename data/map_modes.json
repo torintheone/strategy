@@ -22,7 +22,8 @@
   {"id": "system", "name": "Политическая система", "short_name": "Строй", "kind": "politics", "hotkey": "F10"},
   {"id": "income", "name": "Уровень дохода", "short_name": "Доход", "kind": "income", "hotkey": "F11"},
   {"id": "rating", "name": "Кредитный рейтинг", "short_name": "Рейтинг", "kind": "bins", "indicator": "credit_rating", "thresholds": [6, 9, 12, 15, 18, 20], "hotkey": "F12"},
-  {"id": "policy_rate", "name": "Ключевая ставка", "short_name": "Ставка", "kind": "bins", "indicator": "policy_rate_pct", "thresholds": [2, 4, 7, 12, 20, 35]}
+  {"id": "policy_rate", "name": "Ключевая ставка", "short_name": "Ставка", "kind": "bins", "indicator": "policy_rate_pct", "thresholds": [2, 4, 7, 12, 20, 35]},
+  {"id": "median_age", "name": "Медианный возраст", "short_name": "Возраст", "kind": "bins", "indicator": "median_age", "thresholds": [20, 25, 30, 35, 40, 45]}
  ],
  "politics_colors": {
   "parliamentary_republic": "#86b6ef",

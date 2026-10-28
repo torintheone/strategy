@@ -23,11 +23,21 @@ public sealed class ProductionSystem : EconomySystem
         {
             var e = economy[country.Id];
 
-            // Население и рабочая сила (до этапа 2 — затухающий рост из данных).
-            var populationGrowth = e.PopulationGrowth0 * Math.Exp(-years * Math.Log(2) / b.PopulationHalfLifeYears);
-            var monthly = Math.Pow(1 + populationGrowth, 1.0 / 12);
-            e.Population *= monthly;
-            e.LaborForce *= monthly;
+            // Население и рабочая сила — из демографии; без неё (в тестах ядра) — затухающий рост из данных.
+            double populationGrowth;
+            if (world.Demography?.Countries.GetValueOrDefault(country.Id) is { } d)
+            {
+                e.Population = d.Total;
+                e.LaborForce = d.LaborForce(world.Data.Demography.OlderParticipation);
+                populationGrowth = d.LaborGrowth;
+            }
+            else
+            {
+                populationGrowth = e.PopulationGrowth0 * Math.Exp(-years * Math.Log(2) / b.PopulationHalfLifeYears);
+                var monthly = Math.Pow(1 + populationGrowth, 1.0 / 12);
+                e.Population *= monthly;
+                e.LaborForce *= monthly;
+            }
 
             e.PotentialGrowth = TargetGrowth(e, economy, b, years, populationGrowth);
             var path = Math.Min(1, years / b.ForecastYears);

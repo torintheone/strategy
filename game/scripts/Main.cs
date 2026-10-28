@@ -467,7 +467,7 @@ public partial class Main : Node
             return;
         var views = new (string Name, Action Setup)[]
         {
-            ("01_world", () => { SelectRegion(null); SetMode(_data.MapModes.Modes[0]); _camera.FitWorld(); }),
+            ("01_world", () => { SelectRegion(null); SetMode(_data.MapModes.Modes[0]); _camera.FitWorld(instant: true); }),
             ("02_gdp_per_capita", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "gdp_per_capita"))),
             ("03_europe", () => { SetMode(_data.MapModes.Modes[0]); ShowAt("DEU", 4.5f); }),
             ("04_dossier", () => { SelectCountry(_map.Country("RUS")); ShowAt("RUS", 2.2f); }),
@@ -480,7 +480,14 @@ public partial class Main : Node
                 SetHovered(region, country);
             }),
             ("06_closeup", () => { SetHovered(null, null); ShowAt("NLD", 16f); }),
-            ("07_inflation", () => { SetMode(_data.MapModes.Modes.First(m => m.Id == "inflation")); _camera.FitWorld(); }),
+            ("07_inflation", () => { SetMode(_data.MapModes.Modes.First(m => m.Id == "inflation")); _camera.FitWorld(instant: true); }),
+            ("08_population", () =>
+            {
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "median_age"));
+                SelectCountry(_map.Country("JPN"));
+                _camera.FitWorld(instant: true);
+                _countryPanel.ScrollToSection("Население");
+            }),
         };
         if (_shotStep > 0)
         {
