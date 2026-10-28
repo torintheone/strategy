@@ -90,6 +90,9 @@ public sealed class World
     /// <summary>Население по возрастам и полу; создаётся <see cref="Demography.DemographyModel.Setup"/>.</summary>
     public Demography.WorldDemography? Demography { get; set; }
 
+    /// <summary>Классы населения; создаются <see cref="Society.SocietyModel.Setup"/>.</summary>
+    public Society.WorldSociety? Society { get; set; }
+
     readonly Dictionary<string, Country> _byId = new(StringComparer.Ordinal);
     readonly Dictionary<string, Region> _regionsById = new(StringComparer.Ordinal);
 

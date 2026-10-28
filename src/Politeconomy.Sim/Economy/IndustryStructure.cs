@@ -11,7 +11,7 @@ namespace Politeconomy.Sim.Economy;
 public static class IndustryStructure
 {
     /// <summary>Относительная зарплата работника без образования, с профессиональным и с высшим.</summary>
-    static readonly double[] SkillWages = [0.6, 1.0, 1.8];
+    public static readonly double[] SkillWages = [0.6, 1.0, 1.8];
 
     public sealed record Shares(double[] Output, double[] Employment);
 

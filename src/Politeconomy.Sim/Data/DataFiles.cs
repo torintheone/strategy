@@ -72,7 +72,8 @@ public sealed record ScenarioFile(
     int WarmupMonths,
     string? PlayerCountry);
 
-public sealed record BalanceFile(TimeBalance Time, EconomyBalance? Economy = null, DemographyBalance? Demography = null);
+public sealed record BalanceFile(TimeBalance Time, EconomyBalance? Economy = null, DemographyBalance? Demography = null,
+    SocietyBalance? Society = null);
 
 public sealed record TimeBalance(IReadOnlyList<double> DaysPerSecond);
 
@@ -182,5 +183,6 @@ public sealed record CityRecord(
 [JsonSerializable(typeof(IndustriesFile))]
 [JsonSerializable(typeof(BudgetFile))]
 [JsonSerializable(typeof(PopulationFile))]
+[JsonSerializable(typeof(ClassesFile))]
 [JsonSerializable(typeof(BenchmarksFile))]
 internal sealed partial class DataJsonContext : JsonSerializerContext;

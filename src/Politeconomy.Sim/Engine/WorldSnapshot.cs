@@ -30,7 +30,17 @@ public sealed class WorldSnapshot
             double[]? ages = null;
             if (world.Demography?.Countries.GetValueOrDefault(c.Id) is { } d)
                 ages = [.. d.Male, .. d.Female];
-            countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal), ages);
+            List<ClassSnapshot>? classes = null;
+            if (world.Society?.Countries.GetValueOrDefault(c.Id) is { } s)
+            {
+                var total = s.Total;
+                classes = new List<ClassSnapshot>(s.Size.Length);
+                for (var k = 0; k < s.Size.Length; k++)
+                    classes.Add(new ClassSnapshot(world.Data.Classes.Classes[k].Id, s.Size[k], total > 0 ? s.Size[k] / total * 100 : 0,
+                        s.Income[k], s.Savings[k], s.StandardOfLiving[k], s.Expectations[k], s.Satisfaction[k], s.Radicalism[k], s.Influence[k]));
+            }
+            countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal),
+                ages, classes);
         }
         var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var r in world.Regions)
@@ -63,13 +73,24 @@ public sealed class WorldSnapshot
 
 public sealed record CurrencySnapshot(string Code, bool Floating, string? Anchor, int Users, string? Bank);
 
-/// <summary>Страна в снимке. Ages — численность по пятилетним группам: сначала 17 групп мужчин, затем 17 женщин.</summary>
+/// <summary>
+/// Класс в снимке: численность с семьями, доля населения (%), доход и сбережения на человека (долл. по ППС в год),
+/// уровень жизни, ожидания, удовлетворённость, радикализм (0–100) и влияние (%).
+/// </summary>
+public sealed record ClassSnapshot(string Id, double Size, double Share, double Income, double Savings,
+    double StandardOfLiving, double Expectations, double Satisfaction, double Radicalism, double Influence);
+
+/// <summary>
+/// Страна в снимке. Ages — численность по пятилетним группам: сначала 17 групп мужчин, затем 17 женщин.
+/// Classes — классы в порядке data/classes.json.
+/// </summary>
 public sealed record CountrySnapshot(
     string Id,
     PoliticalSystem System,
     IncomeGroup Income,
     IReadOnlyDictionary<string, StatValue> Stats,
-    IReadOnlyList<double>? Ages = null)
+    IReadOnlyList<double>? Ages = null,
+    IReadOnlyList<ClassSnapshot>? Classes = null)
 {
     public StatValue? Stat(string id) => Stats.GetValueOrDefault(id);
 }

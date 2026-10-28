@@ -12,6 +12,7 @@ using Politeconomy.Sim.Text;
 //   check [--years N]   — прогон и проверки правдоподобия (по умолчанию 50 лет):
 //                         разогрев не уводит показатели от данных, мировой рост 1–5% в год, нет NaN и выходов за диапазоны
 //   report [--years N] [--country ISO] — таблица показателей стран по годам
+//   classes [--years N] [--country ISO] — классы стран: численность, доходы, уровень жизни, настроение, влияние
 // Общий ключ: --data <папка> — где лежит data/ (по умолчанию ищется рядом и выше).
 
 var command = args.FirstOrDefault() ?? "help";
@@ -20,7 +21,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -58,6 +59,8 @@ switch (command)
         return Run(command);
     case "trace":
         return Trace();
+    case "classes":
+        return Classes();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -107,6 +110,7 @@ int Run(string mode)
         return 0;
 
     PrintExtremes(history);
+    PrintSociety(history);
     failures += PopulationCheck(history, data);
     failures += GrowthCheck(history);
     failures += RangeCheck(world);
@@ -268,6 +272,71 @@ static void PrintCountry(List<(int Year, double WorldGdp, Dictionary<string, Dic
         double V(string k) => s.GetValueOrDefault(k, double.NaN);
         Console.WriteLine($"  {history[i].Year} {V("gdp_growth_pct"),6:F1} {V("inflation_pct"),6:F1} {V("unemployment_pct"),5:F1} {V("policy_rate_pct"),6:F1} {V("gov_debt_pct_gdp"),6:F0} {V("budget_balance_pct_gdp"),6:F1} {V("current_account_pct_gdp"),6:F1} {V("exchange_rate_change_pct"),6:F1} {Fmt.Rating(V("credit_rating")),5}");
     }
+}
+
+// Настроение мира: средние по населению уровень жизни, удовлетворённость и радикализм; самые недовольные страны.
+static void PrintSociety(List<(int Year, double WorldGdp, Dictionary<string, Dictionary<string, double>> Stats)> history)
+{
+    Console.WriteLine();
+    Console.WriteLine("Год   Уровень жизни  Удовлетворённость  Радикализм  (средние по населению мира)");
+    for (var i = 0; i < history.Count; i += Math.Max(1, history.Count / 12))
+    {
+        var h = history[i];
+        double Mean(string key)
+        {
+            var weight = h.Stats.Values.Sum(s => s.GetValueOrDefault("population"));
+            return h.Stats.Values.Sum(s => s.GetValueOrDefault(key) * s.GetValueOrDefault("population")) / weight;
+        }
+        Console.WriteLine($"{h.Year}  {Mean("standard_of_living"),12:F1}  {Mean("satisfaction"),16:F1}  {Mean("radicalism"),10:F1}");
+    }
+    var ids = history[0].Stats.Keys.ToList();
+    var lowest = ids.Select(id => (id, v: history.Min(h => h.Stats[id].GetValueOrDefault("satisfaction", double.NaN)))).OrderBy(t => t.v).Take(6);
+    var radical = ids.Select(id => (id, v: history.Max(h => h.Stats[id].GetValueOrDefault("radicalism", double.NaN)))).OrderByDescending(t => t.v).Take(6);
+    Console.WriteLine($"Самая низкая удовлетворённость: {string.Join(", ", lowest.Select(t => $"{t.id} {t.v:F0}"))}");
+    Console.WriteLine($"Самый высокий радикализм: {string.Join(", ", radical.Select(t => $"{t.id} {t.v:F0}"))}");
+}
+
+// Классы стран на старте и (с --years N) через N лет.
+int Classes()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var focus = Option("--country");
+    string[] ids = focus is null ? ["USA", "DEU", "RUS", "CHN", "IND", "NGA", "BRA", "SAU", "JPN", "ETH"] : [focus];
+    void Print()
+    {
+        foreach (var id in ids.Where(id => world.ById(id) is not null))
+        {
+            var s = world.Society![id];
+            var c = world[id];
+            Console.WriteLine();
+            Console.WriteLine($"{id} {Fmt.Date(world.Date)}: ВВП на душу по ППС {c.Stat("gdp_ppp_per_capita"):F0}, уровень жизни {c.Stat("standard_of_living"):F0}, " +
+                $"удовлетворённость {c.Stat("satisfaction"):F0}, радикализм {c.Stat("radicalism"):F0}, поправка доходов {s.Scale:F2}");
+            Console.WriteLine("  класс                             доля%   доход   потр.  сбереж.  ур.жизни ожид. удовл. радик. влиян.%");
+            for (var k = 0; k < s.Size.Length; k++)
+                Console.WriteLine($"  {data.Classes.Classes[k].Name,-32} {s.Size[k] / s.Total * 100,6:F1} {s.Income[k],7:F0} {s.Consumption[k],7:F0} {s.Savings[k],8:F0} {s.StandardOfLiving[k],7:F1} {s.Expectations[k],6:F1} {s.Satisfaction[k],6:F1} {s.Radicalism[k],6:F1} {s.Influence[k],6:F1}");
+        }
+    }
+    if (args.Contains("--scan"))
+    {
+        // Все страны: поправка доходов и разброс уровня жизни между классами.
+        foreach (var country in world.Countries.OrderBy(c => world.Society![c.Id].Scale))
+        {
+            var s = world.Society![country.Id];
+            var min = Enumerable.Range(0, s.Size.Length).Where(k => s.Size[k] > 0).Min(k => s.StandardOfLiving[k]);
+            var max = Enumerable.Range(0, s.Size.Length).Where(k => s.Size[k] > 0).Max(k => s.StandardOfLiving[k]);
+            Console.WriteLine($"{country.Id} поправка {s.Scale:F2} ур.жизни {country.Stat("standard_of_living"):F0} ({min:F0}…{max:F0}) удовл. {country.Stat("satisfaction"):F0} радик. {country.Stat("radicalism"):F0}");
+        }
+        return 0;
+    }
+    Print();
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 0;
+    if (runYears > 0)
+    {
+        sim.RunUntil(world.Date.AddYears(runYears));
+        Print();
+    }
+    return 0;
 }
 
 // Трассировка одной страны: по умолчанию разогрев по месяцам (без толчков), с --years N — игра после разогрева.

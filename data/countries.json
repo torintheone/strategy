@@ -222,6 +222,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 83.4002,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 10.8544,
+     "year": 2020,
+     "source": "wb:SE.TER.ENRR"
+    },
     "tourism_pct_gdp": {
      "value": 0.3805,
      "year": 2020,
@@ -513,6 +523,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 75.905,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 9.9549,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.25,
      "year": 2030,
@@ -781,6 +801,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 50.2797,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 84.1496,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.2,
      "year": 2030,
@@ -965,6 +995,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "tertiary_enrollment_pct": {
+     "value": 67.6768,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.55,
      "year": 2030,
@@ -1094,6 +1129,13 @@
     },
     "employment_services_pct": {
      "value": 74.8906,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 6
+    },
+    "self_employed_pct": {
+     "value": 14.4872,
      "year": null,
      "source": "fill",
      "method": "медиана: субрегион и группа дохода",
@@ -1338,6 +1380,16 @@
      "value": 4.6832,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 5.0663,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 63.7384,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 4.8,
@@ -1613,6 +1665,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 25.5757,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 107.8226,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.55,
      "year": 2030,
@@ -1876,6 +1938,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 33.6644,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 52.7748,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.0,
      "year": 2030,
@@ -2102,6 +2174,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "tertiary_enrollment_pct": {
+     "value": 25.1156,
+     "year": 2012,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.5,
      "year": 2030,
@@ -2203,6 +2280,13 @@
     },
     "employment_services_pct": {
      "value": 82.583,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 3
+    },
+    "self_employed_pct": {
+     "value": 19.5465,
      "year": null,
      "source": "fill",
      "method": "медиана: субрегион и группа дохода",
@@ -2444,6 +2528,16 @@
      "value": 1.5331,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 16.1049,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 108.422,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.05,
@@ -2718,6 +2812,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 12.1956,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 92.6127,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 0.9,
      "year": 2030,
@@ -2987,6 +3091,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 66.9833,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 41.3414,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.5,
      "year": 2030,
@@ -3246,6 +3360,16 @@
      "value": 2.4069,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 84.8501,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 6.3845,
+     "year": 2025,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 4.3,
@@ -3536,6 +3660,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 14.5915,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 82.1476,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.3,
      "year": 2030,
@@ -3803,6 +3937,16 @@
      "value": 2.4029,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 79.8348,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 10.235,
+     "year": 2022,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 6.7,
@@ -4080,6 +4224,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 82.5985,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 10.042,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.8,
      "year": 2030,
@@ -4348,6 +4502,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 61.0416,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 23.7296,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.85,
      "year": 2030,
@@ -4609,6 +4773,16 @@
      "value": -0.1261,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 11.7955,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 69.546,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.5,
@@ -4886,6 +5060,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 2.4407,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 58.3677,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.9,
      "year": 2030,
@@ -5150,6 +5334,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 17.0548,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.5,
      "year": 2030,
@@ -5205,6 +5394,13 @@
      "source": "fill",
      "method": "медиана: субрегион",
      "n": 6
+    },
+    "tertiary_enrollment_pct": {
+     "value": 37.9583,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 4
     }
    }
   },
@@ -5430,6 +5626,16 @@
      "value": -0.7664,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 22.0631,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 45.5028,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.0,
@@ -5687,6 +5893,16 @@
      "value": -0.512,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 6.8334,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 70.1108,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 0.85,
@@ -5968,6 +6184,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 35.1801,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 24.8099,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.0,
      "year": 2030,
@@ -6231,6 +6457,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 66.2674,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.7,
      "year": 2030,
@@ -6279,6 +6510,13 @@
      "source": "fill",
      "method": "медиана: субрегион",
      "n": 8
+    },
+    "tertiary_enrollment_pct": {
+     "value": 68.8084,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 10
     }
    }
   },
@@ -6505,6 +6743,16 @@
      "value": 0.3832,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 30.2939,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 69.7318,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.5,
@@ -6748,6 +6996,16 @@
      "value": 0.0552,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 19.5465,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 50.8011,
+     "year": 2025,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.0,
@@ -7039,6 +7297,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 7.2707,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 36.4183,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.4,
      "year": 2030,
@@ -7329,6 +7597,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 69.5106,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 13.0113,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 6.85,
      "year": 2030,
@@ -7592,6 +7870,16 @@
      "value": 1.6125,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 28.1075,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 21.4088,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.9,
@@ -7874,6 +8162,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 85.3998,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 2.7752,
+     "year": 2012,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.5,
      "year": 2030,
@@ -8141,6 +8439,16 @@
      "value": 0.9391,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 12.9099,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 76.2667,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.7,
@@ -8416,6 +8724,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 16.8608,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 73.5431,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.5,
      "year": 2030,
@@ -8689,6 +9007,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 23.9175,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 110.1769,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.3,
      "year": 2030,
@@ -8961,6 +9289,16 @@
      "value": -0.1698,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 37.668,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 76.8758,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.5,
@@ -9236,6 +9574,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 70.9653,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 12.3355,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 6.9,
      "year": 2030,
@@ -9493,6 +9841,16 @@
      "value": 2.5613,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 69.2761,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 16.6614,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 4.25,
@@ -9775,6 +10133,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 85.0785,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 6.3799,
+     "year": 2020,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.5,
      "year": 2030,
@@ -10042,6 +10410,16 @@
      "value": 2.3637,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 76.7563,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 10.3812,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.95,
@@ -10311,6 +10689,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 45.6406,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 59.2901,
+     "year": 2022,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.7,
      "year": 2030,
@@ -10574,6 +10962,16 @@
      "value": 1.8542,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 57.9014,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 18.819,
+     "year": 2017,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.6,
@@ -10857,6 +11255,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 38.4571,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 24.2906,
+     "year": 2018,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.1,
      "year": 2030,
@@ -11124,6 +11532,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 26.5875,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 55.0203,
+     "year": 2019,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.5,
      "year": 2030,
@@ -11350,6 +11768,16 @@
      "value": -0.3886,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 24.897,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 43.1041,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "tourism_pct_gdp": {
      "value": 1.0731,
@@ -11677,6 +12105,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 10.1683,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 120.8773,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.0,
      "year": 2030,
@@ -11949,6 +12387,16 @@
      "value": -0.1666,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 15.7231,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 66.7283,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.95,
@@ -12223,6 +12671,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 8.1492,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 76.7097,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 0.8,
      "year": 2030,
@@ -12481,6 +12939,16 @@
      "value": 1.3052,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 51.1172,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 5.1601,
+     "year": 2011,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 5.45,
@@ -12826,6 +13294,20 @@
      "method": "медиана: субрегион и группа дохода",
      "n": 5
     },
+    "self_employed_pct": {
+     "value": 26.7449,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 5
+    },
+    "tertiary_enrollment_pct": {
+     "value": 42.3012,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 6
+    },
     "labor_force": {
      "value": 30542.0,
      "year": 2025,
@@ -13063,6 +13545,16 @@
      "value": 0.5369,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 7.9107,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 78.9604,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.55,
@@ -13337,6 +13829,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 42.1009,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 57.6509,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.75,
      "year": 2030,
@@ -13599,6 +14101,16 @@
      "value": 1.3178,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 30.1984,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 54.4283,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.05,
@@ -13875,6 +14387,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 52.3346,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 67.8851,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.9,
      "year": 2030,
@@ -14132,6 +14654,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 26.9848,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 38.0398,
+     "year": 2025,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.15,
      "year": 2030,
@@ -14301,6 +14833,16 @@
      "value": 1.9993,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 52.3655,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 3.2026,
+     "year": 2016,
+     "source": "wb:SE.TER.ENRR"
     },
     "reserves_pct_gdp": {
      "value": 9.6718,
@@ -14719,6 +15261,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 14.5417,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 93.769,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.7,
      "year": 2030,
@@ -14993,6 +15545,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 12.068,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 65.6692,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.7,
      "year": 2030,
@@ -15266,6 +15828,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 84.3117,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 5.9193,
+     "year": 2014,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 8.1,
      "year": 2030,
@@ -15532,6 +16104,16 @@
      "value": 0.4709,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 12.5437,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 110.3045,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.2,
@@ -15807,6 +16389,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 34.0756,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 75.009,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.15,
      "year": 2030,
@@ -16073,6 +16665,16 @@
      "value": 0.2458,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 13.2848,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 71.5347,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.1,
@@ -16391,6 +16993,20 @@
      "method": "медиана: группа дохода",
      "n": 49
     },
+    "self_employed_pct": {
+     "value": 61.0416,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: группа дохода",
+     "n": 49
+    },
+    "tertiary_enrollment_pct": {
+     "value": 37.6853,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 3
+    },
     "labor_force": {
      "value": 52711.0,
      "year": 2025,
@@ -16636,6 +17252,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 32.3929,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.9,
      "year": 2030,
@@ -16665,6 +17286,13 @@
      "year": 2024,
      "source": "wb:FI.RES.TOTL.CD",
      "method": "к ВВП"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 9.9549,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 7
     },
     "unemployment_natural_pct": {
      "value": 20.154,
@@ -16903,6 +17531,16 @@
      "value": 0.2969,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 13.1487,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 80.4146,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.45,
@@ -17178,6 +17816,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 46.0734,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 89.4861,
+     "year": 2025,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.0,
      "year": 2030,
@@ -17446,6 +18094,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 67.4597,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 21.3308,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.0,
      "year": 2030,
@@ -17709,6 +18367,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 81.949,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 10.8547,
+     "year": 2014,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 10.0,
      "year": 2030,
@@ -17967,6 +18635,16 @@
      "value": 2.2252,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 68.6086,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 13.4766,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 5.0,
@@ -18255,6 +18933,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 75.4686,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.35,
      "year": 2030,
@@ -18284,6 +18967,13 @@
      "year": 2019,
      "source": "wb:ST.INT.RCPT.CD",
      "method": "к ВВП"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 10.042,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 5
     },
     "unemployment_natural_pct": {
      "value": 2.673,
@@ -18518,6 +19208,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 27.4987,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.35,
      "year": 2030,
@@ -18554,6 +19249,13 @@
      "source": "fill",
      "method": "медиана: субрегион",
      "n": 9
+    },
+    "tertiary_enrollment_pct": {
+     "value": 9.9549,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 7
     },
     "unemployment_natural_pct": {
      "value": 8.337,
@@ -18793,6 +19495,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 30.4553,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 165.1134,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.6,
      "year": 2030,
@@ -19007,6 +19719,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "tertiary_enrollment_pct": {
+     "value": 99.9892,
+     "year": 2018,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.7,
      "year": 2030,
@@ -19115,6 +19832,13 @@
     },
     "employment_services_pct": {
      "value": 69.7908,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 5
+    },
+    "self_employed_pct": {
+     "value": 26.7449,
      "year": null,
      "source": "fill",
      "method": "медиана: субрегион и группа дохода",
@@ -19357,6 +20081,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 39.0814,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 27.2949,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.9,
      "year": 2030,
@@ -19589,6 +20323,16 @@
      "value": 0.5877,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 31.1144,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 26.4316,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.35,
@@ -19907,6 +20651,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 44.1056,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 23.3178,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.8,
      "year": 2030,
@@ -20174,6 +20928,16 @@
      "value": 0.2583,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 12.737,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 81.1775,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.4,
@@ -20444,6 +21208,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 76.8339,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.05,
      "year": 2030,
@@ -20486,6 +21255,13 @@
      "source": "fill",
      "method": "медиана: субрегион",
      "n": 8
+    },
+    "tertiary_enrollment_pct": {
+     "value": 42.3012,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 10
     },
     "unemployment_natural_pct": {
      "value": 14.944,
@@ -20717,6 +21493,16 @@
      "value": -0.5013,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 11.6311,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 60.5169,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.5,
@@ -20985,6 +21771,16 @@
      "value": 0.7847,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 53.337,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 44.8813,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 5.2,
@@ -21266,6 +22062,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 74.9031,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 34.4465,
+     "year": 2025,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 6.85,
      "year": 2030,
@@ -21540,6 +22346,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 13.3667,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 77.5933,
+     "year": 2022,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.35,
      "year": 2030,
@@ -21809,6 +22625,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 42.9431,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 58.6839,
+     "year": 2022,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.9,
      "year": 2030,
@@ -22074,6 +22900,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 31.6559,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.4,
      "year": 2030,
@@ -22116,6 +22947,13 @@
      "year": 2025,
      "source": "derived",
      "method": "доходы бюджета минус сальдо"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 52.7748,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 5
     },
     "interest_pct_gdp": {
      "value": 2.1265,
@@ -22353,6 +23191,16 @@
      "value": 1.5145,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 13.2968,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 76.5201,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.4,
@@ -22629,6 +23477,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 11.3422,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 56.2561,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.6,
      "year": 2030,
@@ -22902,6 +23760,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 21.1242,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 75.9497,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 0.6,
      "year": 2030,
@@ -23150,6 +24018,16 @@
      "value": -0.0739,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 35.7496,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 26.2334,
+     "year": 2015,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.6,
@@ -23429,6 +24307,16 @@
      "value": -0.279,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 11.2077,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 35.9184,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.0,
@@ -23727,6 +24615,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 9.0508,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 64.4908,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 0.6,
      "year": 2030,
@@ -23996,6 +24894,16 @@
      "value": 1.2124,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 26.1258,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 52.8613,
+     "year": 2025,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.75,
@@ -24277,6 +25185,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 64.7955,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 10.4186,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.0,
      "year": 2030,
@@ -24544,6 +25462,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 30.5029,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 53.8762,
+     "year": 2025,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 6.0,
      "year": 2030,
@@ -24807,6 +25735,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 55.5183,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 21.4437,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.2,
      "year": 2030,
@@ -25052,6 +25990,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "tertiary_enrollment_pct": {
+     "value": 4.9609,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.15,
      "year": 2030,
@@ -25106,6 +26049,13 @@
     },
     "employment_services_pct": {
      "value": 47.1708,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: группа дохода",
+     "n": 49
+    },
+    "self_employed_pct": {
+     "value": 61.0416,
      "year": null,
      "source": "fill",
      "method": "медиана: группа дохода",
@@ -25302,6 +26252,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "tertiary_enrollment_pct": {
+     "value": 93.9224,
+     "year": 2015,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.55,
      "year": 2030,
@@ -25410,6 +26365,13 @@
     },
     "employment_services_pct": {
      "value": 82.583,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 3
+    },
+    "self_employed_pct": {
+     "value": 19.5465,
      "year": null,
      "source": "fill",
      "method": "медиана: субрегион и группа дохода",
@@ -25652,6 +26614,16 @@
      "value": -0.1286,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 22.6696,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 111.8533,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.0,
@@ -25915,6 +26887,16 @@
      "value": -0.6549,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 3.1608,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 51.8967,
+     "year": 2021,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.3,
@@ -26181,6 +27163,16 @@
      "value": 1.3198,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 77.1407,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 14.8842,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.25,
@@ -26467,6 +27459,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 28.3782,
+     "year": 2023,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 54.4013,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "interest_pct_gdp": {
      "value": 0.5899,
      "year": 2024,
@@ -26705,6 +27707,16 @@
      "value": 2.0873,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 78.3414,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 10.8385,
+     "year": 2012,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 5.5,
@@ -27016,6 +28028,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 25.8794,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.4,
      "year": 2030,
@@ -27062,6 +28079,13 @@
     },
     "gini": {
      "value": 33.7,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 5
+    },
+    "tertiary_enrollment_pct": {
+     "value": 38.1219,
      "year": null,
      "source": "fill",
      "method": "медиана: субрегион",
@@ -27280,6 +28304,16 @@
      "value": 0.2251,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 26.7449,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 15.0396,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.55,
@@ -27502,6 +28536,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "tertiary_enrollment_pct": {
+     "value": 46.019,
+     "year": 2021,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.5,
      "year": 2030,
@@ -27632,6 +28671,13 @@
     },
     "employment_services_pct": {
      "value": 79.0477,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 6
+    },
+    "self_employed_pct": {
+     "value": 13.9382,
      "year": null,
      "source": "fill",
      "method": "медиана: субрегион и группа дохода",
@@ -27888,6 +28934,16 @@
      "value": -0.7327,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 42.0703,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 20.7413,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.5,
@@ -28157,6 +29213,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 38.5184,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 9.9384,
+     "year": 2018,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.5,
      "year": 2030,
@@ -28414,6 +29480,16 @@
      "value": 0.0172,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 11.4988,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 75.6177,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.45,
@@ -28703,6 +29779,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 10.3376,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 22.4104,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.05,
      "year": 2030,
@@ -28976,6 +30062,16 @@
      "value": -0.9876,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 13.6574,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 82.9174,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.0,
@@ -29251,6 +30347,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 40.0641,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 48.184,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.25,
      "year": 2030,
@@ -29400,6 +30506,11 @@
      "value": -0.7535,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 77.4807,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_ppp_per_capita": {
      "value": 87320.1477,
@@ -29556,6 +30667,13 @@
     },
     "employment_services_pct": {
      "value": 79.0477,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 6
+    },
+    "self_employed_pct": {
+     "value": 13.9382,
      "year": null,
      "source": "fill",
      "method": "медиана: субрегион и группа дохода",
@@ -29838,6 +30956,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 58.7824,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 74.7109,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.5,
      "year": 2030,
@@ -30105,6 +31233,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 88.3198,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 6.1467,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.75,
      "year": 2030,
@@ -30367,6 +31505,16 @@
      "value": 0.355,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 20.0469,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 48.4969,
+     "year": 2022,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 4.0,
@@ -30642,6 +31790,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 30.8452,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 48.2034,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.1,
      "year": 2030,
@@ -30868,6 +32026,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "tertiary_enrollment_pct": {
+     "value": 37.6853,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.75,
      "year": 2030,
@@ -30949,6 +32112,13 @@
     },
     "employment_services_pct": {
      "value": 60.7682,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: группа дохода",
+     "n": 50
+    },
+    "self_employed_pct": {
+     "value": 31.8413,
      "year": null,
      "source": "fill",
      "method": "медиана: группа дохода",
@@ -31197,6 +32367,16 @@
      "value": -0.1893,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 16.5866,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 55.0082,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.0,
@@ -31460,6 +32640,16 @@
      "value": 2.8998,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 76.3544,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 5.1275,
+     "year": 2015,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 5.3,
@@ -31732,6 +32922,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 13.9025,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 80.525,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.0,
      "year": 2030,
@@ -31993,6 +33193,16 @@
      "value": 0.6412,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 65.4728,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 20.3723,
+     "year": 2018,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.05,
@@ -32280,6 +33490,16 @@
      "value": -0.0635,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 17.3551,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 55.1743,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.0,
@@ -32569,6 +33789,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 41.178,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 69.0441,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.05,
      "year": 2030,
@@ -32837,6 +34067,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 85.3095,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 7.4631,
+     "year": 2018,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 6.45,
      "year": 2030,
@@ -33088,6 +34328,16 @@
      "value": 2.779,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 57.4482,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 5.9719,
+     "year": 2020,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 4.0,
@@ -33366,6 +34616,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 17.7888,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 45.7771,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.3,
      "year": 2030,
@@ -33636,6 +34896,16 @@
      "value": 2.5569,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 61.2585,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 2.7081,
+     "year": 2022,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.85,
@@ -33917,6 +35187,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 25.3702,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 38.5014,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.3,
      "year": 2030,
@@ -34191,6 +35471,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 36.5404,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 26.1093,
+     "year": 2022,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.05,
      "year": 2030,
@@ -34454,6 +35744,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 89.4779,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 4.1517,
+     "year": 2019,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 6.0,
      "year": 2030,
@@ -34698,6 +35998,16 @@
      "value": 2.0623,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 86.152,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 9.7415,
+     "year": 2011,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 4.2,
@@ -35009,6 +36319,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 44.2679,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 30.3635,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.5,
      "year": 2030,
@@ -35276,6 +36596,16 @@
      "value": 0.5219,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 16.7876,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 86.5938,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.25,
@@ -35551,6 +36881,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 4.8741,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 95.4988,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.1,
      "year": 2030,
@@ -35813,6 +37153,16 @@
      "value": -0.1111,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 78.5828,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 21.2916,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 5.05,
@@ -36142,6 +37492,20 @@
      "method": "медиана: группа дохода",
      "n": 55
     },
+    "self_employed_pct": {
+     "value": 13.2848,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: группа дохода",
+     "n": 55
+    },
+    "tertiary_enrollment_pct": {
+     "value": 37.6853,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 3
+    },
     "labor_force": {
      "value": 5576.0,
      "year": 2025,
@@ -36386,6 +37750,16 @@
      "value": 0.6538,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 18.4058,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 77.2406,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.45,
@@ -36657,6 +38031,16 @@
      "value": 3.9565,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 4.9615,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 42.2269,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.95,
@@ -36935,6 +38319,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 57.0025,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 10.8564,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.5,
      "year": 2030,
@@ -37210,6 +38604,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 40.5839,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 53.695,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.7,
      "year": 2030,
@@ -37477,6 +38881,16 @@
      "value": 1.0432,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 51.3474,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 71.2405,
+     "year": 2017,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.0,
@@ -37751,6 +39165,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 36.1484,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 47.4135,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.8,
      "year": 2030,
@@ -37961,6 +39385,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "tertiary_enrollment_pct": {
+     "value": 71.8428,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.15,
      "year": 2030,
@@ -38050,6 +39479,13 @@
     },
     "employment_services_pct": {
      "value": 73.1515,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: группа дохода",
+     "n": 55
+    },
+    "self_employed_pct": {
+     "value": 13.2848,
      "year": null,
      "source": "fill",
      "method": "медиана: группа дохода",
@@ -38283,6 +39719,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 78.6684,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.1,
      "year": 2030,
@@ -38360,6 +39801,13 @@
      "source": "fill",
      "method": "медиана: субрегион",
      "n": 3
+    },
+    "tertiary_enrollment_pct": {
+     "value": 17.7402,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: группа дохода",
+     "n": 44
     },
     "unemployment_natural_pct": {
      "value": 2.571,
@@ -38592,6 +40040,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 18.8897,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 80.915,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.5,
      "year": 2030,
@@ -38724,6 +40182,16 @@
      "value": 0.2721,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 62.0536,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 26.7206,
+     "year": 2018,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_per_capita_usd": {
      "value": 35951.045,
@@ -39184,6 +40652,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 14.4328,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 77.6778,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.65,
      "year": 2030,
@@ -39457,6 +40935,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 41.2527,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 37.6179,
+     "year": 2010,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.8,
      "year": 2030,
@@ -39714,6 +41202,16 @@
      "value": 3.9248,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 0.8322,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 43.0179,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 5.35,
@@ -39997,6 +41495,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 14.464,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 55.1683,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.85,
      "year": 2030,
@@ -40270,6 +41778,16 @@
      "value": -0.1089,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 6.323,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 60.3891,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.0,
@@ -40545,6 +42063,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 40.4485,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 9.4117,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 7.0,
      "year": 2030,
@@ -40807,6 +42335,16 @@
      "value": 4.6312,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 5.5469,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 83.8841,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.45,
@@ -41077,6 +42615,16 @@
      "value": 2.3763,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 46.5211,
+     "year": 2022,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 15.8646,
+     "year": 2015,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 8.0,
@@ -41361,6 +42909,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 64.321,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 15.3302,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "interest_pct_gdp": {
      "value": 4.1336,
      "year": 2024,
@@ -41615,6 +43173,16 @@
      "value": 1.2235,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 12.6918,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 97.2887,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.5,
@@ -41898,6 +43466,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 69.9438,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.95,
      "year": 2030,
@@ -41940,6 +43513,13 @@
      "source": "fill",
      "method": "медиана: группа дохода",
      "n": 41
+    },
+    "tertiary_enrollment_pct": {
+     "value": 17.7402,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: группа дохода",
+     "n": 44
     },
     "unemployment_natural_pct": {
      "value": 1.431,
@@ -42151,6 +43731,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 88.8077,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.6,
      "year": 2030,
@@ -42207,6 +43792,13 @@
      "source": "fill",
      "method": "медиана: субрегион и группа дохода",
      "n": 6
+    },
+    "tertiary_enrollment_pct": {
+     "value": 10.042,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 5
     },
     "interest_pct_gdp": {
      "value": 1.9258,
@@ -42446,6 +44038,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 35.6649,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 32.8347,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.3,
      "year": 2030,
@@ -42655,6 +44257,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "tertiary_enrollment_pct": {
+     "value": 57.5487,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.3,
      "year": 2030,
@@ -42749,6 +44356,13 @@
     },
     "employment_services_pct": {
      "value": 74.8906,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 6
+    },
+    "self_employed_pct": {
+     "value": 14.4872,
      "year": null,
      "source": "fill",
      "method": "медиана: субрегион и группа дохода",
@@ -42958,6 +44572,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 52.1792,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.7,
      "year": 2030,
@@ -43030,6 +44649,13 @@
      "source": "fill",
      "method": "медиана: субрегион и группа дохода",
      "n": 7
+    },
+    "tertiary_enrollment_pct": {
+     "value": 6.033,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 8
     },
     "interest_pct_gdp": {
      "value": 0.4744,
@@ -43272,6 +44898,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 27.0198,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 70.5826,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.5,
      "year": 2030,
@@ -43503,6 +45139,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 82.5463,
+     "year": 2023,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.45,
      "year": 2030,
@@ -43597,6 +45238,13 @@
     },
     "consumption_gov_pct_gdp": {
      "value": 10.3142,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 3
+    },
+    "tertiary_enrollment_pct": {
+     "value": 4.3967,
      "year": null,
      "source": "fill",
      "method": "медиана: субрегион и группа дохода",
@@ -43818,6 +45466,16 @@
      "value": 1.9833,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 43.9916,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 12.8211,
+     "year": 2015,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.8,
@@ -44078,6 +45736,16 @@
      "value": 0.8505,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 22.4754,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 2.5664,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 23.1,
@@ -44395,6 +46063,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 14.8728,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 54.4743,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.35,
      "year": 2030,
@@ -44669,6 +46347,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 13.9557,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 80.0807,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.1,
      "year": 2030,
@@ -44941,6 +46629,16 @@
      "value": 0.2543,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 10.2371,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 83.9988,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.85,
@@ -45217,6 +46915,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 30.2157,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 6.4355,
+     "year": 2013,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.3,
      "year": 2030,
@@ -45459,6 +47167,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "tertiary_enrollment_pct": {
+     "value": 14.5343,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.15,
      "year": 2030,
@@ -45524,6 +47237,13 @@
     },
     "employment_services_pct": {
      "value": 33.7848,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 16
+    },
+    "self_employed_pct": {
+     "value": 67.7859,
      "year": null,
      "source": "fill",
      "method": "медиана: субрегион",
@@ -45714,6 +47434,16 @@
      "value": 3.769,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 42.4366,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 43.7607,
+     "year": 2016,
+     "source": "wb:SE.TER.ENRR"
     },
     "gov_debt_pct_gdp": {
      "value": 42.5,
@@ -46046,6 +47776,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 91.5611,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 4.3967,
+     "year": 2020,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.25,
      "year": 2030,
@@ -46322,6 +48062,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 76.6223,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 14.903,
+     "year": 2020,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.5,
      "year": 2030,
@@ -46589,6 +48339,16 @@
      "value": -0.0672,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 50.6979,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 49.0776,
+     "year": 2025,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.5,
@@ -46863,6 +48623,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 31.2613,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 35.6398,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.75,
      "year": 2030,
@@ -47089,6 +48859,16 @@
      "value": 1.6456,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 32.0266,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 20.425,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.6,
@@ -47400,6 +49180,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 74.8594,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 30.9611,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 3.35,
      "year": 2030,
@@ -47672,6 +49462,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 41.7898,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 42.8612,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.55,
      "year": 2030,
@@ -47933,6 +49733,16 @@
      "value": -0.0416,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 25.7203,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 23.8493,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.4,
@@ -48231,6 +50041,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 24.943,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 38.1219,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.5,
      "year": 2030,
@@ -48506,6 +50326,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 28.5488,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 105.8861,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 4.0,
      "year": 2030,
@@ -48687,6 +50517,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "tertiary_enrollment_pct": {
+     "value": 19.351,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.9,
      "year": 2030,
@@ -48818,6 +50653,13 @@
     },
     "employment_services_pct": {
      "value": 60.7682,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: группа дохода",
+     "n": 50
+    },
+    "self_employed_pct": {
+     "value": 31.8413,
      "year": null,
      "source": "fill",
      "method": "медиана: группа дохода",
@@ -49079,6 +50921,16 @@
      "value": 2.8552,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 85.3421,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 4.0188,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 5.95,
@@ -49348,6 +51200,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 80.5261,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 4.619,
+     "year": 2014,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 6.15,
      "year": 2030,
@@ -49614,6 +51476,16 @@
      "value": 2.9157,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 21.0048,
+     "year": 2021,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 87.192,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 3.8,
@@ -49882,6 +51754,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 27.9675,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 79.9537,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.2,
      "year": 2030,
@@ -50148,6 +52030,16 @@
      "value": 0.5225,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 6.0738,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 79.3619,
+     "year": 2022,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.85,
@@ -50422,6 +52314,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 45.4358,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 59.8087,
+     "year": 2025,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 5.75,
      "year": 2030,
@@ -50653,6 +52555,16 @@
      "value": -0.6901,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 25.6729,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 41.4983,
+     "year": 2022,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.7,
@@ -50895,6 +52807,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 40.4206,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_forecast_pct": {
      "value": 5.0,
      "year": 2026,
@@ -51004,6 +52921,13 @@
      "source": "fill",
      "method": "медиана: субрегион",
      "n": 9
+    },
+    "tertiary_enrollment_pct": {
+     "value": 68.8084,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 10
     },
     "unemployment_natural_pct": {
      "value": 5.307,
@@ -51259,6 +53183,16 @@
      "value": 0.603,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 53.3468,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 37.5924,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 5.8,
@@ -51530,6 +53464,11 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 60.6162,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
     "gdp_growth_trend_pct": {
      "value": 2.5,
      "year": 2030,
@@ -51572,6 +53511,13 @@
      "source": "fill",
      "method": "медиана: группа дохода",
      "n": 41
+    },
+    "tertiary_enrollment_pct": {
+     "value": 17.7402,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: группа дохода",
+     "n": 44
     },
     "unemployment_natural_pct": {
      "value": 5.073,
@@ -51788,6 +53734,16 @@
      "value": 0.5886,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 44.5127,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 16.0264,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 2.5,
@@ -52021,6 +53977,16 @@
      "value": 2.8918,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 52.6445,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 8.8069,
+     "year": 2011,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 1.75,
@@ -52360,6 +54326,16 @@
      "year": 2025,
      "source": "wb:SP.POP.GROW"
     },
+    "self_employed_pct": {
+     "value": 17.2734,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 23.4938,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
+    },
     "gdp_growth_trend_pct": {
      "value": 1.75,
      "year": 2030,
@@ -52622,6 +54598,16 @@
      "value": 2.7711,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 71.7263,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 3.9616,
+     "year": 2012,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 5.3,
@@ -52894,6 +54880,16 @@
      "value": 1.8844,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 70.7764,
+     "year": 2025,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 7.7491,
+     "year": 2024,
+     "source": "wb:SE.TER.ENRR"
     },
     "gdp_growth_trend_pct": {
      "value": 4.2,
@@ -53246,6 +55242,20 @@
      "method": "медиана: субрегион",
      "n": 5
     },
+    "self_employed_pct": {
+     "value": 37.668,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 5
+    },
+    "tertiary_enrollment_pct": {
+     "value": 69.0441,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 5
+    },
     "labor_force": {
      "value": 10803014.0,
      "year": 2025,
@@ -53529,6 +55539,20 @@
      "method": "медиана: субрегион и группа дохода",
      "n": 5
     },
+    "self_employed_pct": {
+     "value": 22.0631,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 5
+    },
+    "tertiary_enrollment_pct": {
+     "value": 55.1743,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 5
+    },
     "labor_force": {
      "value": 731148.0,
      "year": 2025,
@@ -53752,6 +55776,16 @@
      "value": 2.3256,
      "year": 2025,
      "source": "wb:SP.POP.GROW"
+    },
+    "self_employed_pct": {
+     "value": 23.8273,
+     "year": 2022,
+     "source": "wb:SL.EMP.SELF.ZS"
+    },
+    "tertiary_enrollment_pct": {
+     "value": 44.4905,
+     "year": 2023,
+     "source": "wb:SE.TER.ENRR"
     },
     "tourism_pct_gdp": {
      "value": 1.4271,
@@ -54114,6 +56148,20 @@
      "method": "медиана: субрегион и группа дохода",
      "n": 6
     },
+    "self_employed_pct": {
+     "value": 67.7859,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 6
+    },
+    "tertiary_enrollment_pct": {
+     "value": 6.4546,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион и группа дохода",
+     "n": 6
+    },
     "gdp_usd": {
      "value": 11258995550.0,
      "year": null,
@@ -54454,6 +56502,20 @@
     },
     "population_growth_pct": {
      "value": 0.9695,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 8
+    },
+    "self_employed_pct": {
+     "value": 14.4872,
+     "year": null,
+     "source": "fill",
+     "method": "медиана: субрегион",
+     "n": 6
+    },
+    "tertiary_enrollment_pct": {
+     "value": 79.1014,
      "year": null,
      "source": "fill",
      "method": "медиана: субрегион",

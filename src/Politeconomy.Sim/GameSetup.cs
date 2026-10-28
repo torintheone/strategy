@@ -4,10 +4,11 @@ using Politeconomy.Sim.Economy;
 using Politeconomy.Sim.Engine;
 using Politeconomy.Sim.Model;
 using Politeconomy.Sim.Save;
+using Politeconomy.Sim.Society;
 
 namespace Politeconomy.Sim;
 
-/// <summary>Новая партия или загрузка: мир, экономика, разогрев и все системы модели.</summary>
+/// <summary>Новая партия или загрузка: мир, экономика, население, классы, разогрев и все системы модели.</summary>
 public static class GameSetup
 {
     public sealed record Start(Simulation Simulation, WarmupReport? Warmup);
@@ -21,16 +22,18 @@ public static class GameSetup
         if (data.Scenario.WarmupMonths > 0)
         {
             // В разогреве живёт и население (рабочая сила растёт, как в данных), потом и оно возвращается к данным.
-            report = EconomyModel.Warmup(world, data.Scenario.WarmupMonths, Systems());
+            report = EconomyModel.Warmup(world, data.Scenario.WarmupMonths, [.. EconomyModel.Systems(), .. DemographyModel.Systems()]);
             var economy = world.Economy;
             DemographyModel.Setup(world);
             world.Economy = economy;
         }
+        SocietyModel.Setup(world);
         return new Start(new Simulation(world, Systems()), report);
     }
 
-    /// <summary>Все системы модели: экономика, затем демография (порядок внутри месяца — по фазам).</summary>
-    public static IReadOnlyList<ISimSystem> Systems() => [.. EconomyModel.Systems(), .. DemographyModel.Systems()];
+    /// <summary>Все системы модели: экономика, демография, классы (порядок внутри месяца — по фазам).</summary>
+    public static IReadOnlyList<ISimSystem> Systems() =>
+        [.. EconomyModel.Systems(), .. DemographyModel.Systems(), .. SocietyModel.Systems()];
 
     /// <summary>Подключить системы модели к миру из сохранения.</summary>
     public static Simulation Resume(World world) => new(world, Systems());

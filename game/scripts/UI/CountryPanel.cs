@@ -22,6 +22,7 @@ public partial class CountryPanel : GlassPanel
         ("Население", ["population", "population_growth_pct", "median_age", "life_expectancy", "fertility_rate", "birth_rate",
             "death_rate", "net_migration_rate", "age_0_14_pct", "age_65_plus_pct", "urban_pct", "labor_force", "gini",
             "electricity_access_pct"]),
+        ("Классы", ["standard_of_living", "satisfaction", "radicalism"]),
     ];
 
     GameData _data = null!;
@@ -40,6 +41,7 @@ public partial class CountryPanel : GlassPanel
     VBoxContainer _regionList = null!;
     readonly Dictionary<string, (Control Row, Label Value)> _rows = new();
     AgePyramid _pyramid = null!;
+    ClassTable _classes = null!;
     ScrollContainer _scroll = null!;
     readonly Dictionary<string, Control> _sectionHeaders = new();
     string? _countryId;
@@ -149,6 +151,12 @@ public partial class CountryPanel : GlassPanel
             }
             foreach (var id in stats)
                 AddRow(body, id);
+            if (title == "Классы")
+            {
+                _classes = new ClassTable();
+                _classes.Setup(_data.Classes.Classes);
+                body.AddChild(_classes);
+            }
         }
         body.AddChild(new HSeparator());
         _regionsHeader = UiTheme.Text("", 12, UiTheme.SemiBold, UiTheme.TextMuted);
@@ -159,7 +167,7 @@ public partial class CountryPanel : GlassPanel
         body.AddChild(new HSeparator());
     }
 
-    /// <summary>Прокрутить досье к разделу (например, «Население»).</summary>
+    /// <summary>Прокрутить досье к разделу (например, «Население» или «Классы»).</summary>
     public void ScrollToSection(string title)
     {
         if (_sectionHeaders.TryGetValue(title, out var header))
@@ -320,6 +328,7 @@ public partial class CountryPanel : GlassPanel
         }
 
         _pyramid.Show(country.Ages);
+        _classes.Show(country.Classes);
         foreach (var (id, (row, value)) in _rows)
         {
             var def = _data.Indicator(id);

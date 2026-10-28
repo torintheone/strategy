@@ -95,6 +95,9 @@ INDICATORS = [
     ("employment_industry_pct", [("wb", "SL.IND.EMPL.ZS")], 2015, "median"),
     ("employment_services_pct", [("wb", "SL.SRV.EMPL.ZS")], 2015, "median"),
     ("population_growth_pct", [("wb", "SP.POP.GROW")], 2015, "median"),
+    # состав классов (этап 2)
+    ("self_employed_pct", [("wb", "SL.EMP.SELF.ZS")], 2015, "median"),
+    ("tertiary_enrollment_pct", [("wb", "SE.TER.ENRR")], 2010, "median"),
 ]
 GNI_ATLAS = "NY.GNP.PCAP.CD"
 # Правдоподобные пределы: значение вне них считаем ошибкой источника и заполняем как пропуск.

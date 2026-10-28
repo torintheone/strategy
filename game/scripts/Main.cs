@@ -442,13 +442,16 @@ public partial class Main : Node
                 // Экономика должна прожить хотя бы два месяца: показатели пересчитаны моделью и с разбором «почему».
                 var snapshot = _host!.Snapshot;
                 var inflation = snapshot.Countries["RUS"].Stat("inflation_pct");
+                var classes = snapshot.Countries["RUS"].Classes;
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
-                    && inflation is { Source: StatSources.Model, Factors.Count: > 0 } && double.IsFinite(inflation.Value);
+                    && inflation is { Source: StatSources.Model, Factors.Count: > 0 } && double.IsFinite(inflation.Value)
+                    && classes is { Count: 10 } && classes.All(c => double.IsFinite(c.Satisfaction));
                 if (_host.Error != null)
                     GD.PrintErr(_host.Error.ToString());
                 GD.Print($"SMOKE {(ok ? "OK" : "FAIL")}: дата {snapshot.Date:yyyy-MM-dd}, стран {snapshot.Countries.Count}, " +
                          $"регионов {_map.Regions.Count}, занято {snapshot.Occupied.Count}, инфляция в России {inflation?.Value:F2}%, " +
+                         $"удовлетворённость {snapshot.Countries["RUS"].Stat("satisfaction")?.Value:F0}, " +
                          $"шаг {_host.LastStepMs:F2} мс");
                 GetTree().Quit(ok ? 0 : 1);
                 _smokeStep++;
@@ -488,6 +491,14 @@ public partial class Main : Node
                 _camera.FitWorld(instant: true);
                 _countryPanel.ScrollToSection("Население");
             }),
+            ("09_classes", () =>
+            {
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "living"));
+                SelectCountry(_map.Country("BRA"));
+                _camera.FitWorld(instant: true);
+                _countryPanel.ScrollToSection("Классы");
+            }),
+            ("10_satisfaction", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "satisfaction"))),
         };
         if (_shotStep > 0)
         {

@@ -119,6 +119,31 @@ public static partial class DataValidator
         if (data.Balance.Demography is null)
             add("balance.json", "нет раздела demography с коэффициентами населения");
 
+        // --- classes.json и раздел society
+        var classes = data.Classes.Classes;
+        if (!classes.Select(c => c.Id).SequenceEqual(Society.ClassIds.Ids))
+            add("classes.json", $"нужны классы в порядке: {string.Join(", ", Society.ClassIds.Ids)}");
+        foreach (var c in classes)
+        {
+            if (c.Organization is < 0 or > 1)
+                add("classes.json", $"{c.Id}: организованность вне 0…1");
+            if (c.Radicalism is < 0 or > 100)
+                add("classes.json", $"{c.Id}: радикализм вне 0…100");
+            if (c.Saving is < 0 or > 0.6)
+                add("classes.json", $"{c.Id}: норма сбережений вне 0…0,6");
+            if (c.Property < 0 || c.JobRisk < 0 || c.Inflation < 0)
+                add("classes.json", $"{c.Id}: property, job_risk и inflation не могут быть отрицательными");
+        }
+        var society = data.Society;
+        if (data.Balance.Society is null)
+            add("balance.json", "нет раздела society с коэффициентами классов");
+        if (society.TaxWeights.Count != classes.Count)
+            add("balance.json", $"society.tax_weights: нужно {classes.Count} чисел — по одному на класс");
+        if (society.PensionShare + society.BenefitShare > 1)
+            add("balance.json", "society: pension_share + benefit_share больше 1");
+        if (society.ExpectationMonths < 1 || society.SatisfactionMonths < 1)
+            add("balance.json", "society: expectation_months и satisfaction_months — не меньше месяца");
+
         // --- balance.json, раздел economy
         var e = data.Economy;
         if (data.Balance.Economy is null)

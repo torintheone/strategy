@@ -33,6 +33,7 @@ public static class Fmt
             "number0" => Number(v, 0),
             "number1" => Number(v, 1),
             "number2" => Number(v, 2),
+            "number1_signed" => Signed(v, 1),
             "rating" => Rating(v),
             _ => Number(v, 1),
         };

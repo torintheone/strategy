@@ -111,6 +111,7 @@ public class DataTests
         Industries = d.Industries,
         Budget = d.Budget,
         Population = d.Population,
+        Classes = d.Classes,
         Benchmarks = d.Benchmarks,
     };
 }

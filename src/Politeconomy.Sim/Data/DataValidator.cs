@@ -56,6 +56,11 @@ public static partial class DataValidator
         ["credit_rating"] = (0, 21),
         ["defaults"] = (0, 20),
         ["exchange_rate_change_pct"] = (-90, 1000),
+        ["self_employed_pct"] = (0, 100),
+        ["tertiary_enrollment_pct"] = (0, 200),
+        ["standard_of_living"] = (0, 100),
+        ["satisfaction"] = (0, 100),
+        ["radicalism"] = (0, 100),
     };
 
     static readonly HashSet<string> Formats = ["people", "money_big", "money", "percent", "percent_signed", "percent_gdp", "percent_gdp_signed", "years", "number0", "number1", "number2", "rating"];

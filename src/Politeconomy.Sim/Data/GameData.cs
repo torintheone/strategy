@@ -21,6 +21,7 @@ public sealed class GameData
     public required IndustriesFile Industries { get; init; }
     public required BudgetFile Budget { get; init; }
     public required PopulationFile Population { get; init; }
+    public required ClassesFile Classes { get; init; }
     /// <summary>Ориентиры для проверок правдоподобия (прогноз ООН); в игре не используются.</summary>
     public BenchmarksFile? Benchmarks { get; init; }
 
@@ -33,6 +34,11 @@ public sealed class GameData
     public DemographyBalance Demography => Balance.Demography ?? DefaultDemography;
 
     static readonly DemographyBalance DefaultDemography = new();
+
+    /// <summary>Коэффициенты классов; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public SocietyBalance Society => Balance.Society ?? DefaultSociety;
+
+    static readonly SocietyBalance DefaultSociety = new();
 
     public IndicatorDef Indicator(string id) =>
         Indicators.Indicators.FirstOrDefault(i => i.Id == id)
@@ -59,6 +65,7 @@ public sealed class GameData
             Industries = Read(directory, "industries.json", ctx.IndustriesFile),
             Budget = Read(directory, "budget.json", ctx.BudgetFile),
             Population = Read(directory, "population.json", ctx.PopulationFile),
+            Classes = Read(directory, "classes.json", ctx.ClassesFile),
             Benchmarks = File.Exists(Path.Combine(directory, "benchmarks", "population.json"))
                 ? Read(directory, Path.Combine("benchmarks", "population.json"), ctx.BenchmarksFile)
                 : null,
