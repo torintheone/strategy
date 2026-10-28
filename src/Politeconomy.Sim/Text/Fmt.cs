@@ -28,6 +28,7 @@ public static class Fmt
             "percent" => Number(v, 1) + "%",
             "percent_signed" => Signed(v, 1) + "%",
             "percent_gdp" => Number(v, 1) + "%" + Nbsp + "ВВП",
+            "percent_gdp_signed" => Signed(v, 1) + "%" + Nbsp + "ВВП",
             "years" => Number(v, 1) + Nbsp + "года",
             "number1" => Number(v, 1),
             "number2" => Number(v, 2),
@@ -43,7 +44,7 @@ public static class Fmt
         "money_big" => MoneyBig(v),
         "money" => Number(v, 0) + Nbsp + "$",
         "percent" or "percent_gdp" => Number(v, v == Math.Round(v) ? 0 : 1) + "%",
-        "percent_signed" => Signed(v, v == Math.Round(v) ? 0 : 1) + "%",
+        "percent_signed" or "percent_gdp_signed" => Signed(v, v == Math.Round(v) ? 0 : 1) + "%",
         "years" => Number(v, 0),
         _ => Number(v, v == Math.Round(v) ? 0 : 1),
     };

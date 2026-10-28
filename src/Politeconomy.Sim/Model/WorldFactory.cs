@@ -23,6 +23,12 @@ public static class WorldFactory
             countries.Add(country);
         }
 
+        var control = data.Control.Control.ToDictionary(c => c.Region, c => c.Controller, StringComparer.Ordinal);
+        var regions = data.Regions.Regions
+            .OrderBy(r => r.Id, StringComparer.Ordinal)
+            .Select(r => new Region { Id = r.Id, Info = r, Owner = r.Country, Controller = control.GetValueOrDefault(r.Id, r.Country) })
+            .ToList();
+
         var actualSeed = seed ?? data.Scenario.Seed;
         return new World
         {
@@ -32,6 +38,7 @@ public static class WorldFactory
             Random = new DeterministicRandom(actualSeed),
             PlayerCountry = data.Scenario.PlayerCountry,
             Countries = countries,
+            Regions = regions,
         };
     }
 

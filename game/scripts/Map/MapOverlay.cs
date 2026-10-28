@@ -6,7 +6,7 @@ using Politeconomy.Sim.Geo;
 namespace Politeconomy.Game.Map;
 
 /// <summary>
-/// Подписи стран и городов и кружки-метки мелких стран. Рисуется в экранных координатах поверх карты,
+/// Подписи стран, регионов и городов и кружки-метки мелких стран. Рисуется в экранных координатах поверх карты,
 /// поэтому текст не растягивается при масштабе. Подписи, которые не помещаются или налезают, пропускаются.
 /// </summary>
 public partial class MapOverlay : Control
@@ -14,6 +14,8 @@ public partial class MapOverlay : Control
     public const float MarkerRadius = 4.5f;
     /// <summary>Страна рисуется меткой, если на экране она меньше этого размера.</summary>
     public const float MarkerThreshold = 7f;
+    /// <summary>С какого масштаба показываются подписи регионов.</summary>
+    public const float RegionLabelZoom = 1.2f;
 
     const float LabelScale = 1f / 9f;
     const int MinLabelSize = 10;
@@ -21,11 +23,14 @@ public partial class MapOverlay : Control
 
     WorldMap _map = null!;
     IReadOnlyDictionary<string, string> _names = null!;
+    IReadOnlyDictionary<string, string> _regionNames = null!;
     IReadOnlyList<CityRecord> _cities = null!;
-    IReadOnlyList<MapRegion> _bySize = null!;
+    IReadOnlyList<MapCountry> _countriesBySize = null!;
+    IReadOnlyList<MapRegion> _regionsBySize = null!;
     readonly List<Rect2> _placed = [];
 
-    public IReadOnlyDictionary<string, Color> Colors { get; set; } = new Dictionary<string, Color>();
+    /// <summary>Цвет страны на карте для её метки (по стране, которая её контролирует).</summary>
+    public IReadOnlyDictionary<string, Color> CountryColors { get; set; } = new Dictionary<string, Color>();
     public string? Hovered { get; set; }
     public string? Selected { get; set; }
     public float Zoom { get; set; } = 1;
@@ -34,9 +39,12 @@ public partial class MapOverlay : Control
     {
         _map = map;
         _names = data.Countries.Countries.ToDictionary(c => c.Id, c => c.ShortName);
-        _bySize = map.Regions.OrderByDescending(r => r.Main.Area).ToList();
+        _regionNames = data.Regions.Regions.ToDictionary(r => r.Id, r => r.Name);
+        _countriesBySize = map.Countries.OrderByDescending(c => c.MainArea).ToList();
+        _regionsBySize = map.Regions.Where(r => !r.IsNeutral).OrderByDescending(r => r.Main.Area).ToList();
         _cities = data.Cities.Cities
             .OrderByDescending(c => c.Capital)
+            .ThenByDescending(c => c.RegionalCapital)
             .ThenByDescending(c => c.Population)
             .ToList();
         MouseFilter = MouseFilterEnum.Ignore;
@@ -44,8 +52,8 @@ public partial class MapOverlay : Control
     }
 
     /// <summary>Мелкая ли страна при текущем масштабе — тогда она рисуется кружком.</summary>
-    public bool IsMarker(MapRegion region) =>
-        region.IsCountry && Math.Max(region.Bounds.Width, region.Bounds.Height) * Zoom < MarkerThreshold;
+    public bool IsMarker(MapCountry country) =>
+        Math.Max(country.Bounds.Width, country.Bounds.Height) * Zoom < MarkerThreshold;
 
     public override void _Draw()
     {
@@ -58,56 +66,92 @@ public partial class MapOverlay : Control
         DrawMarkers(xf, screen);
         DrawCountryLabels(xf, screen);
         DrawCities(xf, screen);
+        if (Zoom >= RegionLabelZoom)
+            DrawRegionLabels(xf, screen);
+        DrawTerritoryLabels(xf, screen);
     }
 
     void DrawMarkers(Transform2D xf, Rect2 screen)
     {
-        foreach (var region in _map.Regions)
+        foreach (var country in _map.Countries)
         {
-            if (!IsMarker(region))
+            if (!IsMarker(country))
                 continue;
-            var p = xf * new Vector2(region.LabelX, region.LabelY);
+            var p = xf * new Vector2(country.LabelX, country.LabelY);
             if (!screen.Grow(10).HasPoint(p))
                 continue;
-            var fill = Colors.TryGetValue(region.Id, out var c) ? c : UiTheme.TextMuted;
+            var fill = CountryColors.TryGetValue(country.Id, out var c) ? c : UiTheme.TextMuted;
             DrawCircle(p, MarkerRadius, fill);
-            var ring = region.Id == Selected ? UiTheme.Accent
-                : region.Id == Hovered ? new Color(1, 1, 1, 0.8f)
+            var ring = country.Id == Selected ? UiTheme.Accent
+                : country.Id == Hovered ? new Color(1, 1, 1, 0.8f)
                 : UiTheme.MapOutline;
-            DrawArc(p, MarkerRadius, 0, Mathf.Tau, 24, ring, region.Id == Selected ? 2f : 1.2f, true);
+            DrawArc(p, MarkerRadius, 0, Mathf.Tau, 24, ring, country.Id == Selected ? 2f : 1.2f, true);
         }
     }
 
     void DrawCountryLabels(Transform2D xf, Rect2 screen)
     {
-        var font = UiTheme.SemiBold;
-        foreach (var region in _bySize)
+        // Когда видны регионы, названия стран бледнее, чтобы не спорить с ними.
+        var alpha = Zoom >= RegionLabelZoom ? 0.55f : 0.88f;
+        foreach (var country in _countriesBySize)
         {
-            var main = region.Main;
-            var size = (int)Math.Min(MaxLabelSize, Mathf.Sqrt(main.Area) * Zoom * LabelScale);
-            if (size < MinLabelSize)
-                continue;
-            var text = region.IsCountry ? _names.GetValueOrDefault(region.Id, region.Id) : region.Name ?? region.Id;
-            var room = main.Bounds.Width * Zoom * 0.9f;
-            var width = font.GetStringSize(text, HorizontalAlignment.Left, -1, size).X;
-            while (width > room && size > MinLabelSize)
-            {
-                size--;
-                width = font.GetStringSize(text, HorizontalAlignment.Left, -1, size).X;
-            }
-            if (width > room)
-                continue;
-            var center = xf * new Vector2(region.LabelX, region.LabelY);
-            var height = font.GetHeight(size);
-            var rect = new Rect2(center.X - width / 2, center.Y - height / 2, width, height);
-            if (!screen.Intersects(rect) || Overlaps(rect))
-                continue;
-            _placed.Add(rect);
-            var baseline = new Vector2(rect.Position.X, center.Y + (font.GetAscent(size) - font.GetDescent(size)) / 2);
-            var ink = region.IsCountry ? new Color(UiTheme.TextPrimary, 0.88f) : UiTheme.TextMuted;
-            DrawStringOutline(font, baseline, text, HorizontalAlignment.Left, -1, size, 4, UiTheme.MapOutline);
-            DrawString(font, baseline, text, HorizontalAlignment.Left, -1, size, ink);
+            var text = _names.GetValueOrDefault(country.Id, country.Id);
+            var size = (int)Math.Min(MaxLabelSize, Mathf.Sqrt(country.MainArea) * Zoom * LabelScale);
+            PlaceLabel(xf, screen, text, country.LabelX, country.LabelY, size, country.MainBounds.Width * Zoom * 0.9f,
+                UiTheme.SemiBold, new Color(UiTheme.TextPrimary, alpha), 4);
         }
+    }
+
+    void DrawRegionLabels(Transform2D xf, Rect2 screen)
+    {
+        foreach (var region in _regionsBySize)
+        {
+            var size = (int)Math.Min(16, Mathf.Sqrt(region.Main.Area) * Zoom * LabelScale * 0.8f);
+            if (size < MinLabelSize)
+                break; // дальше регионы ещё мельче
+            var text = _regionNames.GetValueOrDefault(region.Id, "");
+            PlaceLabel(xf, screen, text, region.LabelX, region.LabelY, size, region.Main.Bounds.Width * Zoom * 0.95f,
+                UiTheme.Regular, new Color(UiTheme.TextSecondary, 0.9f), 3);
+        }
+    }
+
+    void DrawTerritoryLabels(Transform2D xf, Rect2 screen)
+    {
+        foreach (var t in _map.Territories)
+        {
+            var region = _map.Regions.FirstOrDefault(r => r.Territory == t.Id);
+            if (region == null)
+                continue;
+            var size = (int)Math.Min(18, Mathf.Sqrt(region.Main.Area) * Zoom * LabelScale);
+            PlaceLabel(xf, screen, t.Name, t.LabelX, t.LabelY, size, region.Main.Bounds.Width * Zoom * 0.9f,
+                UiTheme.Regular, UiTheme.TextMuted, 3);
+        }
+    }
+
+    /// <summary>Подпись по центру точки: уменьшается, пока не влезет в ширину, и пропускается, если налезает на другую.</summary>
+    void PlaceLabel(Transform2D xf, Rect2 screen, string text, float x, float y, int size, float room, Font font, Color ink, int outline)
+    {
+        if (size < MinLabelSize || text.Length == 0)
+            return;
+        var center = xf * new Vector2(x, y);
+        if (!screen.Grow(400).HasPoint(center))
+            return;
+        var width = font.GetStringSize(text, HorizontalAlignment.Left, -1, size).X;
+        while (width > room && size > MinLabelSize)
+        {
+            size--;
+            width = font.GetStringSize(text, HorizontalAlignment.Left, -1, size).X;
+        }
+        if (width > room)
+            return;
+        var height = font.GetHeight(size);
+        var rect = new Rect2(center.X - width / 2, center.Y - height / 2, width, height);
+        if (!screen.Intersects(rect) || Overlaps(rect))
+            return;
+        _placed.Add(rect);
+        var baseline = new Vector2(rect.Position.X, center.Y + (font.GetAscent(size) - font.GetDescent(size)) / 2);
+        DrawStringOutline(font, baseline, text, HorizontalAlignment.Left, -1, size, outline, UiTheme.MapOutline);
+        DrawString(font, baseline, text, HorizontalAlignment.Left, -1, size, ink);
     }
 
     void DrawCities(Transform2D xf, Rect2 screen)
@@ -123,7 +167,8 @@ public partial class MapOverlay : Control
             var visible = (city.Capital && Zoom >= 0.8f)
                 || (city.Population >= 5_000_000 && Zoom >= 1.4f)
                 || (city.Population >= 1_000_000 && Zoom >= 2.4f)
-                || Zoom >= 4f;
+                || (city.RegionalCapital && Zoom >= 3f)
+                || Zoom >= 5f;
             if (!visible)
                 continue;
             var p = xf * new Vector2(city.X, city.Y);
@@ -141,7 +186,7 @@ public partial class MapOverlay : Control
             }
             else
             {
-                DrawCircle(p, 2.5f, UiTheme.TextSecondary);
+                DrawCircle(p, city.RegionalCapital ? 2.8f : 2.2f, UiTheme.TextSecondary);
             }
             var baseline = new Vector2(p.X + 7, p.Y - height / 2 + ascent);
             DrawStringOutline(font, baseline, city.Name, HorizontalAlignment.Left, -1, size, 3, UiTheme.MapOutline);

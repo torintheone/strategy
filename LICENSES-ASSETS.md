@@ -6,10 +6,13 @@
 
 | Что | Источник | Лицензия | Где используется |
 | --- | --- | --- | --- |
-| Границы стран 1:50m, населённые пункты | [Natural Earth](https://www.naturalearthdata.com/), версия 5.1.2, [репозиторий проекта](https://github.com/nvkelso/natural-earth-vector) | Общественное достояние | `data/map/world.json`, `data/map/cities.json` |
-| Население, ВВП, рост, инфляция, безработица, госдолг, налоги, торговля, структура экономики, демография, неравенство, военные расходы, доступ к электричеству, ВНД для групп дохода | Всемирный банк, [World Development Indicators](https://datacatalog.worldbank.org/search/dataset/0037712), через зеркало [datasets/world-development-indicators](https://github.com/datasets/world-development-indicators) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `data/countries.json` |
+| Границы стран и регионов 1:10m, населённые пункты | [Natural Earth](https://www.naturalearthdata.com/), версия 5.1.2, [репозиторий проекта](https://github.com/nvkelso/natural-earth-vector) | Общественное достояние | `data/map/world.json`, `data/regions.json` |
+| Население, ВВП, рост, инфляция, безработица, налоги, торговля, структура экономики, демография, неравенство, военные расходы, доступ к электричеству, ВНД для групп дохода | Всемирный банк, [World Development Indicators](https://datacatalog.worldbank.org/search/dataset/0037712), API Всемирного банка | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `data/countries.json` |
+| Госдолг, сальдо, доходы и расходы бюджета, текущий счёт; показатели Тайваня | МВФ, [World Economic Outlook](https://www.imf.org/en/Publications/WEO), DataMapper API | [Условия МВФ](https://www.imf.org/external/terms.htm): свободное использование с указанием источника | `data/countries.json` |
+| Население регионов, города от 15 тыс. жителей, русские названия | [GeoNames](https://www.geonames.org/) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | `data/regions.json`, `data/map/cities.json` |
 | Коды стран, членство в ООН, русские названия, регионы | [mledoze/countries](https://github.com/mledoze/countries) | [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) | `data/countries.json` |
 | Тип политической системы | Ручная классификация, черновик составлен Claude Code | — | `data/politics.json` |
+| Упрощение границ | [mapshaper](https://github.com/mbloch/mapshaper) (инструмент сборки, в игру не входит) | MPL 2.0 | `tools/` |
 
 Если в источниках нет значения для страны, игра подставляет медиану по похожим странам. Каждое такое место помечено в `data/countries.json` (`"source": "fill"`), а в игре — значком «≈».
 

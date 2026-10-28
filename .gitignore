@@ -14,5 +14,6 @@ TestResults/
 # Сборки и кэш загрузок
 build/
 tools/.cache/
+tools/node_modules/
 __pycache__/
 *.tmp

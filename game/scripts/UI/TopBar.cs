@@ -8,7 +8,7 @@ namespace Politeconomy.Game.UI;
 /// <summary>Верхняя панель: дата, пауза и скорость, ключевые показатели страны игрока.</summary>
 public partial class TopBar : PanelContainer
 {
-    static readonly string[] KeyStats = ["gdp_growth_pct", "inflation_pct", "unemployment_pct", "gov_debt_pct_gdp"];
+    static readonly string[] KeyStats = ["gdp_growth_pct", "inflation_pct", "unemployment_pct", "budget_balance_pct_gdp", "gov_debt_pct_gdp"];
 
     GameData _data = null!;
     Label _date = null!;
@@ -79,10 +79,8 @@ public partial class TopBar : PanelContainer
         row.AddChild(new VSeparator());
 
         foreach (var id in KeyStats)
-            AddChip(row, id, data.Indicator(id).Name);
-        AddChip(row, "budget", "Бюджет");
+            AddChip(row, id, id == "budget_balance_pct_gdp" ? "Бюджет" : data.Indicator(id).Name);
         AddChip(row, "approval", "Одобрение");
-        _chips["budget"].Box.TooltipText = "Сальдо бюджета появится на этапе 1, когда заработает модель финансов.";
         _chips["approval"].Box.TooltipText = "Одобрение власти появится на этапе 4, когда заработает политика.";
     }
 
@@ -123,7 +121,8 @@ public partial class TopBar : PanelContainer
             var (box, value) = _chips[stat];
             var def = _data.Indicator(stat);
             var s = player?.Stat(stat);
-            value.Text = s == null ? "—" : (s.IsEstimate ? "≈" : "") + Fmt.Value(def.Format == "percent_gdp" ? "percent" : def.Format, s.Value);
+            var shortFormat = def.Format switch { "percent_gdp" => "percent", "percent_gdp_signed" => "percent_signed", _ => def.Format };
+            value.Text = s == null ? "—" : (s.IsEstimate ? "≈" : "") + Fmt.Value(shortFormat, s.Value);
             box.TooltipText = player == null ? def.Description : Explain.Stat(def, s);
         }
     }

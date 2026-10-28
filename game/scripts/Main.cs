@@ -20,6 +20,8 @@ public partial class Main : Node
     GameData _data = null!;
     WorldMap _map = null!;
     SimulationHost? _host;
+    Dictionary<string, RegionRecord> _regionInfo = null!;
+    Dictionary<string, string> _countryNames = null!;
 
     MapView _mapView = null!;
     MapCamera _camera = null!;
@@ -31,9 +33,12 @@ public partial class Main : Node
     Control _uiRoot = null!;
 
     MapModeView _mode = null!;
-    readonly Dictionary<string, Color> _colors = new(StringComparer.Ordinal);
-    MapRegion? _hovered;
-    MapRegion? _selected;
+    readonly Dictionary<string, Color> _regionColors = new(StringComparer.Ordinal);
+    readonly Dictionary<string, Color> _countryColors = new(StringComparer.Ordinal);
+    MapRegion? _hoveredRegion;
+    MapCountry? _hoveredCountry;
+    MapRegion? _selectedRegion;
+    MapCountry? _selectedCountry;
     long _shownVersion = -1;
     bool _dragging;
     bool _dragMoved;
@@ -44,6 +49,7 @@ public partial class Main : Node
     bool _smoke;
     double _smokeTime;
     int _smokeStep;
+    string? _smokeOccupied;
 
     public override void _Ready()
     {
@@ -71,6 +77,8 @@ public partial class Main : Node
         }
 
         _map = WorldMap.From(_data.Map);
+        _regionInfo = _data.Regions.Regions.ToDictionary(r => r.Id, StringComparer.Ordinal);
+        _countryNames = _data.Countries.Countries.ToDictionary(c => c.Id, c => c.Name, StringComparer.Ordinal);
         var world = WorldFactory.Create(_data);
         _host = new SimulationHost(new Simulation(world), _data.Balance.Time.DaysPerSecond);
 
@@ -115,7 +123,7 @@ public partial class Main : Node
         _topBar.PlayerClicked += () =>
         {
             if (_host!.Snapshot.PlayerCountry is { } id)
-                Select(_map.ById(id), center: true);
+                SelectCountry(_map.Country(id), center: true);
         };
 
         _modePanel = new ModePanel();
@@ -126,16 +134,17 @@ public partial class Main : Node
         _countryPanel = new CountryPanel { Visible = false };
         _uiRoot.AddChild(_countryPanel);
         _countryPanel.Setup(_data);
-        _countryPanel.Closed += () => Select(null);
+        _countryPanel.Closed += () => SelectRegion(null);
         _countryPanel.PlayAs += id => _host!.Post(w => w.PlayerCountry = id);
+        _countryPanel.RegionChosen += id => SelectRegion(_map.Region(id), center: true);
 
         _hoverCard = new HoverCard();
         _uiRoot.AddChild(_hoverCard);
         _hoverCard.Setup();
 
-        // Когда курсор уходит на панель, карта не должна подсвечивать страну под ней.
+        // Когда курсор уходит на панель, карта не должна подсвечивать регион под ней.
         foreach (var panel in new Control[] { _topBar, _modePanel, _countryPanel })
-            panel.MouseEntered += () => SetHovered(null);
+            panel.MouseEntered += () => SetHovered(null, null);
     }
 
     public override void _Process(double delta)
@@ -164,28 +173,32 @@ public partial class Main : Node
 
     void SetMode(MapModeDef mode)
     {
-        _mode = new MapModeView(_data, mode);
+        _mode = new MapModeView(_data, _map, mode);
         _modePanel.Show(_mode);
         if (_host != null)
             Recolor(_host.Snapshot);
         UpdateHoverCard();
     }
 
+    /// <summary>Перекрашивает только те регионы, у которых цвет действительно изменился.</summary>
     void Recolor(WorldSnapshot snapshot)
     {
         var changed = false;
         foreach (var region in _map.Regions)
         {
-            var color = UiTheme.Hex(_mode.ColorOf(region, snapshot.Countries.GetValueOrDefault(region.Id)));
-            if (_colors.TryGetValue(region.Id, out var old) && old == color)
+            var color = UiTheme.Hex(_mode.ColorOf(region, snapshot));
+            if (_regionColors.TryGetValue(region.Id, out var old) && old == color)
                 continue;
-            _colors[region.Id] = color;
+            _regionColors[region.Id] = color;
             _mapView.SetColor(region.Id, color);
             changed = true;
         }
         if (!changed)
             return;
-        _overlay.Colors = _colors;
+        // Метка мелкой страны берёт цвет её самого большого региона.
+        foreach (var country in _map.Countries)
+            _countryColors[country.Id] = _regionColors[country.Regions.MaxBy(r => r.Area)!.Id];
+        _overlay.CountryColors = _countryColors;
         _overlay.QueueRedraw();
     }
 
@@ -193,8 +206,11 @@ public partial class Main : Node
     {
         _overlay.Zoom = _camera.ZoomLevel;
         _overlay.QueueRedraw();
-        _mapView.SetHighlight(_hovered, _selected, _camera.ZoomLevel);
+        UpdateHighlight();
     }
+
+    void UpdateHighlight() =>
+        _mapView.SetHighlight(_hoveredRegion, _hoveredCountry, _selectedRegion, _selectedCountry, _camera.ZoomLevel);
 
     public override void _UnhandledInput(InputEvent e)
     {
@@ -218,7 +234,7 @@ public partial class Main : Node
                 else
                 {
                     if (!_dragMoved && button.ButtonIndex == MouseButton.Left)
-                        Select(RegionAt(button.Position));
+                        ClickAt(button.Position);
                     _dragging = false;
                 }
                 break;
@@ -231,7 +247,8 @@ public partial class Main : Node
                     if (_dragMoved)
                         _camera.PanByScreen(motion.Relative);
                 }
-                SetHovered(RegionAt(motion.Position));
+                var (region, country) = Pick(motion.Position);
+                SetHovered(region, country);
                 break;
             case InputEventKey { Pressed: true, Echo: false } key:
                 HandleKey(key.Keycode);
@@ -250,7 +267,7 @@ public partial class Main : Node
                 _host!.SetSpeed((int)(key - Key.Key1) + 1);
                 return;
             case Key.Escape:
-                Select(null);
+                SelectRegion(null);
                 return;
             case Key.Equal or Key.KpAdd:
                 _camera.ZoomAt(_camera.GetViewportRect().Size / 2, 1.3f);
@@ -267,28 +284,39 @@ public partial class Main : Node
                 SetMode(mode);
     }
 
-    MapRegion? RegionAt(Vector2 screen)
+    /// <summary>Регион под курсором; если его нет — мелкая страна, нарисованная кружком.</summary>
+    (MapRegion? Region, MapCountry? Country) Pick(Vector2 screen)
     {
         var world = _camera.ScreenToWorld(screen);
         var radius = (MapOverlay.MarkerRadius + 3) / _camera.ZoomLevel;
-        var region = _map.FindAt(world.X, world.Y, radius);
-        // Метка действует только для стран, которые сейчас нарисованы кружком.
-        if (region != null && !region.Contains(world.X, world.Y) && !_overlay.IsMarker(region))
-            return null;
-        return region;
+        var marker = _map.FindMarkerAt(world.X, world.Y, radius, _overlay.IsMarker);
+        if (marker != null)
+            return (null, marker);
+        var region = _map.FindRegionAt(world.X, world.Y);
+        return (region, region?.Country is { } c ? _map.Country(c) : null);
     }
 
-    void SetHovered(MapRegion? region)
+    void ClickAt(Vector2 screen)
     {
-        if (region == _hovered)
+        var (region, country) = Pick(screen);
+        if (region != null)
+            SelectRegion(region.IsNeutral ? null : region);
+        else
+            SelectCountry(country);
+    }
+
+    void SetHovered(MapRegion? region, MapCountry? country)
+    {
+        if (region == _hoveredRegion && country == _hoveredCountry)
         {
             UpdateHoverCard();
             return;
         }
-        _hovered = region;
-        _overlay.Hovered = region?.Id;
+        _hoveredRegion = region;
+        _hoveredCountry = country;
+        _overlay.Hovered = country?.Id;
         _overlay.QueueRedraw();
-        _mapView.SetHighlight(_hovered, _selected, _camera.ZoomLevel);
+        UpdateHighlight();
         UpdateHoverCard();
     }
 
@@ -296,37 +324,63 @@ public partial class Main : Node
     {
         if (_hoverCard == null)
             return;
-        if (_hovered == null || _host == null)
+        if (_host == null || (_hoveredRegion == null && _hoveredCountry == null))
         {
             _hoverCard.Visible = false;
             return;
         }
-        if (!_hovered.IsCountry)
+        var snapshot = _host.Snapshot;
+        if (_hoveredRegion is { IsNeutral: true } neutral)
         {
-            _hoverCard.ShowAt(_mouse, _hovered.Name ?? _hovered.Id, _hovered.Note ?? "");
+            var t = _map.Territory(neutral.Territory!);
+            _hoverCard.ShowAt(_mouse, t?.Name ?? neutral.Id, t?.Note ?? "");
             return;
         }
-        var name = _data.Countries.Countries.First(c => c.Id == _hovered.Id).Name;
-        var country = _host.Snapshot.Countries[_hovered.Id];
-        _hoverCard.ShowAt(_mouse, name, _mode.ValueText(country));
+        var region = _hoveredRegion ?? _hoveredCountry!.Regions.MaxBy(r => r.Area)!;
+        var countryName = _countryNames[region.Country!];
+        var lines = new List<string>();
+        var title = countryName;
+        if (_hoveredRegion != null && _regionInfo.TryGetValue(region.Id, out var info))
+        {
+            title = info.Name;
+            lines.Add(countryName);
+        }
+        var controller = snapshot.ControllerOf(region.Id, region.Country!);
+        if (controller != region.Country)
+            lines.Add("Под контролем: " + _countryNames[controller]);
+        var value = _mode.ValueText(region, snapshot);
+        if (value.Length > 0)
+            lines.Add(value);
+        _hoverCard.ShowAt(_mouse, title, string.Join('\n', lines));
     }
 
-    void Select(MapRegion? region, bool center = false)
+    void SelectRegion(MapRegion? region, bool center = false)
     {
-        if (region is { IsCountry: false })
-            region = null;
-        _selected = region;
-        _overlay.Selected = region?.Id;
+        _selectedRegion = region;
+        _selectedCountry = region?.Country is { } c ? _map.Country(c) : null;
+        ApplySelection(center ? region is null ? null : new Vector2(region.LabelX, region.LabelY) : null);
+    }
+
+    void SelectCountry(MapCountry? country, bool center = false)
+    {
+        _selectedRegion = null;
+        _selectedCountry = country;
+        ApplySelection(center && country != null ? new Vector2(country.LabelX, country.LabelY) : null);
+    }
+
+    void ApplySelection(Vector2? centerOn)
+    {
+        _overlay.Selected = _selectedCountry?.Id;
         _overlay.QueueRedraw();
-        _mapView.SetHighlight(_hovered, _selected, _camera.ZoomLevel);
-        if (region == null || _host == null)
+        UpdateHighlight();
+        if (_selectedCountry == null || _host == null)
         {
             _countryPanel.Visible = false;
             return;
         }
-        _countryPanel.ShowCountry(region.Id, _host.Snapshot);
-        if (center)
-            _camera.CenterOn(new Vector2(region.LabelX, region.LabelY));
+        _countryPanel.ShowCountry(_selectedCountry.Id, _selectedRegion?.Id, _host.Snapshot);
+        if (centerOn is { } point)
+            _camera.CenterOn(point);
     }
 
     void SmokeStep(double delta)
@@ -336,8 +390,12 @@ public partial class Main : Node
         {
             case 0 when _smokeTime > 0.3:
                 _host!.SetSpeed(SimulationHost.MaxSpeed);
-                Select(_map.ById("RUS"), center: true);
+                SelectCountry(_map.Country("RUS"), center: true);
                 _host.Post(w => w.PlayerCountry = "RUS");
+                // Захват региона: проверяем, что перекраска и досье переживают смену контроля.
+                _smokeOccupied = _map.Country("FRA")!.Regions[0].Id;
+                var occupied = _smokeOccupied;
+                _host.Post(w => w.TransferControl(occupied, "DEU"));
                 _smokeStep++;
                 break;
             case 1:
@@ -349,14 +407,17 @@ public partial class Main : Node
                     _overlay.QueueRedraw();
                 }
                 foreach (var region in _map.Regions)
-                    SetHovered(region);
-                Select(_map.ById("TUV"));
+                    SetHovered(region, region.Country is { } c ? _map.Country(c) : null);
+                SelectCountry(_map.Country("TUV"));
+                SelectRegion(_map.Region(_smokeOccupied!));
                 _smokeStep++;
                 break;
             case 2 when _smokeTime > 3:
                 var snapshot = _host!.Snapshot;
-                var ok = snapshot.Date > _data.Scenario.StartDate && snapshot.PlayerCountry == "RUS" && _host.Error == null;
-                GD.Print($"SMOKE {(ok ? "OK" : "FAIL")}: дата {snapshot.Date:yyyy-MM-dd}, стран {snapshot.Countries.Count}, шаг {_host.LastStepMs:F2} мс");
+                var ok = snapshot.Date > _data.Scenario.StartDate && snapshot.PlayerCountry == "RUS" && _host.Error == null
+                    && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU";
+                GD.Print($"SMOKE {(ok ? "OK" : "FAIL")}: дата {snapshot.Date:yyyy-MM-dd}, стран {snapshot.Countries.Count}, " +
+                         $"регионов {_map.Regions.Count}, занято {snapshot.Occupied.Count}, шаг {_host.LastStepMs:F2} мс");
                 GetTree().Quit(ok ? 0 : 1);
                 _smokeStep++;
                 break;

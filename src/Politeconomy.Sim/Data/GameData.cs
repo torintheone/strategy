@@ -8,6 +8,8 @@ public sealed class GameData
 {
     public required string Directory { get; init; }
     public required CountriesFile Countries { get; init; }
+    public required RegionsFile Regions { get; init; }
+    public required ControlFile Control { get; init; }
     public required PoliticsFile Politics { get; init; }
     public required ScenarioFile Scenario { get; init; }
     public required BalanceFile Balance { get; init; }
@@ -28,6 +30,8 @@ public sealed class GameData
         {
             Directory = directory,
             Countries = Read(directory, "countries.json", ctx.CountriesFile),
+            Regions = Read(directory, "regions.json", ctx.RegionsFile),
+            Control = Read(directory, "control.json", ctx.ControlFile),
             Politics = Read(directory, "politics.json", ctx.PoliticsFile),
             Scenario = Read(directory, "scenario.json", ctx.ScenarioFile),
             Balance = Read(directory, "balance.json", ctx.BalanceFile),

@@ -67,23 +67,22 @@ public sealed class MapPolygon
     }
 }
 
-/// <summary>Страна или нейтральная территория на карте.</summary>
+/// <summary>Регион на карте: часть страны или нейтральная территория.</summary>
 public sealed class MapRegion
 {
     public required string Id { get; init; }
-    public required bool IsCountry { get; init; }
-    /// <summary>Название для нейтральной территории (у стран название берётся из countries.json).</summary>
-    public string? Name { get; init; }
-    public string? Note { get; init; }
+    /// <summary>Страна-владелец. Пусто у нейтральных территорий.</summary>
+    public string? Country { get; init; }
+    public string? Territory { get; init; }
     public required float LabelX { get; init; }
     public required float LabelY { get; init; }
-    public required int ColorIndex { get; init; }
-    public required IReadOnlyList<string> Neighbors { get; init; }
     public required IReadOnlyList<MapPolygon> Polygons { get; init; }
     public required Rect Bounds { get; init; }
     /// <summary>Самый большой многоугольник — по нему решаем, поместится ли подпись.</summary>
     public required MapPolygon Main { get; init; }
     public required float Area { get; init; }
+
+    public bool IsNeutral => Country is null;
 
     public bool Contains(float x, float y)
     {
@@ -96,45 +95,89 @@ public sealed class MapRegion
     }
 }
 
-/// <summary>Геометрия карты в координатах проекции Equal Earth (ось y вниз) и поиск страны под точкой.</summary>
+/// <summary>Страна на карте: контур (без треугольников — заливка идёт по регионам), подпись, цвет.</summary>
+public sealed class MapCountry
+{
+    public required string Id { get; init; }
+    public required float LabelX { get; init; }
+    public required float LabelY { get; init; }
+    public required int ColorIndex { get; init; }
+    public required IReadOnlyList<string> Neighbors { get; init; }
+    public required IReadOnlyList<float[]> Outline { get; init; }
+    public required Rect Bounds { get; init; }
+    /// <summary>Площадь и рамка самого большого куска страны — для размера подписи.</summary>
+    public required float MainArea { get; init; }
+    public required Rect MainBounds { get; init; }
+    public required IReadOnlyList<MapRegion> Regions { get; init; }
+}
+
+public sealed record MapTerritory(string Id, string Name, string Note, float LabelX, float LabelY);
+
+/// <summary>Геометрия карты в координатах проекции Equal Earth (ось y вниз) и поиск региона под точкой.</summary>
 public sealed class WorldMap
 {
     public required float Width { get; init; }
     public required float MinY { get; init; }
     public required float MaxY { get; init; }
     public required IReadOnlyList<MapRegion> Regions { get; init; }
+    public required IReadOnlyList<MapCountry> Countries { get; init; }
+    public required IReadOnlyList<MapTerritory> Territories { get; init; }
+    public required IReadOnlyList<float[]> CoastLines { get; init; }
+    public required IReadOnlyList<float[]> BorderLines { get; init; }
+    public required IReadOnlyList<float[]> InternalLines { get; init; }
+
+    readonly Dictionary<string, MapRegion> _regions = new(StringComparer.Ordinal);
+    readonly Dictionary<string, MapCountry> _countries = new(StringComparer.Ordinal);
 
     public float MinX => -Width / 2;
     public float MaxX => Width / 2;
     public float Height => MaxY - MinY;
 
-    public IEnumerable<MapRegion> Countries => Regions.Where(r => r.IsCountry);
+    public MapRegion? Region(string id)
+    {
+        if (_regions.Count == 0)
+            foreach (var r in Regions)
+                _regions[r.Id] = r;
+        return _regions.GetValueOrDefault(id);
+    }
 
-    public MapRegion? ById(string id) => Regions.FirstOrDefault(r => r.Id == id);
+    public MapCountry? Country(string id)
+    {
+        if (_countries.Count == 0)
+            foreach (var c in Countries)
+                _countries[c.Id] = c;
+        return _countries.GetValueOrDefault(id);
+    }
 
-    /// <summary>
-    /// Регион под точкой. Если точка ни в каком многоугольнике, но рядом с подписью мелкой страны
-    /// (ближе <paramref name="markerRadius"/>), возвращается эта страна — так можно попасть в островные государства.
-    /// </summary>
-    public MapRegion? FindAt(float x, float y, float markerRadius = 0)
+    public MapTerritory? Territory(string id) => Territories.FirstOrDefault(t => t.Id == id);
+
+    /// <summary>Регион под точкой или null, если там море.</summary>
+    public MapRegion? FindRegionAt(float x, float y)
     {
         foreach (var r in Regions)
             if (r.Contains(x, y))
                 return r;
-        if (markerRadius <= 0)
-            return null;
-        MapRegion? best = null;
-        var bestDist = markerRadius * markerRadius;
-        foreach (var r in Regions)
+        return null;
+    }
+
+    /// <summary>
+    /// Мелкая страна, чья метка (кружок на месте подписи) ближе <paramref name="radius"/> к точке.
+    /// <paramref name="isMarker"/> решает, рисуется ли страна сейчас меткой.
+    /// </summary>
+    public MapCountry? FindMarkerAt(float x, float y, float radius, Func<MapCountry, bool> isMarker)
+    {
+        MapCountry? best = null;
+        var bestDist = radius * radius;
+        foreach (var c in Countries)
         {
-            if (!r.IsCountry)
+            if (!isMarker(c))
                 continue;
-            var dx = r.LabelX - x;
-            var dy = r.LabelY - y;
+            var dx = c.LabelX - x;
+            var dy = c.LabelY - y;
             var d = dx * dx + dy * dy;
             if (d <= bestDist)
             {
-                best = r;
+                best = c;
                 bestDist = d;
             }
         }
@@ -143,41 +186,74 @@ public sealed class WorldMap
 
     public static WorldMap From(WorldMapFile file)
     {
-        var regions = new List<MapRegion>();
+        var regions = file.Regions.Select(Region).ToList();
+        var byCountry = regions.Where(r => r.Country != null).GroupBy(r => r.Country!).ToDictionary(g => g.Key, g => (IReadOnlyList<MapRegion>)g.ToList());
+        var countries = new List<MapCountry>();
         foreach (var c in file.Countries)
-            regions.Add(Region(c.Id, true, null, null, c.Label, c.Color, c.Neighbors, c.Polygons));
-        foreach (var t in file.Territories)
-            regions.Add(Region(t.Id, false, t.Name, t.Note, t.Label, -1, [], t.Polygons));
+        {
+            var outline = c.Outline.Select(r => r.ToArray()).ToList();
+            var own = byCountry.GetValueOrDefault(c.Id) ?? [];
+            if (own.Count == 0)
+                throw new DataException($"У страны {c.Id} на карте нет ни одного региона");
+            var bounds = own.Skip(1).Aggregate(own[0].Bounds, (acc, r) => acc.Union(r.Bounds));
+            var main = outline.Count > 0 ? outline.MaxBy(RingArea)! : own.MaxBy(r => r.Area)!.Main.Vertices;
+            countries.Add(new MapCountry
+            {
+                Id = c.Id,
+                LabelX = (float)c.Label[0],
+                LabelY = (float)c.Label[1],
+                ColorIndex = c.Color,
+                Neighbors = c.Neighbors,
+                Outline = outline,
+                Bounds = bounds,
+                MainArea = RingArea(main),
+                MainBounds = Rect.Of(main),
+                Regions = own,
+            });
+        }
         return new WorldMap
         {
             Width = (float)file.Width,
             MinY = (float)file.MinY,
             MaxY = (float)file.MaxY,
             Regions = regions,
+            Countries = countries,
+            Territories = file.Territories.Select(t => new MapTerritory(t.Id, t.Name, t.Note, (float)t.Label[0], (float)t.Label[1])).ToList(),
+            CoastLines = file.Lines.Coast.Select(l => l.ToArray()).ToList(),
+            BorderLines = file.Lines.Border.Select(l => l.ToArray()).ToList(),
+            InternalLines = file.Lines.Internal.Select(l => l.ToArray()).ToList(),
         };
     }
 
-    static MapRegion Region(string id, bool isCountry, string? name, string? note, IReadOnlyList<double> label, int color,
-        IReadOnlyList<string> neighbors, IReadOnlyList<MapPolygonRecord> records)
+    /// <summary>Площадь кольца по формуле шнурования.</summary>
+    public static float RingArea(float[] ring)
     {
-        var polygons = records.Select(Polygon).ToList();
+        double sum = 0;
+        var n = ring.Length / 2;
+        for (var i = 0; i < n; i++)
+        {
+            var j = (i + 1) % n;
+            sum += (double)ring[i * 2] * ring[j * 2 + 1] - (double)ring[j * 2] * ring[i * 2 + 1];
+        }
+        return (float)Math.Abs(sum / 2);
+    }
+
+    static MapRegion Region(MapRegionRecord r)
+    {
+        var polygons = r.Polygons.Select(Polygon).ToList();
         if (polygons.Count == 0)
-            throw new DataException($"У региона {id} на карте нет ни одного многоугольника");
+            throw new DataException($"У региона {r.Id} на карте нет ни одного многоугольника");
         var bounds = polygons.Skip(1).Aggregate(polygons[0].Bounds, (acc, p) => acc.Union(p.Bounds));
-        var main = polygons.MaxBy(p => p.Area)!;
         return new MapRegion
         {
-            Id = id,
-            IsCountry = isCountry,
-            Name = name,
-            Note = note,
-            LabelX = (float)label[0],
-            LabelY = (float)label[1],
-            ColorIndex = color,
-            Neighbors = neighbors,
+            Id = r.Id,
+            Country = r.Country,
+            Territory = r.Territory,
+            LabelX = (float)r.Label[0],
+            LabelY = (float)r.Label[1],
             Polygons = polygons,
             Bounds = bounds,
-            Main = main,
+            Main = polygons.MaxBy(p => p.Area)!,
             Area = polygons.Sum(p => p.Area),
         };
     }

@@ -24,7 +24,9 @@ public sealed record CountryRecord(
     bool Landlocked,
     string IncomeGroup,
     string IncomeSource,
-    IReadOnlyDictionary<string, StatRecord> Stats);
+    IReadOnlyDictionary<string, StatRecord> Stats,
+    bool UnMember = true,
+    string? StatusNote = null);
 
 public sealed record StatRecord(
     double Value,
@@ -32,6 +34,27 @@ public sealed record StatRecord(
     string Source,
     string? Method = null,
     int? N = null);
+
+public sealed record RegionsFile(
+    string Built,
+    IReadOnlyDictionary<string, string> Sources,
+    IReadOnlyList<RegionRecord> Regions);
+
+/// <summary>Регион страны. Country — страна, которой регион принадлежит по международному праву.</summary>
+public sealed record RegionRecord(
+    string Id,
+    string Name,
+    string Country,
+    string Capital,
+    double Population,
+    string PopulationSource,
+    double AreaKm2,
+    int Units);
+
+/// <summary>Стартовый контроль регионов, если он отличается от принадлежности.</summary>
+public sealed record ControlFile(IReadOnlyList<ControlRecord> Control);
+
+public sealed record ControlRecord(string Region, string Controller, string Note);
 
 public sealed record PoliticsFile(
     IReadOnlyDictionary<string, string> Systems,
@@ -78,7 +101,8 @@ public sealed record MapModeDef(
     string Kind,
     string? Indicator = null,
     IReadOnlyList<double>? Thresholds = null,
-    string? Hotkey = null);
+    string? Hotkey = null,
+    string? Unit = null);
 
 public sealed record IncomeGroupDef(string Id, string Name, string Color);
 
@@ -90,21 +114,37 @@ public sealed record WorldMapFile(
     double MaxY,
     int PoliticalColors,
     IReadOnlyList<MapCountryRecord> Countries,
-    IReadOnlyList<MapTerritoryRecord> Territories);
+    IReadOnlyList<MapRegionRecord> Regions,
+    IReadOnlyList<MapTerritoryRecord> Territories,
+    MapLinesRecord Lines);
 
+/// <summary>Страна на карте: точка подписи, цвет политической карты, соседи и контур для подсветки.</summary>
 public sealed record MapCountryRecord(
     string Id,
     IReadOnlyList<double> Label,
     int Color,
     IReadOnlyList<string> Neighbors,
+    IReadOnlyList<IReadOnlyList<float>> Outline);
+
+/// <summary>Регион на карте. Country — страна-владелец; Territory — нейтральная территория (тогда Country пустой).</summary>
+public sealed record MapRegionRecord(
+    string Id,
+    string? Country,
+    string? Territory,
+    IReadOnlyList<double> Label,
     IReadOnlyList<MapPolygonRecord> Polygons);
 
 public sealed record MapTerritoryRecord(
     string Id,
     string Name,
     string Note,
-    IReadOnlyList<double> Label,
-    IReadOnlyList<MapPolygonRecord> Polygons);
+    IReadOnlyList<double> Label);
+
+/// <summary>Линии карты: побережье, границы стран, границы регионов внутри стран.</summary>
+public sealed record MapLinesRecord(
+    IReadOnlyList<IReadOnlyList<float>> Coast,
+    IReadOnlyList<IReadOnlyList<float>> Border,
+    IReadOnlyList<IReadOnlyList<float>> Internal);
 
 public sealed record MapPolygonRecord(
     IReadOnlyList<IReadOnlyList<float>> Rings,
@@ -115,10 +155,12 @@ public sealed record CitiesFile(IReadOnlyList<CityRecord> Cities);
 public sealed record CityRecord(
     string Name,
     string Country,
+    string Region,
     float X,
     float Y,
     long Population,
     bool Capital,
+    bool RegionalCapital,
     int Rank);
 
 [JsonSourceGenerationOptions(
@@ -127,6 +169,8 @@ public sealed record CityRecord(
     AllowTrailingCommas = true)]
 [JsonSerializable(typeof(CountriesFile))]
 [JsonSerializable(typeof(PoliticsFile))]
+[JsonSerializable(typeof(RegionsFile))]
+[JsonSerializable(typeof(ControlFile))]
 [JsonSerializable(typeof(ScenarioFile))]
 [JsonSerializable(typeof(BalanceFile))]
 [JsonSerializable(typeof(IndicatorsFile))]

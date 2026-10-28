@@ -263,6 +263,12 @@
    "reviewed": false
   },
   {
+   "id": "CYN",
+   "system": "semi_presidential",
+   "note": "Признан только Турцией; Республика Кипр считает эту территорию своей",
+   "reviewed": false
+  },
+  {
    "id": "CYP",
    "system": "presidential_republic",
    "note": "",
@@ -875,6 +881,12 @@
    "reviewed": false
   },
   {
+   "id": "PSE",
+   "system": "semi_presidential",
+   "note": "Государство-наблюдатель ООН; выборов не было с 2006 года, Газа и Западный берег разделены",
+   "reviewed": false
+  },
+  {
    "id": "QAT",
    "system": "absolute_monarchy",
    "note": "",
@@ -944,6 +956,12 @@
    "id": "SMR",
    "system": "parliamentary_republic",
    "note": "Два капитана-регента",
+   "reviewed": false
+  },
+  {
+   "id": "SOL",
+   "system": "presidential_republic",
+   "note": "Непризнанное государство; Сомали считает Сомалиленд своей частью",
    "reviewed": false
   },
   {
@@ -1079,6 +1097,12 @@
    "reviewed": false
   },
   {
+   "id": "TWN",
+   "system": "semi_presidential",
+   "note": "Признан небольшим числом государств; КНР считает Тайвань своей провинцией",
+   "reviewed": false
+  },
+  {
    "id": "TZA",
    "system": "presidential_republic",
    "note": "",
@@ -1142,6 +1166,12 @@
    "id": "WSM",
    "system": "parliamentary_republic",
    "note": "",
+   "reviewed": false
+  },
+  {
+   "id": "XKX",
+   "system": "parliamentary_republic",
+   "note": "Частично признанное государство; Сербия считает Косово своей частью",
    "reviewed": false
   },
   {

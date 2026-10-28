@@ -31,7 +31,9 @@ public static class Explain
         if (stat.Source.StartsWith("wb:", StringComparison.Ordinal))
             return $"Источник: Всемирный банк, показатель {stat.Source[3..]}{year}.";
         if (stat.Source.StartsWith("imf:", StringComparison.Ordinal))
-            return $"Источник: МВФ, World Economic Outlook{year}.";
+            return $"Источник: МВФ, World Economic Outlook, показатель {stat.Source[4..]}{year} (за последний год — оценка МВФ).";
+        if (stat.Source == "natural_earth")
+            return $"Источник: Natural Earth (по данным CIA World Factbook){year}. Других открытых данных по этой стране нет.";
         return stat.Source switch
         {
             StatSources.Fill => $"Оценка: в источниках нет данных по стране, взята {stat.Method} (стран в выборке: {stat.N}).",

@@ -17,7 +17,10 @@ public static class UiTheme
     public static readonly Color TextMuted = Color.FromHtml("#898781");
     public static readonly Color Accent = Color.FromHtml("#d9a441");
     public static readonly Color Critical = Color.FromHtml("#d03b3b");
-    public static readonly Color MapBorder = Color.FromHtml("#0e1217d9");
+    public static readonly Color AccentLight = Color.FromHtml("#f0cd7a");
+    public static readonly Color MapBorder = Color.FromHtml("#0b0e12");
+    public static readonly Color MapCoast = Color.FromHtml("#0e1217cc");
+    public static readonly Color MapRegionBorder = Color.FromHtml("#0e121766");
     public static readonly Color MapOutline = Color.FromHtml("#0e1217cc");
 
     public static Font Regular { get; private set; } = null!;

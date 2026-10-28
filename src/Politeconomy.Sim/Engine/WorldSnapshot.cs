@@ -13,13 +13,22 @@ public sealed class WorldSnapshot
     public required bool Paused { get; init; }
     public required string? PlayerCountry { get; init; }
     public required IReadOnlyDictionary<string, CountrySnapshot> Countries { get; init; }
+    /// <summary>Регионы, которые контролирует не их владелец: регион → контролирующая страна.</summary>
+    public required IReadOnlyDictionary<string, string> Occupied { get; init; }
     public required long Version { get; init; }
+
+    /// <summary>Кто контролирует регион: оккупант или, если его нет, владелец.</summary>
+    public string ControllerOf(string regionId, string owner) => Occupied.GetValueOrDefault(regionId, owner);
 
     public static WorldSnapshot Capture(World world, int speed, bool paused, long version)
     {
         var countries = new Dictionary<string, CountrySnapshot>(world.Countries.Count, StringComparer.Ordinal);
         foreach (var c in world.Countries)
             countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal));
+        var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var r in world.Regions)
+            if (r.IsOccupied)
+                occupied[r.Id] = r.Controller;
         return new WorldSnapshot
         {
             Date = world.Date,
@@ -27,6 +36,7 @@ public sealed class WorldSnapshot
             Paused = paused,
             PlayerCountry = world.PlayerCountry,
             Countries = countries,
+            Occupied = occupied,
             Version = version,
         };
     }

@@ -1,5 +1,5 @@
 {
- "_comment": "Режимы карты. kind: political (цвета соседей различаются), bins (классы по порогам), diverging (две стороны от нуля), politics и income (категории). Палитры заданы ниже, порядок цветов — от меньшего к большему.",
+ "_comment": "Режимы карты. kind: political (цвета соседей различаются), bins (классы по порогам), diverging (две стороны от нуля), politics и income (категории), region_density (плотность населения каждого региона). Регион окрашивается по стране, которая его контролирует. Палитры заданы ниже, порядок цветов — от меньшего к большему.",
  "palettes": {
   "political": ["#2e66a9", "#9e4623", "#187657", "#936409", "#9b4063", "#066309", "#6b64ac", "#a74f51"],
   "sequential": ["#104281", "#184f95", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4", "#cde2fb"],
@@ -18,8 +18,9 @@
   {"id": "debt", "name": "Госдолг", "short_name": "Госдолг", "kind": "bins", "indicator": "gov_debt_pct_gdp", "thresholds": [20, 40, 60, 80, 100, 130], "hotkey": "F6"},
   {"id": "population", "name": "Население", "short_name": "Население", "kind": "bins", "indicator": "population", "thresholds": [1000000, 5000000, 20000000, 50000000, 100000000, 300000000], "hotkey": "F7"},
   {"id": "life_expectancy", "name": "Продолжительность жизни", "short_name": "Жизнь", "kind": "bins", "indicator": "life_expectancy", "thresholds": [60, 65, 70, 75, 80, 83], "hotkey": "F8"},
-  {"id": "system", "name": "Политическая система", "short_name": "Строй", "kind": "politics", "hotkey": "F9"},
-  {"id": "income", "name": "Уровень дохода", "short_name": "Доход", "kind": "income", "hotkey": "F10"}
+  {"id": "density", "name": "Плотность населения регионов", "short_name": "Плотность", "kind": "region_density", "thresholds": [10, 25, 50, 100, 250, 500], "unit": "чел./км²", "hotkey": "F9"},
+  {"id": "system", "name": "Политическая система", "short_name": "Строй", "kind": "politics", "hotkey": "F10"},
+  {"id": "income", "name": "Уровень дохода", "short_name": "Доход", "kind": "income", "hotkey": "F11"}
  ],
  "politics_colors": {
   "parliamentary_republic": "#86b6ef",

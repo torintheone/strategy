@@ -9,18 +9,22 @@ namespace Politeconomy.Sim.Views;
 public sealed record LegendEntry(string Color, string Text);
 
 /// <summary>
-/// Раскраска карты для одного режима: цвет каждой страны (hex из data/map_modes.json) и легенда.
-/// Чистые вычисления без движка — интерфейс только переводит hex в цвет.
+/// Раскраска карты для одного режима: цвет каждого региона (hex из data/map_modes.json) и легенда.
+/// Регион окрашивается по стране, которая его фактически контролирует. Чистые вычисления без движка.
 /// </summary>
 public sealed class MapModeView
 {
     readonly GameData _data;
+    readonly WorldMap _map;
     readonly MapPalettes _palettes;
+    readonly Dictionary<string, RegionRecord> _regions;
 
-    public MapModeView(GameData data, MapModeDef mode)
+    public MapModeView(GameData data, WorldMap map, MapModeDef mode)
     {
         _data = data;
+        _map = map;
         _palettes = data.MapModes.Palettes;
+        _regions = data.Regions.Regions.ToDictionary(r => r.Id, StringComparer.Ordinal);
         Mode = mode;
         Indicator = mode.Indicator is null ? null : data.Indicator(mode.Indicator);
     }
@@ -28,19 +32,35 @@ public sealed class MapModeView
     public MapModeDef Mode { get; }
     public IndicatorDef? Indicator { get; }
 
-    public string ColorOf(MapRegion region, CountrySnapshot? country)
+    /// <summary>Страна, которая контролирует регион, или null для нейтральной территории.</summary>
+    public static string? ControllerOf(MapRegion region, WorldSnapshot snapshot) =>
+        region.Country is null ? null : snapshot.ControllerOf(region.Id, region.Country);
+
+    public string ColorOf(MapRegion region, WorldSnapshot snapshot)
     {
-        if (!region.IsCountry || country is null)
+        var controller = ControllerOf(region, snapshot);
+        if (controller is null || !snapshot.Countries.TryGetValue(controller, out var country))
             return _palettes.Territory;
         return Mode.Kind switch
         {
-            "political" => _palettes.Political[Math.Max(region.ColorIndex, 0) % _palettes.Political.Count],
+            "political" => PoliticalColor(controller),
             "politics" => _data.MapModes.PoliticsColors.GetValueOrDefault(WorldFactory.SystemId(country.System), _palettes.NoData),
             "income" => _data.MapModes.IncomeGroups.FirstOrDefault(g => g.Id == WorldFactory.IncomeId(country.Income))?.Color ?? _palettes.NoData,
             "bins" or "diverging" => ValueColor(country.Stat(Mode.Indicator!)?.Value ?? double.NaN),
+            "region_density" => ValueColor(Density(region.Id)),
             _ => _palettes.NoData,
         };
     }
+
+    public string PoliticalColor(string country)
+    {
+        var index = _map.Country(country)?.ColorIndex ?? 0;
+        return _palettes.Political[Math.Max(index, 0) % _palettes.Political.Count];
+    }
+
+    /// <summary>Плотность населения региона, чел./км².</summary>
+    public double Density(string regionId) =>
+        _regions.TryGetValue(regionId, out var r) && r.AreaKm2 > 0 ? r.Population / r.AreaKm2 : double.NaN;
 
     public string ValueColor(double value)
     {
@@ -88,18 +108,21 @@ public sealed class MapModeView
                     .ToList();
             case "income":
                 return _data.MapModes.IncomeGroups.Select(g => new LegendEntry(g.Color, g.Name)).ToList();
-            case "bins" or "diverging" when Mode.Thresholds is { Count: > 0 } t && Indicator is not null:
+            case "bins" or "diverging" or "region_density" when Mode.Thresholds is { Count: > 0 } t:
             {
                 var list = new List<LegendEntry>();
-                string F(double v) => Fmt.Compact(Indicator.Format, v);
+                var format = Indicator?.Format ?? "number1";
+                var unit = Mode.Unit is null ? "" : Fmt.Nbsp + Mode.Unit;
+                string F(double v) => Fmt.Compact(format, v);
                 for (var k = 0; k <= t.Count; k++)
                 {
-                    var text = k == 0 ? $"меньше {F(t[0])}"
-                        : k == t.Count ? $"{F(t[^1])} и больше"
-                        : $"{F(t[k - 1])} — {F(t[k])}";
+                    var text = k == 0 ? $"меньше {F(t[0])}{unit}"
+                        : k == t.Count ? $"{F(t[^1])}{unit} и больше"
+                        : $"{F(t[k - 1])} — {F(t[k])}{unit}";
                     list.Add(new LegendEntry(ClassColor(k), text));
                 }
-                list.Add(new LegendEntry(_palettes.NoData, "нет данных"));
+                if (Mode.Kind != "region_density")
+                    list.Add(new LegendEntry(_palettes.NoData, "нет данных"));
                 return list;
             }
             default:
@@ -107,14 +130,21 @@ public sealed class MapModeView
         }
     }
 
-    /// <summary>Строка для всплывающей подсказки над страной в этом режиме.</summary>
-    public string ValueText(CountrySnapshot country) => Mode.Kind switch
+    /// <summary>Строка для всплывающей подсказки над регионом в этом режиме.</summary>
+    public string ValueText(MapRegion region, WorldSnapshot snapshot)
     {
-        "politics" => _data.Politics.Systems.GetValueOrDefault(WorldFactory.SystemId(country.System), ""),
-        "income" => _data.MapModes.IncomeGroups.FirstOrDefault(g => g.Id == WorldFactory.IncomeId(country.Income))?.Name ?? "",
-        "bins" or "diverging" when Indicator is not null => ValueLine(country.Stat(Indicator.Id)),
-        _ => "",
-    };
+        var controller = ControllerOf(region, snapshot);
+        if (controller is null || !snapshot.Countries.TryGetValue(controller, out var country))
+            return "";
+        return Mode.Kind switch
+        {
+            "politics" => _data.Politics.Systems.GetValueOrDefault(WorldFactory.SystemId(country.System), ""),
+            "income" => _data.MapModes.IncomeGroups.FirstOrDefault(g => g.Id == WorldFactory.IncomeId(country.Income))?.Name ?? "",
+            "bins" or "diverging" when Indicator is not null => ValueLine(country.Stat(Indicator.Id)),
+            "region_density" => $"Плотность: {Fmt.Number(Density(region.Id), 0)}{Fmt.Nbsp}{Mode.Unit}",
+            _ => "",
+        };
+    }
 
     string ValueLine(StatValue? stat)
     {

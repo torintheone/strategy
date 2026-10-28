@@ -18,6 +18,7 @@ public class TextTests
         Assert.Equal("−0,2%", Fmt.Value("percent_signed", -0.2));
         Assert.Equal("+2,2%", Fmt.Value("percent_signed", 2.2));
         Assert.Equal($"17,9%{Nb}ВВП", Fmt.Value("percent_gdp", 17.9));
+        Assert.Equal($"−7,9%{Nb}ВВП", Fmt.Value("percent_gdp_signed", -7.9));
         Assert.Equal("—", Fmt.Value("percent", double.NaN));
         Assert.Equal($"5{Nb}млн", Fmt.Compact("people", 5_000_000));
         Assert.Equal($"1{Nb}января 2026", Fmt.Date(new DateOnly(2026, 1, 1)));
@@ -37,5 +38,9 @@ public class TextTests
 
         var old = Explain.Stat(def, new StatValue(40, 2015, "wb:X"));
         Assert.Contains("устарели", old);
+
+        var imf = Explain.Stat(def, new StatValue(62.7, 2025, "imf:GGXWDG_NGDP"));
+        Assert.Contains("МВФ", imf);
+        Assert.Contains("Natural Earth", Explain.Source(new StatValue(326000, 2017, "natural_earth")));
     }
 }

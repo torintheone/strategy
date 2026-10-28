@@ -5,8 +5,8 @@ using Politeconomy.Sim.Geo;
 namespace Politeconomy.Game.Map;
 
 /// <summary>
-/// Заливка стран и границы. Каждая страна — отдельная сетка треугольников, цвет меняется через Modulate,
-/// поэтому смена режима карты ничего не перестраивает.
+/// Заливка регионов и линии границ. Каждый регион — отдельная сетка треугольников, цвет меняется через Modulate,
+/// поэтому смена режима карты или захват региона ничего не перестраивает.
 /// </summary>
 public partial class MapView : Node2D
 {
@@ -21,21 +21,26 @@ public partial class MapView : Node2D
             AddChild(fill);
             _fills[region.Id] = fill;
         }
-        AddChild(new MeshInstance2D { Mesh = BorderMesh(map), Modulate = UiTheme.MapBorder, Name = "Borders" });
+        // Сначала тонкие границы регионов, поверх — побережье и границы стран.
+        AddChild(new MeshInstance2D { Mesh = LineMesh(map.InternalLines), Modulate = UiTheme.MapRegionBorder, Name = "RegionBorders" });
+        AddChild(new MeshInstance2D { Mesh = LineMesh(map.CoastLines), Modulate = UiTheme.MapCoast, Name = "Coast" });
+        AddChild(new MeshInstance2D { Mesh = LineMesh(map.BorderLines), Modulate = UiTheme.MapBorder, Name = "CountryBorders" });
         _highlight = new MapHighlight { Name = "Highlight" };
         AddChild(_highlight);
     }
 
-    public void SetColor(string id, Color color)
+    public void SetColor(string regionId, Color color)
     {
-        if (_fills.TryGetValue(id, out var fill))
+        if (_fills.TryGetValue(regionId, out var fill))
             fill.Modulate = color;
     }
 
-    public void SetHighlight(MapRegion? hovered, MapRegion? selected, float zoom)
+    public void SetHighlight(MapRegion? hoveredRegion, MapCountry? hoveredCountry, MapRegion? selectedRegion, MapCountry? selectedCountry, float zoom)
     {
-        _highlight.Hovered = hovered;
-        _highlight.Selected = selected;
+        _highlight.HoveredRegion = hoveredRegion;
+        _highlight.HoveredCountry = hoveredCountry;
+        _highlight.SelectedRegion = selectedRegion;
+        _highlight.SelectedCountry = selectedCountry;
         _highlight.Zoom = zoom;
         _highlight.QueueRedraw();
     }
@@ -60,22 +65,16 @@ public partial class MapView : Node2D
         return BuildMesh(Godot.Mesh.PrimitiveType.Triangles, vertices, colors, indices);
     }
 
-    static ArrayMesh BorderMesh(WorldMap map)
+    /// <summary>Ломаные линии одной сеткой отрезков: на экране всегда толщиной в пиксель.</summary>
+    static ArrayMesh LineMesh(IReadOnlyList<float[]> lines)
     {
         var points = new List<Vector2>();
-        foreach (var region in map.Regions)
-            foreach (var p in region.Polygons)
-                for (var r = 0; r < p.RingCount; r++)
-                {
-                    var ring = p.Ring(r);
-                    var n = ring.Length / 2;
-                    for (var i = 0; i < n; i++)
-                    {
-                        var j = (i + 1) % n;
-                        points.Add(new Vector2(ring[i * 2], ring[i * 2 + 1]));
-                        points.Add(new Vector2(ring[j * 2], ring[j * 2 + 1]));
-                    }
-                }
+        foreach (var line in lines)
+            for (var i = 0; i + 3 < line.Length; i += 2)
+            {
+                points.Add(new Vector2(line[i], line[i + 1]));
+                points.Add(new Vector2(line[i + 2], line[i + 3]));
+            }
         var colors = new Color[points.Count];
         Array.Fill(colors, Colors.White);
         return BuildMesh(Godot.Mesh.PrimitiveType.Lines, points.ToArray(), colors, null);

@@ -13,13 +13,52 @@ public class DataTests
     }
 
     [Fact]
-    public void AllUnMembersAreLoaded()
+    public void AllUnMembersAndOtherStatesAreLoaded()
     {
         var data = TestData.Game;
-        Assert.Equal(193, data.Countries.Countries.Count);
-        Assert.Equal(193, data.Map.Countries.Count);
-        Assert.Equal(193, data.Politics.Countries.Count);
+        Assert.Equal(198, data.Countries.Countries.Count);
+        Assert.Equal(193, data.Countries.Countries.Count(c => c.UnMember));
+        Assert.Equal(198, data.Map.Countries.Count);
+        Assert.Equal(198, data.Politics.Countries.Count);
         Assert.Contains(data.Countries.Countries, c => c.Id == "RUS" && c.Name == "Россия");
+        foreach (var id in new[] { "TWN", "XKX", "PSE", "SOL", "CYN" })
+        {
+            var c = data.Countries.Countries.Single(x => x.Id == id);
+            Assert.False(c.UnMember);
+            Assert.False(string.IsNullOrEmpty(c.StatusNote));
+        }
+    }
+
+    [Fact]
+    public void DebtComesFromImfForMajorEconomies()
+    {
+        var data = TestData.Game;
+        foreach (var id in new[] { "USA", "CHN", "DEU", "JPN", "RUS", "IND", "BRA", "TWN" })
+        {
+            var debt = data.Countries.Countries.Single(c => c.Id == id).Stats["gov_debt_pct_gdp"];
+            Assert.StartsWith("imf:", debt.Source);
+        }
+    }
+
+    [Fact]
+    public void EveryCountryHasRegionsAndACapital()
+    {
+        var data = TestData.Game;
+        var regions = data.Regions.Regions.GroupBy(r => r.Country).ToDictionary(g => g.Key, g => g.ToList());
+        var capitals = data.Cities.Cities.Where(c => c.Capital).ToDictionary(c => c.Country, c => c.Name);
+        foreach (var c in data.Countries.Countries)
+        {
+            Assert.True(regions.ContainsKey(c.Id), $"у {c.Id} нет регионов");
+            Assert.True(capitals.ContainsKey(c.Id), $"у {c.Id} нет столицы");
+        }
+        Assert.Equal("Москва", capitals["RUS"]);
+        Assert.Equal("Тайбэй", capitals["TWN"]);
+        Assert.Equal("Иерусалим", capitals["ISR"]);
+        Assert.Equal("Рамалла", capitals["PSE"]);
+        Assert.Contains(regions["MDA"], r => r.Name == "Приднестровье");
+        Assert.Contains(regions["UKR"], r => r.Name == "Севастополь");
+        Assert.True(regions["RUS"].Count > 80);
+        Assert.Single(regions["SGP"]);
     }
 
     [Fact]
@@ -27,7 +66,7 @@ public class DataTests
     {
         var world = WorldFactory.Create(TestData.Game);
         Assert.Equal(new DateOnly(2026, 1, 1), world.Date);
-        Assert.Equal(193, world.Countries.Count);
+        Assert.Equal(198, world.Countries.Count);
         Assert.True(world["USA"].Stat("population") > 300e6);
         Assert.Equal(PoliticalSystem.PresidentialRepublic, world["USA"].System);
         Assert.Equal(PoliticalSystem.ConstitutionalMonarchy, world["GBR"].System);
@@ -59,6 +98,8 @@ public class DataTests
     {
         Directory = d.Directory,
         Countries = countries,
+        Regions = d.Regions,
+        Control = d.Control,
         Politics = politics,
         Scenario = d.Scenario,
         Balance = d.Balance,

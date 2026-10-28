@@ -29,6 +29,11 @@ public static partial class DataValidator
         ["inflation_pct"] = (-30, 2000),
         ["unemployment_pct"] = (0, 60),
         ["gov_debt_pct_gdp"] = (0, 400),
+        ["budget_balance_pct_gdp"] = (-60, 60),
+        ["gov_revenue_pct_gdp"] = (0, 150),
+        ["gov_spending_pct_gdp"] = (0, 150),
+        ["current_account_pct_gdp"] = (-100, 100),
+        ["services_pct_gdp"] = (0, 100),
         ["tax_revenue_pct_gdp"] = (0, 80),
         ["exports_pct_gdp"] = (0, 300),
         ["imports_pct_gdp"] = (0, 300),
@@ -45,8 +50,8 @@ public static partial class DataValidator
         ["gini"] = (15, 75),
     };
 
-    static readonly HashSet<string> Formats = ["people", "money_big", "money", "percent", "percent_signed", "percent_gdp", "years", "number1", "number2"];
-    static readonly HashSet<string> MapKinds = ["political", "bins", "diverging", "politics", "income"];
+    static readonly HashSet<string> Formats = ["people", "money_big", "money", "percent", "percent_signed", "percent_gdp", "percent_gdp_signed", "years", "number1", "number2"];
+    static readonly HashSet<string> MapKinds = ["political", "bins", "diverging", "politics", "income", "region_density"];
 
     [GeneratedRegex("^#[0-9a-fA-F]{6}$")]
     private static partial Regex HexColor();
@@ -92,12 +97,44 @@ public static partial class DataValidator
                     Add("countries.json", $"{c.Id}.{key} = {s.Value} вне диапазона {r.Min}…{r.Max}");
                 var knownSource = s.Source.StartsWith("wb:", StringComparison.Ordinal)
                     || s.Source.StartsWith("imf:", StringComparison.Ordinal)
-                    || s.Source is StatSources.Fill or StatSources.Derived;
+                    || s.Source is StatSources.Fill or StatSources.Derived or "natural_earth";
                 if (!knownSource)
                     Add("countries.json", $"{c.Id}.{key}: неизвестный источник «{s.Source}»");
                 if (s.Source == StatSources.Fill && string.IsNullOrEmpty(s.Method))
                     Add("countries.json", $"{c.Id}.{key}: заполнение пропуска без описания способа");
             }
+        }
+
+        // --- regions.json и control.json
+        var regionIds = new HashSet<string>(StringComparer.Ordinal);
+        var regionCountry = new Dictionary<string, string>(StringComparer.Ordinal);
+        var regionPop = new Dictionary<string, double>(StringComparer.Ordinal);
+        foreach (var r in data.Regions.Regions)
+        {
+            if (!regionIds.Add(r.Id))
+                Add("regions.json", $"регион {r.Id} встречается дважды");
+            regionCountry[r.Id] = r.Country;
+            if (!ids.Contains(r.Country))
+                Add("regions.json", $"регион {r.Id} ({r.Name}): неизвестная страна {r.Country}");
+            if (string.IsNullOrWhiteSpace(r.Name))
+                Add("regions.json", $"у региона {r.Id} нет названия");
+            if (r.Population <= 0 || r.AreaKm2 <= 0)
+                Add("regions.json", $"у региона {r.Id} ({r.Name}) нет населения или площади");
+            regionPop[r.Country] = regionPop.GetValueOrDefault(r.Country) + r.Population;
+        }
+        foreach (var c in countries)
+        {
+            if (!regionPop.ContainsKey(c.Id))
+                Add("regions.json", $"у страны {c.Id} нет ни одного региона");
+            else if (c.Stats.TryGetValue("population", out var pop) && regionPop[c.Id] < pop.Value * 0.95)
+                Add("regions.json", $"население регионов {c.Id} меньше населения страны: {regionPop[c.Id]:F0} < {pop.Value:F0}");
+        }
+        foreach (var c in data.Control.Control)
+        {
+            if (!regionIds.Contains(c.Region))
+                Add("control.json", $"неизвестный регион {c.Region}");
+            if (!ids.Contains(c.Controller))
+                Add("control.json", $"регион {c.Region}: неизвестная страна {c.Controller}");
         }
 
         // --- politics.json
@@ -129,12 +166,27 @@ public static partial class DataValidator
                 Add("map/world.json", $"у страны {c.Id} цвет {c.Color} вне палитры");
             foreach (var n in c.Neighbors.Where(n => !ids.Contains(n)))
                 Add("map/world.json", $"у страны {c.Id} неизвестный сосед {n}");
-            CheckPolygons("map/world.json", c.Id, c.Polygons, Add);
+            if (c.Outline.Count == 0)
+                Add("map/world.json", $"у страны {c.Id} нет контура");
         }
-        foreach (var t in data.Map.Territories)
-            CheckPolygons("map/world.json", t.Id, t.Polygons, Add);
         foreach (var id in ids.Where(id => !mapIds.Contains(id)))
             Add("map/world.json", $"страны {id} нет на карте");
+        var mapRegions = new HashSet<string>(StringComparer.Ordinal);
+        var territories = data.Map.Territories.Select(t => t.Id).ToHashSet(StringComparer.Ordinal);
+        foreach (var r in data.Map.Regions)
+        {
+            mapRegions.Add(r.Id);
+            if (r.Country is null)
+            {
+                if (r.Territory is null || !territories.Contains(r.Territory))
+                    Add("map/world.json", $"регион {r.Id} без страны и без нейтральной территории");
+            }
+            else if (!regionIds.Contains(r.Id) || regionCountry[r.Id] != r.Country)
+                Add("map/world.json", $"регион {r.Id} на карте не совпадает с regions.json");
+            CheckPolygons("map/world.json", r.Id, r.Polygons, Add);
+        }
+        foreach (var id in regionIds.Where(id => !mapRegions.Contains(id)))
+            Add("map/world.json", $"региона {id} нет на карте");
 
         // --- map/cities.json
         var capitals = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -142,11 +194,17 @@ public static partial class DataValidator
         {
             if (!ids.Contains(city.Country))
                 Add("map/cities.json", $"город {city.Name}: неизвестная страна {city.Country}");
+            if (!regionCountry.TryGetValue(city.Region, out var owner))
+                Add("map/cities.json", $"город {city.Name}: неизвестный регион {city.Region}");
+            else if (owner != city.Country)
+                Add("map/cities.json", $"город {city.Name}: регион {city.Region} принадлежит {owner}, а не {city.Country}");
             if (city.Capital)
                 capitals[city.Country] = capitals.GetValueOrDefault(city.Country) + 1;
         }
         foreach (var (country, count) in capitals.Where(kv => kv.Value > 1))
             Add("map/cities.json", $"у страны {country} {count} столицы");
+        foreach (var id in ids.Where(id => !capitals.ContainsKey(id)))
+            Add("map/cities.json", $"у страны {id} нет столицы");
 
         // --- map_modes.json
         var modes = data.MapModes;
@@ -165,9 +223,9 @@ public static partial class DataValidator
                 Add("map_modes.json", $"режим {m.Id} описан дважды");
             if (!MapKinds.Contains(m.Kind))
                 Add("map_modes.json", $"режим {m.Id}: неизвестный вид «{m.Kind}»");
-            if (m.Kind is not ("bins" or "diverging"))
+            if (m.Kind is not ("bins" or "diverging" or "region_density"))
                 continue;
-            if (m.Indicator is null || !indicators.Contains(m.Indicator))
+            if (m.Kind != "region_density" && (m.Indicator is null || !indicators.Contains(m.Indicator)))
                 Add("map_modes.json", $"режим {m.Id}: показатель «{m.Indicator}» не описан в indicators.json");
             var t = m.Thresholds ?? [];
             if (t.Count == 0)
@@ -175,7 +233,7 @@ public static partial class DataValidator
             for (var i = 1; i < t.Count; i++)
                 if (t[i] <= t[i - 1])
                     Add("map_modes.json", $"режим {m.Id}: пороги должны расти");
-            if (m.Kind == "bins" && t.Count + 1 > pal.Sequential.Count)
+            if (m.Kind is "bins" or "region_density" && t.Count + 1 > pal.Sequential.Count)
                 Add("map_modes.json", $"режим {m.Id}: классов {t.Count + 1}, а цветов в sequential {pal.Sequential.Count}");
             if (m.Kind == "diverging" && (t.Count % 2 != 0 || t.Count / 2 != pal.DivergingNegative.Count || t.Count / 2 != pal.DivergingPositive.Count))
                 Add("map_modes.json", $"режим {m.Id}: число порогов не совпадает с плечами расходящейся палитры");
