@@ -9,6 +9,7 @@
   Всемирный банк, World Development Indicators  -> tools/sources/wb_wdi.json
   GeoNames: население и русские названия регионов -> tools/sources/geonames_admin.json
   GeoNames: города от 15 тыс. жителей              -> tools/sources/geonames_cities.json
+  BIS: ключевые ставки центробанков                -> tools/sources/bis_policy_rates.json
 
 Запуск:  python tools/fetch_sources.py [--only imf,wb,geonames]
 """
@@ -36,7 +37,7 @@ HEADERS = {
 }
 
 FIRST_YEAR = 2010
-LAST_YEAR = 2026
+LAST_YEAR = 2030  # МВФ даёт прогноз на 5 лет вперёд: по нему калибруются тренды модели
 
 IMF_URL = "https://www.imf.org/external/datamapper/api/v1/{indicator}"
 IMF_INDICATORS = [
@@ -52,6 +53,9 @@ IMF_INDICATORS = [
     "LUR",           # безработица, %
     "LP",            # население, млн
     "BCA_NGDPD",     # сальдо текущего счёта, % ВВП
+    "GGXONLB_NGDP",  # первичное сальдо бюджета (без процентов по долгу), % ВВП
+    "NID_NGDP",      # инвестиции, % ВВП
+    "NGSD_NGDP",     # национальные сбережения, % ВВП
 ]
 
 WB_URL = "https://api.worldbank.org/v2/country/all/indicator/{code}?format=json&per_page=20000&date={first}:{last}"
@@ -61,7 +65,14 @@ WB_INDICATORS = [
     "NE.EXP.GNFS.ZS", "NE.IMP.GNFS.ZS", "NV.AGR.TOTL.ZS", "NV.IND.TOTL.ZS", "NV.SRV.TOTL.ZS",
     "SP.DYN.LE00.IN", "SP.DYN.TFRT.IN", "SP.URB.TOTL.IN.ZS", "SP.POP.0014.TO.ZS", "SP.POP.65UP.TO.ZS",
     "SL.TLF.TOTL.IN", "MS.MIL.XPND.GD.ZS", "EG.ELC.ACCS.ZS", "SI.POV.GINI", "NY.GNP.PCAP.CD",
+    # структура экономики и занятости — для калибровки отраслей
+    "NV.IND.MANF.ZS", "NY.GDP.TOTL.RT.ZS", "NY.GDP.PETR.RT.ZS", "NY.GDP.NGAS.RT.ZS", "NY.GDP.COAL.RT.ZS",
+    "NY.GDP.MINR.RT.ZS", "NE.GCF.TOTL.ZS", "NE.CON.PRVT.ZS", "NE.CON.GOVT.ZS", "SL.AGR.EMPL.ZS",
+    "SL.IND.EMPL.ZS", "SL.SRV.EMPL.ZS", "ST.INT.RCPT.CD", "SP.POP.GROW", "FI.RES.TOTL.CD",
+    "PA.NUS.FCRF", "FR.INR.RINR", "FR.INR.LEND",
 ]
+
+BIS_URL = "https://stats.bis.org/api/v1/data/WS_CBPOL/M./all?startPeriod={start}&detail=dataonly"
 
 NE_ADMIN1 = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_1_states_provinces.geojson"
 GEONAMES_ALL = "https://download.geonames.org/export/dump/allCountries.zip"
@@ -124,6 +135,29 @@ def fetch_imf() -> None:
         raise RuntimeError("МВФ не вернул госдолг")
     write("imf_weo.json", {"source": "IMF World Economic Outlook, DataMapper API", "url": IMF_URL.format(indicator="<код>"),
                            "retrieved": dt.date.today().isoformat(), "values": data})
+
+
+def fetch_bis() -> None:
+    """Ключевые ставки центробанков (BIS, около 40 стран, включая ФРС и ЕЦБ) за последние месяцы."""
+    print("BIS: ключевые ставки", flush=True)
+    req = urllib.request.Request(BIS_URL.format(start="2025-01"),
+                                 headers={**HEADERS, "Accept": "application/vnd.sdmx.data+csv;version=1.0.0"})
+    with urllib.request.urlopen(req, timeout=120) as r:
+        text = r.read().decode("utf-8")
+    rows = list(csv.DictReader(io.StringIO(text)))
+    if not rows:
+        raise RuntimeError("BIS вернул пустой ответ")
+    print(f"  столбцы: {list(rows[0].keys())}", flush=True)
+    rates: dict[str, dict[str, float]] = {}
+    for row in rows:
+        area = row.get("REF_AREA") or row.get("REF_AREA:Reference area", "").split(":")[0]
+        period = row.get("TIME_PERIOD") or row.get("TIME_PERIOD:Time period or range", "")
+        value = row.get("OBS_VALUE") or row.get("OBS_VALUE:Observation Value", "")
+        if area and period and value not in ("", "NaN"):
+            rates.setdefault(area, {})[period] = float(value)
+    print(f"  стран и валютных союзов: {len(rates)}", flush=True)
+    write("bis_policy_rates.json", {"source": "BIS, Central bank policy rates (WS_CBPOL)", "url": BIS_URL.format(start="2025-01"),
+                                    "retrieved": dt.date.today().isoformat(), "rates": rates})
 
 
 def fetch_wb() -> None:
@@ -204,9 +238,9 @@ def fetch_geonames() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--only", default="imf,wb,geonames", help="какие источники скачать, через запятую")
+    parser.add_argument("--only", default="imf,wb,bis,geonames", help="какие источники скачать, через запятую")
     args = parser.parse_args()
-    jobs = {"imf": fetch_imf, "wb": fetch_wb, "geonames": fetch_geonames}
+    jobs = {"imf": fetch_imf, "wb": fetch_wb, "bis": fetch_bis, "geonames": fetch_geonames}
     failed = []
     for name in args.only.split(","):
         try:
