@@ -1,0 +1,44 @@
+name: Источники данных
+
+# Скачивает первичные данные (МВФ, Всемирный банк, GeoNames) в tools/sources/
+# и сохраняет их в ту же ветку. Запускается при изменении скрипта загрузки или вручную.
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - tools/fetch_sources.py
+      - .github/workflows/sources.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sources-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    name: Скачать источники
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Скачать
+        run: python tools/fetch_sources.py
+      - name: Сохранить снимки в ветку
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/sources
+          if git diff --cached --quiet; then
+            echo "Снимки не изменились"
+            exit 0
+          fi
+          git commit -m "Обновлены снимки источников данных (МВФ, Всемирный банк, GeoNames)"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
