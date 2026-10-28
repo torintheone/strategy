@@ -41,8 +41,8 @@ IMF_URL = "https://www.imf.org/external/datamapper/api/v1/{indicator}"
 IMF_INDICATORS = [
     "GGXWDG_NGDP",   # госдолг (general government gross debt), % ВВП
     "GGXCNL_NGDP",   # сальдо бюджета (net lending/borrowing), % ВВП
-    "GGR_NGDP",      # доходы бюджета, % ВВП
-    "GGX_NGDP",      # расходы бюджета, % ВВП
+    "rev",           # доходы бюджета, % ВВП (в DataMapper код короткий)
+    "exp",           # расходы бюджета, % ВВП
     "NGDPD",         # ВВП, млрд долл.
     "NGDPDPC",       # ВВП на душу, долл.
     "PPPPC",         # ВВП на душу по ППС
@@ -117,7 +117,9 @@ def fetch_imf() -> None:
         }
         print(f"  {ind}: стран {len(data[ind])}", flush=True)
         if not data[ind]:
-            raise RuntimeError(f"МВФ вернул пустой ряд {ind}")
+            print(f"  внимание: МВФ вернул пустой ряд {ind}", flush=True)
+    if not data.get("GGXWDG_NGDP"):
+        raise RuntimeError("МВФ не вернул госдолг")
     write("imf_weo.json", {"source": "IMF World Economic Outlook, DataMapper API", "url": IMF_URL.format(indicator="<код>"),
                            "retrieved": dt.date.today().isoformat(), "values": data})
 
