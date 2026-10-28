@@ -8,6 +8,7 @@
   МВФ, World Economic Outlook (DataMapper API)  -> tools/sources/imf_weo.json
   Всемирный банк, World Development Indicators  -> tools/sources/wb_wdi.json
   GeoNames: население и русские названия регионов -> tools/sources/geonames_admin.json
+  GeoNames: города от 15 тыс. жителей              -> tools/sources/geonames_cities.json
 
 Запуск:  python tools/fetch_sources.py [--only imf,wb,geonames]
 """
@@ -65,6 +66,7 @@ WB_INDICATORS = [
 NE_ADMIN1 = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_10m_admin_1_states_provinces.geojson"
 GEONAMES_ALL = "https://download.geonames.org/export/dump/allCountries.zip"
 GEONAMES_ALT = "https://download.geonames.org/export/dump/alternateNamesV2.zip"
+GEONAMES_CITIES = "https://download.geonames.org/export/dump/cities15000.zip"
 
 
 def get(url: str, timeout: int = 300, attempts: int = 4) -> bytes:
@@ -165,6 +167,17 @@ def fetch_geonames() -> None:
                               "pop": int(cols[14] or 0)}
     print(f"  административных единиц: {len(admin)}", flush=True)
 
+    cities: dict[int, dict] = {}
+    path = download(GEONAMES_CITIES, TMP / "cities15000.zip")
+    with zipfile.ZipFile(path) as z, z.open("cities15000.txt") as f:
+        for line in io.TextIOWrapper(f, encoding="utf-8"):
+            cols = line.rstrip("\n").split("\t")
+            if len(cols) < 15 or cols[6] != "P":
+                continue
+            cities[int(cols[0])] = {"name": cols[1], "lat": round(float(cols[4]), 4), "lon": round(float(cols[5]), 4),
+                                    "cc": cols[8], "code": cols[7], "a1": cols[10], "pop": int(cols[14] or 0)}
+    print(f"  городов: {len(cities)}", flush=True)
+
     ru: dict[int, tuple[int, str]] = {}
     path = download(GEONAMES_ALT, TMP / "alternateNamesV2.zip")
     with zipfile.ZipFile(path) as z, z.open("alternateNamesV2.txt") as f:
@@ -173,17 +186,20 @@ def fetch_geonames() -> None:
             if len(cols) < 8 or cols[2] != "ru":
                 continue
             gid = int(cols[1])
-            if gid not in admin or cols[6] == "1" or cols[7] == "1":  # разговорные и исторические названия не берём
+            if (gid not in admin and gid not in cities) or cols[6] == "1" or cols[7] == "1":  # разговорные и исторические не берём
                 continue
             rank = 2 if cols[4] == "1" else 1 if cols[5] == "1" else 0
             if gid not in ru or rank > ru[gid][0]:
                 ru[gid] = (rank, cols[3])
     for gid, (_, name) in ru.items():
-        admin[gid]["ru"] = name
+        (admin.get(gid) or cities[gid])["ru"] = name
     print(f"  с русским названием: {len(ru)}", flush=True)
     write("geonames_admin.json", {"source": "GeoNames (CC BY 4.0)", "url": GEONAMES_ALL,
                                   "retrieved": dt.date.today().isoformat(),
                                   "admin": {str(k): v for k, v in sorted(admin.items())}})
+    write("geonames_cities.json", {"source": "GeoNames (CC BY 4.0), города от 15 тыс. жителей", "url": GEONAMES_CITIES,
+                                   "retrieved": dt.date.today().isoformat(),
+                                   "cities": {str(k): v for k, v in sorted(cities.items())}})
 
 
 def main() -> int:
