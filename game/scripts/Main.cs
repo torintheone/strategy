@@ -46,6 +46,11 @@ public partial class Main : Node
     Vector2 _dragStart;
     Vector2 _mouse;
 
+    // Скриншоты для CI: «-- --screenshots <папка>» снимает несколько видов карты и интерфейса и выходит.
+    string? _shotsDir;
+    int _shotStep;
+    int _shotFrames;
+
     // Дымовой тест для CI: запуск с аргументом «-- --smoke» проходит по всем режимам карты и выходит.
     bool _smoke;
     double _smokeTime;
@@ -54,7 +59,11 @@ public partial class Main : Node
 
     public override void _Ready()
     {
-        _smoke = OS.GetCmdlineUserArgs().Contains("--smoke");
+        var userArgs = OS.GetCmdlineUserArgs();
+        _smoke = userArgs.Contains("--smoke");
+        var shots = Array.IndexOf(userArgs, "--screenshots");
+        if (shots >= 0 && shots + 1 < userArgs.Length)
+            _shotsDir = userArgs[shots + 1];
         var window = GetWindow();
         window.Title = "Politeconomy";
         window.MinSize = new Vector2I(1280, 720);
@@ -153,6 +162,8 @@ public partial class Main : Node
     {
         if (_smoke && _host != null)
             SmokeStep(delta);
+        if (_shotsDir != null && _host != null)
+            ScreenshotStep();
         if (_host == null)
             return;
         if (_host.Error is { } error)
@@ -430,6 +441,57 @@ public partial class Main : Node
                 _smokeStep++;
                 break;
         }
+    }
+
+    /// <summary>
+    /// Обход для скриншотов: выставить вид, подождать, пока кадр отрисуется, сохранить PNG.
+    /// Время стоит на паузе, поэтому кадры каждый раз одинаковые.
+    /// </summary>
+    void ScreenshotStep()
+    {
+        _shotFrames++;
+        if (_shotFrames < 45)
+            return;
+        var views = new (string Name, Action Setup)[]
+        {
+            ("01_world", () => { SelectRegion(null); SetMode(_data.MapModes.Modes[0]); _camera.FitWorld(); }),
+            ("02_gdp_per_capita", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "gdp_per_capita"))),
+            ("03_europe", () => { SetMode(_data.MapModes.Modes[0]); ShowAt("DEU", 4.5f); }),
+            ("04_dossier", () => { SelectCountry(_map.Country("RUS")); ShowAt("RUS", 2.2f); }),
+            ("05_hover", () =>
+            {
+                SelectRegion(null);
+                ShowAt("FRA", 7f);
+                _mouse = _camera.GetViewportRect().Size / 2;
+                var (region, country) = Pick(_mouse);
+                SetHovered(region, country);
+            }),
+            ("06_closeup", () => { SetHovered(null, null); ShowAt("NLD", 16f); }),
+            ("07_inflation", () => { SetMode(_data.MapModes.Modes.First(m => m.Id == "inflation")); _camera.FitWorld(); }),
+        };
+        if (_shotStep > 0)
+        {
+            var image = GetViewport().GetTexture().GetImage();
+            var path = System.IO.Path.Combine(_shotsDir!, views[_shotStep - 1].Name + ".png");
+            image.SavePng(path);
+            GD.Print("SCREENSHOT " + path);
+        }
+        if (_shotStep == views.Length)
+        {
+            GetTree().Quit();
+            _shotsDir = null;
+            return;
+        }
+        views[_shotStep].Setup();
+        _shotStep++;
+        _shotFrames = 0;
+    }
+
+    /// <summary>Показать страну в центре экрана с масштабом «во столько-то раз ближе, чем весь мир».</summary>
+    void ShowAt(string countryId, float closer)
+    {
+        var country = _map.Country(countryId)!;
+        _camera.ShowAt(new Vector2(country.LabelX, country.LabelY), closer);
     }
 
     void ShowFatal(string message, Theme theme)

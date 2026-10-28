@@ -60,6 +60,17 @@ public partial class MapCamera : Camera2D
         Clamp();
     }
 
+    /// <summary>Точка мира в центре экрана, масштаб — во сколько раз ближе, чем «весь мир».</summary>
+    public void ShowAt(Vector2 world, float closer)
+    {
+        var view = GetViewportRect().Size;
+        var fit = Mathf.Min(view.X / _bounds.Size.X, (view.Y - 80) / _bounds.Size.Y);
+        var zoom = Mathf.Clamp(fit * closer, _minZoom, MaxZoom);
+        Zoom = new Vector2(zoom, zoom);
+        Position = world;
+        Clamp();
+    }
+
     public Vector2 ScreenToWorld(Vector2 screenPos) => Position + (screenPos - GetViewportRect().Size / 2) / Zoom.X;
 
     public override void _Process(double delta)
