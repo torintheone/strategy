@@ -54,13 +54,14 @@ IMF_INDICATORS = [
     "LP",            # население, млн
     "BCA_NGDPD",     # сальдо текущего счёта, % ВВП
     "GGXONLB_NGDP",  # первичное сальдо бюджета (без процентов по долгу), % ВВП
+    "prim_exp",      # первичные расходы бюджета (без процентов), % ВВП: проценты = exp − prim_exp
     "NID_NGDP",      # инвестиции, % ВВП
     "NGSD_NGDP",     # национальные сбережения, % ВВП
 ]
 IMF_CORE = {"GGXWDG_NGDP", "NGDP_RPCH", "PCPIPCH"}
 # В DataMapper у части рядов WEO другие коды. Если ряд пуст, ищем замену в списке индикаторов по словам в названии.
 IMF_SEARCH = {
-    "GGXONLB_NGDP": ["primary"],
+    "GGXONLB_NGDP": ["primary", "balance"],
     "NID_NGDP": ["investment"],
     "NGSD_NGDP": ["saving"],
 }
@@ -75,7 +76,7 @@ WB_INDICATORS = [
     "SL.TLF.TOTL.IN", "MS.MIL.XPND.GD.ZS", "EG.ELC.ACCS.ZS", "SI.POV.GINI", "NY.GNP.PCAP.CD",
     # структура экономики и занятости — для калибровки отраслей
     "NV.IND.MANF.ZS", "NY.GDP.TOTL.RT.ZS", "NY.GDP.PETR.RT.ZS", "NY.GDP.NGAS.RT.ZS", "NY.GDP.COAL.RT.ZS",
-    "NY.GDP.MINR.RT.ZS", "NE.GCF.TOTL.ZS", "NE.CON.PRVT.ZS", "NE.CON.GOVT.ZS", "SL.AGR.EMPL.ZS",
+    "NY.GDP.MINR.RT.ZS", "NE.GDI.TOTL.ZS", "NE.CON.PRVT.ZS", "NE.CON.GOVT.ZS", "SL.AGR.EMPL.ZS",
     "SL.IND.EMPL.ZS", "SL.SRV.EMPL.ZS", "ST.INT.RCPT.CD", "SP.POP.GROW", "FI.RES.TOTL.CD",
     "PA.NUS.FCRF", "FR.INR.RINR", "FR.INR.LEND", "GC.XPN.INTP.RV.ZS",
 ]
