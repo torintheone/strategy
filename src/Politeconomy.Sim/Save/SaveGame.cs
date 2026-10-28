@@ -10,7 +10,7 @@ namespace Politeconomy.Sim.Save;
 /// <summary>Сохранение партии: состояние мира в JSON, сжатое gzip. Постоянные данные берутся из data/.</summary>
 public static class SaveGame
 {
-    public const int FormatVersion = 1;
+    public const int FormatVersion = 2;
 
     public static SaveState Capture(World world) => new(
         FormatVersion,
@@ -27,14 +27,16 @@ public static class SaveGame
                 WorldFactory.IncomeId(c.Income),
                 c.Stats
                     .OrderBy(kv => kv.Key, StringComparer.Ordinal)
-                    .Select(kv => new StatState(kv.Key, kv.Value.Value, kv.Value.Year, kv.Value.Source, kv.Value.Method, kv.Value.N))
+                    .Select(kv => new StatState(kv.Key, kv.Value.Value, kv.Value.Year, kv.Value.Source, kv.Value.Method, kv.Value.N,
+                        kv.Value.Factors?.ToList()))
                     .ToList()))
             .ToList(),
         world.Regions
             .Where(r => r.IsOccupied)
             .OrderBy(r => r.Id, StringComparer.Ordinal)
             .Select(r => new RegionState(r.Id, r.Controller))
-            .ToList());
+            .ToList(),
+        world.Economy);
 
     public static void Write(World world, Stream output)
     {
@@ -83,7 +85,7 @@ public static class SaveGame
                 Income = WorldFactory.ParseIncome(cs.Income),
             };
             foreach (var s in cs.Stats)
-                country.Stats[s.Key] = new StatValue(s.Value, s.Year, s.Source, s.Method, s.N);
+                country.Stats[s.Key] = new StatValue(s.Value, s.Year, s.Source, s.Method, s.N, s.Factors);
             countries.Add(country);
         }
         var controllers = (state.Occupied ?? []).ToDictionary(r => r.Id, r => r.Controller, StringComparer.Ordinal);
@@ -102,6 +104,7 @@ public static class SaveGame
             PlayerCountry = state.PlayerCountry,
             Countries = countries,
             Regions = regions,
+            Economy = state.Economy,
         };
     }
 
@@ -121,14 +124,16 @@ public sealed record SaveState(
     ulong[] Rng,
     string? PlayerCountry,
     List<CountryState> Countries,
-    List<RegionState>? Occupied = null);
+    List<RegionState>? Occupied = null,
+    Economy.WorldEconomy? Economy = null);
 
 /// <summary>Регион, который контролирует не владелец.</summary>
 public sealed record RegionState(string Id, string Controller);
 
 public sealed record CountryState(string Id, string System, string Income, List<StatState> Stats);
 
-public sealed record StatState(string Key, double Value, int? Year, string Source, string? Method, int? N);
+public sealed record StatState(string Key, double Value, int? Year, string Source, string? Method, int? N,
+    List<StatFactor>? Factors = null);
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
 [JsonSerializable(typeof(SaveState))]

@@ -26,7 +26,8 @@ public sealed record CountryRecord(
     string IncomeSource,
     IReadOnlyDictionary<string, StatRecord> Stats,
     bool UnMember = true,
-    string? StatusNote = null);
+    string? StatusNote = null,
+    string Currency = "");
 
 public sealed record StatRecord(
     double Value,
@@ -71,7 +72,7 @@ public sealed record ScenarioFile(
     int WarmupMonths,
     string? PlayerCountry);
 
-public sealed record BalanceFile(TimeBalance Time);
+public sealed record BalanceFile(TimeBalance Time, EconomyBalance? Economy = null);
 
 public sealed record TimeBalance(IReadOnlyList<double> DaysPerSecond);
 
@@ -177,4 +178,7 @@ public sealed record CityRecord(
 [JsonSerializable(typeof(MapModesFile))]
 [JsonSerializable(typeof(WorldMapFile))]
 [JsonSerializable(typeof(CitiesFile))]
+[JsonSerializable(typeof(CurrenciesFile))]
+[JsonSerializable(typeof(IndustriesFile))]
+[JsonSerializable(typeof(BudgetFile))]
 internal sealed partial class DataJsonContext : JsonSerializerContext;

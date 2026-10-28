@@ -107,5 +107,8 @@ public class DataTests
         MapModes = d.MapModes,
         Map = d.Map,
         Cities = d.Cities,
+        Currencies = d.Currencies,
+        Industries = d.Industries,
+        Budget = d.Budget,
     };
 }

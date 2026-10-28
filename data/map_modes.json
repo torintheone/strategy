@@ -20,7 +20,9 @@
   {"id": "life_expectancy", "name": "Продолжительность жизни", "short_name": "Жизнь", "kind": "bins", "indicator": "life_expectancy", "thresholds": [60, 65, 70, 75, 80, 83], "hotkey": "F8"},
   {"id": "density", "name": "Плотность населения регионов", "short_name": "Плотность", "kind": "region_density", "thresholds": [10, 25, 50, 100, 250, 500], "unit": "чел./км²", "hotkey": "F9"},
   {"id": "system", "name": "Политическая система", "short_name": "Строй", "kind": "politics", "hotkey": "F10"},
-  {"id": "income", "name": "Уровень дохода", "short_name": "Доход", "kind": "income", "hotkey": "F11"}
+  {"id": "income", "name": "Уровень дохода", "short_name": "Доход", "kind": "income", "hotkey": "F11"},
+  {"id": "rating", "name": "Кредитный рейтинг", "short_name": "Рейтинг", "kind": "bins", "indicator": "credit_rating", "thresholds": [6, 9, 12, 15, 18, 20], "hotkey": "F12"},
+  {"id": "policy_rate", "name": "Ключевая ставка", "short_name": "Ставка", "kind": "bins", "indicator": "policy_rate_pct", "thresholds": [2, 4, 7, 12, 20, 35]}
  ],
  "politics_colors": {
   "parliamentary_republic": "#86b6ef",

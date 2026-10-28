@@ -2,12 +2,19 @@ using Politeconomy.Sim.Data;
 
 namespace Politeconomy.Sim.Model;
 
-/// <summary>Значение показателя и его происхождение — из него строится подсказка «почему».</summary>
-public sealed record StatValue(double Value, int? Year, string Source, string? Method = null, int? N = null)
+/// <summary>
+/// Значение показателя и его происхождение — из него строится подсказка «почему».
+/// Factors — из чего складывается значение, рассчитанное моделью (для подсказки).
+/// </summary>
+public sealed record StatValue(double Value, int? Year, string Source, string? Method = null, int? N = null,
+    IReadOnlyList<StatFactor>? Factors = null)
 {
     /// <summary>Значение не из источника, а оценка: заполнение пропуска или расчёт из других показателей.</summary>
     public bool IsEstimate => Source is StatSources.Fill or StatSources.Derived;
 }
+
+/// <summary>Слагаемое или причина значения показателя. Format — как в indicators.json (percent, percent_signed…).</summary>
+public sealed record StatFactor(string Label, double Value, string Format);
 
 public static class StatSources
 {
@@ -76,6 +83,9 @@ public sealed class World
     public string? PlayerCountry { get; set; }
     public required IReadOnlyList<Country> Countries { get; init; }
     public required IReadOnlyList<Region> Regions { get; init; }
+
+    /// <summary>Состояние экономики всех стран; создаётся <see cref="Economy.EconomyModel.Setup"/>.</summary>
+    public Economy.WorldEconomy? Economy { get; set; }
 
     readonly Dictionary<string, Country> _byId = new(StringComparer.Ordinal);
     readonly Dictionary<string, Region> _regionsById = new(StringComparer.Ordinal);

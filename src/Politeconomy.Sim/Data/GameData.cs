@@ -17,6 +17,14 @@ public sealed class GameData
     public required MapModesFile MapModes { get; init; }
     public required WorldMapFile Map { get; init; }
     public required CitiesFile Cities { get; init; }
+    public required CurrenciesFile Currencies { get; init; }
+    public required IndustriesFile Industries { get; init; }
+    public required BudgetFile Budget { get; init; }
+
+    /// <summary>Коэффициенты модели экономики; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public EconomyBalance Economy => Balance.Economy ?? DefaultEconomy;
+
+    static readonly EconomyBalance DefaultEconomy = new();
 
     public IndicatorDef Indicator(string id) =>
         Indicators.Indicators.FirstOrDefault(i => i.Id == id)
@@ -39,6 +47,9 @@ public sealed class GameData
             MapModes = Read(directory, "map_modes.json", ctx.MapModesFile),
             Map = Read(directory, Path.Combine("map", "world.json"), ctx.WorldMapFile),
             Cities = Read(directory, Path.Combine("map", "cities.json"), ctx.CitiesFile),
+            Currencies = Read(directory, "currencies.json", ctx.CurrenciesFile),
+            Industries = Read(directory, "industries.json", ctx.IndustriesFile),
+            Budget = Read(directory, "budget.json", ctx.BudgetFile),
         };
     }
 

@@ -12,9 +12,13 @@ public partial class CountryPanel : PanelContainer
     static readonly (string Title, string[] Stats)[] Sections =
     [
         ("Экономика", ["gdp_usd", "gdp_per_capita_usd", "gdp_ppp_per_capita", "gdp_growth_pct", "inflation_pct", "unemployment_pct",
-            "agriculture_pct_gdp", "industry_pct_gdp", "services_pct_gdp", "exports_pct_gdp", "imports_pct_gdp", "current_account_pct_gdp"]),
-        ("Государство", ["gov_debt_pct_gdp", "budget_balance_pct_gdp", "gov_revenue_pct_gdp", "gov_spending_pct_gdp",
-            "tax_revenue_pct_gdp", "military_pct_gdp"]),
+            "investment_pct_gdp", "exports_pct_gdp", "imports_pct_gdp", "current_account_pct_gdp"]),
+        ("Деньги и долг", ["policy_rate_pct", "exchange_rate_change_pct", "credit_rating", "bond_yield_pct", "gov_debt_pct_gdp",
+            "interest_pct_gdp", "defaults"]),
+        ("Бюджет", ["budget_balance_pct_gdp", "gov_revenue_pct_gdp", "gov_spending_pct_gdp", "tax_revenue_pct_gdp", "military_pct_gdp"]),
+        ("Структура экономики", ["agriculture_pct_gdp", "industry_pct_gdp", "manufacturing_pct_gdp", "services_pct_gdp",
+            "resource_rents_pct_gdp", "tourism_pct_gdp", "employment_agriculture_pct", "employment_industry_pct", "employment_services_pct"]),
+        ("Ориентиры прогноза МВФ", ["gdp_growth_trend_pct", "inflation_anchor_pct", "unemployment_natural_pct"]),
         ("Население", ["population", "labor_force", "life_expectancy", "fertility_rate", "urban_pct", "age_0_14_pct",
             "age_65_plus_pct", "gini", "electricity_access_pct"]),
     ];
@@ -178,6 +182,8 @@ public partial class CountryPanel : PanelContainer
                 politics is null ? null : PoliticsTooltip(politics));
             AddFact("Доход", _data.MapModes.IncomeGroups.FirstOrDefault(g => g.Id == WorldFactory.IncomeId(country.Income))?.Name ?? "—",
                 "Группа дохода по классификации Всемирного банка на 2026 финансовый год (ВНД на душу населения за 2024 год).");
+            if (snapshot.Currencies.GetValueOrDefault(id) is { } currency)
+                AddFact("Валюта", CurrencyText(currency), CurrencyTooltip(currency));
             FillRegionList(id);
         }
         Visible = true;
@@ -212,6 +218,22 @@ public partial class CountryPanel : PanelContainer
             row.AddChild(pop);
             _regionList.AddChild(row);
         }
+    }
+
+    string CurrencyName(string code) =>
+        _data.Currencies.Currencies.FirstOrDefault(c => c.Id == code)?.Name ?? code;
+
+    string CurrencyText(CurrencySnapshot c) => $"{CurrencyName(c.Code)} ({c.Code})";
+
+    string CurrencyTooltip(CurrencySnapshot c)
+    {
+        var regime = c.Floating
+            ? "Плавающий курс: центробанк сам ставит ключевую ставку по инфляции и состоянию экономики, курс к доллару меняется."
+            : $"Курс привязан к валюте {CurrencyName(c.Anchor!)}: ставка следует за ставкой {c.Anchor}, курс к ней не меняется.";
+        var shared = c.Users > 1
+            ? $"\nВалютой пользуются {c.Users} стран(ы): ставку задаёт общий центробанк ({c.Bank ?? "по стране-эмитенту"}) по средней инфляции и экономике всех."
+            : "";
+        return regime + shared;
     }
 
     static string RegionTooltip(RegionRecord r)

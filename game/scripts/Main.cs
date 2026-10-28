@@ -1,6 +1,7 @@
 using Godot;
 using Politeconomy.Game.Map;
 using Politeconomy.Game.UI;
+using Politeconomy.Sim;
 using Politeconomy.Sim.Data;
 using Politeconomy.Sim.Engine;
 using Politeconomy.Sim.Geo;
@@ -79,8 +80,9 @@ public partial class Main : Node
         _map = WorldMap.From(_data.Map);
         _regionInfo = _data.Regions.Regions.ToDictionary(r => r.Id, StringComparer.Ordinal);
         _countryNames = _data.Countries.Countries.ToDictionary(c => c.Id, c => c.Name, StringComparer.Ordinal);
-        var world = WorldFactory.Create(_data);
-        _host = new SimulationHost(new Simulation(world), _data.Balance.Time.DaysPerSecond);
+        // Новая партия: мир, экономика по данным и разогрев модели (меньше секунды).
+        var start = GameSetup.NewGame(_data);
+        _host = new SimulationHost(start.Simulation, _data.Balance.Time.DaysPerSecond);
 
         BuildMap();
         BuildInterface(theme);
@@ -412,12 +414,18 @@ public partial class Main : Node
                 SelectRegion(_map.Region(_smokeOccupied!));
                 _smokeStep++;
                 break;
-            case 2 when _smokeTime > 3:
+            case 2 when _smokeTime > 3 && (_host!.Snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) || _smokeTime > 20):
+                // Экономика должна прожить хотя бы два месяца: показатели пересчитаны моделью и с разбором «почему».
                 var snapshot = _host!.Snapshot;
-                var ok = snapshot.Date > _data.Scenario.StartDate && snapshot.PlayerCountry == "RUS" && _host.Error == null
-                    && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU";
+                var inflation = snapshot.Countries["RUS"].Stat("inflation_pct");
+                var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
+                    && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
+                    && inflation is { Source: StatSources.Model, Factors.Count: > 0 } && double.IsFinite(inflation.Value);
+                if (_host.Error != null)
+                    GD.PrintErr(_host.Error.ToString());
                 GD.Print($"SMOKE {(ok ? "OK" : "FAIL")}: дата {snapshot.Date:yyyy-MM-dd}, стран {snapshot.Countries.Count}, " +
-                         $"регионов {_map.Regions.Count}, занято {snapshot.Occupied.Count}, шаг {_host.LastStepMs:F2} мс");
+                         $"регионов {_map.Regions.Count}, занято {snapshot.Occupied.Count}, инфляция в России {inflation?.Value:F2}%, " +
+                         $"шаг {_host.LastStepMs:F2} мс");
                 GetTree().Quit(ok ? 0 : 1);
                 _smokeStep++;
                 break;

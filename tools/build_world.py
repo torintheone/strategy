@@ -81,8 +81,43 @@ INDICATORS = [
     ("military_pct_gdp", [("wb", "MS.MIL.XPND.GD.ZS")], 2015, "median"),
     ("electricity_access_pct", [("wb", "EG.ELC.ACCS.ZS")], 2015, "median"),
     ("gini", [("wb", "SI.POV.GINI")], 2005, "median"),
+    # структура экономики — для калибровки отраслей (этап 1)
+    ("manufacturing_pct_gdp", [("wb", "NV.IND.MANF.ZS")], 2015, "median"),
+    ("resource_rents_pct_gdp", [("wb", "NY.GDP.TOTL.RT.ZS")], 2015, "median"),
+    ("oil_rents_pct_gdp", [("wb", "NY.GDP.PETR.RT.ZS")], 2015, "median"),
+    ("gas_rents_pct_gdp", [("wb", "NY.GDP.NGAS.RT.ZS")], 2015, "median"),
+    ("coal_rents_pct_gdp", [("wb", "NY.GDP.COAL.RT.ZS")], 2015, "median"),
+    ("mineral_rents_pct_gdp", [("wb", "NY.GDP.MINR.RT.ZS")], 2015, "median"),
+    ("investment_pct_gdp", [("wb", "NE.GDI.TOTL.ZS")], 2015, "median"),
+    ("consumption_private_pct_gdp", [("wb", "NE.CON.PRVT.ZS")], 2015, "median"),
+    ("consumption_gov_pct_gdp", [("wb", "NE.CON.GOVT.ZS")], 2015, "median"),
+    ("employment_agriculture_pct", [("wb", "SL.AGR.EMPL.ZS")], 2015, "median"),
+    ("employment_industry_pct", [("wb", "SL.IND.EMPL.ZS")], 2015, "median"),
+    ("employment_services_pct", [("wb", "SL.SRV.EMPL.ZS")], 2015, "median"),
+    ("population_growth_pct", [("wb", "SP.POP.GROW")], 2015, "median"),
 ]
 GNI_ATLAS = "NY.GNP.PCAP.CD"
+# Правдоподобные пределы: значение вне них считаем ошибкой источника и заполняем как пропуск.
+PLAUSIBLE = {"investment_pct_gdp": (3, 70), "consumption_private_pct_gdp": (20, 120), "consumption_gov_pct_gdp": (2, 60)}
+# Ренту усредняем за несколько лет: в отдельные годы она скачет вместе с ценами на сырьё.
+AVERAGED = {"resource_rents_pct_gdp", "oil_rents_pct_gdp", "gas_rents_pct_gdp", "coal_rents_pct_gdp", "mineral_rents_pct_gdp"}
+AVERAGE_FROM = 2019
+
+# Прогноз МВФ: тренд роста и инфляции, к которым модель сходится в первые годы.
+# Тренд — 2029–2030: в прогнозах на 2026–2028 годы у части стран (Персидский залив) заложены события 2026 года
+# и восстановление после них, которых в сценарии со стартом 1 января 2026 года ещё не было.
+TREND_YEARS = (2029, 2030)
+FORECAST_YEAR = 2026
+ANCHOR_YEAR = 2030
+
+# Валюта страны, если в справочнике их несколько или нет ни одной.
+CURRENCY_OVERRIDES = {
+    "BHS": "BSD", "BRN": "BND", "BTN": "BTN", "FSM": "USD", "KHM": "KHR", "KIR": "AUD", "LSO": "LSL", "NAM": "NAD",
+    "PAN": "USD", "SWZ": "SZL", "TUV": "AUD", "ZWE": "ZWG", "XKX": "EUR", "PSE": "ILS", "SOL": "SLS", "CYN": "TRY",
+    "TWN": "TWD",
+}
+# Коды BIS для стран зоны евро нет: ставку ЕЦБ BIS даёт под кодом XM.
+BIS_EURO = "XM"
 
 # Пороги групп дохода Всемирного банка на 2026 финансовый год (ВНД на душу за 2024 год, метод Атласа, долл. США).
 INCOME_YEAR = 2024
@@ -237,6 +272,13 @@ def latest(values: dict[int, float] | None, min_year: int, max_year: int = LATES
     return None
 
 
+def average(values: dict[int, float] | None, min_year: int, max_year: int = LATEST_YEAR) -> tuple[float, int] | None:
+    years = [y for y in (values or {}) if min_year <= y <= max_year]
+    if not years:
+        return None
+    return sum(values[y] for y in years) / len(years), max(years)
+
+
 def country_records(ref: dict[str, dict], ref_all: dict[str, dict], extras: list[dict], ne0_by_owner: dict[str, dict],
                     capitals: dict[str, str]) -> list[dict]:
     records = []
@@ -251,6 +293,7 @@ def country_records(ref: dict[str, dict], ref_all: dict[str, dict], extras: list
             "subregion": SUBREGION_RU.get(c["subregion"], c["subregion"]),
             "area_km2": c.get("area"), "landlocked": bool(c.get("landlocked")),
             "un_member": True, "status_note": None,
+            "currency": CURRENCY_OVERRIDES.get(iso) or next(iter(c.get("currencies") or {}), ""),
             "_wb": iso, "_imf": iso, "_ne": ne0_by_owner.get(iso, {}), "_ne_stats": [],
         })
     for e in extras:
@@ -261,12 +304,13 @@ def country_records(ref: dict[str, dict], ref_all: dict[str, dict], extras: list
             "capital": e["capital"], "region": e["region"], "subregion": e["subregion"],
             "area_km2": e.get("area_km2") or ref_all.get(e["ref"] or "", {}).get("area"), "landlocked": False,
             "un_member": False, "status_note": e["note"],
+            "currency": CURRENCY_OVERRIDES.get(e["id"], ""),
             "_wb": e["wb"], "_imf": e["imf"], "_ne": ne, "_ne_stats": e.get("ne_stats", []),
         })
     return records
 
 
-def build_countries(records: list[dict], wb: dict, imf: dict) -> list[dict]:
+def build_countries(records: list[dict], wb: dict, imf: dict, bis: dict) -> list[dict]:
     countries = []
     for rec in records:
         entry = {k: v for k, v in rec.items() if not k.startswith("_")}
@@ -274,10 +318,13 @@ def build_countries(records: list[dict], wb: dict, imf: dict) -> list[dict]:
         entry["income_source"] = None
         entry["stats"] = {}
         for key, sources, min_year, _ in INDICATORS:
+            # Берём самое свежее значение из Всемирного банка и МВФ; при равном годе — по порядку источников.
+            candidates = []
             for src in sources:
                 found, label = None, None
                 if src[0] == "wb" and rec["_wb"]:
-                    found = latest(series(wb, src[1], rec["_wb"]), min_year)
+                    pick = average if key in AVERAGED else latest
+                    found = pick(series(wb, src[1], rec["_wb"]), AVERAGE_FROM if key in AVERAGED else min_year)
                     label = f"wb:{src[1]}"
                 elif src[0] == "imf" and rec["_imf"]:
                     hit = latest(series(imf, src[1], rec["_imf"]), min_year)
@@ -287,9 +334,21 @@ def build_countries(records: list[dict], wb: dict, imf: dict) -> list[dict]:
                     year = rec["_ne"].get("POP_YEAR" if key == "population" else "GDP_YEAR")
                     found = (float(rec["_ne"][src[1]]) * src[2], int(year) if year else None)
                     label = "natural_earth"
+                if found and key in PLAUSIBLE and not PLAUSIBLE[key][0] <= found[0] <= PLAUSIBLE[key][1]:
+                    found = None
                 if found:
-                    entry["stats"][key] = {"value": round(found[0], 4), "year": found[1], "source": label}
-                    break
+                    candidates.append((found, label))
+            measured = [c for c in candidates if c[1] != "natural_earth"]
+            if measured:
+                found, label = max(measured, key=lambda c: c[0][1] or 0)  # max берёт первый из равных
+            elif candidates:
+                found, label = candidates[0]
+            else:
+                continue
+            entry["stats"][key] = {"value": round(found[0], 4), "year": found[1], "source": label}
+            if key in AVERAGED:
+                entry["stats"][key]["method"] = f"среднее за {AVERAGE_FROM}–{found[1]}"
+        add_economy_stats(entry, rec, wb, imf, bis)
 
         gni = latest(series(wb, GNI_ATLAS, rec["_wb"]) if rec["_wb"] else None, 2018, INCOME_YEAR)
         gdp_pc = entry["stats"].get("gdp_per_capita_usd")
@@ -305,7 +364,128 @@ def build_countries(records: list[dict], wb: dict, imf: dict) -> list[dict]:
         countries.append(entry)
 
     fill_gaps(countries)
+    fill_economy(countries)
     return countries
+
+
+def add_economy_stats(entry: dict, rec: dict, wb: dict, imf: dict, bis: dict) -> None:
+    """Показатели для калибровки модели экономики: прогнозы МВФ, проценты по долгу, ставка ЦБ, туризм, резервы."""
+    stats = entry["stats"]
+    if rec["_imf"]:
+        growth = series(imf, "NGDP_RPCH", rec["_imf"])
+        trend = [growth[y] for y in range(TREND_YEARS[0], TREND_YEARS[1] + 1) if y in growth]
+        if len(trend) >= 2:
+            stats["gdp_growth_trend_pct"] = {"value": round(sum(trend) / len(trend), 4), "year": TREND_YEARS[1],
+                                             "source": "imf:NGDP_RPCH",
+                                             "method": f"среднее прогноза на {TREND_YEARS[0]}–{TREND_YEARS[1]}"}
+        if FORECAST_YEAR in growth:
+            stats["gdp_growth_forecast_pct"] = {"value": growth[FORECAST_YEAR], "year": FORECAST_YEAR,
+                                                "source": "imf:NGDP_RPCH", "method": "прогноз"}
+        infl = series(imf, "PCPIPCH", rec["_imf"])
+        if ANCHOR_YEAR in infl:
+            stats["inflation_anchor_pct"] = {"value": infl[ANCHOR_YEAR], "year": ANCHOR_YEAR,
+                                             "source": "imf:PCPIPCH", "method": "прогноз"}
+        lur = series(imf, "LUR", rec["_imf"])
+        if ANCHOR_YEAR in lur:
+            stats["unemployment_natural_pct"] = {"value": lur[ANCHOR_YEAR], "year": ANCHOR_YEAR,
+                                                 "source": "imf:LUR", "method": "прогноз"}
+        exp = series(imf, "exp", rec["_imf"])
+        prim = series(imf, "prim_exp", rec["_imf"])
+        common = [y for y in exp if y in prim and 2018 <= y <= LATEST_YEAR]
+        if common:
+            y = max(common)
+            stats["interest_pct_gdp"] = {"value": round(max(0.0, exp[y] - prim[y]), 4), "year": y,
+                                         "source": "imf:exp", "method": "расходы минус первичные расходы"}
+    if "interest_pct_gdp" not in stats and rec["_wb"] and "gov_revenue_pct_gdp" in stats:
+        hit = latest(series(wb, "GC.XPN.INTP.RV.ZS", rec["_wb"]), 2018)
+        if hit:
+            stats["interest_pct_gdp"] = {"value": round(hit[0] * stats["gov_revenue_pct_gdp"]["value"] / 100, 4),
+                                         "year": hit[1], "source": "wb:GC.XPN.INTP.RV.ZS",
+                                         "method": "доля процентов в доходах × доходы бюджета"}
+    gdp = stats.get("gdp_usd")
+    if rec["_wb"] and gdp:
+        for key, code in (("tourism_pct_gdp", "ST.INT.RCPT.CD"), ("reserves_pct_gdp", "FI.RES.TOTL.CD")):
+            hit = latest(series(wb, code, rec["_wb"]), 2018)
+            if hit:
+                stats[key] = {"value": round(100 * hit[0] / gdp["value"], 4), "year": hit[1], "source": f"wb:{code}",
+                              "method": "к ВВП"}
+    area = BIS_EURO if entry["currency"] == "EUR" and entry["id"] not in ("XKX", "MNE", "AND", "MCO", "SMR") else entry["iso2"]
+    rates = bis.get(area) or {}
+    months = sorted(m for m in rates if m <= f"{LATEST_YEAR}-12")
+    if months:
+        m = months[-1]
+        stats["policy_rate_pct"] = {"value": rates[m], "year": int(m[:4]), "source": "bis:WS_CBPOL",
+                                    "method": f"на {m[5:]}.{m[:4]}"}
+
+
+def fill_economy(countries: list[dict]) -> None:
+    """Пропуски в показателях для калибровки: тождества и медианы, без которых модель не запустить."""
+    for c in countries:
+        s = c["stats"]
+        if "investment_pct_gdp" not in s and all(k in s for k in ("consumption_private_pct_gdp", "consumption_gov_pct_gdp",
+                                                                  "exports_pct_gdp", "imports_pct_gdp")):
+            inv = 100 - s["consumption_private_pct_gdp"]["value"] - s["consumption_gov_pct_gdp"]["value"] \
+                - s["exports_pct_gdp"]["value"] + s["imports_pct_gdp"]["value"]
+            if 5 <= inv <= 60 and is_measured(s["consumption_private_pct_gdp"]):
+                s["investment_pct_gdp"] = {"value": round(inv, 4), "year": s["consumption_private_pct_gdp"]["year"],
+                                           "source": "derived", "method": "100 − потребление − экспорт + импорт"}
+    # Бюджет должен сходиться: доходы − расходы = сальдо. Если одна из величин — оценка или за другой год,
+    # выводим её из двух других (сальдо МВФ считаем самым надёжным).
+    for c in countries:
+        s = c["stats"]
+        if not all(k in s for k in ("gov_revenue_pct_gdp", "gov_spending_pct_gdp", "budget_balance_pct_gdp")):
+            continue
+        rev, exp, bal = s["gov_revenue_pct_gdp"], s["gov_spending_pct_gdp"], s["budget_balance_pct_gdp"]
+        if abs(rev["value"] - exp["value"] - bal["value"]) <= 1.0:
+            continue
+        if is_measured(rev) or not is_measured(exp):
+            s["gov_spending_pct_gdp"] = {"value": round(rev["value"] - bal["value"], 4), "year": bal["year"], "source": "derived",
+                                         "method": "доходы бюджета минус сальдо"}
+        else:
+            s["gov_revenue_pct_gdp"] = {"value": round(exp["value"] + bal["value"], 4), "year": bal["year"], "source": "derived",
+                                        "method": "расходы бюджета плюс сальдо"}
+
+    # Инфляция страны без данных, которая пользуется чужой валютой, — как у эмитента валюты (Северный Кипр — как Турция).
+    by_currency: dict[str, list[dict]] = {}
+    for c in countries:
+        by_currency.setdefault(c["currency"], []).append(c)
+    for c in countries:
+        for key in ("inflation_pct", "inflation_anchor_pct"):
+            if key in c["stats"] and is_measured(c["stats"][key]):
+                continue
+            issuers = [o for o in by_currency[c["currency"]] if o is not c and key in o["stats"] and is_measured(o["stats"][key])]
+            if issuers:
+                home = max(issuers, key=lambda o: o["stats"]["gdp_usd"]["value"])
+                c["stats"][key] = {"value": home["stats"][key]["value"], "year": home["stats"][key]["year"], "source": "derived",
+                                   "method": f"как в стране той же валюты: {home['name']}"}
+    rate_by_group: dict[str, float] = {}
+    for group in ("low", "lower_middle", "upper_middle", "high"):
+        rates = [c["stats"]["interest_pct_gdp"]["value"] / c["stats"]["gov_debt_pct_gdp"]["value"]
+                 for c in countries if c["income_group"] == group and "interest_pct_gdp" in c["stats"]
+                 and is_measured(c["stats"]["interest_pct_gdp"]) and c["stats"]["gov_debt_pct_gdp"]["value"] > 5]
+        rate_by_group[group] = statistics.median(rates) if rates else 0.03
+    for c in countries:
+        s = c["stats"]
+        if "interest_pct_gdp" not in s:
+            r = rate_by_group[c["income_group"]]
+            s["interest_pct_gdp"] = {"value": round(r * s["gov_debt_pct_gdp"]["value"], 4), "year": None, "source": "derived",
+                                     "method": f"госдолг × средняя ставка по группе дохода ({100 * r:.1f}%)"}
+        if "unemployment_natural_pct" not in s:
+            u = s["unemployment_pct"]
+            s["unemployment_natural_pct"] = {"value": u["value"], "year": u["year"], "source": "derived",
+                                             "method": "равна текущей безработице"}
+        if "gdp_growth_forecast_pct" not in s and "gdp_growth_trend_pct" in s:
+            s["gdp_growth_forecast_pct"] = dict(s["gdp_growth_trend_pct"])
+    for key in ("investment_pct_gdp", "tourism_pct_gdp", "reserves_pct_gdp", "gdp_growth_trend_pct", "inflation_anchor_pct"):
+        for c in countries:
+            if key not in c["stats"]:
+                filled = median_fill(countries, key, c)
+                if filled:
+                    c["stats"][key] = filled
+    for c in countries:
+        s = c["stats"]
+        if "gdp_growth_forecast_pct" not in s:
+            s["gdp_growth_forecast_pct"] = dict(s["gdp_growth_trend_pct"])
 
 
 def is_measured(stat: dict) -> bool:
@@ -357,6 +537,19 @@ def fill_gaps(countries: list[dict]) -> None:
         if "labor_force" not in s:
             s["labor_force"] = {"value": round(pop * lf_share, 0), "year": s["population"]["year"], "source": "derived",
                                 "method": f"население × медианная доля рабочей силы ({lf_share:.2f})"}
+
+
+def check_currencies(countries: list[dict]) -> None:
+    known = {c["id"]: c for c in json.loads((DATA / "currencies.json").read_text(encoding="utf-8"))["currencies"]}
+    missing = [c["id"] for c in countries if not c["currency"]]
+    if missing:
+        raise SystemExit(f"Нет валюты у стран: {missing} — добавьте в CURRENCY_OVERRIDES")
+    used = {c["currency"] for c in countries}
+    for cur in known.values():
+        anchor = cur.get("anchor")
+        if anchor and anchor not in used and anchor not in known:
+            raise SystemExit(f"Валюта {cur['id']} привязана к {anchor}, которой нет ни у одной страны")
+    print(f"  валют: {len(used)}, из них описаны в currencies.json: {len(used & set(known))}, остальные плавающие")
 
 
 # ---------- регионы и карта ----------
@@ -715,6 +908,7 @@ def main() -> None:
     un = set(ref)
     wb = load_snapshot("wb_wdi.json")
     imf = load_snapshot("imf_weo.json")
+    bis = load_snapshot("bis_policy_rates.json")
     geonames = load_snapshot("geonames_admin.json")["admin"]
     print(f"  членов ООН: {len(un)}, других государств: {len(extras)}")
 
@@ -730,7 +924,8 @@ def main() -> None:
 
     print("3/4 Показатели стран")
     records = country_records(ref, {c["cca3"]: c for c in ref_all}, extras, ne_by_owner, capitals)
-    countries = build_countries(records, wb["values"], imf["values"])
+    countries = build_countries(records, wb["values"], imf["values"], bis["rates"])
+    check_currencies(countries)
     filled = sum(1 for c in countries for s in c["stats"].values() if not is_measured(s))
     total = sum(len(c["stats"]) for c in countries)
     print(f"  стран: {len(countries)}, значений: {total}, из них оценок: {filled}")
@@ -758,11 +953,12 @@ def main() -> None:
         "sources": {
             "wb": "Всемирный банк, World Development Indicators (CC BY 4.0)",
             "imf": "МВФ, World Economic Outlook",
+            "bis": "Банк международных расчётов, ключевые ставки центробанков",
             "natural_earth": "Natural Earth (общественное достояние)",
             "fill": "Пропуск заполнен медианой по похожим странам",
             "derived": "Вычислено из других показателей",
         },
-        "snapshots": {"wb": wb["retrieved"], "imf": imf["retrieved"]},
+        "snapshots": {"wb": wb["retrieved"], "imf": imf["retrieved"], "bis": bis["retrieved"]},
         "countries": countries,
     })
     write_json(DATA / "regions.json", {

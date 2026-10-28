@@ -30,8 +30,10 @@ public static class Fmt
             "percent_gdp" => Number(v, 1) + "%" + Nbsp + "ВВП",
             "percent_gdp_signed" => Signed(v, 1) + "%" + Nbsp + "ВВП",
             "years" => Number(v, 1) + Nbsp + "года",
+            "number0" => Number(v, 0),
             "number1" => Number(v, 1),
             "number2" => Number(v, 2),
+            "rating" => Rating(v),
             _ => Number(v, 1),
         };
         return unit is null ? text : text + Nbsp + unit;
@@ -46,6 +48,7 @@ public static class Fmt
         "percent" or "percent_gdp" => Number(v, v == Math.Round(v) ? 0 : 1) + "%",
         "percent_signed" or "percent_gdp_signed" => Signed(v, v == Math.Round(v) ? 0 : 1) + "%",
         "years" => Number(v, 0),
+        "rating" => Rating(v),
         _ => Number(v, v == Math.Round(v) ? 0 : 1),
     };
 
@@ -91,5 +94,8 @@ public static class Fmt
     ];
 
     /// <summary>«1 января 2026».</summary>
+    /// <summary>Кредитный рейтинг по шкале 0–21: 21 — AAA, 0 — D.</summary>
+    public static string Rating(double score) => Economy.Systems.RatingSystem.Letter(score);
+
     public static string Date(DateOnly d) => $"{d.Day}{Nbsp}{Months[d.Month - 1]} {d.Year}";
 }

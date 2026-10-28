@@ -6,7 +6,7 @@
 dotnet run --project src/Politeconomy.Tools -- validate
 ```
 
-Файлы `countries.json`, `regions.json`, `map/world.json` и `map/cities.json` собирает скрипт `tools/build_world.py` из снимков источников в `tools/sources/`. Остальные файлы ведутся вручную.
+Файлы `countries.json`, `regions.json`, `map/world.json` и `map/cities.json` собирает скрипт `tools/build_world.py` из снимков источников в `tools/sources/` (МВФ, Всемирный банк, BIS, GeoNames). Остальные файлы ведутся вручную.
 
 ## countries.json
 
@@ -23,8 +23,9 @@ dotnet run --project src/Politeconomy.Tools -- validate
 | `income_source` | Откуда взята группа дохода |
 | `stats` | Показатели: `{ "<id показателя>": { "value", "year", "source", "method"?, "n"? } }` |
 | `un_member`, `status_note` | Член ли ООН; для остальных — пояснение статуса |
+| `currency` | Код валюты ISO 4217 (`RUB`, `EUR`…), см. `currencies.json` |
 
-`source`: `wb:<код Всемирного банка>`, `imf:<код МВФ>`, `natural_earth`, `fill` (медиана по похожим странам, `method` — как именно, `n` — сколько стран в выборке) или `derived` (вычислено, `method` — формула).
+`source`: `wb:<код Всемирного банка>`, `imf:<код МВФ>`, `bis:WS_CBPOL` (ключевые ставки ЦБ), `natural_earth`, `fill` (медиана по похожим странам, `method` — как именно, `n` — сколько стран в выборке) или `derived` (вычислено, `method` — формула).
 
 ## regions.json
 
@@ -38,7 +39,7 @@ dotnet run --project src/Politeconomy.Tools -- validate
 
 Описание показателей: `id`, `name` (как называется в игре), `format`, `description` (текст подсказки), `unit` (необязательно).
 
-Форматы: `people` (143,5 млн), `money_big` (2,56 трлн $), `money` (17 850 $), `percent` (8,7%), `percent_signed` (+2,2%), `percent_gdp` (17,9% ВВП), `percent_gdp_signed` (−7,9% ВВП), `years` (73,2 года), `number1`, `number2`.
+Форматы: `people` (143,5 млн), `money_big` (2,56 трлн $), `money` (17 850 $), `percent` (8,7%), `percent_signed` (+2,2%), `percent_gdp` (17,9% ВВП), `percent_gdp_signed` (−7,9% ВВП), `years` (73,2 года), `number0`, `number1`, `number2`, `rating` (балл 0–21 выводится буквами: 21 — AAA, 13 — BBB, 0 — D).
 
 ## politics.json
 
@@ -52,7 +53,20 @@ dotnet run --project src/Politeconomy.Tools -- validate
 
 ## balance.json
 
-Коэффициенты модели; смысл каждого — в `MODEL.md`. Сейчас: `time.days_per_second` — пять скоростей времени, игровых дней в секунду.
+Коэффициенты модели; смысл каждого — в `MODEL.md`. `time.days_per_second` — пять скоростей времени, игровых дней в секунду. `economy` — коэффициенты экономики по разделам: `supply` (потенциальный рост), `demand` (цикл, инвестиции, торговля), `labor`, `prices`, `monetary`, `exchange`, `commodities`, `budget` (долг, бюджетное правило, дефолт), `rating`. Списки из четырёх чисел — по группам дохода: низкий, ниже среднего, выше среднего, высокий. Если коэффициент убрать, модель возьмёт значение по умолчанию (оно совпадает с файлом).
+
+## currencies.json
+
+`currencies[]` — валюты, у которых есть особенности: `id` (код ISO 4217), `name`, `regime` (`float` — плавающий курс и своя ставка; `peg` — курс привязан к валюте `anchor`, ставка следует за ней), `reserve` (резервная валюта: выше рейтинг), `bank` (общий центробанк, если валютой пользуются несколько стран). Валюта, которой нет в файле, — плавающая. Якорь привязки сам должен быть плавающим.
+
+## industries.json
+
+`industries[]` — 20 отраслей: `id`, `name`, `sector` (`agriculture`, `industry`, `services` — часть ВВП по Всемирному банку), `kind` (`commodity`, `manufactured`, `service`, `public`), `cycle` (во сколько раз сильнее среднего отрасль качается в подъём и спад), `alpha` (доля капитала в доходе), `depreciation` (выбытие капитала в год), `skills` (доли работников без образования, с профессиональным и высшим — с этапа 2), `manufacturing_share` (доля в обрабатывающей промышленности по группам дохода; сумма по отраслям — 1), `services_share` (доля в услугах), `market_service` (рыночная услуга: торговля, транспорт, финансы, ИТ). Отрасли `agriculture`, `oil_gas`, `coal_ores`, `defense`, `construction`, `tourism` обязательны — по ним идёт калибровка.
+
+## budget.json
+
+- `revenues[]` — статьи доходов: `id`, `name`, `base` (`wages`, `profits`, `consumption`, `imports`, `resources`, `assets`, `gdp` — от чего считается сбор), `elasticity` (во сколько раз сильнее ВВП сбор реагирует на подъём и спад), `shares` (доля в доходах по группам дохода; сумма по статьям — 1; рента считается отдельно по добыче).
+- `spending[]` — статьи расходов: `id`, `name`, `shares` (доля в расходах без процентов; сумма — 1; оборона берётся из данных о военных расходах). Обслуживание долга считается по долгу и ставке.
 
 ## map_modes.json
 

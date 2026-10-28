@@ -58,6 +58,14 @@ public sealed class DeterministicRandom
 
     public bool Chance(double probability) => NextDouble() < probability;
 
+    /// <summary>Нормальное распределение со средним 0 и разбросом 1 (метод Бокса — Мюллера, два числа на вызов).</summary>
+    public double NextGaussian()
+    {
+        var u1 = 1.0 - NextDouble();
+        var u2 = NextDouble();
+        return Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);
+    }
+
     static ulong RotateLeft(ulong x, int k) => (x << k) | (x >> (64 - k));
 
     static ulong SplitMix(ref ulong x)

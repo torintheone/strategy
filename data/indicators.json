@@ -1,5 +1,5 @@
 {
- "_comment": "Описание показателей: название, единицы и формат вывода. format: people, money_big, money, percent, percent_signed, percent_gdp, percent_gdp_signed, years, number1, number2.",
+ "_comment": "Описание показателей: название, единицы и формат вывода. format: people, money_big, money, percent, percent_signed, percent_gdp, percent_gdp_signed, years, number0, number1, number2, rating.",
  "indicators": [
   {"id": "population", "name": "Население", "format": "people", "description": "Все жители страны без зависимых территорий."},
   {"id": "gdp_usd", "name": "ВВП", "format": "money_big", "description": "Валовой внутренний продукт: стоимость всего, что произведено в стране за год, в текущих долларах США."},
@@ -27,6 +27,31 @@
   {"id": "labor_force", "name": "Рабочая сила", "format": "people", "description": "Работающие и ищущие работу люди старше 15 лет."},
   {"id": "military_pct_gdp", "name": "Военные расходы", "format": "percent_gdp", "description": "Расходы на армию в процентах ВВП."},
   {"id": "electricity_access_pct", "name": "Доступ к электричеству", "format": "percent", "description": "Доля населения, у которого есть электричество."},
-  {"id": "gini", "name": "Неравенство (Джини)", "format": "number1", "description": "Индекс Джини: 0 — все доходы равны, 100 — всё у одного человека."}
+  {"id": "gini", "name": "Неравенство (Джини)", "format": "number1", "description": "Индекс Джини: 0 — все доходы равны, 100 — всё у одного человека."},
+  {"id": "manufacturing_pct_gdp", "name": "Обрабатывающая промышленность", "format": "percent_gdp", "description": "Добавленная стоимость обрабатывающей промышленности (без добычи и строительства) в процентах ВВП."},
+  {"id": "resource_rents_pct_gdp", "name": "Природная рента", "format": "percent_gdp", "description": "Доход от добычи природных ресурсов сверх затрат на добычу: нефть, газ, уголь, руды, лес. Среднее за несколько лет."},
+  {"id": "oil_rents_pct_gdp", "name": "Рента от нефти", "format": "percent_gdp", "description": "Доход от добычи нефти сверх затрат в процентах ВВП."},
+  {"id": "gas_rents_pct_gdp", "name": "Рента от газа", "format": "percent_gdp", "description": "Доход от добычи природного газа сверх затрат в процентах ВВП."},
+  {"id": "coal_rents_pct_gdp", "name": "Рента от угля", "format": "percent_gdp", "description": "Доход от добычи угля сверх затрат в процентах ВВП."},
+  {"id": "mineral_rents_pct_gdp", "name": "Рента от руд", "format": "percent_gdp", "description": "Доход от добычи металлических руд и минералов сверх затрат в процентах ВВП."},
+  {"id": "investment_pct_gdp", "name": "Инвестиции", "format": "percent_gdp", "description": "Вложения в здания, оборудование и запасы в процентах ВВП."},
+  {"id": "consumption_private_pct_gdp", "name": "Потребление домохозяйств", "format": "percent_gdp", "description": "Расходы населения на товары и услуги в процентах ВВП."},
+  {"id": "consumption_gov_pct_gdp", "name": "Госпотребление", "format": "percent_gdp", "description": "Расходы государства на зарплаты, товары и услуги (без пособий и процентов) в процентах ВВП."},
+  {"id": "employment_agriculture_pct", "name": "Занятые в сельском хозяйстве", "format": "percent", "description": "Доля работающих в сельском, лесном и рыбном хозяйстве."},
+  {"id": "employment_industry_pct", "name": "Занятые в промышленности", "format": "percent", "description": "Доля работающих в промышленности, добыче и строительстве."},
+  {"id": "employment_services_pct", "name": "Занятые в услугах", "format": "percent", "description": "Доля работающих в сфере услуг, включая бюджетную."},
+  {"id": "population_growth_pct", "name": "Прирост населения", "format": "percent_signed", "description": "Изменение численности населения за год."},
+  {"id": "interest_pct_gdp", "name": "Проценты по госдолгу", "format": "percent_gdp", "description": "Сколько государство платит за год процентов по долгу, в процентах ВВП."},
+  {"id": "tourism_pct_gdp", "name": "Доходы от туризма", "format": "percent_gdp", "description": "Траты иностранных туристов в стране в процентах ВВП."},
+  {"id": "reserves_pct_gdp", "name": "Валютные резервы", "format": "percent_gdp", "description": "Резервы центробанка в иностранной валюте и золоте в процентах ВВП."},
+  {"id": "policy_rate_pct", "name": "Ключевая ставка", "format": "percent", "description": "Ставка центробанка, под которую банки занимают деньги. Повышение сдерживает инфляцию и экономику."},
+  {"id": "gdp_growth_trend_pct", "name": "Тренд роста по прогнозу МВФ", "format": "percent_signed", "description": "Средний рост ВВП в 2027–2030 годах по прогнозу МВФ — к нему модель ведёт экономику в первые годы."},
+  {"id": "gdp_growth_forecast_pct", "name": "Прогноз роста МВФ на 2026 год", "format": "percent_signed", "description": "Рост ВВП в 2026 году по прогнозу МВФ."},
+  {"id": "inflation_anchor_pct", "name": "Прогноз инфляции МВФ на 2030 год", "format": "percent", "description": "Инфляция, к которой МВФ ждёт возвращения страны; модель использует её как цель центробанка."},
+  {"id": "unemployment_natural_pct", "name": "Естественная безработица", "format": "percent", "description": "Безработица, к которой рынок труда возвращается без подъёма и спада."},
+  {"id": "exchange_rate_change_pct", "name": "Курс к доллару за год", "format": "percent_signed", "description": "Насколько подорожал доллар в местной валюте за год. Плюс — валюта подешевела, минус — укрепилась."},
+  {"id": "credit_rating", "name": "Кредитный рейтинг", "format": "rating", "description": "Оценка надёжности государства как заёмщика: от AAA (лучше всех) до D (дефолт). Чем ниже рейтинг, тем дороже долг."},
+  {"id": "bond_yield_pct", "name": "Ставка по новым займам", "format": "percent", "description": "Под какой процент государство может занять сейчас: ключевая ставка плюс премия за срок и за риск."},
+  {"id": "defaults", "name": "Дефолты с начала партии", "format": "number0", "description": "Сколько раз страна не смогла платить по долгу и списала его часть с кредиторами."}
  ]
 }

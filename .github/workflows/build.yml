@@ -28,7 +28,7 @@ jobs:
       - name: Прогон мира на 50 лет без графики
         run: |
           set -o pipefail
-          dotnet run --project src/Politeconomy.Tools --configuration Release -- check --years 50 | tee check-report.txt
+          dotnet run --project src/Politeconomy.Tools --configuration Release -- check --years 50 2>&1 | tee check-report.txt
       - uses: actions/upload-artifact@v4
         with:
           name: check-report

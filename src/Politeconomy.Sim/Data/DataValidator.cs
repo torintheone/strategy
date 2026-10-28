@@ -23,11 +23,11 @@ public static partial class DataValidator
     {
         ["population"] = (1e3, 2e9),
         ["gdp_usd"] = (1e6, 1e14),
-        ["gdp_per_capita_usd"] = (50, 300_000),
-        ["gdp_ppp_per_capita"] = (300, 300_000),
+        ["gdp_per_capita_usd"] = (50, 1_000_000),
+        ["gdp_ppp_per_capita"] = (300, 1_000_000),
         ["gdp_growth_pct"] = (-60, 60),
         ["inflation_pct"] = (-30, 2000),
-        ["unemployment_pct"] = (0, 60),
+        ["unemployment_pct"] = (0, 80),
         ["gov_debt_pct_gdp"] = (0, 400),
         ["budget_balance_pct_gdp"] = (-60, 60),
         ["gov_revenue_pct_gdp"] = (0, 150),
@@ -48,9 +48,17 @@ public static partial class DataValidator
         ["military_pct_gdp"] = (0, 40),
         ["electricity_access_pct"] = (0, 100),
         ["gini"] = (15, 75),
+        ["manufacturing_pct_gdp"] = (0, 100),
+        ["investment_pct_gdp"] = (0, 80),
+        ["interest_pct_gdp"] = (0, 30),
+        ["policy_rate_pct"] = (-1, 100),
+        ["bond_yield_pct"] = (-1, 100),
+        ["credit_rating"] = (0, 21),
+        ["defaults"] = (0, 20),
+        ["exchange_rate_change_pct"] = (-90, 1000),
     };
 
-    static readonly HashSet<string> Formats = ["people", "money_big", "money", "percent", "percent_signed", "percent_gdp", "percent_gdp_signed", "years", "number1", "number2"];
+    static readonly HashSet<string> Formats = ["people", "money_big", "money", "percent", "percent_signed", "percent_gdp", "percent_gdp_signed", "years", "number0", "number1", "number2", "rating"];
     static readonly HashSet<string> MapKinds = ["political", "bins", "diverging", "politics", "income", "region_density"];
 
     [GeneratedRegex("^#[0-9a-fA-F]{6}$")]
@@ -97,6 +105,7 @@ public static partial class DataValidator
                     Add("countries.json", $"{c.Id}.{key} = {s.Value} вне диапазона {r.Min}…{r.Max}");
                 var knownSource = s.Source.StartsWith("wb:", StringComparison.Ordinal)
                     || s.Source.StartsWith("imf:", StringComparison.Ordinal)
+                    || s.Source.StartsWith("bis:", StringComparison.Ordinal)
                     || s.Source is StatSources.Fill or StatSources.Derived or "natural_earth";
                 if (!knownSource)
                     Add("countries.json", $"{c.Id}.{key}: неизвестный источник «{s.Source}»");
@@ -253,6 +262,7 @@ public static partial class DataValidator
             if (speeds[i] <= 0 || (i > 0 && speeds[i] <= speeds[i - 1]))
                 Add("balance.json", "скорости времени должны быть положительными и расти");
 
+        ValidateEconomy(data, Add);
         return problems;
     }
 
