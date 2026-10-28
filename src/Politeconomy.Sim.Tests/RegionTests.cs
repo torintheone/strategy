@@ -7,12 +7,20 @@ namespace Politeconomy.Sim.Tests;
 public class RegionTests
 {
     [Fact]
-    public void RegionsStartUnderTheirOwners()
+    public void OnlyCrimeaAndSevastopolStartUnderForeignControl()
     {
         var world = WorldFactory.Create(TestData.Game);
         Assert.Equal(TestData.Game.Regions.Regions.Count, world.Regions.Count);
-        Assert.All(world.Regions, r => Assert.Equal(r.Owner, r.Controller));
-        Assert.Empty(WorldSnapshot.Capture(world, 1, true, 0).Occupied);
+        var occupied = world.Regions.Where(r => r.IsOccupied).ToList();
+        Assert.Equal(2, occupied.Count);
+        Assert.All(occupied, r =>
+        {
+            Assert.Equal("UKR", r.Owner);
+            Assert.Equal("RUS", r.Controller);
+        });
+        Assert.Contains(occupied, r => r.Name.Contains("Крым"));
+        Assert.Contains(occupied, r => r.Name == "Севастополь");
+        Assert.Equal(2, WorldSnapshot.Capture(world, 1, true, 0).Occupied.Count);
     }
 
     [Fact]
@@ -33,14 +41,15 @@ public class RegionTests
     {
         var world = WorldFactory.Create(TestData.Game);
         var crimea = world.Regions.Single(r => r.Owner == "UKR" && r.Name.Contains("Крым"));
-
-        world.TransferControl(crimea.Id, "RUS");
-        Assert.True(crimea.IsOccupied);
         Assert.Contains(crimea, world.RegionsControlledBy("RUS"));
-        Assert.Equal("RUS", WorldSnapshot.Capture(world, 1, true, 0).Occupied[crimea.Id]);
 
         world.TransferControl(crimea.Id, "UKR");
         Assert.False(crimea.IsOccupied);
+        Assert.False(WorldSnapshot.Capture(world, 1, true, 0).Occupied.ContainsKey(crimea.Id));
+
+        world.TransferControl(crimea.Id, "RUS");
+        Assert.True(crimea.IsOccupied);
+        Assert.Equal("RUS", WorldSnapshot.Capture(world, 1, true, 0).Occupied[crimea.Id]);
         Assert.Throws<KeyNotFoundException>(() => world.TransferControl(crimea.Id, "XXX"));
     }
 

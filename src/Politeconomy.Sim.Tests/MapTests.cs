@@ -88,6 +88,17 @@ public class MapTests
     }
 
     [Fact]
+    public void CrimeaIsDrawnInRussianColorAtStart()
+    {
+        var data = TestData.Game;
+        var snapshot = WorldSnapshot.Capture(WorldFactory.Create(data), 1, true, 0);
+        var political = new MapModeView(data, Map, data.MapModes.Modes.First(m => m.Kind == "political"));
+        var crimea = data.Regions.Regions.Single(r => r.Country == "UKR" && r.Name.Contains("Крым"));
+        Assert.Equal(political.PoliticalColor("RUS"), political.ColorOf(Map.Region(crimea.Id)!, snapshot));
+        Assert.NotEqual(political.PoliticalColor("RUS"), political.PoliticalColor("UKR"));
+    }
+
+    [Fact]
     public void OccupiedRegionTakesOccupierColor()
     {
         var data = TestData.Game;
