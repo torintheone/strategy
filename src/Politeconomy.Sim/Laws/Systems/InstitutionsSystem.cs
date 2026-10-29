@@ -42,9 +42,12 @@ public sealed class InstitutionsSystem : ISimSystem
             {
                 var practice = byRegime[Math.Clamp(r, 0, byRegime.Count - 1)];
                 var fromLaws = c.Effect(effect);
-                Set(id, practice + fromLaws,
+                // Репрессии (разгоны, аресты) — поверх законов.
+                var repression = LawModel.Effect(world, country.Id, effect) - fromLaws;
+                Set(id, practice + fromLaws + repression,
                     new StatFactor("Практика власти (режим)", practice, "number0"),
-                    new StatFactor("Законы", fromLaws, "number1_signed"));
+                    new StatFactor("Законы", fromLaws, "number1_signed"),
+                    new StatFactor("Репрессии", repression, "number1_signed"));
             }
             Index("democracy_index", "index.democracy", b.Democracy);
             Index("rule_of_law_index", "index.rule_of_law", b.RuleOfLaw);
@@ -72,7 +75,7 @@ public sealed class InstitutionsSystem : ISimSystem
                     legitimacy += s.Influence[k] / 100 * s.Satisfaction[k];
                 // Раскрытые фальсификации подрывают доверие к власти, пока скандал не забудется.
                 var scandal = world.Data.PoliticsBalance.ScandalLegitimacy * Politics.PoliticsModel.Scandal(world, country.Id);
-                // Группы интересов: недовольная церковь или интеллигенция подрывают доверие, довольные — поддерживают.
+                // Группы интересов (недовольная церковь или интеллигенция подрывают доверие), протесты и репрессии.
                 var groups = LawModel.Effect(world, country.Id, "legitimacy");
                 Set("legitimacy", Math.Clamp(legitimacy - scandal + groups, 0, 100));
                 var satisfaction = s.Average(s.Satisfaction);

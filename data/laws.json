@@ -222,6 +222,21 @@
    "unit": "пункты",
    "description": "ко всем классам"
   },
+  "protest_rate": {
+   "name": "Склонность к протестам",
+   "unit": "доля",
+   "description": "насколько чаще (+) или реже (−) недовольные выходят на улицы"
+  },
+  "protest_escalation": {
+   "name": "Ожесточение протестов",
+   "unit": "доля",
+   "description": "к шансу, что протест перерастёт в следующую стадию"
+  },
+  "disperse": {
+   "name": "Сила полиции",
+   "unit": "доля",
+   "description": "к шансу разогнать протест"
+  },
   "organization.skilled": {
    "name": "Организованность квалифицированных рабочих",
    "unit": "",
@@ -1863,7 +1878,9 @@
      "effects": {
       "index.civil_liberties": -30,
       "index.democracy": -10,
-      "radicalism": 3
+      "radicalism": 3,
+      "protest_rate": -0.4,
+      "protest_escalation": 0.1
      },
      "attitudes": {
       "professionals": -2,
@@ -1879,7 +1896,8 @@
      "effects": {
       "index.civil_liberties": -12,
       "index.democracy": -4,
-      "radicalism": 1
+      "radicalism": 1,
+      "protest_rate": -0.15
      },
      "attitudes": {
       "professionals": -1,
@@ -1890,7 +1908,9 @@
      "id": "free",
      "name": "Свободны",
      "description": "Люди свободно выходят на улицы.",
-     "effects": {},
+     "effects": {
+      "protest_rate": 0.1
+     },
      "attitudes": {}
     }
    ],
@@ -2122,7 +2142,8 @@
      "description": "Полиция действует только по решению суда.",
      "effects": {
       "index.civil_liberties": 5,
-      "radicalism": 1
+      "radicalism": 1,
+      "disperse": -0.1
      },
      "attitudes": {
       "professionals": 1,
@@ -2143,7 +2164,9 @@
      "effects": {
       "index.civil_liberties": -15,
       "index.rule_of_law": -5,
-      "radicalism": -2
+      "radicalism": -2,
+      "disperse": 0.1,
+      "protest_rate": -0.1
      },
      "attitudes": {
       "professionals": -2,

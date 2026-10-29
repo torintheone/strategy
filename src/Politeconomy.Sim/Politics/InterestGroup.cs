@@ -15,6 +15,8 @@ public sealed class InterestGroup
     public double FromLaws { get; set; }
     public double FromBudget { get; set; }
     public double FromGovernment { get; set; }
+    /// <summary>Репрессии: интеллигенции и профсоюзам они не нравятся, силовикам — по душе.</summary>
+    public double FromRepression { get; set; }
     /// <summary>Память о выполненных требованиях: прибавка к одобрению, понемногу тает.</summary>
     public double Memory { get; set; }
     public List<GroupDemand> Demands { get; set; } = [];

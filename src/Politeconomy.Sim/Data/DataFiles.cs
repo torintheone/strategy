@@ -95,7 +95,8 @@ public sealed record ScenarioFile(
 
 public sealed record BalanceFile(TimeBalance Time, EconomyBalance? Economy = null, DemographyBalance? Demography = null,
     SocietyBalance? Society = null, GovernmentBalance? Government = null, LawsBalance? Laws = null,
-    BudgetCycleBalance? BudgetCycle = null, PoliticsBalance? Politics = null, InterestGroupsBalance? InterestGroups = null);
+    BudgetCycleBalance? BudgetCycle = null, PoliticsBalance? Politics = null, InterestGroupsBalance? InterestGroups = null,
+    UnrestBalance? Unrest = null);
 
 public sealed record TimeBalance(IReadOnlyList<double> DaysPerSecond);
 

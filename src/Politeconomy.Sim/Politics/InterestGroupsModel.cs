@@ -60,9 +60,10 @@ public static class InterestGroupsModel
                 : Math.Clamp(b.LawWeight * data.Laws.Laws.Sum(l => r.LawAttitude(l.Id, laws.Current[l.Id]) - r.LawAttitude(l.Id, laws.Start[l.Id])), -b.LawCap, b.LawCap);
             g.FromBudget = Budget(world, country, p, r, b);
             g.FromGovernment = Align(world, p, g, b);
+            g.FromRepression = r.Repression * p.Security.Repression;
             if (months > 0)
                 g.Memory *= b.DemandMemory;
-            var target = Math.Clamp(50 + g.FromClasses + g.FromLaws + g.FromBudget + g.FromGovernment + g.Memory, 0, 100);
+            var target = Math.Clamp(50 + g.FromClasses + g.FromLaws + g.FromBudget + g.FromGovernment + g.FromRepression + g.Memory, 0, 100);
             var before = g.Approval;
             g.Approval = months == 0 ? target : g.Approval + (target - g.Approval) / b.ApprovalMonths;
             if (player && months > 0 && before >= b.Angry && g.Approval < b.Angry)

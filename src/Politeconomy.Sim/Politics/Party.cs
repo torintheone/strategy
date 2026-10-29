@@ -78,6 +78,16 @@ public sealed class CountryPolitics
     public Dictionary<string, double> GroupEffects { get; set; } = new(StringComparer.Ordinal);
     /// <summary>Расходы по статьям бюджета на старте — от них группы отсчитывают рост и сокращение.</summary>
     public double[] StartSpending { get; set; } = [];
+    /// <summary>Протесты классов (не больше одного на класс) и номер для следующего.</summary>
+    public List<Protest> Protests { get; set; } = [];
+    public int NextProtest { get; set; } = 1;
+    /// <summary>Поправки к модели от протестов и репрессий; прибавка к настроению классов от уступок (тает).</summary>
+    public Dictionary<string, double> ProtestEffects { get; set; } = new(StringComparer.Ordinal);
+    public double[] Concessions { get; set; } = [];
+    public Security Security { get; set; } = new();
+    /// <summary>Индекс беспорядков (0–100) и удар протестов по выпуску в месяц (доля разрыва выпуска).</summary>
+    public double Unrest { get; set; }
+    public double UnrestOutput { get; set; }
     /// <summary>Номер для id следующей новой партии.</summary>
     public int NextParty { get; set; } = 1;
     /// <summary>Растёт при каждом изменении — по нему снимок понимает, что пора пересобраться.</summary>

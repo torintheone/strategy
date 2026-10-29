@@ -75,6 +75,16 @@ public static class PoliticsActions
     /// <summary>Фальсификации на ближайших выборах: 0 — нет, 1 — вбросы, 2 — массовые.</summary>
     public static bool SetFraud(World world, string countryId, int level) => CampaignModel.SetFraud(world, countryId, level);
 
+    /// <summary>Ответ на протест: concede, negotiate, ignore или disperse (не чаще раза в месяц на один протест).</summary>
+    public static bool RespondToProtest(World world, string countryId, int protestId, string response) =>
+        world.PlayerCountry == countryId && world.Politics?.Countries.GetValueOrDefault(countryId) is { } p
+        && p.Protests.FirstOrDefault(x => x.Id == protestId) is { } protest
+        && ProtestModel.Respond(world, world[countryId], p, protest, response) != null;
+
+    /// <summary>Жёсткая мера: аресты лидеров главной оппозиционной партии.</summary>
+    public static bool ArrestOpposition(World world, string countryId) =>
+        world.PlayerCountry == countryId && ProtestModel.Arrest(world, countryId);
+
     /// <summary>Собрать коалицию с выбранными партнёрами (переговоры после выборов).</summary>
     public static bool FormCoalition(World world, string countryId, IReadOnlyCollection<string> partners) =>
         CoalitionTalksModel.Accept(world, countryId, partners);

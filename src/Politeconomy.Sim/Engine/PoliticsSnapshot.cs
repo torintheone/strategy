@@ -104,11 +104,37 @@ public sealed record GroupSnapshot(
     double FromLaws,
     double FromBudget,
     double FromGovernment,
+    double FromRepression,
     double FromDemands,
     double Pressure,
     IReadOnlyDictionary<string, double> Effects,
     IReadOnlyList<double> Position,
     IReadOnlyList<DemandSnapshot> Demands);
+
+/// <summary>
+/// Протест в снимке: класс (индекс), стадия и её название, повод словами, требование (закон и вариант), сколько человек
+/// на улицах, ответила ли власть в этом месяце, шансы переговоров и разгона.
+/// </summary>
+public sealed record ProtestSnapshot(
+    int Id,
+    int Class,
+    int Stage,
+    string StageName,
+    string Cause,
+    string CauseText,
+    string? Law,
+    string? Variant,
+    DateOnly Started,
+    int Months,
+    double Participants,
+    bool Answered,
+    string? Response,
+    double NegotiateChance,
+    double DisperseChance,
+    bool Army);
+
+/// <summary>Силовики: лояльность полиции и армии, репрессии (0–100), можно ли сейчас арестовать оппозицию и кого.</summary>
+public sealed record SecuritySnapshot(double PoliceLoyalty, double ArmyLoyalty, double Repression, bool CanArrest, string? ArrestTarget, DateOnly? NextArrest);
 
 /// <summary>
 /// Политика страны в снимке: избирательная система и барьер, партии (правящие первыми, затем по опросам),
@@ -130,7 +156,10 @@ public sealed record PoliticsSnapshot(
     CampaignSnapshot? Campaign = null,
     IReadOnlyList<PledgeSnapshot>? Pledges = null,
     double Scandal = 0,
-    IReadOnlyList<GroupSnapshot>? Groups = null)
+    IReadOnlyList<GroupSnapshot>? Groups = null,
+    IReadOnlyList<ProtestSnapshot>? Protests = null,
+    SecuritySnapshot? Security = null,
+    double Unrest = 0)
 {
     public PartySnapshot? Party(string? id) => id == null ? null : Parties.FirstOrDefault(p => p.Id == id);
 
@@ -178,9 +207,24 @@ public sealed record PoliticsSnapshot(
             CaptureCampaign(world, country, p),
             p.Pledges.Select(x => new PledgeSnapshot(x.Law, x.Variant, x.Deadline)).ToList(),
             p.Scandal,
-            CaptureGroups(world, country, p));
+            CaptureGroups(world, country, p),
+            CaptureProtests(world, country, p),
+            new SecuritySnapshot(p.Security.PoliceLoyalty, p.Security.ArmyLoyalty, p.Security.Repression, ProtestModel.CanArrest(world, country.Id),
+                ProtestModel.Target(p)?.Id, p.Security.Arrests?.AddMonths(world.Data.UnrestBalance.ArrestCooldown)),
+            p.Unrest);
         Cache.AddOrUpdate(p, new Cached(p.Version, snapshot));
         return snapshot;
+    }
+
+    static List<ProtestSnapshot> CaptureProtests(World world, Country country, CountryPolitics p)
+    {
+        var data = world.Data;
+        if (p.Protests.Count == 0 || world.Society?.Countries.GetValueOrDefault(country.Id) is not { } s)
+            return [];
+        return p.Protests.Select(x => new ProtestSnapshot(x.Id, x.Class, x.Stage, ProtestModel.StageName(data, x), x.Cause, ProtestModel.CauseText(data, x),
+            x.Law, x.Variant, x.Started, x.Months, ProtestModel.Participants(data, s, x), x.Answered == world.Date, x.Response,
+            ProtestModel.NegotiateChance(data.UnrestBalance, s, x), ProtestModel.DisperseChance(world, country, p, x),
+            x.Stage >= data.UnrestBalance.ArmyStage)).ToList();
     }
 
     static List<GroupSnapshot> CaptureGroups(World world, Country country, CountryPolitics p)
@@ -203,7 +247,7 @@ public sealed record PoliticsSnapshot(
                     "deficit" => double.IsFinite(balance) ? -balance : 0,
                     _ => 0,
                 })).ToList();
-            list.Add(new GroupSnapshot(g.Id, g.Influence, g.Approval, g.FromClasses, g.FromLaws, g.FromBudget, g.FromGovernment, g.Memory, pressure,
+            list.Add(new GroupSnapshot(g.Id, g.Influence, g.Approval, g.FromClasses, g.FromLaws, g.FromBudget, g.FromGovernment, g.FromRepression, g.Memory, pressure,
                 r.Effects.ToDictionary(kv => kv.Key, kv => kv.Value * pressure, StringComparer.Ordinal), g.Position.ToArray(), demands));
         }
         return list;

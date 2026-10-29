@@ -10,7 +10,7 @@ public sealed record InterestGroupsFile(IReadOnlyList<InterestGroupRecord> Group
 /// Clout — множитель влияния, Regime — по режимам (демократия, гибридный, авторитарный), Military — при военном
 /// режиме, Monarchy — при абсолютной монархии; Religious — влияние × квадрат религиозности страны. Lean — сдвиг взглядов
 /// группы от взглядов её классов. Spending — статьи бюджета, за которыми она следит; Deficit — как сильно её злит
-/// дефицит сверх 3% ВВП. Laws — собственное отношение к вариантам законов (сверх отношения её классов).
+/// дефицит сверх 3% ВВП; Repression — как к ней относятся репрессии (за единицу их уровня). Laws — собственное отношение к вариантам законов (сверх отношения её классов).
 /// Effects — поправки к модели при полном недовольстве (у довольной — обратные, слабее). Pressure и Support —
 /// что группа делает, когда недовольна и когда довольна.
 /// </summary>
@@ -32,7 +32,8 @@ public sealed record InterestGroupRecord(
     double Military = 1,
     double Monarchy = 1,
     bool Religious = false,
-    double Deficit = 0)
+    double Deficit = 0,
+    double Repression = 0)
 {
     /// <summary>Собственное отношение группы к варианту закона (0, если не задано).</summary>
     public double LawAttitude(string law, string variant) => Laws.GetValueOrDefault(law)?.GetValueOrDefault(variant) ?? 0;

@@ -86,6 +86,7 @@ public static class Legislation
         if (world.Reign is { } reign && reign.Country == countryId)
             reign.LawsPassed++;
         laws.Transitions.RemoveAll(t => t.Law == bill.Law);
+        var previous = laws.Current[bill.Law];
         laws.Transitions.Add(new LawTransition
         {
             Law = bill.Law,
@@ -96,6 +97,8 @@ public static class Legislation
         });
         laws.Current[bill.Law] = bill.Variant;
         LawModel.Recompute(data, laws, world.Date);
+        // Кому закон сильно не нравится, выходят на улицы и требуют вернуть прежний.
+        Politics.ProtestModel.LawPassed(world, countryId, law, previous, bill.Variant);
     }
 
     public static void Remember(World world, CountryLaws laws, Bill bill)

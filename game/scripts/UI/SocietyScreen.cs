@@ -6,9 +6,9 @@ using Politeconomy.Sim.Text;
 namespace Politeconomy.Game.UI;
 
 /// <summary>
-/// Экран «Общество»: классы (доля, доход, уровень жизни, настроение, радикализм, влияние) и группы интересов —
-/// влияние, одобрение власти и из чего оно сложилось, чем группа давит или помогает, её требования с переходом
-/// к закону или бюджету.
+/// Экран «Общество»: протесты и силовики (лояльность, репрессии, аресты оппозиции), группы интересов — влияние,
+/// одобрение власти и из чего оно сложилось, чем группа давит или помогает, её требования с переходом к закону или
+/// бюджету — и классы (доля, доход, уровень жизни, настроение, радикализм, влияние).
 /// </summary>
 public partial class SocietyScreen : GlassPanel
 {
@@ -19,6 +19,7 @@ public partial class SocietyScreen : GlassPanel
     Label _subtitle = null!;
     GridContainer _classes = null!;
     GridContainer _groups = null!;
+    VBoxContainer _unrest = null!;
     string? _countryId;
     PoliticsSnapshot? _shownPolitics;
     IReadOnlyList<ClassSnapshot>? _shownClasses;
@@ -27,6 +28,8 @@ public partial class SocietyScreen : GlassPanel
     public event Action? Closed;
     public event Action<string, string, string>? LawRequested;
     public event Action<string>? BudgetRequested;
+    public event Action<string, int>? ProtestRequested;
+    public event Action<string>? ArrestRequested;
 
     public string? CountryId => _countryId;
 
@@ -64,6 +67,10 @@ public partial class SocietyScreen : GlassPanel
         var content = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         content.AddThemeConstantOverride("separation", 10);
         scroll.AddChild(content);
+
+        _unrest = new VBoxContainer();
+        _unrest.AddThemeConstantOverride("separation", 6);
+        content.AddChild(_unrest);
 
         content.AddChild(UiTheme.Text("ГРУППЫ ИНТЕРЕСОВ", 11, UiTheme.MapCountryFont, UiTheme.Accent));
         content.AddChild(Wrapped("Влияние — доля группы в силе всех групп: от численности и богатства её классов, отраслей экономики, режима. " +
@@ -103,9 +110,87 @@ public partial class SocietyScreen : GlassPanel
         var record = _data.Countries.Countries.First(c => c.Id == _countryId);
         _title.Text = "Общество: " + record.Name;
         _subtitle.Text = player ? "Требования групп можно выполнить: кнопка ведёт к нужному закону или к бюджету" : "вы можете только смотреть: это не ваша страна";
+        RenderUnrest(country, player);
         RenderGroups(country, player);
         RenderClasses(country);
     }
+
+    /// <summary>Протесты (с кнопкой ответа в своей стране) и силовики: лояльность, репрессии, аресты оппозиции.</summary>
+    void RenderUnrest(CountrySnapshot country, bool player)
+    {
+        Clear(_unrest);
+        if (country.Politics is not { } p)
+            return;
+        var header = new HBoxContainer();
+        header.AddThemeConstantOverride("separation", 12);
+        _unrest.AddChild(header);
+        var caption = UiTheme.Text("ПРОТЕСТЫ И СИЛОВИКИ", 11, UiTheme.MapCountryFont, UiTheme.Accent);
+        caption.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        header.AddChild(caption);
+        if (p.Security is { } sec)
+        {
+            var text = $"Лояльность полиции {Fmt.Number(sec.PoliceLoyalty, 0)}, армии {Fmt.Number(sec.ArmyLoyalty, 0)}" +
+                       (sec.Repression >= 1 ? $" · репрессии {Fmt.Number(sec.Repression, 0)}" : "") +
+                       $" · беспорядки {Fmt.Number(p.Unrest, 0)}";
+            var label = UiTheme.Text(text, 13, UiTheme.Medium, sec.PoliceLoyalty < 35 || sec.ArmyLoyalty < 35 ? UiTheme.Critical : UiTheme.TextSecondary);
+            label.TooltipText = "Лояльность силовиков (0–100) — от того, довольна ли властью группа «Силовики», и от нагрузки: каждый разгон изматывает " +
+                                "полицию (беспорядки — армию). Нелояльные силовики хуже разгоняют протесты.\nРепрессии (0–100) — от разгонов и арестов: " +
+                                "бьют по свободам и легитимности, растят радикализм, со временем забываются.\nБеспорядки (0–100) — сколько протестов и насколько они сильны.";
+            label.MouseFilter = MouseFilterEnum.Pass;
+            header.AddChild(label);
+            if (player && _countryId != null && p.Party(sec.ArrestTarget) is { } target)
+            {
+                var id = _countryId;
+                var arrest = new Button
+                {
+                    Text = "Аресты оппозиции", FocusMode = FocusModeEnum.None, Disabled = !sec.CanArrest,
+                    TooltipText = sec.CanArrest ? $"Задержать лидеров «{target.Name}»" : $"Снова — не раньше {Fmt.Date(sec.NextArrest ?? default)}",
+                };
+                arrest.AddThemeColorOverride("font_color", UiTheme.Critical);
+                arrest.AddThemeFontSizeOverride("font_size", 13);
+                arrest.Pressed += () => ArrestRequested?.Invoke(id);
+                header.AddChild(arrest);
+            }
+        }
+        if (p.Protests is not { Count: > 0 } protests)
+        {
+            _unrest.AddChild(Wrapped("Протестов нет. Они начинаются, когда класс радикален, зол и организован; поводом может стать и закон, " +
+                                     "который ему сильно не нравится, и раскрытые фальсификации.", 12, UiTheme.TextMuted));
+            return;
+        }
+        foreach (var x in protests.OrderByDescending(x => x.Stage))
+        {
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 10);
+            row.AddChild(Dot(_data.Classes.Classes[x.Class].Color));
+            var stage = UiTheme.Text($"{_data.Classes.Classes[x.Class].Name}: {x.StageName}", 14, UiTheme.SemiBold,
+                x.Stage >= 3 ? UiTheme.Critical : x.Stage >= 2 ? UiTheme.Accent : UiTheme.TextPrimary);
+            row.AddChild(stage);
+            var text = UiTheme.Text($"{x.CauseText} · около {Fmt.People(x.Participants)} человек · {Fmt.Plural(Math.Max(1, x.Months), "месяц", "месяца", "месяцев")}" +
+                                    (x.Response != null ? $" · ответ: {ResponseName(x.Response)}" : ""), 13, null, UiTheme.TextSecondary);
+            text.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            text.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            row.AddChild(text);
+            if (player && _countryId != null)
+            {
+                var id = _countryId;
+                var answer = new Button { Text = x.Answered ? "Уже ответили" : "Ответить", Disabled = x.Answered, FocusMode = FocusModeEnum.None, CustomMinimumSize = new Vector2(120, 28) };
+                answer.AddThemeFontSizeOverride("font_size", 13);
+                answer.TooltipText = x.Answered ? "На протест можно ответить раз в месяц" : "Уступить, договориться, промолчать или разогнать";
+                answer.Pressed += () => ProtestRequested?.Invoke(id, x.Id);
+                row.AddChild(answer);
+            }
+            _unrest.AddChild(row);
+        }
+    }
+
+    static string ResponseName(string response) => response switch
+    {
+        "concede" => "уступки",
+        "negotiate" => "переговоры",
+        "disperse" => "разгон",
+        _ => "молчание",
+    };
 
     void RenderGroups(CountrySnapshot country, bool player)
     {
@@ -151,7 +236,7 @@ public partial class SocietyScreen : GlassPanel
         approvalRow.AddChild(bar);
         approvalRow.AddChild(UiTheme.Text(status, 13, UiTheme.Medium, color));
 
-        var parts = new[] { ("классы", g.FromClasses), ("законы", g.FromLaws), ("бюджет", g.FromBudget), ("власть", g.FromGovernment), ("требования", g.FromDemands) }
+        var parts = new[] { ("классы", g.FromClasses), ("законы", g.FromLaws), ("бюджет", g.FromBudget), ("власть", g.FromGovernment), ("репрессии", g.FromRepression), ("требования", g.FromDemands) }
             .Where(x => Math.Abs(x.Item2) >= 0.5)
             .Select(x => $"{x.Item1} {Fmt.Signed(x.Item2, 0)}");
         var why = Wrapped("Из чего: " + (parts.Any() ? string.Join(" · ", parts) : "ничего особенного — нейтральна"), 12, UiTheme.TextSecondary);

@@ -43,6 +43,8 @@ public partial class Main : Node
     ReignSummaryDialog _summaryDialog = null!;
     ConfirmDialog _confirmDialog = null!;
     DebateDialog _debateDialog = null!;
+    ProtestDialog _protestDialog = null!;
+    readonly HashSet<string> _seenProtests = new();
     string? _seenCampaign;
     string? _seenDebate;
     bool _dialogWasOpen;
@@ -251,6 +253,17 @@ public partial class Main : Node
             _laws.SelectLaw(law, variant);
         };
         _society.BudgetRequested += _ => OpenBudget();
+        _society.ProtestRequested += ShowProtest;
+        _society.ArrestRequested += id =>
+        {
+            var p = _host?.Snapshot.Countries.GetValueOrDefault(id)?.Politics;
+            var target = p?.Party(p.Security?.ArrestTarget);
+            _confirmDialog.Show("Арестовать лидеров оппозиции?",
+                $"Будут задержаны лидер и активисты партии «{target?.Name}». Партия ослабнет и потеряет часть сторонников. Цена: свобод станет меньше, " +
+                "легитимность упадёт, радикализм вырастет, сторонники партии выйдут на улицы, интеллигенция и профсоюзы будут недовольны, " +
+                "а при свободной прессе случится скандал. Повторить можно не раньше чем через год.",
+                "Арестовать", () => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.ArrestOpposition(w, id)));
+        };
 
         _laws = new LawsScreen { Visible = false };
         _uiRoot.AddChild(_laws);
@@ -299,6 +312,11 @@ public partial class Main : Node
         _uiRoot.AddChild(_debateDialog);
         _debateDialog.Setup();
         _debateDialog.Answered += (id, answer) => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.AnswerDebate(w, id, answer));
+        _protestDialog = new ProtestDialog();
+        _uiRoot.AddChild(_protestDialog);
+        _protestDialog.Setup(_data);
+        _protestDialog.Answered += (id, protest, response) =>
+            _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.RespondToProtest(w, id, protest, response));
 
         _toasts = new Toasts();
         _uiRoot.AddChild(_toasts);
@@ -645,6 +663,9 @@ public partial class Main : Node
                     Politeconomy.Sim.Politics.Elections.HoldParliament(w, w["RUS"]);
                     // Кампания: выборы в России через два месяца — штаб и дебаты появятся в первый же месяц.
                     w.Politics!["RUS"].NextElection = w.Date.AddMonths(2);
+                    // Протест в России: митинги специалистов; ответ — разгон.
+                    var protest = Politeconomy.Sim.Politics.ProtestModel.Start(w, w["RUS"], w.Politics!["RUS"], Politeconomy.Sim.Society.ClassIds.Professionals, "mood", 1);
+                    Politeconomy.Sim.Politics.PoliticsActions.RespondToProtest(w, "RUS", protest.Id, "disperse");
                 });
                 _defeatDialog.Show(new Politeconomy.Sim.Politics.Defeat(_data.Scenario.StartDate, "RUS", "А", "Б", "В"), "Россия");
                 _summaryDialog.Show(new Politeconomy.Sim.Politics.ReignSummary("RUS", _data.Scenario.StartDate, _data.Scenario.StartDate.AddYears(3),
@@ -668,7 +689,8 @@ public partial class Main : Node
                     && snapshot.Countries["DEU"].Politics is { Parties.Count: >= 3, Polls.Count: >= 2 }
                     && snapshot.Countries["RUS"].Politics?.Elections?.Count >= 2 && snapshot.Countries["BRA"].Politics?.LastElection?.Kind == "president"
                     && snapshot.Countries["DEU"].Stat("ruling_poll_pct") is { } ruling && double.IsFinite(ruling.Value)
-                    && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "campaign");
+                    && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "campaign")
+                    && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "protest");
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
                     && inflation is { Source: StatSources.Model, Factors.Count: > 0 } && double.IsFinite(inflation.Value)
@@ -836,6 +858,34 @@ public partial class Main : Node
                 OpenSociety("BRA");
             }),
             ("31_society_saudi", () => OpenSociety("SAU")),
+            // Протест в Бразилии: окно ответа открывается само.
+            ("32_protest", () =>
+            {
+                OpenSociety("BRA");
+                _host!.Post(w =>
+                {
+                    var p = w.Politics!["BRA"];
+                    Politeconomy.Sim.Politics.ProtestModel.Start(w, w["BRA"], p, Politeconomy.Sim.Society.ClassIds.Skilled, "mood", 0);
+                    var law = w.Data.Law("retirement_age");
+                    Politeconomy.Sim.Politics.ProtestModel.Start(w, w["BRA"], p, Politeconomy.Sim.Society.ClassIds.Pensioners, "law", 2, law.Id, w.Laws!["BRA"].Current[law.Id]);
+                });
+            }),
+            ("33_society_protests", () =>
+            {
+                CloseDialogs();
+                OpenSociety("BRA");
+            }),
+            ("34_map_unrest", () =>
+            {
+                CloseScreens();
+                _host!.Post(w =>
+                {
+                    foreach (var id in new[] { "FRA", "IRN", "VEN", "NGA", "ARG" })
+                        Politeconomy.Sim.Politics.ProtestModel.Start(w, w[id], w.Politics![id], Politeconomy.Sim.Society.ClassIds.Unskilled, "mood", id == "VEN" ? 3 : 2);
+                });
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "unrest"));
+                _camera.FitWorld(instant: true);
+            }),
         };
         if (_shotStep > 0)
         {
@@ -975,7 +1025,7 @@ public partial class Main : Node
     }
 
     bool DialogOpen => _resultsDialog.Visible || _coalitionDialog.Visible || _defeatDialog.Visible || _summaryDialog.Visible || _confirmDialog.Visible
-                       || _debateDialog.Visible;
+                       || _debateDialog.Visible || _protestDialog.Visible;
 
     string CountryName(string id) => _data.Countries.Countries.First(c => c.Id == id).Name;
 
@@ -998,7 +1048,7 @@ public partial class Main : Node
 
     /// <summary>
     /// Окна о стране игрока по одному: новые итоги выборов, поражение, переговоры о коалиции, начало кампании, дебаты,
-    /// итоги правления. Пока окно открыто, время стоит.
+    /// протест (новый или разгоревшийся, с митингов и выше), итоги правления. Пока окно открыто, время стоит.
     /// </summary>
     void CheckDialogs(WorldSnapshot snapshot)
     {
@@ -1047,6 +1097,12 @@ public partial class Main : Node
             ShowDebate(player!);
             PauseForDialog();
         }
+        else if (country?.Politics?.Protests?.FirstOrDefault(x => x is { Stage: >= 1, Answered: false } && !_seenProtests.Contains($"{player}/{x.Id}/{x.Stage}")) is { } protest)
+        {
+            _seenProtests.Add($"{player}/{protest.Id}/{protest.Stage}");
+            ShowProtest(player!, protest.Id);
+            PauseForDialog();
+        }
         else if (snapshot.LastReign is { } summary && !ReferenceEquals(summary, _seenSummary))
         {
             _seenSummary = summary;
@@ -1068,6 +1124,13 @@ public partial class Main : Node
         _summaryDialog.Visible = false;
         _confirmDialog.Visible = false;
         _debateDialog.Visible = false;
+        _protestDialog.Visible = false;
+    }
+
+    void ShowProtest(string countryId, int protestId)
+    {
+        if (_host?.Snapshot.Countries.GetValueOrDefault(countryId)?.Politics is { } p && p.Protests?.FirstOrDefault(x => x.Id == protestId) is { Answered: false } protest)
+            _protestDialog.Show(countryId, CountryName(countryId), protest, p.Security);
     }
 
     void ShowDebate(string countryId)

@@ -76,6 +76,8 @@ switch (command)
         return CampaignReport();
     case "groups":
         return GroupsReport();
+    case "protests":
+        return ProtestsReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -117,6 +119,8 @@ int Run(string mode)
     var elections = new List<(string Country, Regime Regime, Politeconomy.Sim.Politics.ElectionResult Result)>();
     var seen = new HashSet<Politeconomy.Sim.Politics.ElectionResult>(world.Politics!.Countries.Values.SelectMany(p => p.Elections));
 
+    // Протесты по месяцам: сколько стран-месяцев с массовыми протестами и с восстаниями.
+    var unrest = (Months: 0, Any: 0, Mass: 0, Uprising: 0);
     var end = world.Date.AddYears(years);
     timer.Restart();
     var days = 0;
@@ -131,8 +135,13 @@ int Run(string mode)
             Record();
         if (world.Date.Day == 1)
             foreach (var country in world.Countries)
-                foreach (var e in world.Politics!.Countries[country.Id].Elections.Where(seen.Add))
+            {
+                var p = world.Politics!.Countries[country.Id];
+                foreach (var e in p.Elections.Where(seen.Add))
                     elections.Add((country.Id, country.Regime, e));
+                unrest = (unrest.Months + 1, unrest.Any + (p.Protests.Count > 0 ? 1 : 0), unrest.Mass + (p.Protests.Any(x => x.Stage >= 2) ? 1 : 0),
+                    unrest.Uprising + (p.Protests.Any(x => x.Stage >= 4) ? 1 : 0));
+            }
     }
     Console.WriteLine($"Прогон: {years} лет ({days} дней) до {Fmt.Date(world.Date)} за {timer.Elapsed.TotalSeconds:F1} с; самый долгий день {worstDayMs:F2} мс.");
     if (mode == "run")
@@ -151,8 +160,22 @@ int Run(string mode)
     failures += RangeCheck(world);
     failures += ElectionCheck(elections, years);
     failures += GroupsCheck(world, data);
+    failures += ProtestsCheck(unrest);
     Console.WriteLine(failures == 0 ? "Все проверки пройдены." : $"Нарушений: {failures}");
     return failures == 0 ? 0 : 1;
+}
+
+// Протесты: массовые идут в 0,1–15% стран-месяцев (в кризисных странах), восстания — не больше 2%.
+static int ProtestsCheck((int Months, int Any, int Mass, int Uprising) u)
+{
+    double Share(int n) => u.Months > 0 ? (double)n / u.Months : 0;
+    Console.WriteLine($"Протесты: хоть какие-то — в {Share(u.Any):P1} стран-месяцев, массовые и сильнее — в {Share(u.Mass):P1}, восстания — в {Share(u.Uprising):P2}.");
+    if (Share(u.Mass) is < 0.001 or > 0.15 || Share(u.Uprising) > 0.02)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: протестов слишком мало или слишком много");
+        return 1;
+    }
+    return 0;
 }
 
 // Группы интересов в конце прогона: одобрение не сваливается в крайности (враждебных — меньше четверти, у групп
@@ -493,6 +516,42 @@ int Ministry()
             Console.WriteLine($"    {stat}: " + string.Join(" ", series.TakeLast(10).Select(p => $"{p.Year % 100:D2}:{p.Value:G4}")));
         }
     }
+    return 0;
+}
+
+// Протесты: сколько их по стадиям каждый год, где беспокойнее всего, как отвечали власти.
+int ProtestsReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 10;
+    var months = new Dictionary<string, int>();
+    var mass = new Dictionary<string, int>();
+    for (var year = 0; year < runYears; year++)
+    {
+        var stages = new int[5];
+        for (var m = 0; m < 12; m++)
+        {
+            sim.RunUntil(world.Date.AddMonths(1));
+            foreach (var (id, p) in world.Politics!.Countries)
+            {
+                foreach (var x in p.Protests)
+                    stages[Math.Clamp(x.Stage, 0, 4)]++;
+                if (p.Protests.Count > 0)
+                    months[id] = months.GetValueOrDefault(id) + 1;
+                if (p.Protests.Any(x => x.Stage >= 2))
+                    mass[id] = mass.GetValueOrDefault(id) + 1;
+            }
+        }
+        Console.WriteLine($"{world.Date.Year - 1}: протестов в среднем за месяц — забастовки {stages[0] / 12.0:F1}, митинги {stages[1] / 12.0:F1}, " +
+                          $"массовые {stages[2] / 12.0:F1}, беспорядки {stages[3] / 12.0:F1}, восстания {stages[4] / 12.0:F1}");
+    }
+    Console.WriteLine("Дольше всех протестуют (месяцев с протестом, из них с массовыми): " +
+                      string.Join(", ", months.OrderByDescending(kv => kv.Value).Take(15).Select(kv => $"{kv.Key} {kv.Value}/{mass.GetValueOrDefault(kv.Key)}")));
+    foreach (var id in new[] { "DEU", "USA", "FRA", "BRA", "RUS", "IRN", "VEN", "SDN" })
+        Console.WriteLine($"  {world[id].Name}: протестов {months.GetValueOrDefault(id)} мес., массовых {mass.GetValueOrDefault(id)} мес.; " +
+                          $"радикализм {world[id].Stat("radicalism"):F0}, лояльность полиции {world.Politics![id].Security.PoliceLoyalty:F0}, " +
+                          $"репрессии {world.Politics![id].Security.Repression:F0}");
     return 0;
 }
 

@@ -217,6 +217,7 @@ public static class CampaignModel
                 leader.Popularity = Math.Max(1, leader.Popularity - b.ScandalPopularity * c.Fraud);
                 world.Log(country.Id, "fraud", "Фальсификации раскрыты: журналисты и наблюдатели доказали вбросы. Доверие к власти рухнуло, " +
                                                "недовольные выходят на улицы.");
+                ProtestModel.FraudExposed(world, country, p);
             }
             else
                 world.Log(country.Id, "fraud", "Подсчёт голосов прошёл «как надо»: разоблачений не было.");
