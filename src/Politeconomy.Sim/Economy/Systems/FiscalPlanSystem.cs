@@ -32,14 +32,14 @@ public sealed class FiscalPlanSystem : EconomySystem
 
     /// <summary>
     /// Долг стал неподъёмным: реальные проценты (за вычетом ожидаемой инфляции, которая сама обесценивает долг)
-    /// съедают больше DefaultInterestShare доходов, или долг выше порога для группы дохода и заметно выше
-    /// стартового. Эмитенты резервных валют по размеру долга не дефолтят.
+    /// съедают больше DefaultInterestShare доходов, или номинальные проценты больше DefaultNominalShare доходов, или долг
+    /// выше порога для группы дохода и заметно выше стартового. Эмитенты резервных валют по размеру долга не дефолтят.
     /// </summary>
     public static bool MustDefault(CountryEconomy e, WorldEconomy economy, FiscalBalance b)
     {
         var revenue = e.TotalRevenue;
         var realInterest = Math.Max(0, e.EffectiveRate - Math.Max(0, e.Expectations)) * e.Debt;
-        if (revenue > 0 && realInterest / revenue > b.DefaultInterestShare)
+        if (revenue > 0 && (realInterest / revenue > b.DefaultInterestShare || e.Interest / revenue > b.DefaultNominalShare))
             return true;
         var reserve = economy.Currencies.TryGetValue(e.Currency, out var cur) && cur.Reserve;
         var limit = Math.Max(EconomyBalance.ByIncome(b.DefaultDebt, e.IncomeIndex), b.DefaultDebtGrowth * e.DebtRatio0);

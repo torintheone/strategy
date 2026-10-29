@@ -271,7 +271,7 @@ public partial class LawsScreen : GlassPanel
         var influence = country.Classes?.Select(c => c.Influence).ToArray() ?? [];
         var support = _variantId == current ? 0.5 : Legislation.Support(_data, lawRecord, current, _variantId, influence);
         var months = Legislation.DraftingMonths(_data.LawsBalance, lawRecord, minister?.Competence ?? 50, minister?.Traits.Contains("reformer") == true);
-        _forecast.Text = _variantId == current ? "" : ForecastText(country, lawRecord, support, months);
+        _forecast.Text = _variantId == current ? "" : ForecastText(country, lawRecord, current, _variantId, support, months);
 
         _propose.Visible = player;
         _propose.Disabled = !player || bill != null || _variantId == current;
@@ -287,12 +287,15 @@ public partial class LawsScreen : GlassPanel
             _bills.AddChild(BillLine(b));
     }
 
-    string ForecastText(CountrySnapshot country, LawRecord law, double support, int months)
+    string ForecastText(CountrySnapshot country, LawRecord law, string from, string to, double support, int months)
     {
         var text = $"Одобрение в обществе: {Fmt.Value("percent", support * 100)}. Подготовка займёт около {Fmt.Plural(months, "месяца", "месяцев", "месяцев")}.";
         if (country.Government?.Parliament is not { } p)
             return text;
-        var vote = ParliamentVote.Forecast(_data.GovernmentBalance.Parliament, p.Kind, p.Seats, p.Ruling, p.Discipline, support, law.Constitutional);
+        // Каждая фракция смотрит на своих избирателей; блоки без партии — на общество в целом.
+        var factions = p.Factions.Select(f => new FactionSupport(f.Party, f.Seats, f.Ruling,
+            country.Politics?.Party(f.Party) is { } party ? Legislation.PartySupport(_data, law, from, to, party.Voters) : support)).ToList();
+        var vote = ParliamentVote.Forecast(_data.GovernmentBalance.Parliament, p.Kind, p.Seats, p.Discipline, factions, law.Constitutional);
         if (vote.Decree)
             return text + " Парламента нет: закон вступит в силу указом.";
         var verdict = vote.Passed ? "скорее всего пройдёт" : "скорее всего не пройдёт";

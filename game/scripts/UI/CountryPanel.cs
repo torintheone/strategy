@@ -23,7 +23,7 @@ public partial class CountryPanel : GlassPanel
             "death_rate", "net_migration_rate", "age_0_14_pct", "age_65_plus_pct", "urban_pct", "labor_force", "gini",
             "electricity_access_pct"]),
         ("Классы", ["standard_of_living", "satisfaction", "radicalism"]),
-        ("Власть", ["approval_pct", "legitimacy", "democracy_index", "rule_of_law_index", "judicial_independence_index",
+        ("Власть", ["approval_pct", "ruling_poll_pct", "legitimacy", "democracy_index", "rule_of_law_index", "judicial_independence_index",
             "press_freedom_index", "civil_liberties_index", "corruption_index", "government_effectiveness"]),
     ];
 
@@ -53,6 +53,7 @@ public partial class CountryPanel : GlassPanel
     public event Action<string>? PlayAs;
     public event Action<string>? RegionChosen;
     public event Action<string>? GovernmentRequested;
+    public event Action<string>? PoliticsRequested;
 
     public string? CountryId => _countryId;
 
@@ -130,13 +131,23 @@ public partial class CountryPanel : GlassPanel
         column.AddChild(_play);
         _playing = UiTheme.Text("Вы управляете этой страной", 14, UiTheme.Medium, UiTheme.Accent);
         column.AddChild(_playing);
-        var governmentButton = new Button { Text = "Правительство и парламент", FocusMode = FocusModeEnum.None };
+        var buttons = new HBoxContainer();
+        buttons.AddThemeConstantOverride("separation", 6);
+        column.AddChild(buttons);
+        var governmentButton = new Button { Text = "Правительство", FocusMode = FocusModeEnum.None, SizeFlagsHorizontal = SizeFlags.ExpandFill };
         governmentButton.Pressed += () =>
         {
             if (_countryId != null)
                 GovernmentRequested?.Invoke(_countryId);
         };
-        column.AddChild(governmentButton);
+        buttons.AddChild(governmentButton);
+        var politicsButton = new Button { Text = "Партии и опросы", FocusMode = FocusModeEnum.None, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        politicsButton.Pressed += () =>
+        {
+            if (_countryId != null)
+                PoliticsRequested?.Invoke(_countryId);
+        };
+        buttons.AddChild(politicsButton);
 
         var scroll = _scroll = new ScrollContainer
         {

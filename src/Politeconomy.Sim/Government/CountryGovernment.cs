@@ -20,22 +20,48 @@ public sealed class CountryGovernment
 }
 
 /// <summary>
-/// Парламент до появления партий (этап 4): правящий блок и оппозиция. Kind — real (голосует всерьёз), formal
-/// (одобряет почти всё) или none (власть правит указами). Discipline — доля депутатов, голосующих по линии блока.
+/// Парламент. Kind — real (голосует всерьёз), formal (одобряет почти всё) или none (власть правит указами).
+/// Discipline — доля депутатов, голосующих по линии своей фракции. Фракции — партии с местами; где партий нет,
+/// две фракции без партии: правящий блок и оппозиция.
 /// </summary>
 public sealed class Parliament
 {
     public string Kind { get; set; } = "real";
     public string Name { get; set; } = "";
     public int Seats { get; set; }
-    public int RulingSeats { get; set; }
     public double Discipline { get; set; }
+    public List<Faction> Factions { get; set; } = [];
+
+    [JsonIgnore]
+    public int RulingSeats => Factions.Where(f => f.Ruling).Sum(f => f.Seats);
 
     [JsonIgnore]
     public int OppositionSeats => Seats - RulingSeats;
 
     [JsonIgnore]
     public bool Exists => Kind != "none" && Seats > 0;
+
+    /// <summary>Парламент из двух блоков без партий: правящего и оппозиции.</summary>
+    public static Parliament Blocks(string kind, string name, int seats, int ruling, double discipline) => new()
+    {
+        Kind = kind,
+        Name = name,
+        Seats = seats,
+        Discipline = discipline,
+        Factions = seats <= 0 ? [] :
+        [
+            new Faction { Seats = ruling, Ruling = true },
+            new Faction { Seats = seats - ruling, Ruling = false },
+        ],
+    };
+}
+
+/// <summary>Фракция: партия (null — правящий блок или оппозиция без партий), её места и входит ли она в правящую коалицию.</summary>
+public sealed class Faction
+{
+    public string? Party { get; set; }
+    public int Seats { get; set; }
+    public bool Ruling { get; set; }
 }
 
 public sealed class WorldGovernment

@@ -26,7 +26,7 @@
   {"id": "foreign", "name": "Министр иностранных дел", "ministry": "Министерство иностранных дел", "short": "МИД", "spending": ["foreign"], "stats": ["exports_pct_gdp", "imports_pct_gdp", "current_account_pct_gdp", "exchange_rate_change_pct"]},
   {"id": "justice", "name": "Министр юстиции", "ministry": "Министерство юстиции", "short": "Юстиция", "spending": ["courts"], "stats": ["rule_of_law_index", "judicial_independence_index", "corruption_index", "civil_liberties_index"]},
   {"id": "central_bank", "name": "Глава центрального банка", "ministry": "Центральный банк", "short": "ЦБ", "spending": [], "finance": true, "stats": ["inflation_pct", "policy_rate_pct", "exchange_rate_change_pct", "unemployment_pct"]},
-  {"id": "chief_of_staff", "name": "Руководитель администрации", "ministry": "Администрация главы государства", "short": "Администрация", "spending": ["administration"], "stats": ["approval_pct", "legitimacy", "government_effectiveness", "democracy_index"]},
+  {"id": "chief_of_staff", "name": "Руководитель администрации", "ministry": "Администрация главы государства", "short": "Администрация", "spending": ["administration"], "stats": ["approval_pct", "ruling_poll_pct", "legitimacy", "government_effectiveness"]},
   {"id": "prosecutor", "name": "Генеральный прокурор", "ministry": "Генеральная прокуратура", "short": "Прокуратура", "spending": [], "security": true, "stats": ["corruption_index", "rule_of_law_index", "judicial_independence_index", "government_effectiveness"]},
   {"id": "intelligence", "name": "Директор спецслужбы", "ministry": "Спецслужба", "short": "Спецслужба", "spending": [], "security": true, "stats": ["radicalism", "press_freedom_index", "civil_liberties_index", "legitimacy"]}
  ],

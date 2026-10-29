@@ -56,6 +56,8 @@ public sealed class ParliamentBalance
     /// <summary>Мест в парламенте без данных: кубический корень из населения, в пределах SeatsMin…SeatsMax.</summary>
     public int SeatsMin { get; init; } = 15;
     public int SeatsMax { get; init; } = 750;
+    /// <summary>Избиратели правящих партий доверяют своему правительству: прибавка к одобрению проекта (0–1).</summary>
+    public double RulingTrust { get; init; } = 0.15;
     /// <summary>Оппозиция поддерживает закон, если его одобрение в обществе выше этого порога (0–1).</summary>
     public double OppositionThreshold { get; init; } = 0.62;
     /// <summary>Доля воздержавшихся и случайный разброс голосов.</summary>

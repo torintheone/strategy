@@ -29,6 +29,7 @@ public sealed class CabinetSystem : ISimSystem
                 if (!retire && !world.Random.Chance(b.ResignationRate))
                     continue;
                 var successor = CharacterFactory.Create(world, country, post, leader: false);
+                Politics.PoliticsModel.Affiliate(world, country.Id, successor, minister.Party);
                 g.Ministers[post.Id] = successor;
                 g.Candidates.Remove(post.Id);
                 g.Version++;

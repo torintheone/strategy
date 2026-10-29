@@ -18,4 +18,5 @@ public sealed record ClassRecord(
     double JobRisk,
     double Inflation,
     string Color,
-    string? ShortName = null);
+    string? ShortName = null,
+    IReadOnlyList<double>? Views = null);

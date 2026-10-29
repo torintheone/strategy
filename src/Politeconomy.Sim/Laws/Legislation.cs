@@ -28,13 +28,27 @@ public static class Legislation
     /// </summary>
     public static double Support(GameData data, LawRecord law, string from, string to, IReadOnlyList<double> influence)
     {
+        var shifts = Shifts(data, law, from, to);
+        var shift = 0.0;
+        for (var k = 0; k < shifts.Length && k < influence.Count; k++)
+            shift += influence[k] / 100 * shifts[k];
+        return 0.5 + 0.5 * Math.Tanh(shift / data.LawsBalance.SupportScale);
+    }
+
+    /// <summary>
+    /// Одобрение закона избирателями партии от 0 до 1: сдвиг отношения каждого класса, взвешенный по его доле
+    /// среди избирателей партии (voters). По нему голосует фракция партии.
+    /// </summary>
+    public static double PartySupport(GameData data, LawRecord law, string from, string to, IReadOnlyList<double> voters) =>
+        Politics.PoliticsModel.Support(voters, Shifts(data, law, from, to), data.LawsBalance.SupportScale);
+
+    /// <summary>Как изменится отношение каждого класса к закону при переходе с варианта from на to.</summary>
+    public static double[] Shifts(GameData data, LawRecord law, string from, string to)
+    {
         var classes = data.Classes.Classes;
         var old = law.Variant(from);
         var proposed = law.Variant(to);
-        var shift = 0.0;
-        for (var k = 0; k < classes.Count && k < influence.Count; k++)
-            shift += influence[k] / 100 * (proposed.Attitudes.GetValueOrDefault(classes[k].Id) - old.Attitudes.GetValueOrDefault(classes[k].Id));
-        return 0.5 + 0.5 * Math.Tanh(shift / data.LawsBalance.SupportScale);
+        return classes.Select(c => proposed.Attitudes.GetValueOrDefault(c.Id) - old.Attitudes.GetValueOrDefault(c.Id)).ToArray();
     }
 
     /// <summary>Голосование по готовому законопроекту; при успехе закон вступает в силу с переходным периодом.</summary>
@@ -45,7 +59,13 @@ public static class Legislation
         var influence = world.Society?[countryId].Influence ?? new double[data.Classes.Classes.Count];
         bill.Support = Support(data, law, laws.Current[bill.Law], bill.Variant, influence);
         var parliament = world.Government![countryId].Parliament;
-        bill.Vote = ParliamentVote.Cast(world, parliament, bill.Support, law.Constitutional);
+        var shifts = Shifts(data, law, laws.Current[bill.Law], bill.Variant);
+        var general = bill.Support;
+        bill.Vote = ParliamentVote.Cast(world, parliament,
+            party => Politics.PoliticsModel.Voters(world, countryId, party) is { } voters
+                ? Politics.PoliticsModel.Support(voters, shifts, data.LawsBalance.SupportScale)
+                : general,
+            law.Constitutional);
         bill.Decided = world.Date;
         bill.Stage = bill.Vote.Passed ? "passed" : "rejected";
         laws.Bills.Remove(bill);

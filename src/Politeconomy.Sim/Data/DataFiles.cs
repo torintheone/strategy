@@ -62,8 +62,21 @@ public sealed record PoliticsFile(
     IReadOnlyList<PoliticsRecord> Countries,
     IReadOnlyDictionary<string, string>? Regimes = null);
 
-/// <summary>Политика страны: тип системы, режим (democracy, hybrid, authoritarian), пометка и проверено ли человеком.</summary>
-public sealed record PoliticsRecord(string Id, string System, string Note, bool Reviewed, string Regime = "democracy");
+/// <summary>
+/// Политика страны: тип системы, режим (democracy, hybrid, authoritarian), избирательная система парламента
+/// (majoritarian, proportional, mixed, none) и барьер в процентах, есть ли легальные партии, особое семейство партии
+/// власти, пометка и проверено ли человеком.
+/// </summary>
+public sealed record PoliticsRecord(
+    string Id,
+    string System,
+    string Note,
+    bool Reviewed,
+    string Regime = "democracy",
+    string Electoral = "proportional",
+    double Threshold = 3,
+    bool Parties = true,
+    string? RulingFamily = null);
 
 public sealed record ScenarioFile(
     string Id,
@@ -76,7 +89,7 @@ public sealed record ScenarioFile(
 
 public sealed record BalanceFile(TimeBalance Time, EconomyBalance? Economy = null, DemographyBalance? Demography = null,
     SocietyBalance? Society = null, GovernmentBalance? Government = null, LawsBalance? Laws = null,
-    BudgetCycleBalance? BudgetCycle = null);
+    BudgetCycleBalance? BudgetCycle = null, PoliticsBalance? Politics = null);
 
 public sealed record TimeBalance(IReadOnlyList<double> DaysPerSecond);
 
@@ -191,5 +204,6 @@ public sealed record CityRecord(
 [JsonSerializable(typeof(GovernmentFile))]
 [JsonSerializable(typeof(LawsFile))]
 [JsonSerializable(typeof(HistoryFile))]
+[JsonSerializable(typeof(PartiesFile))]
 [JsonSerializable(typeof(CultureRecord))]
 internal sealed partial class DataJsonContext : JsonSerializerContext;

@@ -24,6 +24,7 @@ public sealed class GameData
     public required ClassesFile Classes { get; init; }
     public required GovernmentFile Government { get; init; }
     public required LawsFile Laws { get; init; }
+    public required PartiesFile Parties { get; init; }
     /// <summary>История показателей за 10 лет до старта (для графиков ведомств).</summary>
     public required HistoryFile History { get; init; }
     /// <summary>Культуры имён из папки data/names/, по одной на файл.</summary>
@@ -61,6 +62,19 @@ public sealed class GameData
 
     static readonly BudgetCycleBalance DefaultBudgetCycle = new();
 
+    /// <summary>Коэффициенты взглядов, партий и опросов; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public PoliticsBalance PoliticsBalance => Balance.Politics ?? DefaultPolitics;
+
+    static readonly PoliticsBalance DefaultPolitics = new();
+
+    /// <summary>Политика страны из data/politics.json.</summary>
+    public PoliticsRecord PoliticsOf(string country) =>
+        Politics.Countries.FirstOrDefault(c => c.Id == country) ?? throw new KeyNotFoundException($"Нет страны «{country}» в data/politics.json");
+
+    public PartyFamilyRecord Family(string id) =>
+        id == Parties.Power.Id ? Parties.Power
+        : Parties.Families.FirstOrDefault(f => f.Id == id) ?? throw new KeyNotFoundException($"Нет семейства партий «{id}» в data/parties.json");
+
     public LawRecord Law(string id) =>
         Laws.Laws.FirstOrDefault(l => l.Id == id) ?? throw new KeyNotFoundException($"Нет закона «{id}» в data/laws.json");
 
@@ -92,6 +106,7 @@ public sealed class GameData
             Classes = Read(directory, "classes.json", ctx.ClassesFile),
             Government = Read(directory, "government.json", ctx.GovernmentFile),
             Laws = Read(directory, "laws.json", ctx.LawsFile),
+            Parties = Read(directory, "parties.json", ctx.PartiesFile),
             History = Read(directory, "history.json", ctx.HistoryFile),
             Cultures = ReadCultures(directory),
             Benchmarks = File.Exists(Path.Combine(directory, "benchmarks", "population.json"))

@@ -60,13 +60,8 @@ public static class GovernmentModel
             _ => (b.DemocracyRuling, b.DemocracyDiscipline),
         };
         var share = range[0] + world.Random.NextDouble() * (range[1] - range[0]);
-        return new Parliament
-        {
-            Kind = kind,
-            Name = system.ParliamentName,
-            Seats = kind == "none" ? 0 : seats,
-            RulingSeats = kind == "none" ? 0 : (int)Math.Round(seats * share),
-            Discipline = discipline,
-        };
+        return kind == "none"
+            ? Parliament.Blocks(kind, system.ParliamentName, 0, 0, discipline)
+            : Parliament.Blocks(kind, system.ParliamentName, seats, (int)Math.Round(seats * share), discipline);
     }
 }

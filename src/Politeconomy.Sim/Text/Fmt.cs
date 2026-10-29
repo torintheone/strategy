@@ -98,6 +98,11 @@ public static class Fmt
     public static string Rating(double score) => Economy.Systems.RatingSystem.Letter(score);
 
     /// <summary>«1 января 2026».</summary>
+    static readonly string[] ShortMonths = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+
+    /// <summary>Месяц и год коротко: «мар 2027» — для подписей на графиках.</summary>
+    public static string MonthYear(DateOnly d) => $"{ShortMonths[d.Month - 1]}{Nbsp}{d.Year}";
+
     public static string Date(DateOnly d) => $"{d.Day}{Nbsp}{Months[d.Month - 1]} {d.Year}";
 
     /// <summary>Число с существительным в нужной форме: Plural(5, "год", "года", "лет") → «5 лет».</summary>

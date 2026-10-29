@@ -40,7 +40,16 @@ public sealed record BudgetForecast(
     double[] IncomeChange,
     double[] Attitudes,
     double Support,
-    VoteResult Vote);
+    VoteResult Vote,
+    double Penalty = 0)
+{
+    /// <summary>
+    /// Одобрение бюджета избирателями партии: их отношение (доли классов × отношение класса) минус штраф
+    /// за рост дефицита. Для фракций без партии — одобрение в обществе.
+    /// </summary>
+    public double PartySupport(IReadOnlyList<double>? voters, double scale) =>
+        voters == null ? Support : Math.Clamp(Politics.PoliticsModel.Support(voters, Attitudes, scale) - Penalty, 0, 1);
+}
 
 public sealed class WorldBudgets
 {

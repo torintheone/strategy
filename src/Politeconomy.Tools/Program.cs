@@ -17,6 +17,7 @@ using Politeconomy.Sim.Text;
 //   classes [--years N] [--country ISO] — классы стран: численность, доходы, уровень жизни, настроение, влияние
 //   government [--country ISO] [--years N] — правительство и парламент страны, журнал отставок
 //   ministry [--country ISO] [--years N] — доклады всех министров страны (как на экране «Ведомства»)
+//   politics [--country ISO] [--years N] — партии, опросы, места в парламенте и взгляды классов
 // Общий ключ: --data <папка> — где лежит data/ (по умолчанию ищется рядом и выше).
 
 var command = args.FirstOrDefault() ?? "help";
@@ -25,7 +26,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -69,6 +70,8 @@ switch (command)
         return Government();
     case "ministry":
         return Ministry();
+    case "politics":
+        return PoliticsReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -411,6 +414,40 @@ int Ministry()
             var series = country.History?.Series(stat) ?? [];
             Console.WriteLine($"    {stat}: " + string.Join(" ", series.TakeLast(10).Select(p => $"{p.Year % 100:D2}:{p.Value:G4}")));
         }
+    }
+    return 0;
+}
+
+int PoliticsReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 0;
+    if (runYears > 0)
+        sim.RunUntil(world.Date.AddYears(runYears));
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "GBR", "DEU", "FRA", "BRA", "IND", "JPN", "RUS", "CHN", "ZAF", "MEX", "SWE"];
+    var classes = data.Classes.Classes;
+    foreach (var id in ids)
+    {
+        var p = world.Politics![id];
+        var g = world.Government![id];
+        var record = data.PoliticsOf(id);
+        Console.WriteLine();
+        Console.WriteLine($"{world[id].Name}: {record.Electoral}, барьер {record.Threshold}%, {g.Parliament.Name} {g.Parliament.Seats} мест, " +
+                          $"правящие {g.Parliament.RulingSeats}; глава {g.Leader.Name} ({p.Party(g.Leader.Party)?.Short ?? "—"})");
+        foreach (var party in p.Parties.OrderByDescending(x => x.Poll))
+        {
+            var seats = g.Parliament.Factions.FirstOrDefault(f => f.Party == party.Id)?.Seats ?? 0;
+            var top = Enumerable.Range(0, party.Voters.Length).OrderByDescending(k => party.Voters[k]).Take(3)
+                .Select(k => $"{classes[k].ShortName ?? classes[k].Name} {party.Voters[k] * 100:F0}%");
+            Console.WriteLine($"  {(party.Ruling ? "*" : " ")} {party.Name,-44} {party.Short,-14} {party.Family,-15} " +
+                              $"[{party.Position[0],4:F0} {party.Position[1],4:F0} {party.Position[2],4:F0}] опрос {party.Poll * 100,5:F1}% мест {seats,4}  " +
+                              string.Join(", ", top));
+        }
+        var ministers = g.Ministers.Values.GroupBy(m => p.Party(m.Party)?.Short ?? "беспарт.").Select(x => $"{x.Key} {x.Count()}");
+        Console.WriteLine("  министры: " + string.Join(", ", ministers));
+        Console.WriteLine("  взгляды классов: " + string.Join("; ", p.Views.Select((v, k) =>
+            $"{classes[k].ShortName ?? classes[k].Name} [{v[0]:F0} {v[1]:F0} {v[2]:F0}]")));
     }
     return 0;
 }

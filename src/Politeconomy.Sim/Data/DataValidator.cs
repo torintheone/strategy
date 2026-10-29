@@ -70,10 +70,11 @@ public static partial class DataValidator
         ["government_effectiveness"] = (0, 100),
         ["legitimacy"] = (0, 100),
         ["approval_pct"] = (0, 100),
+        ["ruling_poll_pct"] = (0, 100),
     };
 
     static readonly HashSet<string> Formats = ["people", "money_big", "money", "percent", "percent_signed", "percent_gdp", "percent_gdp_signed", "years", "number0", "number1", "number2", "rating"];
-    static readonly HashSet<string> MapKinds = ["political", "bins", "diverging", "politics", "income", "region_density"];
+    static readonly HashSet<string> MapKinds = ["political", "bins", "diverging", "politics", "income", "region_density", "parties"];
 
     [GeneratedRegex("^#[0-9a-fA-F]{6}$")]
     private static partial Regex HexColor();
@@ -281,6 +282,7 @@ public static partial class DataValidator
         ValidateEconomy(data, Add);
         ValidateGovernment(data, Add);
         ValidateLaws(data, Add);
+        ValidatePolitics(data, Add);
         return problems;
     }
 

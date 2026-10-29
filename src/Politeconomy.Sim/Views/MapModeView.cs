@@ -46,6 +46,7 @@ public sealed class MapModeView
             "political" => PoliticalColor(controller),
             "politics" => _data.MapModes.PoliticsColors.GetValueOrDefault(WorldFactory.SystemId(country.System), _palettes.NoData),
             "income" => _data.MapModes.IncomeGroups.FirstOrDefault(g => g.Id == WorldFactory.IncomeId(country.Income))?.Color ?? _palettes.NoData,
+            "parties" => country.Politics?.Head?.Color ?? _palettes.NoData,
             "bins" or "diverging" => ValueColor(country.Stat(Mode.Indicator!)?.Value ?? double.NaN),
             "region_density" => ValueColor(Density(region.Id)),
             _ => _palettes.NoData,
@@ -108,6 +109,11 @@ public sealed class MapModeView
                     .ToList();
             case "income":
                 return _data.MapModes.IncomeGroups.Select(g => new LegendEntry(g.Color, g.Name)).ToList();
+            case "parties":
+                return _data.Parties.Families.Append(_data.Parties.Power)
+                    .Select(f => new LegendEntry(f.Color, f.Name))
+                    .Append(new LegendEntry(_palettes.NoData, "партий нет"))
+                    .ToList();
             case "bins" or "diverging" or "region_density" when Mode.Thresholds is { Count: > 0 } t:
             {
                 var list = new List<LegendEntry>();
@@ -140,6 +146,9 @@ public sealed class MapModeView
         {
             "politics" => _data.Politics.Systems.GetValueOrDefault(WorldFactory.SystemId(country.System), ""),
             "income" => _data.MapModes.IncomeGroups.FirstOrDefault(g => g.Id == WorldFactory.IncomeId(country.Income))?.Name ?? "",
+            "parties" => country.Politics?.Head is { } head
+                ? $"Правит: {head.Name} ({_data.Family(head.Family).Name.ToLowerInvariant()}), в опросах {Fmt.Value("percent", head.Poll * 100)}"
+                : "Партий нет",
             "bins" or "diverging" when Indicator is not null => ValueLine(country.Stat(Indicator.Id)),
             "region_density" => $"Плотность: {Fmt.Number(Density(region.Id), 0)}{Fmt.Nbsp}{Mode.Unit}",
             _ => "",

@@ -34,6 +34,7 @@ public partial class Main : Node
     ScreenRail _rail = null!;
     GovernmentScreen _government = null!;
     MinistryScreen _ministries = null!;
+    PoliticsScreen _politicsScreen = null!;
     LawsScreen _laws = null!;
     BudgetScreen _budget = null!;
     bool _dossierBeforeScreen;
@@ -167,11 +168,12 @@ public partial class Main : Node
         _countryPanel.RegionChosen += id => SelectRegion(_map.Region(id), center: true);
 
         _countryPanel.GovernmentRequested += id => OpenGovernment(id);
+        _countryPanel.PoliticsRequested += id => OpenPolitics(id);
 
         _rail = new ScreenRail();
         _uiRoot.AddChild(_rail);
         _rail.Setup([("government", "government", "Правительство и парламент (G)"), ("ministries", "ministries", "Ведомства и доклады министров (M)"),
-            ("laws", "laws", "Законы (L)"), ("budget", "budget", "Бюджет и налоги (B)")]);
+            ("politics", "politics", "Партии и опросы (P)"), ("laws", "laws", "Законы (L)"), ("budget", "budget", "Бюджет и налоги (B)")]);
         _rail.ScreenChosen += ToggleScreen;
 
         _government = new GovernmentScreen { Visible = false };
@@ -198,6 +200,11 @@ public partial class Main : Node
             _laws.SelectLaw(law);
         };
         _ministries.BudgetRequested += OpenBudget;
+
+        _politicsScreen = new PoliticsScreen { Visible = false };
+        _uiRoot.AddChild(_politicsScreen);
+        _politicsScreen.Setup(_data);
+        _politicsScreen.Closed += CloseScreens;
 
         _laws = new LawsScreen { Visible = false };
         _uiRoot.AddChild(_laws);
@@ -227,7 +234,7 @@ public partial class Main : Node
         _hoverCard.Setup();
 
         // Когда курсор уходит на панель, карта не должна подсвечивать регион под ней.
-        foreach (var panel in new Control[] { _topBar, _modePanel, _countryPanel, _rail, _government, _ministries, _laws, _budget })
+        foreach (var panel in new Control[] { _topBar, _modePanel, _countryPanel, _rail, _government, _ministries, _politicsScreen, _laws, _budget })
             panel.MouseEntered += () => SetHovered(null, null);
     }
 
@@ -257,6 +264,8 @@ public partial class Main : Node
             _government.Refresh(snapshot);
         if (_ministries.Visible)
             _ministries.Refresh(snapshot);
+        if (_politicsScreen.Visible)
+            _politicsScreen.Refresh(snapshot);
         if (_laws.Visible)
             _laws.Refresh(snapshot);
         if (_budget.Visible)
@@ -357,9 +366,9 @@ public partial class Main : Node
     /// <summary>Клавиши; буквенные — по физическому положению, чтобы работали и в русской раскладке.</summary>
     void HandleKey(Key key, Key physical)
     {
-        if (physical is Key.G or Key.M or Key.L or Key.B)
+        if (physical is Key.G or Key.M or Key.P or Key.L or Key.B)
         {
-            ToggleScreen(physical switch { Key.G => "government", Key.M => "ministries", Key.L => "laws", _ => "budget" });
+            ToggleScreen(physical switch { Key.G => "government", Key.M => "ministries", Key.P => "politics", Key.L => "laws", _ => "budget" });
             return;
         }
         switch (key)
@@ -533,6 +542,9 @@ public partial class Main : Node
                 OpenMinistries("RUS");
                 foreach (var post in _data.Government.Posts)
                     _ministries.SelectPost(post.Id);
+                OpenPolitics("DEU");
+                OpenPolitics("SAU");
+                OpenPolitics("RUS");
                 OpenLaws("RUS");
                 OpenBudget();
                 _smokeStep++;
@@ -546,7 +558,9 @@ public partial class Main : Node
                     && snapshot.Countries["RUS"].Government is { Ministers.Count: 18 }
                     && snapshot.Countries["RUS"].Laws is { } rusLaws && (rusLaws.BillFor("vat_reduced") != null || rusLaws.Current["vat_reduced"] == "no")
                     && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "budget")
-                    && snapshot.Countries["RUS"].History?.Series("gdp_growth_pct").Count >= 5;
+                    && snapshot.Countries["RUS"].History?.Series("gdp_growth_pct").Count >= 5
+                    && snapshot.Countries["DEU"].Politics is { Parties.Count: >= 3, Polls.Count: >= 2 }
+                    && snapshot.Countries["DEU"].Stat("ruling_poll_pct") is { } ruling && double.IsFinite(ruling.Value);
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
                     && inflation is { Source: StatSources.Model, Factors.Count: > 0 } && double.IsFinite(inflation.Value)
@@ -636,6 +650,15 @@ public partial class Main : Node
                 _ministries.SelectPost("health");
             }),
             ("17_ministry_finance", () => _ministries.SelectPost("finance")),
+            ("18_politics", () => OpenPolitics("BRA")),
+            ("19_politics_germany", () => OpenPolitics("DEU")),
+            ("20_map_parties", () =>
+            {
+                CloseScreens();
+                SelectRegion(null);
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "parties"));
+                _camera.FitWorld(instant: true);
+            }),
         };
         if (_shotStep > 0)
         {
@@ -656,7 +679,7 @@ public partial class Main : Node
     }
 
     /// <summary>Открыть или закрыть экран: страны игрока, а если игрок ещё не выбрал страну — выбранной на карте.</summary>
-    bool ScreenOpen => _government.Visible || _ministries.Visible || _laws.Visible || _budget.Visible;
+    bool ScreenOpen => _government.Visible || _ministries.Visible || _politicsScreen.Visible || _laws.Visible || _budget.Visible;
 
     void ToggleScreen(string screen)
     {
@@ -664,6 +687,7 @@ public partial class Main : Node
         {
             "government" => _government.Visible,
             "ministries" => _ministries.Visible,
+            "politics" => _politicsScreen.Visible,
             "laws" => _laws.Visible,
             _ => _budget.Visible,
         };
@@ -681,7 +705,7 @@ public partial class Main : Node
         if (id == null)
         {
             _toasts.Push("Выберите страну на карте или начните игру за неё — тогда откроется её " +
-                         (screen switch { "government" => "правительство.", "ministries" => "ведомства.", _ => "законодательство." }));
+                         (screen switch { "government" => "правительство.", "ministries" => "ведомства.", "politics" => "партии.", _ => "законодательство." }));
             _rail.SetActive(null);
             return;
         }
@@ -689,6 +713,8 @@ public partial class Main : Node
             OpenGovernment(id);
         else if (screen == "ministries")
             OpenMinistries(id);
+        else if (screen == "politics")
+            OpenPolitics(id);
         else
             OpenLaws(id);
     }
@@ -702,6 +728,7 @@ public partial class Main : Node
         _modePanel.Visible = false;
         _government.Visible = false;
         _ministries.Visible = false;
+        _politicsScreen.Visible = false;
         _laws.Visible = false;
         _budget.Visible = false;
     }
@@ -736,6 +763,16 @@ public partial class Main : Node
         SetHovered(null, null);
     }
 
+    void OpenPolitics(string countryId)
+    {
+        if (_host == null)
+            return;
+        HideUnderScreens();
+        _politicsScreen.ShowCountry(countryId, _host.Snapshot);
+        _rail.SetActive("politics");
+        SetHovered(null, null);
+    }
+
     void OpenLaws(string countryId)
     {
         if (_host == null)
@@ -755,6 +792,7 @@ public partial class Main : Node
         }
         _government.Visible = false;
         _ministries.Visible = false;
+        _politicsScreen.Visible = false;
         _laws.Visible = false;
         _budget.Visible = false;
         _rail.SetActive(null);

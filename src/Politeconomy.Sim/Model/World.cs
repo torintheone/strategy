@@ -111,6 +111,9 @@ public sealed class World
     /// <summary>Законы стран: действующие варианты, законопроекты, поправки к модели; создаются <see cref="Laws.LawModel.Setup"/>.</summary>
     public Laws.WorldLaws? Laws { get; set; }
 
+    /// <summary>Взгляды, партии и опросы; null — политика не создана.</summary>
+    public Politics.WorldPolitics? Politics { get; set; }
+
     /// <summary>История показателей по годам (для графиков); создаётся <see cref="History.HistoryModel.Setup"/>.</summary>
     public History.WorldHistory? History { get; set; }
 

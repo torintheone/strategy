@@ -4,6 +4,7 @@ using Politeconomy.Sim.Economy.Systems;
 using Politeconomy.Sim.Government;
 using Politeconomy.Sim.Laws;
 using Politeconomy.Sim.Model;
+using Politeconomy.Sim.Politics;
 using Politeconomy.Sim.Society;
 using Politeconomy.Sim.Text;
 
@@ -81,7 +82,7 @@ public static class BudgetCycle
     {
         var forecast = p.Forecast = Forecast(world, id, p.Spending, p.Taxes);
         var parliament = world.Government![id].Parliament;
-        var vote = ParliamentVote.Cast(world, parliament, forecast.Support);
+        var vote = Cast(world, id, parliament, forecast);
         p.Votes.Add(vote);
         if (vote.Passed)
         {
@@ -110,7 +111,7 @@ public static class BudgetCycle
     {
         var forecast = p.Forecast = Forecast(world, id, p.AmendSpending!, p.AmendTaxes!);
         var parliament = world.Government![id].Parliament;
-        var vote = ParliamentVote.Cast(world, parliament, forecast.Support);
+        var vote = Cast(world, id, parliament, forecast);
         if (vote.Passed)
         {
             e.SpendingPlan = p.AmendSpending!.ToArray();
@@ -122,6 +123,13 @@ public static class BudgetCycle
         p.AmendSpending = p.AmendTaxes = null;
         p.AmendVote = null;
         p.Forecast = null;
+    }
+
+    /// <summary>Голосование о бюджете: каждая фракция смотрит на своих избирателей.</summary>
+    static VoteResult Cast(World world, string id, Parliament parliament, BudgetForecast forecast)
+    {
+        var scale = world.Data.BudgetCycleBalance.SupportScale;
+        return ParliamentVote.Cast(world, parliament, party => forecast.PartySupport(PoliticsModel.Voters(world, id, party), scale));
     }
 
     static void Log(World world, string id, BudgetProcess p, string text)
@@ -177,12 +185,20 @@ public static class BudgetCycle
         var balance = (revenue.Sum() - outlays.Sum() - e.Interest) / gdp;
         // Парламент не любит, когда дефицит растёт больше чем на DeficitTolerance ВВП по сравнению с нынешним.
         var growth = e.BalanceRatio - balance;
-        var support = Math.Clamp(0.5 + 0.5 * Math.Tanh(weighted / b.SupportScale) - b.DeficitPenalty * Math.Max(0, growth - b.DeficitTolerance), 0, 1);
+        var penalty = b.DeficitPenalty * Math.Max(0, growth - b.DeficitTolerance);
+        var support = Math.Clamp(0.5 + 0.5 * Math.Tanh(weighted / b.SupportScale) - penalty, 0, 1);
+        var forecast = new BudgetForecast(revenue.Sum() / gdp, outlays.Sum() / gdp, e.Interest / gdp, balance, change, attitudes, support,
+            new VoteResult(0, 0, 0, 0, 0, 0, true, true), penalty);
         var parliament = world.Government?.Countries.GetValueOrDefault(id)?.Parliament;
-        var vote = parliament == null
-            ? new VoteResult(0, 0, 0, 0, 0, 0, true, true)
-            : ParliamentVote.Forecast(data.GovernmentBalance.Parliament, parliament.Kind, parliament.Seats, parliament.RulingSeats,
-                parliament.Discipline, support, constitutional: false);
-        return new BudgetForecast(revenue.Sum() / gdp, outlays.Sum() / gdp, e.Interest / gdp, balance, change, attitudes, support, vote);
+        if (parliament == null)
+            return forecast;
+        var factions = parliament.Factions
+            .Select(f => new FactionSupport(f.Party, f.Seats, f.Ruling, forecast.PartySupport(PoliticsModel.Voters(world, id, f.Party), b.SupportScale)))
+            .ToList();
+        return forecast with
+        {
+            Vote = ParliamentVote.Forecast(data.GovernmentBalance.Parliament, parliament.Kind, parliament.Seats, parliament.Discipline, factions,
+                constitutional: false),
+        };
     }
 }

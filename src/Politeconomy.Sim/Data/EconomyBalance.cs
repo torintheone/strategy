@@ -145,6 +145,8 @@ public sealed class FiscalBalance
     public double SpendingFloor { get; init; } = 0.05;
     public double RateCap { get; init; } = 0.4;
     public double DefaultInterestShare { get; init; } = 0.35;
+    /// <summary>Дефолт и тогда, когда номинальные проценты больше такой доли доходов (высокая инфляция их не спасает).</summary>
+    public double DefaultNominalShare { get; init; } = 1.0;
     public IReadOnlyList<double> DefaultDebt { get; init; } = [1.5, 1.8, 2.2, 3.0];
     public double DefaultDebtGrowth { get; init; } = 1.3;
     public double Haircut { get; init; } = 0.5;

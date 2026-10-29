@@ -1,4 +1,5 @@
 using Politeconomy.Sim.Budget;
+using Politeconomy.Sim.Government;
 using Politeconomy.Sim.Model;
 using Politeconomy.Sim.Save;
 
@@ -45,7 +46,8 @@ public class BudgetTests
         baseline.World.PlayerCountry = "DEU";
         var world = sim.World;
         // У правительства меньшинство, а проект резко повышает налоги — парламент его не примет.
-        world.Government!["DEU"].Parliament.RulingSeats = 250;
+        var parliament = world.Government!["DEU"].Parliament;
+        parliament.Factions = Parliament.Blocks(parliament.Kind, parliament.Name, parliament.Seats, 250, parliament.Discipline).Factions;
         sim.RunUntil(new DateOnly(2026, 9, 2));
         var e = world.Economy!["DEU"];
         var p = world.Budgets!["DEU"];

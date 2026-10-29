@@ -12,9 +12,13 @@ public static class GovernmentActions
         var post = world.Data.Government.Posts.First(p => p.Id == postId);
         var country = world[countryId];
         var list = new List<Character>();
-        for (var i = 0; i < world.Data.GovernmentBalance.Candidates; i++)
-            list.Add(CharacterFactory.Create(world, country, post, leader: false));
         var g = government[countryId];
+        for (var i = 0; i < world.Data.GovernmentBalance.Candidates; i++)
+        {
+            var candidate = CharacterFactory.Create(world, country, post, leader: false);
+            Politics.PoliticsModel.Affiliate(world, countryId, candidate, g.Minister(postId)?.Party);
+            list.Add(candidate);
+        }
         g.Candidates[postId] = list;
         g.Version++;
     }

@@ -36,6 +36,15 @@ public partial class RailButton : Button
                 DrawLine(c + new Vector2(-11, 1), c + new Vector2(11, 1), color, w, true);
                 DrawRect(new Rect2(c + new Vector2(-2.5f, -0.5f), new Vector2(5, 4)), color);
                 break;
+            case "politics":
+                // Урна для голосования: ящик с прорезью и бюллетень над ней.
+                DrawPolyline([c + new Vector2(-11, -2), c + new Vector2(11, -2), c + new Vector2(11, 11), c + new Vector2(-11, 11),
+                    c + new Vector2(-11, -2)], color, w, true);
+                DrawLine(c + new Vector2(-5, 3), c + new Vector2(5, 3), color, w + 0.6f, true);
+                DrawPolyline([c + new Vector2(-4, 1), c + new Vector2(-4, -11), c + new Vector2(4, -11), c + new Vector2(4, 1)], color, w, true);
+                DrawLine(c + new Vector2(-1.5f, -7), c + new Vector2(1.5f, -4), color, w, true);
+                DrawLine(c + new Vector2(1.5f, -4), c + new Vector2(3, -8), color, w, true);
+                break;
             case "laws":
                 // Документ с загнутым углом и строками.
                 DrawPolyline([c + new Vector2(-8, -11), c + new Vector2(4, -11), c + new Vector2(9, -6), c + new Vector2(9, 11),

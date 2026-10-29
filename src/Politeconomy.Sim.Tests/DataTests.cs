@@ -116,6 +116,7 @@ public class DataTests
         Cultures = d.Cultures,
         Laws = d.Laws,
         History = d.History,
+        Parties = d.Parties,
         Benchmarks = d.Benchmarks,
     };
 }

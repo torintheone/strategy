@@ -87,14 +87,19 @@ public class LawTests
     {
         var sim = NewGame();
         var world = sim.World;
-        // Демократия с президентом без большинства в парламенте.
-        var country = world.Countries.First(c => c.Regime == Regime.Democracy && c.System == PoliticalSystem.PresidentialRepublic
-                                                 && world.Government![c.Id].Parliament.RulingSeats * 2 < world.Government![c.Id].Parliament.Seats - 20);
-        Assert.True(LawActions.Propose(world, country.Id, "wealth_tax", "high"));
-        var bill = world.Laws![country.Id].BillFor("wealth_tax")!;
+        // Демократия, где правит одна партия главы, и у неё меньше 45% мест: остальные фракции — оппозиция.
+        var country = world.Countries.First(c => c.Regime == Regime.Democracy && world.Laws![c.Id].Current["conscription"] == "professional"
+                                                 && world.Government![c.Id].Parliament.Factions.FirstOrDefault(f => f.Party == world.Government![c.Id].Leader.Party)
+                                                     is { } head && head.Seats < 0.45 * world.Government![c.Id].Parliament.Seats);
+        var parliament = world.Government![country.Id].Parliament;
+        foreach (var f in parliament.Factions)
+            f.Ruling = f.Party == world.Government![country.Id].Leader.Party;
+        // Всеобщий призыв не нравится почти никому — оппозиция голосует против.
+        Assert.True(LawActions.Propose(world, country.Id, "conscription", "universal"));
+        var bill = world.Laws![country.Id].BillFor("conscription")!;
         sim.RunUntil(bill.Ready.AddMonths(1).AddDays(1));
         Assert.Equal("rejected", bill.Stage);
-        Assert.Equal("none", world.Laws![country.Id].Current["wealth_tax"]);
+        Assert.Equal("professional", world.Laws![country.Id].Current["conscription"]);
         Assert.Empty(world.Laws![country.Id].Modifiers);
         Assert.Contains(world.Journal, e => e.Country == country.Id && e.Text.Contains("отклонил"));
     }

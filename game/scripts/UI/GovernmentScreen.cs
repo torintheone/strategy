@@ -37,6 +37,7 @@ public partial class GovernmentScreen : GlassPanel
     GovernmentSnapshot? _shown;
     bool _shownPlayer;
     IReadOnlyList<CharacterSnapshot>? _shownCandidates;
+    PoliticsSnapshot? _politics;
 
     public event Action? Closed;
     public event Action<string, string>? CandidatesRequested;
@@ -213,6 +214,7 @@ public partial class GovernmentScreen : GlassPanel
         if (ReferenceEquals(g, _shown) && player == _shownPlayer)
             return;
         _shown = g;
+        _politics = country.Politics;
         _shownPlayer = player;
         var record = _data.Countries.Countries.First(c => c.Id == _countryId);
         _title.Text = "Правительство: " + record.Name;
@@ -224,18 +226,20 @@ public partial class GovernmentScreen : GlassPanel
         _leaderPortrait.Show(leader.Female, leader.Age, leader.Id);
         _leaderRole.Text = g.LeaderTitle.ToUpperInvariant() + (player ? " · ЭТО ВЫ" : "");
         _leaderName.Text = leader.Name;
-        _leaderInfo.Text = $"{Fmt.Age(leader.Age)}{TraitsText(leader)}";
+        _leaderInfo.Text = $"{Fmt.Age(leader.Age)}{PartyText(leader)}{TraitsText(leader)}";
         _leaderCompetence.Show("Компетентность", leader.Competence, UiTheme.Accent);
         _leaderPopularity.Show("Популярность", leader.Popularity, Color.FromHtml("#7fc49a"));
         _leaderCard.TooltipText = PersonTooltip(g.LeaderTitle, leader);
 
         var p = g.Parliament;
         _parliamentName.Text = (p.Kind == "none" ? "ПАРЛАМЕНТА НЕТ" : p.Name.ToUpperInvariant());
-        _chart.Show(p);
+        _chart.Show(p, country.Politics);
         _chart.Visible = p.Seats > 0;
-        _parliamentLegend.Text = p.Seats > 0
-            ? $"Правящий блок {Fmt.Number(p.Ruling, 0)} · оппозиция {Fmt.Number(p.Opposition, 0)} · всего {Fmt.Number(p.Seats, 0)}"
-            : "";
+        var coalition = country.Politics?.Parties.Where(x => x.Ruling && x.Seats > 0).Select(x => x.Short).ToList() ?? [];
+        _parliamentLegend.Text = p.Seats <= 0 ? ""
+            : coalition.Count > 0
+                ? $"Правящие ({string.Join(", ", coalition)}) {Fmt.Number(p.Ruling, 0)} · оппозиция {Fmt.Number(p.Opposition, 0)} · всего {Fmt.Number(p.Seats, 0)}"
+                : $"Правящий блок {Fmt.Number(p.Ruling, 0)} · оппозиция {Fmt.Number(p.Opposition, 0)} · всего {Fmt.Number(p.Seats, 0)}";
         _parliamentNote.Text = p.Kind switch
         {
             "real" when p.Ruling * 2 > p.Seats => "Парламент голосует всерьёз. У правительства большинство, но часть депутатов может проголосовать против непопулярного закона.",
@@ -246,7 +250,7 @@ public partial class GovernmentScreen : GlassPanel
 
         foreach (var m in g.Ministers)
             if (_cards.TryGetValue(m.Post, out var card))
-                card.Show(m.Person, Fmt.Age(m.Person.Age) + TraitsText(m.Person), PersonTooltip(_posts[m.Post].Name, m.Person), player);
+                card.Show(m.Person, Fmt.Age(m.Person.Age) + PartyText(m.Person) + TraitsText(m.Person), PersonTooltip(_posts[m.Post].Name, m.Person), player);
     }
 
     /// <summary>Открыть выбор замены на пост: игра подберёт кандидатов.</summary>
@@ -282,7 +286,7 @@ public partial class GovernmentScreen : GlassPanel
             portrait.Show(c.Female, c.Age, c.Id);
             column.AddChild(portrait);
             column.AddChild(UiTheme.Text(c.Name, 16, UiTheme.SemiBold));
-            var info = UiTheme.Text(Fmt.Age(c.Age) + TraitsText(c), 12, null, UiTheme.TextSecondary);
+            var info = UiTheme.Text(Fmt.Age(c.Age) + PartyText(c) + TraitsText(c), 12, null, UiTheme.TextSecondary);
             info.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             column.AddChild(info);
             foreach (var (label, value, color) in Qualities(c))
@@ -316,6 +320,12 @@ public partial class GovernmentScreen : GlassPanel
         ("Честность", 100 - c.Corruption, Color.FromHtml("#7fc49a")),
     ];
 
+    /// <summary>Партия персонажа коротким названием («· СДП» или «· беспартийный»); пусто, если партий в стране нет.</summary>
+    string PartyText(CharacterSnapshot c) =>
+        _politics is not { Parties.Count: > 0 } p ? ""
+        : p.Party(c.Party) is { } party ? " · " + party.Short
+        : c.Female ? " · беспартийная" : " · беспартийный";
+
     string TraitsText(CharacterSnapshot c) =>
         c.Traits.Count == 0 ? "" : " · " + string.Join(", ", c.Traits.Select(t => _traits.TryGetValue(t, out var r) ? r.Name : t));
 
@@ -325,10 +335,15 @@ public partial class GovernmentScreen : GlassPanel
         {
             $"{role}: {c.Name}",
             $"{Fmt.Age(c.Age)}, на посту с {Fmt.Date(c.Since)}",
+        };
+        if (_politics?.Party(c.Party) is { } party)
+            lines.Add("Партия: " + party.Name);
+        lines.AddRange(new[]
+        {
             $"Компетентность {Fmt.Number(c.Competence, 0)} — как быстро и хорошо работает ведомство",
             $"Лояльность {Fmt.Number(c.Loyalty, 0)} — насколько верен главе",
             $"Честность {Fmt.Number(100 - c.Corruption, 0)}, популярность {Fmt.Number(c.Popularity, 0)}",
-        };
+        });
         foreach (var t in c.Traits)
             if (_traits.TryGetValue(t, out var trait))
                 lines.Add($"{trait.Name}: {trait.Description}");

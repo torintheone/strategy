@@ -70,13 +70,13 @@ public class GovernmentTests
     public void ParliamentVotesFollowMajorityAndPopularity()
     {
         var world = NewWorld();
-        var democracy = new Parliament { Kind = "real", Seats = 400, RulingSeats = 220, Discipline = 0.82 };
+        var democracy = Parliament.Blocks("real", "", 400, 220, 0.82);
         Assert.True(ParliamentVote.Cast(world, democracy, 0.5).Passed, "правящее большинство проводит обычный проект");
-        var divided = new Parliament { Kind = "real", Seats = 400, RulingSeats = 170, Discipline = 0.82 };
+        var divided = Parliament.Blocks("real", "", 400, 170, 0.82);
         Assert.False(ParliamentVote.Cast(world, divided, 0.3).Passed, "без большинства непопулярный проект проваливается");
         Assert.True(ParliamentVote.Cast(world, divided, 0.9).Passed, "популярный проект поддерживает и оппозиция");
         Assert.False(ParliamentVote.Cast(world, democracy, 0.5, constitutional: true).Passed, "для конституции нужно две трети");
-        var formal = new Parliament { Kind = "formal", Seats = 400, RulingSeats = 370, Discipline = 0.99 };
+        var formal = Parliament.Blocks("formal", "", 400, 370, 0.99);
         Assert.True(ParliamentVote.Cast(world, formal, 0.05).Passed, "формальный парламент одобряет всё");
         var none = new Parliament { Kind = "none" };
         Assert.True(ParliamentVote.Cast(world, none, 0.1).Decree);
