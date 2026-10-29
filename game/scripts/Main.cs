@@ -44,6 +44,7 @@ public partial class Main : Node
     DebateDialog _debateDialog = null!;
     string? _seenCampaign;
     string? _seenDebate;
+    bool _dialogWasOpen;
     // Какие выборы, переговоры, поражения и итоги игрок уже видел (окна показываются один раз).
     readonly HashSet<string> _seenElections = new();
     string? _seenFor;
@@ -316,6 +317,11 @@ public partial class Main : Node
             return;
         }
         var snapshot = _host.Snapshot;
+        // Окно закрыли — следующее (например, дебаты после начала кампании) показываем сразу: на паузе нового снимка не будет.
+        if (_dialogWasOpen && !DialogOpen)
+            CheckDialogs(snapshot);
+        _dialogWasOpen = DialogOpen;
+        _dialogWasOpen = DialogOpen;
         if (snapshot.Version == _shownVersion)
             return;
         _toasts.Feed(snapshot.Journal, snapshot.PlayerCountry, silent: _shownVersion < 0);
@@ -333,6 +339,7 @@ public partial class Main : Node
             _budget.Refresh(snapshot);
         Recolor(snapshot);
         CheckDialogs(snapshot);
+        _dialogWasOpen = DialogOpen;
         if (_countryPanel.Visible)
             _countryPanel.Refresh(snapshot);
     }

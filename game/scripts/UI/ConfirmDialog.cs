@@ -12,6 +12,7 @@ public partial class ConfirmDialog : ModalDialog
         _confirmed = confirmed;
         Title.Text = title;
         Subtitle.Text = "";
+        Subtitle.Visible = false;
         ClearContent();
         Content.AddChild(Line(text, 14, UiTheme.TextPrimary));
         ClearButtons();

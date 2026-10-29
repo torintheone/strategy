@@ -300,17 +300,23 @@ public partial class PoliticsScreen : GlassPanel
         RenderViews(country, p);
         RenderElections(country, p, player);
         if (_focusCampaign && Campaign.Visible)
-        {
-            _focusCampaign = false;
-            Callable.From(() => _content.EnsureControlVisible(Campaign)).CallDeferred();
-        }
+            ScrollToCampaign();
     }
 
-    /// <summary>Прокрутить к штабу кампании, как только он появится на экране.</summary>
+    /// <summary>Прокрутить к штабу кампании — сейчас или, если его ещё нет, как только он появится.</summary>
     public void FocusCampaign()
     {
-        _focusCampaign = true;
-        _shown = null;
+        if (Visible && Campaign.Visible)
+            ScrollToCampaign();
+        else
+            _focusCampaign = true;
+    }
+
+    void ScrollToCampaign()
+    {
+        _focusCampaign = false;
+        // После раскладки: верх штаба — к верху прокрутки.
+        Callable.From(() => _content.ScrollVertical = Math.Max(0, (int)Campaign.Position.Y - 4)).CallDeferred();
     }
 
     void RenderParliament(CountrySnapshot country, PoliticsSnapshot p)
