@@ -286,7 +286,7 @@
   "approval_popularity": 0.25
  },
  "budget_cycle": {
-  "_comment": "Бюджетный процесс страны игрока (MODEL.md, «Бюджетный цикл»). Проект — в месяце draft_month, голосование — в vote_month, последняя попытка — в last_vote_month. Отношение класса к бюджету = income_attitude × изменение его дохода в процентах + spending_attitude × относительное изменение статей, за которыми он следит (supporters в budget.json), в пределах ±attitude_cap. Одобрение = 0,5 + 0,5·th(отношение, взвешенное по влиянию / support_scale) − deficit_penalty × дефицит сверх deficit_tolerance ВВП. Ползунки: налог — от tax_min до tax_max нынешней ставки, статья расходов — до spending_max нынешней.",
+  "_comment": "Бюджетный процесс страны игрока (MODEL.md, «Бюджетный цикл»). Проект — в месяце draft_month, голосование — в vote_month, последняя попытка — в last_vote_month. Отношение класса к бюджету = income_attitude × изменение его дохода в процентах + spending_attitude × относительное изменение статей, за которыми он следит (supporters в budget.json), в пределах ±attitude_cap. Одобрение = 0,5 + 0,5·th(отношение, взвешенное по влиянию / support_scale) − deficit_penalty × рост дефицита (по сравнению с нынешним) сверх deficit_tolerance ВВП. Ползунки: налог — от tax_min до tax_max нынешней ставки, статья расходов — до spending_max нынешней.",
   "draft_month": 9,
   "vote_month": 10,
   "last_vote_month": 12,
@@ -294,7 +294,7 @@
   "spending_attitude": 2.0,
   "attitude_cap": 3,
   "support_scale": 1.0,
-  "deficit_tolerance": 0.04,
+  "deficit_tolerance": 0.01,
   "deficit_penalty": 5,
   "tax_min": 0.5,
   "tax_max": 1.6,

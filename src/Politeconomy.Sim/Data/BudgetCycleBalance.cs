@@ -13,8 +13,8 @@ public sealed class BudgetCycleBalance
     public double SpendingAttitude { get; init; } = 2.0;
     public double AttitudeCap { get; init; } = 3;
     public double SupportScale { get; init; } = 1.0;
-    /// <summary>Дефицит больше DeficitTolerance ВВП снижает одобрение на DeficitPenalty за каждую долю ВВП сверх.</summary>
-    public double DeficitTolerance { get; init; } = 0.04;
+    /// <summary>Рост дефицита больше чем на DeficitTolerance ВВП снижает одобрение на DeficitPenalty за каждую долю ВВП сверх.</summary>
+    public double DeficitTolerance { get; init; } = 0.01;
     public double DeficitPenalty { get; init; } = 5;
     /// <summary>Пределы ползунков: множитель налога и расходы относительно нынешних.</summary>
     public double TaxMin { get; init; } = 0.5;

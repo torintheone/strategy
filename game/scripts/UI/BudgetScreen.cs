@@ -32,6 +32,8 @@ public partial class BudgetScreen : GlassPanel
     int _syncedVersion = -1;
     double _pending = -1;
     double _ratePending = -1;
+    /// <summary>Ползунки выставляются из модели — их сигналы об изменении не считаются действием игрока.</summary>
+    bool _syncing;
 
     public event Action? Closed;
     public event Action<string, double[], double[]>? Edited;
@@ -136,7 +138,11 @@ public partial class BudgetScreen : GlassPanel
         rateRow.AddThemeConstantOverride("separation", 12);
         rateBox.AddChild(rateRow);
         _rate = new HSlider { MinValue = 0, MaxValue = 40, Step = 0.25, CustomMinimumSize = new Vector2(360, 24), FocusMode = FocusModeEnum.None };
-        _rate.ValueChanged += _ => _ratePending = 0.4;
+        _rate.ValueChanged += _ =>
+        {
+            if (!_syncing)
+                _ratePending = 0.4;
+        };
         rateRow.AddChild(_rate);
         _rateValue = UiTheme.Text("", 15, UiTheme.Numbers);
         rateRow.AddChild(_rateValue);
@@ -163,7 +169,11 @@ public partial class BudgetScreen : GlassPanel
             label.ClipText = true;
             row.AddChild(label);
             var slider = new HSlider { SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(160, 22), FocusMode = FocusModeEnum.None };
-            slider.ValueChanged += _ => _pending = 0.35;
+            slider.ValueChanged += _ =>
+            {
+                if (!_syncing)
+                    _pending = 0.35;
+            };
             row.AddChild(slider);
             var value = UiTheme.Text("", 13, UiTheme.Numbers, UiTheme.TextPrimary);
             value.CustomMinimumSize = new Vector2(150, 0);
@@ -215,6 +225,7 @@ public partial class BudgetScreen : GlassPanel
         // Ползунки берут значения из модели, пока игрок их не двигает.
         if (b.Version != _syncedVersion && _pending <= 0)
         {
+            _syncing = true;
             _syncedVersion = b.Version;
             var cycle = _data.BudgetCycleBalance;
             for (var k = 0; k < _taxes.Count; k++)
@@ -234,12 +245,14 @@ public partial class BudgetScreen : GlassPanel
                 s.Step = 0.01;
                 s.SetValueNoSignal(b.EditSpending[k] * 100);
             }
+            _syncing = false;
         }
 
         foreach (var child in _classes.GetChildren())
             child.QueueFree();
         if (b.Forecast is { } f)
         {
+            var shown = 0;
             var classes = _data.Classes.Classes;
             for (var k = 0; k < classes.Count && k < f.Attitudes.Length; k++)
             {
@@ -251,8 +264,9 @@ public partial class BudgetScreen : GlassPanel
                 chip.AddChild(UiTheme.Text($"{classes[k].ShortName ?? classes[k].Name} {Fmt.Signed(f.Attitudes[k], 1)}", 12, UiTheme.Medium, color));
                 chip.TooltipText = $"Доход класса изменится на {Fmt.Value("percent_signed", f.IncomeChange[k] * 100)}";
                 _classes.AddChild(chip);
+                shown++;
             }
-            if (_classes.GetChildCount() == 0)
+            if (shown == 0)
                 _classes.AddChild(UiTheme.Text("Изменений нет — классы равнодушны.", 13, null, UiTheme.TextMuted));
             var v = f.Vote;
             var vote = v.Decree ? "Парламента нет: бюджет утверждается указом."
@@ -270,7 +284,11 @@ public partial class BudgetScreen : GlassPanel
         _discard.Visible = editingAmendment && b.Amending && b.AmendVote == null;
         _rateBox.Visible = b.CanSetRate;
         if (b.CanSetRate && _ratePending <= 0)
+        {
+            _syncing = true;
             _rate.SetValueNoSignal((b.ManualRate ?? b.PolicyRate) * 100);
+            _syncing = false;
+        }
         UpdateLabels();
     }
 

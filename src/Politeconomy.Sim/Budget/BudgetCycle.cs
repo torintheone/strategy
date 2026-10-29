@@ -175,7 +175,9 @@ public static class BudgetCycle
         for (var k = 0; k < n; k++)
             weighted += influence[k] / 100 * attitudes[k];
         var balance = (revenue.Sum() - outlays.Sum() - e.Interest) / gdp;
-        var support = Math.Clamp(0.5 + 0.5 * Math.Tanh(weighted / b.SupportScale) - b.DeficitPenalty * Math.Max(0, -balance - b.DeficitTolerance), 0, 1);
+        // Парламент не любит, когда дефицит растёт больше чем на DeficitTolerance ВВП по сравнению с нынешним.
+        var growth = e.BalanceRatio - balance;
+        var support = Math.Clamp(0.5 + 0.5 * Math.Tanh(weighted / b.SupportScale) - b.DeficitPenalty * Math.Max(0, growth - b.DeficitTolerance), 0, 1);
         var parliament = world.Government?.Countries.GetValueOrDefault(id)?.Parliament;
         var vote = parliament == null
             ? new VoteResult(0, 0, 0, 0, 0, 0, true, true)
