@@ -7,7 +7,7 @@ public partial class ConfirmDialog : ModalDialog
 
     public void Setup() => InitDialog(520);
 
-    public void Show(string title, string text, string confirm, Action confirmed)
+    public void Show(string title, string text, string confirm, Action confirmed, string cancel = "Отмена")
     {
         _confirmed = confirmed;
         Title.Text = title;
@@ -15,7 +15,7 @@ public partial class ConfirmDialog : ModalDialog
         ClearContent();
         Content.AddChild(Line(text, 14, UiTheme.TextPrimary));
         ClearButtons();
-        AddButton("Отмена", false, () => Visible = false);
+        AddButton(cancel, false, () => Visible = false);
         AddButton(confirm, true, () =>
         {
             Visible = false;

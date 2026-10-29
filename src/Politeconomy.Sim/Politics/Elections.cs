@@ -65,6 +65,12 @@ public static class Elections
         var result = Polls.Compute(b, country, p, s, g, PoliticsModel.Majoritarian(world, country), world.Date,
             Polls.EconomicVote(b, world.Economy![country.Id]), list, extra, weights);
         var shares = result.Shares.Select(x => x * Math.Exp(PoliticsModel.Rng(world).NextGaussian() * b.ElectionNoise)).ToArray();
+        // Фальсификации в пользу партии игрока: прибавка к её доле до пересчёта долей.
+        var (fraudParty, fraudShare) = CampaignModel.FraudBoost(world, country);
+        var before = shares.Sum();
+        for (var i = 0; i < list.Count; i++)
+            if (list[i].Id == fraudParty)
+                shares[i] += fraudShare * before;
         var total = shares.Sum();
         var heads = s.Heads.Sum();
         return (shares.Select(x => total > 0 ? x / total : 0).ToArray(), heads > 0 ? weights.Sum() / heads : 0);

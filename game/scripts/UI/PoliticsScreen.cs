@@ -6,8 +6,9 @@ using Politeconomy.Sim.Text;
 namespace Politeconomy.Game.UI;
 
 /// <summary>
-/// Экран «Политика»: парламент в цветах партий, опросы по месяцам, карточки партий (позиция на трёх осях, лидер,
-/// кто за неё голосует) и взгляды классов — за кого каждый класс голосует чаще всего.
+/// Экран «Политика»: парламент в цветах партий, опросы по месяцам, выборы, штаб кампании (в стране игрока перед
+/// выборами), карточки партий (позиция на трёх осях, лидер, кто за неё голосует) и взгляды классов — за кого каждый
+/// класс голосует чаще всего.
 /// </summary>
 public partial class PoliticsScreen : GlassPanel
 {
@@ -30,8 +31,9 @@ public partial class PoliticsScreen : GlassPanel
     GridContainer _parties = null!;
     VBoxContainer _views = null!;
     Label _empty = null!;
-    Control _content = null!;
+    ScrollContainer _content = null!;
     string? _countryId;
+    bool _focusCampaign;
     PoliticsSnapshot? _shown;
     GovernmentSnapshot? _shownGovernment;
 
@@ -39,6 +41,9 @@ public partial class PoliticsScreen : GlassPanel
     public event Action<string>? ResultsRequested;
     public event Action<string>? TalksRequested;
     public event Action<string>? EarlyElectionRequested;
+
+    /// <summary>Штаб кампании: его события (поездки, агитация, обещания, дебаты, фальсификации) подписываются снаружи.</summary>
+    public CampaignPanel Campaign { get; private set; } = null!;
 
     public string? CountryId => _countryId;
 
@@ -93,6 +98,9 @@ public partial class PoliticsScreen : GlassPanel
         top.AddChild(BuildParliament());
         top.AddChild(BuildPolls());
         content.AddChild(BuildElections());
+        Campaign = new CampaignPanel { Visible = false };
+        Campaign.Setup(data);
+        content.AddChild(Campaign);
 
         content.AddChild(UiTheme.Text("ПАРТИИ", 11, UiTheme.MapCountryFont, UiTheme.Accent));
         _parties = new GridContainer { Columns = 3, SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -194,6 +202,24 @@ public partial class PoliticsScreen : GlassPanel
         _electionsText.Text = string.Join(" ", lines);
         foreach (var child in _promises.GetChildren())
             child.QueueFree();
+        foreach (var pledge in p.Pledges ?? [])
+        {
+            var law = _data.Law(pledge.Law);
+            var title = $"«{law.Name}: {law.Variant(pledge.Variant).Name.ToLowerInvariant()}»";
+            var label = UiTheme.Text(pledge.Deadline is { } deadline
+                    ? $"Обещано избирателям: {title} до {Fmt.Date(deadline)} — иначе партия и глава потеряют доверие."
+                    : $"Обещано в кампании: {title}. Если победите, закон нужно будет принять за два года.",
+                13, null, UiTheme.Accent);
+            label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            _promises.AddChild(label);
+        }
+        if (p.Scandal > 0.05)
+        {
+            var label = UiTheme.Text("Скандал с фальсификациями: доверие к власти подорвано, правящие партии теряют голоса, люди радикализуются. " +
+                                     "Со временем это забудется.", 13, null, UiTheme.Critical);
+            label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            _promises.AddChild(label);
+        }
         foreach (var promise in p.Promises ?? [])
         {
             var law = _data.Law(promise.Law);
@@ -205,6 +231,9 @@ public partial class PoliticsScreen : GlassPanel
         _results.Visible = p.LastElection != null;
         _talks.Visible = player && p.Talks != null;
         _early.Visible = player && p.CanCallEarlyElection;
+        Campaign.Visible = player && p.Campaign != null;
+        if (player && p.Campaign is { } campaign)
+            Campaign.Show(country.Id, p, campaign);
     }
 
     Control BuildPolls()
@@ -270,6 +299,18 @@ public partial class PoliticsScreen : GlassPanel
         RenderParties(country, p);
         RenderViews(country, p);
         RenderElections(country, p, player);
+        if (_focusCampaign && Campaign.Visible)
+        {
+            _focusCampaign = false;
+            Callable.From(() => _content.EnsureControlVisible(Campaign)).CallDeferred();
+        }
+    }
+
+    /// <summary>Прокрутить к штабу кампании, как только он появится на экране.</summary>
+    public void FocusCampaign()
+    {
+        _focusCampaign = true;
+        _shown = null;
     }
 
     void RenderParliament(CountrySnapshot country, PoliticsSnapshot p)

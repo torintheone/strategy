@@ -303,7 +303,7 @@
   "spending_max": 2.5
  },
  "politics": {
-  "_comment": "Взгляды, партии и опросы (MODEL.md, «Взгляды», «Партии», «Опросы»). Списки из четырёх чисел — по группам дохода, из трёх — по режимам (демократия, гибридный, авторитарный) или по осям (экономика, общество, внешний мир).",
+  "_comment": "Взгляды, партии и опросы (MODEL.md, «Взгляды», «Партии», «Опросы»). Списки из четырёх чисел — по группам дохода, из трёх — по режимам (демократия, гибридный, авторитарный) или по осям (экономика, общество, внешний мир). Кампания (MODEL.md, «Кампания»): за campaign_months до выборов штаб игрока получает campaign_points + campaign_organization × организованность очков в месяц; поездка (trip_cost) прибавляет классу trip_bonus к привлекательности, агитация (media_cost) — media_bonus всем, обещание (promise_cost × (1 + уже данных)) — promise_weight × изменение отношения класса; прибавки умножаются на campaign_decay каждый месяц, не больше campaign_cap; все партии сами ведут кампанию на ai_campaign × организованность. Дебаты: debate_weight × ответ × взгляд класса / 100 плюс debate_charisma × (популярность − 50) / 50 и удача ± debate_noise. Обещание выполнено — партии +kept_promise, нарушено — −broken_promise и −broken_popularity лидеру. Фальсификации (нет, вбросы, массовые): +fraud_share голосов, риск разоблачения fraud_risk × (0,3 + 0,7 × свобода прессы / 100) × (0,5 + доля оппозиции); раскрытые — скандал scandal × уровень (затухает на scandal_decay в месяц): правящим минус скандал к привлекательности, легитимность −scandal_legitimacy × скандал, радикализм +scandal_radicalism × скандал, популярность главы −scandal_popularity × уровень.",
   "income_economy": [-10, -5, 0, 5],
   "income_civil": [25, 15, 5, -15],
   "income_foreign": [15, 10, 5, -10],
@@ -364,6 +364,31 @@
   "coalition_refuse": 0.8,
   "demand_support": 0.6,
   "promise_years": 2,
-  "second_term_share": 0.4
+  "second_term_share": 0.4,
+  "campaign_months": 3,
+  "campaign_points": 3,
+  "campaign_organization": 2,
+  "trip_cost": 2,
+  "trip_bonus": 0.15,
+  "media_cost": 3,
+  "media_bonus": 0.05,
+  "promise_cost": 1,
+  "promise_weight": 0.05,
+  "campaign_decay": 0.8,
+  "campaign_cap": 0.8,
+  "ai_campaign": 0.15,
+  "debate_weight": 0.3,
+  "debate_charisma": 0.1,
+  "debate_noise": 0.06,
+  "kept_promise": 0.1,
+  "broken_promise": 0.3,
+  "broken_popularity": 8,
+  "fraud_share": [0, 0.03, 0.08],
+  "fraud_risk": [0, 0.3, 0.6],
+  "scandal": 0.6,
+  "scandal_decay": 0.9,
+  "scandal_radicalism": 12,
+  "scandal_legitimacy": 20,
+  "scandal_popularity": 15
  }
 }

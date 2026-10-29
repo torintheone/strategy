@@ -27,8 +27,10 @@ public sealed class ClassMoodSystem : ISimSystem
         {
             var laws = world.Laws?.Countries.GetValueOrDefault(country.Id);
             var lawMood = laws?.Attitudes.Select(a => a * weight).ToArray();
+            // Скандал (раскрытые фальсификации) радикализирует всех, как закон с поправкой «радикализм».
+            var scandal = world.Data.PoliticsBalance.ScandalRadicalism * Politics.PoliticsModel.Scandal(world, country.Id);
             Update(country, world.Economy![country.Id], society[country.Id], classes, b, months: 1,
-                laws == null ? null : laws.Effect, lawMood);
+                id => (laws?.Effect(id) ?? 0) + (id == "radicalism" ? scandal : 0), lawMood);
         }
     }
 

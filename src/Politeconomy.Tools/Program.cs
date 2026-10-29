@@ -26,7 +26,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -72,6 +72,8 @@ switch (command)
         return Ministry();
     case "politics":
         return PoliticsReport();
+    case "campaign":
+        return CampaignReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -455,6 +457,59 @@ int Ministry()
             Console.WriteLine($"    {stat}: " + string.Join(" ", series.TakeLast(10).Select(p => $"{p.Year % 100:D2}:{p.Value:G4}")));
         }
     }
+    return 0;
+}
+
+// Кампания в цифрах: в демократиях с выборами в первый год игры — доля партии главы без кампании, с активной кампанией
+// (все очки на поездки и агитацию) и с фальсификациями; раскрыты ли они.
+int CampaignReport()
+{
+    var start = GameSetup.NewGame(data).Simulation.World;
+    var ids = Option("--country") is { } one ? [one] : start.Countries
+        .Where(c => c.Regime == Regime.Democracy && start.Politics![c.Id].NextElection is { } d && d < start.Date.AddYears(1) && d > start.Date.AddMonths(3)
+                    && start.Government![c.Id].Parliament.Exists)
+        .Take(int.TryParse(Option("--count"), out var n) ? n : 10).Select(c => c.Id).ToList();
+    Console.WriteLine($"{"Страна",-22} {"выборы",-10} {"пассивно",9} {"кампания",9} {"вбросы",9} {"массовые",9}  разоблачение");
+    var gains = new List<double>();
+    foreach (var id in ids)
+    {
+        var election = start.Politics![id].NextElection!.Value;
+        double Votes(int mode, out bool exposed)
+        {
+            var sim = GameSetup.NewGame(data).Simulation;
+            var world = sim.World;
+            Politeconomy.Sim.Politics.PoliticsActions.PlayAs(world, id);
+            var party = Politeconomy.Sim.Politics.PoliticsModel.HeadParty(world, id)!.Id;
+            for (var date = world.Date.AddMonths(1); date <= election.AddDays(1); date = date.AddMonths(1))
+            {
+                sim.RunUntil(date);
+                if (mode == 1 && Politeconomy.Sim.Politics.CampaignModel.Estimate(world, world[id]) is { } shown)
+                    Console.WriteLine($"  {date:yyyy-MM}: обещания " + string.Join(", ", shown.Options.Take(3).Select(o => $"{o.Law}={o.Variant} {o.Gain * 100:+0.0;-0.0}"))
+                                      + (shown.DebateGain.Length == 3 ? "; дебаты " + string.Join(" ", shown.DebateGain.Select(g => (g * 100).ToString("+0.0;-0.0"))) : ""));
+                if (mode == 1)
+                    while (Politeconomy.Sim.Politics.CampaignModel.Estimate(world, world[id]) is { } o)
+                    {
+                        var best = Array.IndexOf(o.TripGain, o.TripGain.Max());
+                        if (!(o.TripGain[best] > 0 && Politeconomy.Sim.Politics.PoliticsActions.CampaignTrip(world, id, best))
+                            && !Politeconomy.Sim.Politics.PoliticsActions.CampaignMedia(world, id))
+                            break;
+                    }
+                if (mode >= 2)
+                    Politeconomy.Sim.Politics.PoliticsActions.SetFraud(world, id, mode - 1);
+            }
+            sim.RunUntil(election.AddDays(1));
+            exposed = world.Politics![id].Scandal > 0;
+            return world.Politics![id].Elections.Last(e => e.Kind == "parliament").Votes.GetValueOrDefault(party);
+        }
+        var passive = Votes(0, out _);
+        var active = Votes(1, out _);
+        var light = Votes(2, out var lightExposed);
+        var mass = Votes(3, out var massExposed);
+        gains.Add(active - passive);
+        Console.WriteLine($"{start[id].Name,-22} {election:yyyy-MM}    {passive * 100,8:F1}% {active * 100,8:F1}% {light * 100,8:F1}% {mass * 100,8:F1}%  " +
+                          $"{(lightExposed ? "вбросы" : "")} {(massExposed ? "массовые" : "")}");
+    }
+    Console.WriteLine($"Кампания прибавляет в среднем {gains.Average() * 100:F1} п. п. (от {gains.Min() * 100:F1} до {gains.Max() * 100:F1})");
     return 0;
 }
 

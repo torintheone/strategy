@@ -8,8 +8,12 @@ public sealed record PartiesFile(
     PartyFamilyRecord Power,
     IReadOnlyList<PartyNounRecord> Nouns);
 
-/// <summary>Ось взглядов: что значит минус (Low) и плюс (High).</summary>
-public sealed record AxisRecord(string Id, string Name, string Low, string High);
+/// <summary>
+/// Ось взглядов: что значит минус (Low) и плюс (High); вопрос на предвыборных дебатах по этой оси и три ответа —
+/// к минусу, к середине, к плюсу.
+/// </summary>
+public sealed record AxisRecord(string Id, string Name, string Low, string High, string Debate = "", string LowAnswer = "",
+    string CenterAnswer = "", string HighAnswer = "");
 
 /// <summary>
 /// Семейство партий: позиция на трёх осях для страны со средними взглядами, цвет, вес при выборе семейства

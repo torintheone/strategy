@@ -112,4 +112,42 @@ public sealed class PoliticsBalance
     public int PromiseYears { get; init; } = 2;
     /// <summary>Вероятность, что президент на старте уже на втором сроке (если сроков два).</summary>
     public double SecondTermShare { get; init; } = 0.4;
+
+    // --- Кампания и фальсификации (MODEL.md, «Кампания»)
+
+    /// <summary>Кампания начинается за столько месяцев до выборов.</summary>
+    public int CampaignMonths { get; init; } = 3;
+    /// <summary>Очки штаба в месяц: основа + за организованность партии; копятся не больше чем на три месяца.</summary>
+    public double CampaignPoints { get; init; } = 3;
+    public double CampaignOrganization { get; init; } = 2;
+    /// <summary>Поездка к классу и агитация в СМИ: цена в очках и прибавка к привлекательности (у класса или у всех).</summary>
+    public double TripCost { get; init; } = 2;
+    public double TripBonus { get; init; } = 0.15;
+    public double MediaCost { get; init; } = 3;
+    public double MediaBonus { get; init; } = 0.05;
+    /// <summary>Обещание закона: цена и сила (× изменение отношения класса к закону).</summary>
+    public double PromiseCost { get; init; } = 1;
+    public double PromiseWeight { get; init; } = 0.05;
+    /// <summary>Прибавки кампании за месяц уменьшаются в CampaignDecay раз; одна прибавка не больше CampaignCap.</summary>
+    public double CampaignDecay { get; init; } = 0.8;
+    public double CampaignCap { get; init; } = 0.8;
+    /// <summary>Кампании остальных партий: прибавка AiCampaign × организованность у всех классов.</summary>
+    public double AiCampaign { get; init; } = 0.15;
+    /// <summary>Дебаты: сила позиции (× взгляд класса по оси / 100), обаяние лидера и случайность выступления.</summary>
+    public double DebateWeight { get; init; } = 0.3;
+    public double DebateCharisma { get; init; } = 0.1;
+    public double DebateNoise { get; init; } = 0.06;
+    /// <summary>Выполненное и невыполненное обещание кампании: дрейф партии и популярность лидера.</summary>
+    public double KeptPromise { get; init; } = 0.1;
+    public double BrokenPromise { get; init; } = 0.3;
+    public double BrokenPopularity { get; init; } = 8;
+    /// <summary>Фальсификации по уровням (нет, вбросы, массовые): прибавка к доле партии и базовый риск разоблачения.</summary>
+    public IReadOnlyList<double> FraudShare { get; init; } = [0, 0.03, 0.08];
+    public IReadOnlyList<double> FraudRisk { get; init; } = [0, 0.3, 0.6];
+    /// <summary>Разоблачение: скандал (минус к привлекательности правящих), как быстро он затихает, его вклад в радикализм и легитимность.</summary>
+    public double Scandal { get; init; } = 0.6;
+    public double ScandalDecay { get; init; } = 0.9;
+    public double ScandalRadicalism { get; init; } = 12;
+    public double ScandalLegitimacy { get; init; } = 20;
+    public double ScandalPopularity { get; init; } = 15;
 }

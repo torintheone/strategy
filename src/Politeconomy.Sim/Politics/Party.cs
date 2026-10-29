@@ -37,6 +37,8 @@ public sealed class Party
     public double Poll { get; set; }
     /// <summary>Из кого состоят избиратели партии: доли классов (порядок data/classes.json), сумма 1.</summary>
     public double[] Voters { get; set; } = new double[ClassIds.Count];
+    /// <summary>Прибавка к привлекательности от кампании у каждого класса (поездки, агитация, обещания, дебаты); затухает.</summary>
+    public double[] Campaign { get; set; } = new double[ClassIds.Count];
 }
 
 /// <summary>Опрос месяца: доли партий (id → 0–1), как их видит публика (с погрешностью).</summary>
@@ -63,6 +65,12 @@ public sealed class CountryPolitics
     public CoalitionTalks? Talks { get; set; }
     /// <summary>Обещания партнёрам по коалиции.</summary>
     public List<CoalitionPromise> Promises { get; set; } = [];
+    /// <summary>Предвыборная кампания партии игрока (null — кампании нет).</summary>
+    public Campaign? Campaign { get; set; }
+    /// <summary>Обещания избирателям, данные в кампании.</summary>
+    public List<CampaignPromise> Pledges { get; set; } = [];
+    /// <summary>Скандал после разоблачённых фальсификаций: минус к привлекательности правящих, плюс к радикализму; затихает.</summary>
+    public double Scandal { get; set; }
     /// <summary>Номер для id следующей новой партии.</summary>
     public int NextParty { get; set; } = 1;
     /// <summary>Растёт при каждом изменении — по нему снимок понимает, что пора пересобраться.</summary>

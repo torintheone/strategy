@@ -70,7 +70,9 @@ public sealed class InstitutionsSystem : ISimSystem
                 var legitimacy = 0.0;
                 for (var k = 0; k < s.Influence.Length; k++)
                     legitimacy += s.Influence[k] / 100 * s.Satisfaction[k];
-                Set("legitimacy", legitimacy);
+                // Раскрытые фальсификации подрывают доверие к власти, пока скандал не забудется.
+                var scandal = world.Data.PoliticsBalance.ScandalLegitimacy * Politics.PoliticsModel.Scandal(world, country.Id);
+                Set("legitimacy", Math.Max(0, legitimacy - scandal));
                 var satisfaction = s.Average(s.Satisfaction);
                 var popularity = world.Government?.Countries.GetValueOrDefault(country.Id)?.Leader.Popularity ?? 45;
                 var fromMood = b.ApprovalSatisfaction * (satisfaction - 50);

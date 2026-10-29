@@ -60,6 +60,21 @@ public static class PoliticsActions
         && world.Politics?.Countries.GetValueOrDefault(country.Id) is { Parties.Count: > 0, Talks: null }
         && world.Government?.Countries.GetValueOrDefault(country.Id)?.Parliament.Exists == true;
 
+    /// <summary>Кампания: поездка к классу classIndex (стоит TripCost очков штаба).</summary>
+    public static bool CampaignTrip(World world, string countryId, int classIndex) => CampaignModel.Trip(world, countryId, classIndex);
+
+    /// <summary>Кампания: агитация в СМИ (MediaCost очков).</summary>
+    public static bool CampaignMedia(World world, string countryId) => CampaignModel.Media(world, countryId);
+
+    /// <summary>Кампания: пообещать закон (PromiseCost очков); после победы его надо принять за PromiseYears лет.</summary>
+    public static bool Pledge(World world, string countryId, string law, string variant) => CampaignModel.Promise(world, countryId, law, variant);
+
+    /// <summary>Дебаты: ответ −1, 0 или +1 по оси темы.</summary>
+    public static bool AnswerDebate(World world, string countryId, int answer) => CampaignModel.AnswerDebate(world, countryId, answer);
+
+    /// <summary>Фальсификации на ближайших выборах: 0 — нет, 1 — вбросы, 2 — массовые.</summary>
+    public static bool SetFraud(World world, string countryId, int level) => CampaignModel.SetFraud(world, countryId, level);
+
     /// <summary>Собрать коалицию с выбранными партнёрами (переговоры после выборов).</summary>
     public static bool FormCoalition(World world, string countryId, IReadOnlyCollection<string> partners) =>
         CoalitionTalksModel.Accept(world, countryId, partners);

@@ -4,8 +4,8 @@ using Politeconomy.Sim.Model;
 namespace Politeconomy.Sim.Politics.Systems;
 
 /// <summary>
-/// 1-го числа: если подошла дата — выборы президента, затем парламента; переговоры о коалиции, у которых вышел
-/// срок; обещания партнёрам по коалиции. MODEL.md, «Выборы».
+/// 1-го числа: если подошла дата — выборы президента, затем парламента, и конец кампании; переговоры о коалиции,
+/// у которых вышел срок; обещания партнёрам по коалиции. MODEL.md, «Выборы».
 /// </summary>
 public sealed class ElectionSystem : ISimSystem
 {
@@ -29,6 +29,8 @@ public sealed class ElectionSystem : ISimSystem
                 Elections.HoldPresident(world, country);
             if (p.NextElection is { } election && world.Date >= election && world.Government![country.Id].Parliament.Exists)
                 Elections.HoldParliament(world, country);
+            if (p.Campaign is { } campaign && world.Date >= campaign.Election)
+                CampaignModel.End(world, country, p);
         }
     }
 }

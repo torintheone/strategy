@@ -13,7 +13,7 @@ namespace Politeconomy.Sim.Politics;
 /// </summary>
 public static class PoliticsModel
 {
-    public static IReadOnlyList<ISimSystem> Systems() => [new ViewsSystem(), new PollsSystem(), new ElectionSystem()];
+    public static IReadOnlyList<ISimSystem> Systems() => [new ViewsSystem(), new PollsSystem(), new CampaignSystem(), new ElectionSystem()];
 
     public static void Setup(World world)
     {
@@ -169,6 +169,9 @@ public static class PoliticsModel
 
     /// <summary>Генератор случайных чисел политики (свой, чтобы не сбивать экономику; до создания политики — общий).</summary>
     public static DeterministicRandom Rng(World world) => world.Politics?.Random ?? world.Random;
+
+    /// <summary>Скандал после раскрытых фальсификаций (0 — нет; растёт с масштабом, затухает со временем).</summary>
+    public static double Scandal(World world, string countryId) => world.Politics?.Countries.GetValueOrDefault(countryId)?.Scandal ?? 0;
 
     /// <summary>Мажоритарная система: голос за мелкую партию «теряется», и её поддерживают меньше.</summary>
     public static bool Majoritarian(World world, Country country) =>
