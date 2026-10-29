@@ -43,8 +43,8 @@ public partial class Main : Node
     // Какие выборы, переговоры, поражения и итоги игрок уже видел (окна показываются один раз).
     readonly HashSet<string> _seenElections = new();
     string? _seenFor;
-    DateOnly? _seenTalks;
-    DateOnly? _seenDefeat;
+    string? _seenTalks;
+    Politeconomy.Sim.Politics.Defeat? _seenDefeat;
     Politeconomy.Sim.Politics.ReignSummary? _seenSummary;
     bool _dialogsPrimed;
     LawsScreen _laws = null!;
@@ -736,7 +736,7 @@ public partial class Main : Node
             ("23_election_map", () =>
             {
                 CloseDialogs();
-                _seenDefeat = _host!.Snapshot.Defeat?.Date;
+                _seenDefeat = _host!.Snapshot.Defeat;
                 _host.Post(Politeconomy.Sim.Politics.PoliticsActions.ContinueAfterDefeat);
                 ShowElectionMap();
             }),
@@ -896,14 +896,18 @@ public partial class Main : Node
 
     static string ElectionKey(string country, ElectionSnapshot e) => $"{country}/{e.Date}/{e.Kind}";
 
-    /// <summary>Запомнить всё, что уже есть, как просмотренное (на старте, при смене страны игрока, в обходе скриншотов).</summary>
+    /// <summary>
+    /// Запомнить прошлые выборы страны игрока как просмотренные (на старте и при смене страны); итоги правления —
+    /// только на старте, иначе окно итогов не покажется после «Закончить партию» (тогда страна игрока тоже меняется).
+    /// </summary>
     void PrimeDialogs(WorldSnapshot snapshot)
     {
         _seenFor = snapshot.PlayerCountry;
         if (_seenFor != null && snapshot.Countries[_seenFor].Politics?.Elections is { } elections)
             foreach (var e in elections)
                 _seenElections.Add(ElectionKey(_seenFor, e));
-        _seenSummary = snapshot.LastReign;
+        if (!_dialogsPrimed)
+            _seenSummary = snapshot.LastReign;
         _dialogsPrimed = true;
     }
 
@@ -925,15 +929,15 @@ public partial class Main : Node
             _resultsDialog.Show(CountryName(player!), country, election);
             PauseForDialog();
         }
-        else if (snapshot.Defeat is { } defeat && defeat.Date != _seenDefeat)
+        else if (snapshot.Defeat is { } defeat && defeat != _seenDefeat)
         {
-            _seenDefeat = defeat.Date;
+            _seenDefeat = defeat;
             _defeatDialog.Show(defeat, CountryName(defeat.Country));
             PauseForDialog();
         }
-        else if (country?.Politics?.Talks is { } talks && talks.Date != _seenTalks)
+        else if (country?.Politics?.Talks is { } talks && $"{player}/{talks.Date}" != _seenTalks)
         {
-            _seenTalks = talks.Date;
+            _seenTalks = $"{player}/{talks.Date}";
             _coalitionDialog.Show(player!, CountryName(player!), country);
             PauseForDialog();
         }
