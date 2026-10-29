@@ -43,6 +43,9 @@ public partial class LineChart : Control
         var min = _points.Min(p => p.Value);
         var max = _points.Max(p => p.Value);
         var pad = Math.Max((max - min) * 0.12, Math.Max(Math.Abs(max), 1) * 0.02);
+        // Рейтинг меняется ступенями: меньше полутора ступеней — и подписи сетки повторяют одну букву.
+        if (_format == "rating")
+            pad = Math.Max(pad, 1.5);
         // Неотрицательные показатели не уходят ниже нуля, чтобы сетка не подписывалась «−1%».
         var floor = min >= 0 ? 0 : double.NegativeInfinity;
         return (Math.Max(floor, min - pad), max + pad);

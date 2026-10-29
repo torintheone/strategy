@@ -91,7 +91,7 @@ public partial class MinistryScreen : GlassPanel
     {
         var scroll = new ScrollContainer
         {
-            CustomMinimumSize = new Vector2(300, 0),
+            CustomMinimumSize = new Vector2(350, 0),
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
         };
         var list = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
