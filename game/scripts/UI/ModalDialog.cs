@@ -12,14 +12,15 @@ public partial class ModalDialog : Control
 
     protected void InitDialog(float width)
     {
-        SetAnchorsPreset(LayoutPreset.FullRect);
+        // Именно «с отступами»: окно уже на сцене, и простая привязка сохранила бы его нулевой размер.
+        SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Stop;
         Visible = false;
         var dim = new ColorRect { Color = new Color(0.02f, 0.03f, 0.04f, 0.62f), MouseFilter = MouseFilterEnum.Ignore };
-        dim.SetAnchorsPreset(LayoutPreset.FullRect);
+        dim.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         AddChild(dim);
         var center = new CenterContainer { MouseFilter = MouseFilterEnum.Ignore };
-        center.SetAnchorsPreset(LayoutPreset.FullRect);
+        center.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         AddChild(center);
         var panel = new PanelContainer { CustomMinimumSize = new Vector2(width, 0) };
         panel.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.PanelRaised, UiTheme.PanelBorder, 14, 24, 20));

@@ -16,7 +16,8 @@ public static class CoalitionTalksModel
         var b = world.Data.PoliticsBalance;
         var p = world.Politics![country.Id];
         var talks = new CoalitionTalks { Date = world.Date, Deadline = world.Date.AddMonths(b.TalksMonths) };
-        for (var i = 0; i < p.Parties.Count; i++)
+        var demanded = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var i in Enumerable.Range(0, p.Parties.Count).OrderByDescending(i => seats[i]))
         {
             var party = p.Parties[i];
             if (party == head || seats[i] <= 0)
@@ -27,7 +28,9 @@ public static class CoalitionTalksModel
                 Seats = seats[i],
                 Refuses = PoliticalViews.Distance(party.Position, head.Position, b.Salience) > b.CoalitionRefuse,
             };
-            (offer.Law, offer.Variant) = Demand(world, country, party);
+            (offer.Law, offer.Variant) = Demand(world, country, party, head, demanded);
+            if (offer.Law != null)
+                demanded.Add(offer.Law);
             talks.Offers.Add(offer);
         }
         p.Talks = talks;
@@ -36,22 +39,29 @@ public static class CoalitionTalksModel
                                            "иначе её соберут без вас (экран «Политика»).");
     }
 
-    /// <summary>Закон, которого больше всего хотят избиратели партии (одобрение не ниже DemandSupport), или ничего.</summary>
-    public static (string? Law, string? Variant) Demand(World world, Country country, Party party)
+    /// <summary>
+    /// Требование партии — её «фирменный» закон: тот, которого её избиратели хотят (одобрение не ниже DemandSupport)
+    /// сильнее всего по сравнению с избирателями партии главы. Законы, которые уже требуют другие партии (taken), не
+    /// повторяются. Ничего подходящего — без условий.
+    /// </summary>
+    public static (string? Law, string? Variant) Demand(World world, Country country, Party party, Party head, IReadOnlySet<string> taken)
     {
         var data = world.Data;
         var laws = world.Laws?.Countries.GetValueOrDefault(country.Id);
         if (laws == null)
             return (null, null);
-        (string? Law, string? Variant, double Support) best = (null, null, data.PoliticsBalance.DemandSupport);
-        foreach (var law in data.Laws.Laws.Where(l => !l.Constitutional))
+        (string? Law, string? Variant, double Score) best = (null, null, 0);
+        foreach (var law in data.Laws.Laws.Where(l => !l.Constitutional && !taken.Contains(l.Id)))
         {
             var current = laws.Current[law.Id];
             foreach (var v in law.Variants.Where(v => v.Id != current))
             {
                 var support = Legislation.PartySupport(data, law, current, v.Id, party.Voters);
-                if (support > best.Support)
-                    best = (law.Id, v.Id, support);
+                if (support < data.PoliticsBalance.DemandSupport)
+                    continue;
+                var score = support - Legislation.PartySupport(data, law, current, v.Id, head.Voters);
+                if (score > best.Score)
+                    best = (law.Id, v.Id, score);
             }
         }
         return (best.Law, best.Variant);
