@@ -59,15 +59,16 @@ public partial class ProtestDialog : ModalDialog
 
     void Option(string title, string text, string response, string countryId, ProtestSnapshot protest)
     {
-        var button = new Button { FocusMode = FocusModeEnum.None, CustomMinimumSize = new Vector2(0, 58) };
-        button.AddThemeStyleboxOverride("normal", UiTheme.Box(new Color(1, 1, 1, 0.04f), UiTheme.Hairline, 10, 14, 8));
-        button.AddThemeStyleboxOverride("hover", UiTheme.Box(new Color(0.88f, 0.68f, 0.32f, 0.12f), UiTheme.Accent, 10, 14, 8));
-        button.AddThemeStyleboxOverride("pressed", UiTheme.Box(new Color(0.88f, 0.68f, 0.32f, 0.2f), UiTheme.Accent, 10, 14, 8));
+        // Карточка, а не кнопка: её высота следует за текстом.
+        var normal = UiTheme.Box(new Color(1, 1, 1, 0.04f), UiTheme.Hairline, 10, 14, 8);
+        var hover = UiTheme.Box(new Color(0.88f, 0.68f, 0.32f, 0.12f), UiTheme.Accent, 10, 14, 8);
+        var card = new PanelContainer { MouseFilter = MouseFilterEnum.Stop, MouseDefaultCursorShape = CursorShape.PointingHand };
+        card.AddThemeStyleboxOverride("panel", normal);
+        card.MouseEntered += () => card.AddThemeStyleboxOverride("panel", hover);
+        card.MouseExited += () => card.AddThemeStyleboxOverride("panel", normal);
         var column = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
-        column.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
-        (column.OffsetLeft, column.OffsetRight, column.OffsetTop, column.OffsetBottom) = (14, -14, 7, -7);
         column.AddThemeConstantOverride("separation", 1);
-        button.AddChild(column);
+        card.AddChild(column);
         var name = UiTheme.Text(title, 15, UiTheme.SemiBold, response == "disperse" ? UiTheme.Critical : UiTheme.TextPrimary);
         name.MouseFilter = MouseFilterEnum.Ignore;
         column.AddChild(name);
@@ -75,14 +76,14 @@ public partial class ProtestDialog : ModalDialog
         label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         label.MouseFilter = MouseFilterEnum.Ignore;
         column.AddChild(label);
-        // Высота кнопки — по тексту: метки внутри кнопки её размер не задают.
-        button.Resized += () => button.CustomMinimumSize = new Vector2(0, Math.Max(58, column.GetCombinedMinimumSize().Y + 14));
-        button.Pressed += () =>
+        card.GuiInput += e =>
         {
+            if (e is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
+                return;
             Visible = false;
             Answered?.Invoke(countryId, protest.Id, response);
         };
-        Content.AddChild(button);
+        Content.AddChild(card);
     }
 
     static string Percent(double chance) => $"{Fmt.Number(chance * 100, 0)}%";
