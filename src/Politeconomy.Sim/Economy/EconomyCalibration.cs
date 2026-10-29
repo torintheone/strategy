@@ -199,6 +199,7 @@ public static class EconomyCalibration
         var otherShares = revenues.Select(r => r.Base == "resources" ? 0 : r.Shares.GetValueOrDefault(incomeKey)).ToArray();
         var otherSum = otherShares.Sum();
         e.RevenueRate = new double[revenues.Count];
+        e.TaxPolicy = Enumerable.Repeat(1.0, revenues.Count).ToArray();
         e.Revenue = new double[revenues.Count];
         for (var k = 0; k < revenues.Count; k++)
         {

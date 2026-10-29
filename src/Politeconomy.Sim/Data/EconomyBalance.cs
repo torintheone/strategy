@@ -169,6 +169,8 @@ public sealed class RatingBalance
     public double SpreadBase { get; init; } = 0.002;
     public double SpreadSlope { get; init; } = 0.25;
     public double SpreadMax { get; init; } = 0.15;
+    /// <summary>Год без принятого бюджета снижает рейтинг на столько ступеней.</summary>
+    public double BudgetFailure { get; init; } = 1.0;
     public double WealthFloor { get; init; } = -6;
     public double SizeFloor { get; init; } = -3;
 }

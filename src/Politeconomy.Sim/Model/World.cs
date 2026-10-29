@@ -111,6 +111,9 @@ public sealed class World
     /// <summary>Законы стран: действующие варианты, законопроекты, поправки к модели; создаются <see cref="Laws.LawModel.Setup"/>.</summary>
     public Laws.WorldLaws? Laws { get; set; }
 
+    /// <summary>Бюджетный процесс страны игрока (проект, голосования, поправки).</summary>
+    public Budget.WorldBudgets? Budgets { get; set; }
+
     /// <summary>Журнал важных событий: отставки, назначения, голосования. Новые — в конце.</summary>
     public List<JournalEntry> Journal { get; set; } = [];
 

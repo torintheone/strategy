@@ -57,6 +57,10 @@ public sealed class CountryEconomy
     public double DebtAnchor { get; set; }
     /// <summary>Ставка каждого дохода бюджета к его базе (налог на зарплаты — к фонду оплаты и т. д.).</summary>
     public double[] RevenueRate { get; set; } = [];
+    /// <summary>Налоговая политика: множитель к ставке каждого дохода (1 — как на старте). Меняется бюджетом игрока.</summary>
+    public double[] TaxPolicy { get; set; } = [];
+    /// <summary>Год, в котором парламент так и не принял бюджет (рейтинг в этот год ниже), 0 — не было.</summary>
+    public int BudgetFailedYear { get; set; }
     /// <summary>Доля мира в ВВП (для подсчёта мирового цикла без самой страны).</summary>
     public double WorldShare { get; set; }
 

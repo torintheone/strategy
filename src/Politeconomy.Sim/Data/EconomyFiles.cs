@@ -45,8 +45,12 @@ public sealed record RevenueRecord(
     double Elasticity,
     IReadOnlyDictionary<string, double> Shares);
 
-/// <summary>Статья расходов и её типичная доля в расходах без процентов по группам дохода.</summary>
+/// <summary>
+/// Статья расходов, её типичная доля в расходах без процентов по группам дохода и классы, которые выигрывают
+/// от неё и следят за ней при голосовании о бюджете (Supporters).
+/// </summary>
 public sealed record SpendingRecord(
     string Id,
     string Name,
-    IReadOnlyDictionary<string, double> Shares);
+    IReadOnlyDictionary<string, double> Shares,
+    IReadOnlyList<string>? Supporters = null);

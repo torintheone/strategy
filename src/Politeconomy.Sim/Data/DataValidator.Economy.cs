@@ -86,6 +86,19 @@ public static partial class DataValidator
                 add("budget.json", $"доли расходов для группы {group} дают {spending:F3}, а не 1");
         }
 
+        // --- budget.json: классы, которые следят за статьями расходов
+        var classIds = data.Classes.Classes.Select(c => c.Id).ToHashSet(StringComparer.Ordinal);
+        foreach (var s in data.Budget.Spending)
+            foreach (var c in (s.Supporters ?? []).Where(c => !classIds.Contains(c)))
+                add("budget.json", $"статья {s.Id}: класса «{c}» нет в classes.json");
+        var cycle = data.BudgetCycleBalance;
+        if (data.Balance.BudgetCycle is null)
+            add("balance.json", "нет раздела budget_cycle с коэффициентами бюджетного процесса");
+        if (!(cycle.DraftMonth < cycle.VoteMonth && cycle.VoteMonth <= cycle.LastVoteMonth && cycle.LastVoteMonth <= 12 && cycle.DraftMonth >= 1))
+            add("balance.json", "budget_cycle: месяцы проекта, голосования и последней попытки должны идти по порядку в пределах года");
+        if (cycle.TaxMin <= 0 || cycle.TaxMax <= cycle.TaxMin || cycle.SpendingMax <= 1)
+            add("balance.json", "budget_cycle: пределы ползунков — tax_min > 0, tax_max > tax_min, spending_max > 1");
+
         // --- population.json
         var population = data.Population.Countries.ToDictionary(r => r.Id, StringComparer.Ordinal);
         foreach (var c in data.Countries.Countries)

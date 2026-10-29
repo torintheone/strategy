@@ -75,7 +75,8 @@ public sealed record ScenarioFile(
     string? PlayerCountry);
 
 public sealed record BalanceFile(TimeBalance Time, EconomyBalance? Economy = null, DemographyBalance? Demography = null,
-    SocietyBalance? Society = null, GovernmentBalance? Government = null, LawsBalance? Laws = null);
+    SocietyBalance? Society = null, GovernmentBalance? Government = null, LawsBalance? Laws = null,
+    BudgetCycleBalance? BudgetCycle = null);
 
 public sealed record TimeBalance(IReadOnlyList<double> DaysPerSecond);
 

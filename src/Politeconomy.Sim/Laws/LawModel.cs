@@ -80,6 +80,10 @@ public static class LawModel
         };
     }
 
+    /// <summary>Центробанк страны подчинён правительству (закон «Независимость центробанка»).</summary>
+    public static bool CentralBankObeys(World world, string country) =>
+        world.Laws?.Countries.GetValueOrDefault(country)?.Current.GetValueOrDefault("central_bank") == "government";
+
     /// <summary>Поправка законов к модели по ключу эффекта (0, если законов нет или эффект не задан).</summary>
     public static double Effect(World world, string country, string key) =>
         world.Laws?.Countries.GetValueOrDefault(country)?.Effect(key) ?? 0;

@@ -34,6 +34,8 @@ public partial class Main : Node
     ScreenRail _rail = null!;
     GovernmentScreen _government = null!;
     LawsScreen _laws = null!;
+    BudgetScreen _budget = null!;
+    bool _dossierBeforeScreen;
     Toasts _toasts = null!;
     Control _uiRoot = null!;
 
@@ -167,7 +169,8 @@ public partial class Main : Node
 
         _rail = new ScreenRail();
         _uiRoot.AddChild(_rail);
-        _rail.Setup([("government", "government", "Правительство и парламент (G)"), ("laws", "laws", "Законы (L)")]);
+        _rail.Setup([("government", "government", "Правительство и парламент (G)"), ("laws", "laws", "Законы (L)"),
+            ("budget", "budget", "Бюджет и налоги (B)")]);
         _rail.ScreenChosen += ToggleScreen;
 
         _government = new GovernmentScreen { Visible = false };
@@ -188,6 +191,16 @@ public partial class Main : Node
         _laws.Withdrawn += (country, law) =>
             _host!.Post(w => Politeconomy.Sim.Laws.LawActions.Withdraw(w, country, law));
 
+        _budget = new BudgetScreen { Visible = false };
+        _uiRoot.AddChild(_budget);
+        _budget.Setup(_data);
+        _budget.Closed += CloseScreens;
+        _budget.Edited += (country, spending, taxes) =>
+            _host!.Post(w => Politeconomy.Sim.Budget.BudgetActions.Edit(w, country, spending, taxes));
+        _budget.AmendmentSubmitted += country => _host!.Post(w => Politeconomy.Sim.Budget.BudgetActions.SubmitAmendment(w, country));
+        _budget.AmendmentDiscarded += country => _host!.Post(w => Politeconomy.Sim.Budget.BudgetActions.DiscardAmendment(w, country));
+        _budget.RateChosen += (country, rate) => _host!.Post(w => Politeconomy.Sim.Budget.BudgetActions.SetRate(w, country, rate));
+
         _toasts = new Toasts();
         _uiRoot.AddChild(_toasts);
         _toasts.Setup();
@@ -197,7 +210,7 @@ public partial class Main : Node
         _hoverCard.Setup();
 
         // Когда курсор уходит на панель, карта не должна подсвечивать регион под ней.
-        foreach (var panel in new Control[] { _topBar, _modePanel, _countryPanel, _rail, _government, _laws })
+        foreach (var panel in new Control[] { _topBar, _modePanel, _countryPanel, _rail, _government, _laws, _budget })
             panel.MouseEntered += () => SetHovered(null, null);
     }
 
@@ -227,6 +240,8 @@ public partial class Main : Node
             _government.Refresh(snapshot);
         if (_laws.Visible)
             _laws.Refresh(snapshot);
+        if (_budget.Visible)
+            _budget.Refresh(snapshot);
         Recolor(snapshot);
         if (_countryPanel.Visible)
             _countryPanel.Refresh(snapshot);
@@ -323,9 +338,9 @@ public partial class Main : Node
     /// <summary>Клавиши; буквенные — по физическому положению, чтобы работали и в русской раскладке.</summary>
     void HandleKey(Key key, Key physical)
     {
-        if (physical is Key.G or Key.L)
+        if (physical is Key.G or Key.L or Key.B)
         {
-            ToggleScreen(physical == Key.G ? "government" : "laws");
+            ToggleScreen(physical switch { Key.G => "government", Key.L => "laws", _ => "budget" });
             return;
         }
         switch (key)
@@ -337,7 +352,7 @@ public partial class Main : Node
                 _host!.SetSpeed((int)(key - Key.Key1) + 1);
                 return;
             case Key.Escape:
-                if (_government.Visible || _laws.Visible)
+                if (ScreenOpen)
                     CloseScreens();
                 else
                     SelectRegion(null);
@@ -490,8 +505,14 @@ public partial class Main : Node
                     Politeconomy.Sim.Government.GovernmentActions.RequestCandidates(w, "RUS", "health");
                     Politeconomy.Sim.Government.GovernmentActions.Appoint(w, "RUS", "health", 0);
                     Politeconomy.Sim.Laws.LawActions.Propose(w, "RUS", "vat_reduced", "no");
+                    var e = w.Economy!["RUS"];
+                    var spending = e.SpendingPlan.ToArray();
+                    spending[0] *= 1.05;
+                    Politeconomy.Sim.Budget.BudgetActions.Edit(w, "RUS", spending, e.TaxPolicy.ToArray());
+                    Politeconomy.Sim.Budget.BudgetActions.SubmitAmendment(w, "RUS");
                 });
                 OpenLaws("RUS");
+                OpenBudget();
                 _smokeStep++;
                 break;
             case 2 when _smokeTime > 3 && (_host!.Snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) || _smokeTime > 20):
@@ -501,7 +522,8 @@ public partial class Main : Node
                 var classes = snapshot.Countries["RUS"].Classes;
                 var appointed = snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "appointment")
                     && snapshot.Countries["RUS"].Government is { Ministers.Count: 18 }
-                    && snapshot.Countries["RUS"].Laws is { } rusLaws && (rusLaws.BillFor("vat_reduced") != null || rusLaws.Current["vat_reduced"] == "no");
+                    && snapshot.Countries["RUS"].Laws is { } rusLaws && (rusLaws.BillFor("vat_reduced") != null || rusLaws.Current["vat_reduced"] == "no")
+                    && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "budget");
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
                     && inflation is { Source: StatSources.Model, Factors.Count: > 0 } && double.IsFinite(inflation.Value)
@@ -572,6 +594,19 @@ public partial class Main : Node
                 OpenLaws("BRA");
                 _laws.SelectLaw("minimum_wage", "high");
             }),
+            ("15_budget", () =>
+            {
+                _host!.Post(w =>
+                {
+                    var e = w.Economy!["BRA"];
+                    var spending = e.SpendingPlan.ToArray();
+                    spending[0] *= 1.2;
+                    var taxes = e.TaxPolicy.ToArray();
+                    taxes[0] = 1.15;
+                    Politeconomy.Sim.Budget.BudgetActions.Edit(w, "BRA", spending, taxes);
+                });
+                OpenBudget();
+            }),
         };
         if (_shotStep > 0)
         {
@@ -592,12 +627,19 @@ public partial class Main : Node
     }
 
     /// <summary>Открыть или закрыть экран: страны игрока, а если игрок ещё не выбрал страну — выбранной на карте.</summary>
+    bool ScreenOpen => _government.Visible || _laws.Visible || _budget.Visible;
+
     void ToggleScreen(string screen)
     {
-        var open = screen == "government" ? _government.Visible : _laws.Visible;
+        var open = screen switch { "government" => _government.Visible, "laws" => _laws.Visible, _ => _budget.Visible };
         if (open)
         {
             CloseScreens();
+            return;
+        }
+        if (screen == "budget")
+        {
+            OpenBudget();
             return;
         }
         var id = _host?.Snapshot.PlayerCountry ?? _selectedCountry?.Id;
@@ -614,11 +656,33 @@ public partial class Main : Node
             OpenLaws(id);
     }
 
+    /// <summary>Перед открытием экрана прячем досье и легенду карты: экран закрывает их, а сквозь стекло они бы просвечивали.</summary>
+    void HideUnderScreens()
+    {
+        if (!ScreenOpen)
+            _dossierBeforeScreen = _countryPanel.Visible;
+        _countryPanel.Visible = false;
+        _modePanel.Visible = false;
+        _government.Visible = false;
+        _laws.Visible = false;
+        _budget.Visible = false;
+    }
+
+    void OpenBudget()
+    {
+        if (_host == null)
+            return;
+        HideUnderScreens();
+        _budget.Open(_host.Snapshot);
+        _rail.SetActive("budget");
+        SetHovered(null, null);
+    }
+
     void OpenGovernment(string countryId)
     {
         if (_host == null)
             return;
-        _laws.Visible = false;
+        HideUnderScreens();
         _government.ShowCountry(countryId, _host.Snapshot);
         _rail.SetActive("government");
         SetHovered(null, null);
@@ -628,7 +692,7 @@ public partial class Main : Node
     {
         if (_host == null)
             return;
-        _government.Visible = false;
+        HideUnderScreens();
         _laws.ShowCountry(countryId, _host.Snapshot);
         _rail.SetActive("laws");
         SetHovered(null, null);
@@ -636,8 +700,14 @@ public partial class Main : Node
 
     void CloseScreens()
     {
+        if (ScreenOpen)
+        {
+            _countryPanel.Visible = _dossierBeforeScreen && _selectedCountry != null;
+            _modePanel.Visible = true;
+        }
         _government.Visible = false;
         _laws.Visible = false;
+        _budget.Visible = false;
         _rail.SetActive(null);
     }
 

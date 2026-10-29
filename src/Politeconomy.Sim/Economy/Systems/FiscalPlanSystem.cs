@@ -23,6 +23,9 @@ public sealed class FiscalPlanSystem : EconomySystem
             var e = economy[country.Id];
             if (MustDefault(e, economy, balance.Budget))
                 Restructure(e, balance.Budget, world.Date.Year);
+            // Бюджет страны игрока на этот год решал парламент (Budget.BudgetCycleSystem) — автопилот его не трогает.
+            if (Budget.BudgetCycle.HandledByPlayer(world, country.Id))
+                continue;
             Plan(e, revenues, balance.Budget, BudgetSystem.LawSpending(world, country.Id, world.Data.Budget.Spending));
         }
     }
@@ -61,9 +64,20 @@ public sealed class FiscalPlanSystem : EconomySystem
     /// <summary>LawSpending — расходы по законам поверх плана (доля ВВП): план учитывает их, но сами они не масштабируются.</summary>
     public static void Plan(CountryEconomy e, IReadOnlyList<RevenueRecord> revenues, FiscalBalance b, double lawSpending = 0)
     {
+        if (Propose(e, revenues, b, lawSpending) is not { } plan)
+            return;
+        e.PrimaryBalancePlan = plan.PrimaryBalance;
+        e.SpendingPlan = plan.Spending;
+    }
+
+    /// <summary>Предложение автопилота на следующий год: расходы по статьям (доли ВВП) и плановое первичное сальдо. Страну не меняет.</summary>
+    public sealed record Proposal(double[] Spending, double PrimaryBalance);
+
+    public static Proposal? Propose(CountryEconomy e, IReadOnlyList<RevenueRecord> revenues, FiscalBalance b, double lawSpending = 0)
+    {
         var structural = e.StructuralGdp;
         if (structural <= 0)
-            return;
+            return null;
         var revenue = 0.0;
         for (var k = 0; k < revenues.Count; k++)
             revenue += e.Revenue[k] / (1 + (revenues[k].Elasticity - 1) * (revenues[k].Base is "resources" or "imports" ? 0 : e.Gap));
@@ -80,11 +94,10 @@ public sealed class FiscalPlanSystem : EconomySystem
         var gap = target - current;
         var limit = Math.Max(b.MaxStep, b.LargeGapShare * Math.Abs(gap));
         var step = Math.Clamp(b.ConsolidationSpeed * gap, -limit, limit);
-        e.PrimaryBalancePlan = current + step;
+        var primary = current + step;
 
-        var newSpending = Math.Max(b.SpendingFloor + lawSpending, revenueRatio - e.PrimaryBalancePlan);
+        var newSpending = Math.Max(b.SpendingFloor + lawSpending, revenueRatio - primary);
         var scale = planned > 0 ? Math.Max(0, newSpending - lawSpending) / planned : 1;
-        for (var k = 0; k < e.SpendingPlan.Length; k++)
-            e.SpendingPlan[k] *= scale;
+        return new Proposal(e.SpendingPlan.Select(x => x * scale).ToArray(), primary);
     }
 }

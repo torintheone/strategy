@@ -34,6 +34,8 @@ public sealed class RatingSystem : EconomySystem
                     - b.Debt * Math.Max(0, e.DebtRatio - b.DebtThreshold)
                     - b.Deficit * Math.Max(0, -e.BalanceRatio - b.DeficitThreshold)
                     - b.Inflation * Math.Log(1 + Math.Max(0, inflation - b.InflationThreshold) / 0.1);
+        if (e.BudgetFailedYear > 0 && e.BudgetFailedYear == (int)CurrentYear(economy))
+            score -= b.BudgetFailure;
         if (currency is { Reserve: true })
             score += b.ReserveCurrency + (currency.Id == "USD" ? b.DollarBonus : 0);
         if (e.Defaults > 0 && economy.Months > 0)

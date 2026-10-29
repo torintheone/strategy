@@ -70,6 +70,8 @@ public sealed class CurrencyState
     /// <summary>Логарифм реального курса к доллару: плюс — валюта дешевле, чем на старте.</summary>
     public double LogReal { get; set; }
     public double RealRateDifference { get; set; }
+    /// <summary>Ставка, которую задало правительство при подчинённом ему центробанке (null — решает центробанк).</summary>
+    public double? ManualRate { get; set; }
 
     // Средние по пользователям валюты (обновляются центробанком каждый месяц)
     public double Inflation { get; set; }

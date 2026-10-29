@@ -1,5 +1,6 @@
 using Politeconomy.Sim.Data;
 using Politeconomy.Sim.Engine;
+using Politeconomy.Sim.Laws;
 using Politeconomy.Sim.Model;
 
 namespace Politeconomy.Sim.Economy.Systems;
@@ -27,8 +28,11 @@ public sealed class MonetarySystem : EconomySystem
             cur.Target = cur.Members.Sum(id => weights[id] * economy[id].InflationTarget);
             if (!cur.IsFloating)
                 continue;
-            var taylor = TaylorRate(cur, b);
-            cur.PolicyRate = Math.Clamp(cur.PolicyRate + b.Smoothing * (taylor - cur.PolicyRate), b.Floor, b.Ceiling);
+            // Если центробанк подчинён правительству и оно задало ставку — ставка идёт к ней, иначе по правилу Тейлора.
+            if (cur.ManualRate != null && !LawModel.CentralBankObeys(world, cur.Home))
+                cur.ManualRate = null;
+            var target = cur.ManualRate ?? TaylorRate(cur, b);
+            cur.PolicyRate = Math.Clamp(cur.PolicyRate + b.Smoothing * (target - cur.PolicyRate), b.Floor, b.Ceiling);
         }
         foreach (var cur in economy.Currencies.Values.Where(c => !c.IsFloating))
             cur.PolicyRate = Math.Clamp(economy.Currencies[cur.Anchor!].PolicyRate + cur.PegSpread, b.Floor, b.Ceiling);

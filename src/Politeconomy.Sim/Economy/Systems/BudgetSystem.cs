@@ -44,7 +44,7 @@ public sealed class BudgetSystem : EconomySystem
 
             // Законы меняют собираемость налогов (доля) и добавляют расходы (% ВВП) поверх бюджетного плана.
             for (var k = 0; k < revenues.Count; k++)
-                e.Revenue[k] = e.RevenueRate[k] * Math.Max(0, 1 + LawModel.Effect(world, country.Id, revenueKeys[k]))
+                e.Revenue[k] = e.RevenueRate[k] * Policy(e, k) * Math.Max(0, 1 + LawModel.Effect(world, country.Id, revenueKeys[k]))
                                * EconomyCalibration.RevenueBase(revenues[k], e, e.Gap);
 
             var structural = e.StructuralGdp;
@@ -106,6 +106,9 @@ public sealed class BudgetSystem : EconomySystem
             _ => e.Price,
         };
     }
+
+    /// <summary>Множитель налоговой политики к ставке дохода k (1, если политика не задана).</summary>
+    public static double Policy(CountryEconomy e, int k) => k < e.TaxPolicy.Length ? e.TaxPolicy[k] : 1;
 
     /// <summary>Сколько законы добавляют к расходам бюджета, в долях ВВП (сумма по статьям).</summary>
     public static double LawSpending(World world, string country, IReadOnlyList<SpendingRecord> spending) =>

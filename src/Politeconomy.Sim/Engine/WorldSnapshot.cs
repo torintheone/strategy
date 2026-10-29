@@ -15,6 +15,8 @@ public sealed class WorldSnapshot
     public required IReadOnlyDictionary<string, CountrySnapshot> Countries { get; init; }
     /// <summary>Регионы, которые контролирует не их владелец: регион → контролирующая страна.</summary>
     public required IReadOnlyDictionary<string, string> Occupied { get; init; }
+    /// <summary>Бюджет страны игрока (проект, поправки, прогноз); null, если игрок ещё не выбрал страну.</summary>
+    public BudgetSnapshot? Budget { get; init; }
     /// <summary>Последние записи журнала (отставки, назначения, голосования), новые — в конце.</summary>
     public IReadOnlyList<JournalEntry> Journal { get; init; } = [];
     /// <summary>Валюта каждой страны: код, режим курса, якорь и сколько стран ею пользуются.</summary>
@@ -72,6 +74,7 @@ public sealed class WorldSnapshot
             Countries = countries,
             Occupied = occupied,
             Currencies = currencies,
+            Budget = BudgetSnapshot.Capture(world),
             Journal = world.Journal.Count <= JournalShown ? world.Journal.ToList() : world.Journal.GetRange(world.Journal.Count - JournalShown, JournalShown),
             Version = version,
         };

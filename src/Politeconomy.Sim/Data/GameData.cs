@@ -54,6 +54,11 @@ public sealed class GameData
 
     static readonly LawsBalance DefaultLaws = new();
 
+    /// <summary>Коэффициенты бюджетного процесса; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public BudgetCycleBalance BudgetCycleBalance => Balance.BudgetCycle ?? DefaultBudgetCycle;
+
+    static readonly BudgetCycleBalance DefaultBudgetCycle = new();
+
     public LawRecord Law(string id) =>
         Laws.Laws.FirstOrDefault(l => l.Id == id) ?? throw new KeyNotFoundException($"Нет закона «{id}» в data/laws.json");
 
