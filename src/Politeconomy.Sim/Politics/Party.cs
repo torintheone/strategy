@@ -39,6 +39,8 @@ public sealed class Party
     public double[] Voters { get; set; } = new double[ClassIds.Count];
     /// <summary>Прибавка к привлекательности от кампании у каждого класса (поездки, агитация, обещания, дебаты); затухает.</summary>
     public double[] Campaign { get; set; } = new double[ClassIds.Count];
+    /// <summary>Деньги групп интересов: прибавка к привлекательности у всех классов (пересчитывается каждый месяц).</summary>
+    public double Backing { get; set; }
 }
 
 /// <summary>Опрос месяца: доли партий (id → 0–1), как их видит публика (с погрешностью).</summary>
@@ -71,6 +73,11 @@ public sealed class CountryPolitics
     public List<CampaignPromise> Pledges { get; set; } = [];
     /// <summary>Скандал после разоблачённых фальсификаций: минус к привлекательности правящих, плюс к радикализму; затихает.</summary>
     public double Scandal { get; set; }
+    /// <summary>Группы интересов (порядок data/interest_groups.json) и их поправки к модели (давление недовольных, помощь довольных).</summary>
+    public List<InterestGroup> Groups { get; set; } = [];
+    public Dictionary<string, double> GroupEffects { get; set; } = new(StringComparer.Ordinal);
+    /// <summary>Расходы по статьям бюджета на старте — от них группы отсчитывают рост и сокращение.</summary>
+    public double[] StartSpending { get; set; } = [];
     /// <summary>Номер для id следующей новой партии.</summary>
     public int NextParty { get; set; } = 1;
     /// <summary>Растёт при каждом изменении — по нему снимок понимает, что пора пересобраться.</summary>

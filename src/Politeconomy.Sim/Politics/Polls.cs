@@ -9,7 +9,8 @@ namespace Politeconomy.Sim.Politics;
 /// Опрос: каждый класс делит голоса между партиями по привлекательности (логит-модель). Привлекательность =
 /// − расстояние до взглядов класса / DistanceScale + популярность лидера + организованность + случайный дрейф
 /// + ответственность власти (правящим партиям — по удовлетворённости класса и по состоянию экономики) − усталость от власти
-/// + административный ресурс партии власти + кампания (у каждого класса своя прибавка) − скандал (правящим).
+/// + административный ресурс партии власти + кампания (у каждого класса своя прибавка) − скандал (правящим)
+/// + деньги групп интересов.
 /// В мажоритарной демократии мелкие партии теряют «бесполезные» голоса.
 /// Голос класса весит числом взрослых в нём (работающие, безработные, пенсионеры). MODEL.md, «Опросы».
 /// </summary>
@@ -83,7 +84,7 @@ public static class Polls
         var appeal = -PoliticalViews.Distance(view, party.Position, b.Salience) / b.DistanceScale
                      + b.LeaderWeight * (leader.Popularity - 50) / 50
                      + b.OrganizationWeight * (party.Organization - 0.5)
-                     + party.Momentum;
+                     + party.Momentum + party.Backing;
         if (party.Ruling)
             appeal += b.Incumbency * (satisfaction - 50) / 50 + economy - Fatigue(b, party, date);
         if (party.Power)

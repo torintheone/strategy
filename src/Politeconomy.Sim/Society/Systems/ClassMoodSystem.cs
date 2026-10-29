@@ -30,7 +30,7 @@ public sealed class ClassMoodSystem : ISimSystem
             // Скандал (раскрытые фальсификации) радикализирует всех, как закон с поправкой «радикализм».
             var scandal = world.Data.PoliticsBalance.ScandalRadicalism * Politics.PoliticsModel.Scandal(world, country.Id);
             Update(country, world.Economy![country.Id], society[country.Id], classes, b, months: 1,
-                id => (laws?.Effect(id) ?? 0) + (id == "radicalism" ? scandal : 0), lawMood);
+                id => Laws.LawModel.Effect(world, country.Id, id) + (id == "radicalism" ? scandal : 0), lawMood);
         }
     }
 

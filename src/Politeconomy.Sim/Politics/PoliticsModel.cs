@@ -13,7 +13,7 @@ namespace Politeconomy.Sim.Politics;
 /// </summary>
 public static class PoliticsModel
 {
-    public static IReadOnlyList<ISimSystem> Systems() => [new ViewsSystem(), new PollsSystem(), new CampaignSystem(), new ElectionSystem()];
+    public static IReadOnlyList<ISimSystem> Systems() => [new ViewsSystem(), new PollsSystem(), new InterestGroupsSystem(), new CampaignSystem(), new ElectionSystem()];
 
     public static void Setup(World world)
     {

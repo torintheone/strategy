@@ -74,6 +74,8 @@ switch (command)
         return PoliticsReport();
     case "campaign":
         return CampaignReport();
+    case "groups":
+        return GroupsReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -148,8 +150,42 @@ int Run(string mode)
     failures += GrowthCheck(history);
     failures += RangeCheck(world);
     failures += ElectionCheck(elections, years);
+    failures += GroupsCheck(world, data);
     Console.WriteLine(failures == 0 ? "Все проверки пройдены." : $"Нарушений: {failures}");
     return failures == 0 ? 0 : 1;
+}
+
+// Группы интересов в конце прогона: одобрение не сваливается в крайности (враждебных — меньше четверти, у групп
+// в среднем 35–65), давление групп на рост и ставки умеренное.
+static int GroupsCheck(World world, GameData data)
+{
+    var approvals = world.Politics!.Countries.Values.SelectMany(p => p.Groups.Select(g => g.Approval)).ToList();
+    var hostile = approvals.Count(a => a < 25) / (double)approvals.Count;
+    var happy = approvals.Count(a => a > 75) / (double)approvals.Count;
+    var growth = world.Politics.Countries.Values.Select(p => p.GroupEffects.GetValueOrDefault("potential_growth")).ToList();
+    var spread = world.Politics.Countries.Values.Select(p => p.GroupEffects.GetValueOrDefault("spread")).ToList();
+    var byGroup = data.InterestGroups.Groups.Select((r, i) => $"{r.Name} {world.Politics.Countries.Values.Where(p => p.Groups.Count > i).Average(p => p.Groups[i].Approval):F0}");
+    Console.WriteLine($"Группы интересов: одобрение в среднем {approvals.Average():F1}, враждебных (<25) {hostile:P0}, восторженных (>75) {happy:P0}; " +
+                      $"давление на рост от {growth.Min():F2} до {growth.Max():F2} п. п., на ставки от {spread.Min():F2} до {spread.Max():F2} п. п.");
+    Console.WriteLine("  по группам: " + string.Join(", ", byGroup));
+    var failures = 0;
+    if (hostile > 0.25 || happy > 0.25)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: слишком много групп в крайностях");
+        failures++;
+    }
+    var means = data.InterestGroups.Groups.Select((_, i) => world.Politics.Countries.Values.Where(p => p.Groups.Count > i).Average(p => p.Groups[i].Approval)).ToList();
+    if (means.Any(m => m is < 35 or > 65))
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: у какой-то группы среднее одобрение по миру вне 35–65");
+        failures++;
+    }
+    if (growth.Min() < -1.5 || spread.Max() > 3)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: давление групп слишком сильное");
+        failures++;
+    }
+    return failures;
 }
 
 // Выборы правдоподобны (критерий этапа 4): в демократиях власть иногда меняется, но не всегда; явка в разумных
@@ -456,6 +492,36 @@ int Ministry()
             var series = country.History?.Series(stat) ?? [];
             Console.WriteLine($"    {stat}: " + string.Join(" ", series.TakeLast(10).Select(p => $"{p.Year % 100:D2}:{p.Value:G4}")));
         }
+    }
+    return 0;
+}
+
+// Группы интересов: влияние, одобрение и его составляющие, давление и требования в нескольких странах.
+int GroupsReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 0;
+    if (runYears > 0)
+        sim.RunUntil(world.Date.AddYears(runYears));
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "GBR", "DEU", "FRA", "BRA", "IND", "RUS", "CHN", "SAU", "NGA", "IRN", "MMR"];
+    var records = data.InterestGroups.Groups;
+    foreach (var id in ids)
+    {
+        var p = world.Politics![id];
+        Console.WriteLine();
+        Console.WriteLine($"{world[id].Name} ({world[id].Regime}, {world[id].System}), религиозность {Politeconomy.Sim.Politics.InterestGroupsModel.Religiosity(data, world[id]):F2}");
+        for (var i = 0; i < p.Groups.Count; i++)
+        {
+            var g = p.Groups[i];
+            Console.WriteLine($"  {records[i].Name,-24} влияние {g.Influence * 100,5:F1}%  одобрение {g.Approval,5:F1}  " +
+                              $"[классы {g.FromClasses,5:F1} законы {g.FromLaws,5:F1} бюджет {g.FromBudget,5:F1} власть {g.FromGovernment,5:F1} требования {g.Memory,4:F1}]  " +
+                              string.Join("; ", g.Demands.Select(d => Politeconomy.Sim.Politics.InterestGroupsModel.Describe(data, d))));
+        }
+        if (p.GroupEffects.Count > 0)
+            Console.WriteLine("  Давление: " + string.Join(", ", p.GroupEffects.Select(kv => $"{kv.Key} {kv.Value:+0.00;-0.00}")));
+        if (p.Parties.Count > 0)
+            Console.WriteLine("  Деньги партиям: " + string.Join(", ", p.Parties.Where(x => Math.Abs(x.Backing) > 0.001).Select(x => $"{x.Short} {x.Backing:+0.000}")));
     }
     return 0;
 }

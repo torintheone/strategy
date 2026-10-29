@@ -33,6 +33,7 @@ public static class GameSetup
         GovernmentModel.Setup(world);
         Politics.PoliticsModel.Setup(world);
         LawModel.Setup(world);
+        Politics.InterestGroupsModel.Setup(world);
         world.Budgets = new Budget.WorldBudgets();
         History.HistoryModel.Setup(world);
         return new Start(new Simulation(world, Systems()), report);

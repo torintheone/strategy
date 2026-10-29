@@ -61,10 +61,12 @@ public static class Legislation
         var parliament = world.Government![countryId].Parliament;
         var shifts = Shifts(data, law, laws.Current[bill.Law], bill.Variant);
         var general = bill.Support;
+        // Группы интересов лоббируют: одобрение у всех фракций сдвигается на одну и ту же величину.
+        var lobby = Politics.InterestGroupsModel.Lobby(world, countryId, law, laws.Current[bill.Law], bill.Variant);
         bill.Vote = ParliamentVote.Cast(world, parliament,
-            party => Politics.PoliticsModel.Voters(world, countryId, party) is { } voters
+            party => Math.Clamp((Politics.PoliticsModel.Voters(world, countryId, party) is { } voters
                 ? Politics.PoliticsModel.Support(voters, shifts, data.LawsBalance.SupportScale)
-                : general,
+                : general) + lobby, 0, 1),
             law.Constitutional);
         bill.Decided = world.Date;
         bill.Stage = bill.Vote.Passed ? "passed" : "rejected";

@@ -87,6 +87,30 @@ public sealed record CampaignSnapshot(
     DebateSnapshot? Debate);
 
 /// <summary>
+/// Требование группы (поля — как у <see cref="GroupDemand"/>); Text — словами; Current — нынешний уровень для
+/// расходов (доля ВВП) и дефицита (% ВВП), для закона — 0.
+/// </summary>
+public sealed record DemandSnapshot(string Kind, string Target, string? Variant, double Level, DateOnly Since, string Text, double Current);
+
+/// <summary>
+/// Группа интересов в снимке: влияние (0–1), одобрение (0–100) и его составляющие, давление (больше нуля — давит,
+/// меньше — помогает), поправки к модели от этой группы, взгляды и требования.
+/// </summary>
+public sealed record GroupSnapshot(
+    string Id,
+    double Influence,
+    double Approval,
+    double FromClasses,
+    double FromLaws,
+    double FromBudget,
+    double FromGovernment,
+    double FromDemands,
+    double Pressure,
+    IReadOnlyDictionary<string, double> Effects,
+    IReadOnlyList<double> Position,
+    IReadOnlyList<DemandSnapshot> Demands);
+
+/// <summary>
 /// Политика страны в снимке: избирательная система и барьер, партии (правящие первыми, затем по опросам),
 /// взгляды классов [класс][ось], опросы по месяцам.
 /// </summary>
@@ -105,7 +129,8 @@ public sealed record PoliticsSnapshot(
     bool TwoRounds = false,
     CampaignSnapshot? Campaign = null,
     IReadOnlyList<PledgeSnapshot>? Pledges = null,
-    double Scandal = 0)
+    double Scandal = 0,
+    IReadOnlyList<GroupSnapshot>? Groups = null)
 {
     public PartySnapshot? Party(string? id) => id == null ? null : Parties.FirstOrDefault(p => p.Id == id);
 
@@ -152,9 +177,36 @@ public sealed record PoliticsSnapshot(
             record.TwoRounds,
             CaptureCampaign(world, country, p),
             p.Pledges.Select(x => new PledgeSnapshot(x.Law, x.Variant, x.Deadline)).ToList(),
-            p.Scandal);
+            p.Scandal,
+            CaptureGroups(world, country, p));
         Cache.AddOrUpdate(p, new Cached(p.Version, snapshot));
         return snapshot;
+    }
+
+    static List<GroupSnapshot> CaptureGroups(World world, Country country, CountryPolitics p)
+    {
+        var data = world.Data;
+        var b = data.GroupsBalance;
+        var e = world.Economy?.Countries.GetValueOrDefault(country.Id);
+        var balance = country.Stat("budget_balance_pct_gdp");
+        var list = new List<GroupSnapshot>(p.Groups.Count);
+        for (var i = 0; i < p.Groups.Count && i < data.InterestGroups.Groups.Count; i++)
+        {
+            var g = p.Groups[i];
+            var r = data.InterestGroups.Groups[i];
+            var pressure = InterestGroupsModel.Pressure(b, g.Approval) * InterestGroupsModel.Weight(b, g.Influence, p.Groups.Count);
+            var demands = g.Demands.Select(d => new DemandSnapshot(d.Kind, d.Target, d.Variant, d.Level, d.Since, InterestGroupsModel.Describe(data, d),
+                d.Kind switch
+                {
+                    "spending" when e != null && data.Budget.Spending.ToList().FindIndex(s => s.Id == d.Target) is var k && k >= 0 && k < e.SpendingPlan.Length
+                        => e.SpendingPlan[k],
+                    "deficit" => double.IsFinite(balance) ? -balance : 0,
+                    _ => 0,
+                })).ToList();
+            list.Add(new GroupSnapshot(g.Id, g.Influence, g.Approval, g.FromClasses, g.FromLaws, g.FromBudget, g.FromGovernment, g.Memory, pressure,
+                r.Effects.ToDictionary(kv => kv.Key, kv => kv.Value * pressure, StringComparer.Ordinal), g.Position.ToArray(), demands));
+        }
+        return list;
     }
 
     static CampaignSnapshot? CaptureCampaign(World world, Country country, CountryPolitics p)

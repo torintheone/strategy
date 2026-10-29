@@ -3,6 +3,7 @@ using Politeconomy.Sim.Data;
 using Politeconomy.Sim.Engine;
 using Politeconomy.Sim.Government;
 using Politeconomy.Sim.Laws;
+using Politeconomy.Sim.Politics;
 using Politeconomy.Sim.Text;
 
 namespace Politeconomy.Game.UI;
@@ -290,16 +291,41 @@ public partial class LawsScreen : GlassPanel
     string ForecastText(CountrySnapshot country, LawRecord law, string from, string to, double support, int months)
     {
         var text = $"Одобрение в обществе: {Fmt.Value("percent", support * 100)}. Подготовка займёт около {Fmt.Plural(months, "месяца", "месяцев", "месяцев")}.";
+        var groups = country.Politics?.Groups ?? [];
+        text += GroupsText(groups, law, from, to);
         if (country.Government?.Parliament is not { } p)
             return text;
-        // Каждая фракция смотрит на своих избирателей; блоки без партии — на общество в целом.
+        // Каждая фракция смотрит на своих избирателей; блоки без партии — на общество в целом. Лоббисты сдвигают всех.
+        var lobby = InterestGroupsModel.Lobby(_data, groups.Select(g => (g.Id, g.Influence)), law, from, to);
         var factions = p.Factions.Select(f => new FactionSupport(f.Party, f.Seats, f.Ruling,
-            country.Politics?.Party(f.Party) is { } party ? Legislation.PartySupport(_data, law, from, to, party.Voters) : support)).ToList();
+            Math.Clamp((country.Politics?.Party(f.Party) is { } party ? Legislation.PartySupport(_data, law, from, to, party.Voters) : support) + lobby, 0, 1))).ToList();
         var vote = ParliamentVote.Forecast(_data.GovernmentBalance.Parliament, p.Kind, p.Seats, p.Discipline, factions, law.Constitutional);
         if (vote.Decree)
             return text + " Парламента нет: закон вступит в силу указом.";
         var verdict = vote.Passed ? "скорее всего пройдёт" : "скорее всего не пройдёт";
         return text + $" Прогноз голосования: за {vote.Yes}, против {vote.No}, нужно {vote.Required} — {verdict}.";
+    }
+
+    /// <summary>Какие группы интересов за, какие против (по силе отношения и влиянию).</summary>
+    string GroupsText(IReadOnlyList<GroupSnapshot> groups, LawRecord law, string from, string to)
+    {
+        var stances = groups
+            .Select(g => (Group: _data.InterestGroups.Groups.FirstOrDefault(r => r.Id == g.Id), g.Influence))
+            .Where(x => x.Group != null)
+            .Select(x => (x.Group!.Name, x.Influence, Stance: InterestGroupsModel.Stance(_data, x.Group, law, from, to)))
+            .ToList();
+        string Names(IEnumerable<(string Name, double Influence, double Stance)> list) =>
+            string.Join(", ", list.OrderByDescending(x => x.Influence * Math.Abs(x.Stance)).Select(x => x.Name.ToLowerInvariant()));
+        var pro = stances.Where(x => x.Stance >= 0.5).ToList();
+        var contra = stances.Where(x => x.Stance <= -0.5).ToList();
+        if (pro.Count == 0 && contra.Count == 0)
+            return " Группам интересов закон безразличен.";
+        var parts = new List<string>();
+        if (pro.Count > 0)
+            parts.Add("за — " + Names(pro));
+        if (contra.Count > 0)
+            parts.Add("против — " + Names(contra));
+        return " Группы интересов: " + string.Join("; ", parts) + ".";
     }
 
     Control VariantCard(LawVariantRecord v, bool current, bool selected, bool drafting)

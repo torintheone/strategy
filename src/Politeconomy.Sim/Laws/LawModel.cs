@@ -52,7 +52,7 @@ public static class LawModel
         "natural_unemployment", "potential_growth", "credibility", "inflation_target", "monetary_control", "food_inflation",
         "exchange_volatility", "spread", "pension_replacement", "benefit_replacement", "unskilled_wage", "tax_progressivity",
         "unemployment_fear", "small_business", "tertiary", "vocational", "foreign_profit", "capitalist_take",
-        "older_participation", "fertility", "migration", "life_expectancy", "radicalism",
+        "older_participation", "fertility", "migration", "life_expectancy", "radicalism", "legitimacy",
     };
 
     /// <summary>Индексы институтов, которые законы могут сдвигать (index.*).</summary>
@@ -84,9 +84,12 @@ public static class LawModel
     public static bool CentralBankObeys(World world, string country) =>
         world.Laws?.Countries.GetValueOrDefault(country)?.Current.GetValueOrDefault("central_bank") == "government";
 
-    /// <summary>Поправка законов к модели по ключу эффекта (0, если законов нет или эффект не задан).</summary>
+    /// <summary>
+    /// Поправка к модели по ключу эффекта: от законов и от давления групп интересов (0, если поправок нет).
+    /// </summary>
     public static double Effect(World world, string country, string key) =>
-        world.Laws?.Countries.GetValueOrDefault(country)?.Effect(key) ?? 0;
+        (world.Laws?.Countries.GetValueOrDefault(country)?.Effect(key) ?? 0)
+        + (world.Politics?.Countries.GetValueOrDefault(country)?.GroupEffects.GetValueOrDefault(key) ?? 0);
 
     /// <summary>
     /// Пересчитать поправки страны: для каждого закона — эффект нынешнего варианта (в переходный период — между

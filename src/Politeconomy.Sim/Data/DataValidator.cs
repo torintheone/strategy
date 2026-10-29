@@ -283,6 +283,7 @@ public static partial class DataValidator
         ValidateGovernment(data, Add);
         ValidateLaws(data, Add);
         ValidatePolitics(data, Add);
+        ValidateGroups(data, Add);
         return problems;
     }
 

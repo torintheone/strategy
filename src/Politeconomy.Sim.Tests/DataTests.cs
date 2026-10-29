@@ -117,6 +117,7 @@ public class DataTests
         Laws = d.Laws,
         History = d.History,
         Parties = d.Parties,
+        InterestGroups = d.InterestGroups,
         Benchmarks = d.Benchmarks,
     };
 }
