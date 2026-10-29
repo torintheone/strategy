@@ -36,6 +36,9 @@ public partial class PoliticsScreen : GlassPanel
     GovernmentSnapshot? _shownGovernment;
 
     public event Action? Closed;
+    public event Action<string>? ResultsRequested;
+    public event Action<string>? TalksRequested;
+    public event Action<string>? EarlyElectionRequested;
 
     public string? CountryId => _countryId;
 
@@ -89,6 +92,7 @@ public partial class PoliticsScreen : GlassPanel
         content.AddChild(top);
         top.AddChild(BuildParliament());
         top.AddChild(BuildPolls());
+        content.AddChild(BuildElections());
 
         content.AddChild(UiTheme.Text("ПАРТИИ", 11, UiTheme.MapCountryFont, UiTheme.Accent));
         _parties = new GridContainer { Columns = 3, SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -128,6 +132,79 @@ public partial class PoliticsScreen : GlassPanel
         _factions.AddThemeConstantOverride("separation", 2);
         column.AddChild(_factions);
         return card;
+    }
+
+    VBoxContainer _elections = null!;
+    Label _electionsText = null!;
+    Button _results = null!;
+    Button _talks = null!;
+    Button _early = null!;
+    VBoxContainer _promises = null!;
+
+    Control BuildElections()
+    {
+        var card = Card();
+        card.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", 16);
+        card.AddChild(row);
+        _elections = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        _elections.AddThemeConstantOverride("separation", 4);
+        row.AddChild(_elections);
+        _elections.AddChild(UiTheme.Text("ВЫБОРЫ", 11, UiTheme.MapCountryFont, UiTheme.Accent));
+        _electionsText = UiTheme.Text("", 14, null, UiTheme.TextSecondary);
+        _electionsText.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _elections.AddChild(_electionsText);
+        _promises = new VBoxContainer();
+        _promises.AddThemeConstantOverride("separation", 2);
+        _elections.AddChild(_promises);
+        var buttons = new VBoxContainer { SizeFlagsVertical = SizeFlags.ShrinkCenter };
+        buttons.AddThemeConstantOverride("separation", 6);
+        row.AddChild(buttons);
+        Button Action(string text, Action<string>? handler)
+        {
+            var button = new Button { Text = text, FocusMode = FocusModeEnum.None, CustomMinimumSize = new Vector2(230, 34) };
+            button.Pressed += () =>
+            {
+                if (_countryId != null)
+                    handler?.Invoke(_countryId);
+            };
+            buttons.AddChild(button);
+            return button;
+        }
+        _results = Action("Итоги последних выборов", id => ResultsRequested?.Invoke(id));
+        _talks = Action("Переговоры о коалиции", id => TalksRequested?.Invoke(id));
+        _talks.AddThemeColorOverride("font_color", UiTheme.Accent);
+        _early = Action("Досрочные выборы", id => EarlyElectionRequested?.Invoke(id));
+        _early.TooltipText = "Распустить парламент: выборы пройдут через два месяца";
+        return card;
+    }
+
+    void RenderElections(CountrySnapshot country, PoliticsSnapshot p, bool player)
+    {
+        var lines = new List<string>();
+        if (p.NextElection is { } parliament)
+            lines.Add($"Выборы парламента — {Fmt.Date(parliament)}.");
+        if (p.NextPresident is { } president)
+            lines.Add($"Президентские выборы — {Fmt.Date(president)}" + (p.TwoRounds ? ", если никто не наберёт больше половины, будет второй тур." : ", в один тур."));
+        if (p.LastElection is { } last && p.Party(last.Winner) is { } winner)
+            lines.Add(last.Kind == "president"
+                ? $"Прошлые выборы ({Fmt.Date(last.Date)}): президентом избран {last.Candidates.GetValueOrDefault(winner.Id, "")} ({winner.Short})."
+                : $"Прошлые выборы ({Fmt.Date(last.Date)}): больше всех мест у {winner.Short}, явка {Fmt.Value("percent", last.Turnout * 100)}.");
+        _electionsText.Text = string.Join(" ", lines);
+        foreach (var child in _promises.GetChildren())
+            child.QueueFree();
+        foreach (var promise in p.Promises ?? [])
+        {
+            var law = _data.Law(promise.Law);
+            var label = UiTheme.Text($"Обещано {p.Party(promise.Party)?.Short}: «{law.Name}: {law.Variant(promise.Variant).Name.ToLowerInvariant()}» до {Fmt.Date(promise.Deadline)} — " +
+                                     "иначе партия выйдет из коалиции.", 13, null, UiTheme.Accent);
+            label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            _promises.AddChild(label);
+        }
+        _results.Visible = p.LastElection != null;
+        _talks.Visible = player && p.Talks != null;
+        _early.Visible = player && p.CanCallEarlyElection;
     }
 
     Control BuildPolls()
@@ -192,6 +269,7 @@ public partial class PoliticsScreen : GlassPanel
         RenderPolls(country, p);
         RenderParties(country, p);
         RenderViews(country, p);
+        RenderElections(country, p, player);
     }
 
     void RenderParliament(CountrySnapshot country, PoliticsSnapshot p)

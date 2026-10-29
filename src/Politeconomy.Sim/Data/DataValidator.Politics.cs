@@ -2,6 +2,9 @@ namespace Politeconomy.Sim.Data;
 
 public static partial class DataValidator
 {
+    [System.Text.RegularExpressions.GeneratedRegex(@"^\d{4}-(0[1-9]|1[0-2])$")]
+    private static partial System.Text.RegularExpressions.Regex YearMonth();
+
     static readonly HashSet<string> ElectoralSystems = ["majoritarian", "proportional", "mixed", "none"];
     static readonly HashSet<string> Genders = ["m", "f", "n"];
 
@@ -44,11 +47,24 @@ public static partial class DataValidator
                 add("politics.json", $"{c.Id}: партии есть, а выборов нет");
             if (c.RulingFamily != null && !families.Contains(c.RulingFamily))
                 add("politics.json", $"{c.Id}: семейства «{c.RulingFamily}» нет в parties.json");
+            if (c.Term is < 1 or > 10 || c.PresidentTerm is < 1 or > 10)
+                add("politics.json", $"{c.Id}: срок парламента и президента — от 1 до 10 лет");
+            foreach (var date in new[] { c.NextElection, c.NextPresident }.Where(d => d != null))
+                if (!YearMonth().IsMatch(date!))
+                    add("politics.json", $"{c.Id}: дата выборов «{date}» — нужно «год-месяц», например 2026-10");
+            if (c.NextPresident != null && c.PresidentTerm == null)
+                add("politics.json", $"{c.Id}: есть дата президентских выборов, но нет срока president_term");
+            if (c.PresidentTerm != null && c.System is not ("presidential_republic" or "semi_presidential"))
+                add("politics.json", $"{c.Id}: президентские выборы бывают только в президентской или смешанной республике");
         }
 
         foreach (var c in data.Classes.Classes)
+        {
             if (c.Views is not { Count: 3 } || c.Views.Any(v => v is < -100 or > 100))
                 add("classes.json", $"{c.Id}: views — три числа от −100 до 100");
+            if (c.Turnout is < 0.05 or > 1)
+                add("classes.json", $"{c.Id}: turnout — явка от 0,05 до 1");
+        }
 
         var b = data.PoliticsBalance;
         if (b.DistanceScale <= 0 || b.ViewMonths < 1 || b.PollMonths < 1)
@@ -57,7 +73,7 @@ public static partial class DataValidator
             add("balance.json", "politics: salience и crisis_shift — по три числа (оси)");
         if (b.AdminBonus.Count != 3 || b.RegimeCivil.Count != 3 || b.RegimeForeign.Count != 3)
             add("balance.json", "politics: admin_bonus, regime_civil, regime_foreign — по три числа (режимы)");
-        foreach (var range in new[] { b.MajoritarianParties, b.ProportionalParties, b.MixedParties, b.HybridParties, b.AuthoritarianParties })
+        foreach (var range in new[] { b.MajoritarianParties, b.ProportionalParties, b.MixedParties, b.HybridParties, b.AuthoritarianParties, b.OnePartyParties })
             if (range.Count != 2 || range[0] < 1 || range[1] < range[0])
                 add("balance.json", "politics: число партий — «от, до», от 1");
         if (b.ProportionalParties[1] > parties.Families.Count || b.MixedParties[1] > parties.Families.Count)

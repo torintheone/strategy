@@ -107,21 +107,24 @@ public class PoliticsTests
     [Fact]
     public void RecessionLowersTheRulingPartiesRating()
     {
-        // Критерий приёмки этапа 4: в рецессию рейтинг правящей партии падает.
+        // Критерий приёмки этапа 4: в рецессию рейтинг правящей партии падает. Смотрим на партии, правившие на старте,
+        // через 8 месяцев — до первых выборов в этих странах (в Бразилии они в октябре).
         var crisis = GameSetup.NewGame(TestData.Game, 3).Simulation;
         var baseline = GameSetup.NewGame(TestData.Game, 3).Simulation;
         string[] countries = ["DEU", "BRA", "USA", "IND"];
-        for (var month = 0; month < 12; month++)
+        var ruling = countries.ToDictionary(id => id, id => crisis.World.Politics![id].Parties.Where(x => x.Ruling).Select(x => x.Id).ToHashSet());
+        for (var month = 0; month < 8; month++)
         {
             foreach (var id in countries)
                 crisis.World.Economy![id].GapCore = -0.12;
             crisis.RunUntil(crisis.World.Date.AddMonths(1));
             baseline.RunUntil(baseline.World.Date.AddMonths(1));
         }
+        double Rating(World w, string id) => w.Politics![id].Parties.Where(x => ruling[id].Contains(x.Id)).Sum(x => x.Poll) * 100;
         foreach (var id in countries)
         {
-            var hit = crisis.World[id].Stat("ruling_poll_pct");
-            var calm = baseline.World[id].Stat("ruling_poll_pct");
+            var hit = Rating(crisis.World, id);
+            var calm = Rating(baseline.World, id);
             Assert.True(hit < calm - 3, $"{id}: правящие в кризис {hit:F1}%, без кризиса {calm:F1}%");
         }
     }

@@ -14,30 +14,41 @@ namespace Politeconomy.Sim.Politics;
 /// </summary>
 public static class Polls
 {
-    public sealed record Result(double[] Shares, double[][] Voters);
+    /// <summary>
+    /// Shares — доли партий; Voters — состав избирателей каждой партии по классам; ByClass[класс][партия] — как
+    /// делит голоса каждый класс.
+    /// </summary>
+    public sealed record Result(double[] Shares, double[][] Voters, double[][] ByClass);
 
+    /// <summary>
+    /// Опрос среди партий list (по умолчанию все партии страны). Extra — добавка к привлекательности (кандидат,
+    /// кампания), weights — вес голоса каждого класса (по умолчанию — число взрослых; на выборах — с учётом явки).
+    /// </summary>
     public static Result Compute(PoliticsBalance b, Country country, CountryPolitics p, CountrySociety s, CountryGovernment g, bool majoritarian,
-        DateOnly date, double economy)
+        DateOnly date, double economy, IReadOnlyList<Party>? list = null, Func<Party, double>? extra = null, IReadOnlyList<double>? weights = null)
     {
-        var parties = p.Parties;
+        var parties = list ?? p.Parties;
         var n = parties.Count;
         // В мажоритарной системе две ведущие партии (по опросам, на старте — по организованности) не теряют голосов,
         // остальные теряют: избиратели не хотят отдавать голос тем, кто не выиграет округ.
-        var leading = parties.OrderByDescending(x => x.Poll).ThenByDescending(x => x.Organization).Take(2).ToHashSet();
+        var leading = p.Parties.OrderByDescending(x => x.Poll).ThenByDescending(x => x.Organization).Take(2).ToHashSet();
         var classes = p.Views.Length;
         var votes = new double[n];
-        var byClass = new double[n][];
+        var byParty = new double[n][];
         for (var i = 0; i < n; i++)
-            byClass[i] = new double[classes];
+            byParty[i] = new double[classes];
+        var byClass = new double[classes][];
         var admin = b.AdminBonus[Math.Clamp((int)country.Regime, 0, b.AdminBonus.Count - 1)];
+        var bonus = parties.Select(x => extra?.Invoke(x) ?? 0).ToArray();
         var u = new double[n];
         for (var k = 0; k < classes; k++)
         {
-            var heads = s.Heads[k];
-            if (heads <= 0)
+            byClass[k] = new double[n];
+            var weight = weights != null ? weights[k] : s.Heads[k];
+            if (weight <= 0 || n == 0)
                 continue;
             for (var i = 0; i < n; i++)
-                u[i] = Appeal(b, parties[i], p.Views[k], s.Satisfaction[k], g, admin, date, economy)
+                u[i] = Appeal(b, parties[i], p.Views[k], s.Satisfaction[k], g, admin, date, economy) + bonus[i]
                        - (majoritarian && !leading.Contains(parties[i]) ? b.WastedVote : 0);
             var max = u.Take(n).Max();
             var sum = 0.0;
@@ -45,19 +56,20 @@ public static class Polls
                 sum += u[i] = Math.Exp(u[i] - max);
             for (var i = 0; i < n; i++)
             {
-                var v = heads * u[i] / sum;
+                byClass[k][i] = u[i] / sum;
+                var v = weight * byClass[k][i];
                 votes[i] += v;
-                byClass[i][k] = v;
+                byParty[i][k] = v;
             }
         }
         var total = votes.Sum();
         var shares = votes.Select(v => total > 0 ? v / total : 1.0 / n).ToArray();
-        var voters = byClass.Select(row =>
+        var voters = byParty.Select(row =>
         {
             var t = row.Sum();
             return row.Select(v => t > 0 ? v / t : 0).ToArray();
         }).ToArray();
-        return new Result(shares, voters);
+        return new Result(shares, voters, byClass);
     }
 
     /// <summary>Привлекательность партии для класса со взглядами view и удовлетворённостью satisfaction.</summary>

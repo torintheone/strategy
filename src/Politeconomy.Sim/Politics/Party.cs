@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using Politeconomy.Sim.Government;
+using Politeconomy.Sim.Model;
 using Politeconomy.Sim.Society;
 
 namespace Politeconomy.Sim.Politics;
@@ -52,6 +54,15 @@ public sealed class CountryPolitics
     public List<Party> Parties { get; set; } = [];
     /// <summary>Ежемесячные опросы, новые в конце.</summary>
     public List<PollRecord> Polls { get; set; } = [];
+    /// <summary>Ближайшие выборы парламента и президента (null — таких выборов нет).</summary>
+    public DateOnly? NextElection { get; set; }
+    public DateOnly? NextPresident { get; set; }
+    /// <summary>Итоги последних выборов, новые в конце.</summary>
+    public List<ElectionResult> Elections { get; set; } = [];
+    /// <summary>Переговоры о коалиции (только в стране игрока).</summary>
+    public CoalitionTalks? Talks { get; set; }
+    /// <summary>Обещания партнёрам по коалиции.</summary>
+    public List<CoalitionPromise> Promises { get; set; } = [];
     /// <summary>Номер для id следующей новой партии.</summary>
     public int NextParty { get; set; } = 1;
     /// <summary>Растёт при каждом изменении — по нему снимок понимает, что пора пересобраться.</summary>
@@ -60,9 +71,28 @@ public sealed class CountryPolitics
     public Party? Party(string? id) => id == null ? null : Parties.FirstOrDefault(p => p.Id == id);
 }
 
+/// <summary>
+/// Политика всех стран и свой генератор случайных чисел: итоги выборов в разных мирах расходятся, и если бы
+/// политика брала числа из общего генератора, вслед за ней разошлись бы и случайные толчки экономики.
+/// </summary>
 public sealed class WorldPolitics
 {
     public Dictionary<string, CountryPolitics> Countries { get; set; } = new(StringComparer.Ordinal);
+
+    DeterministicRandom? _random;
+    ulong[] _state = [];
+
+    /// <summary>Состояние генератора политики (для сохранения).</summary>
+    public ulong[] Rng
+    {
+        get => _random?.State ?? _state;
+        set => (_state, _random) = (value, null);
+    }
+
+    [JsonIgnore]
+    public DeterministicRandom Random => _random ??= _state.Length == 4 ? DeterministicRandom.FromState(_state) : new DeterministicRandom(0);
+
+    public static WorldPolitics Create(ulong seed) => new() { _random = new DeterministicRandom(seed) };
 
     public CountryPolitics this[string country] => Countries[country];
 }

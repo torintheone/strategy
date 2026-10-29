@@ -19,4 +19,5 @@ public sealed record ClassRecord(
     double Inflation,
     string Color,
     string? ShortName = null,
-    IReadOnlyList<double>? Views = null);
+    IReadOnlyList<double>? Views = null,
+    double Turnout = 0.6);

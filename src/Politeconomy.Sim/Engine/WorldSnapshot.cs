@@ -17,6 +17,10 @@ public sealed class WorldSnapshot
     public required IReadOnlyDictionary<string, string> Occupied { get; init; }
     /// <summary>Бюджет страны игрока (проект, поправки, прогноз); null, если игрок ещё не выбрал страну.</summary>
     public BudgetSnapshot? Budget { get; init; }
+    /// <summary>Правление игрока, поражение на выборах (ждёт решения) и итоги закончившегося правления.</summary>
+    public ReignSnapshot? Reign { get; init; }
+    public Politics.Defeat? Defeat { get; init; }
+    public Politics.ReignSummary? LastReign { get; init; }
     /// <summary>Последние записи журнала (отставки, назначения, голосования), новые — в конце.</summary>
     public IReadOnlyList<JournalEntry> Journal { get; init; } = [];
     /// <summary>Валюта каждой страны: код, режим курса, якорь и сколько стран ею пользуются.</summary>
@@ -85,11 +89,17 @@ public sealed class WorldSnapshot
             Occupied = occupied,
             Currencies = currencies,
             Budget = BudgetSnapshot.Capture(world),
+            Reign = world.Reign is { } reign ? new ReignSnapshot(reign.Country, reign.Since, reign.ElectionsWon, reign.ElectionsLost, reign.LawsPassed) : null,
+            Defeat = world.Defeat,
+            LastReign = world.LastReign,
             Journal = world.Journal.Count <= JournalShown ? world.Journal.ToList() : world.Journal.GetRange(world.Journal.Count - JournalShown, JournalShown),
             Version = version,
         };
     }
 }
+
+/// <summary>Правление игрока: страна, с какой даты, выборы выиграны и проиграны, законов принято.</summary>
+public sealed record ReignSnapshot(string Country, DateOnly Since, int ElectionsWon, int ElectionsLost, int LawsPassed);
 
 public sealed record CurrencySnapshot(string Code, bool Floating, string? Anchor, int Users, string? Bank);
 

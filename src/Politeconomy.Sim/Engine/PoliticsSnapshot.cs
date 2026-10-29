@@ -29,6 +29,28 @@ public sealed record PartySnapshot(
 /// <summary>Опубликованный опрос: дата и доли партий (id → 0–1).</summary>
 public sealed record PollSnapshot(DateOnly Date, IReadOnlyDictionary<string, double> Shares);
 
+/// <summary>Итог выборов в снимке (поля — как у <see cref="ElectionResult"/>).</summary>
+public sealed record ElectionSnapshot(
+    DateOnly Date,
+    string Kind,
+    double Turnout,
+    IReadOnlyDictionary<string, double> Votes,
+    IReadOnlyDictionary<string, double>? Runoff,
+    IReadOnlyDictionary<string, int> Seats,
+    IReadOnlyDictionary<string, string> Candidates,
+    string? Winner,
+    IReadOnlyDictionary<string, string> Regions,
+    bool PowerChanged);
+
+/// <summary>Условия партии на переговорах о коалиции.</summary>
+public sealed record OfferSnapshot(string Party, int Seats, string? Law, string? Variant, bool Refuses);
+
+/// <summary>Переговоры о коалиции: до какой даты и условия партий.</summary>
+public sealed record TalksSnapshot(DateOnly Date, DateOnly Deadline, IReadOnlyList<OfferSnapshot> Offers);
+
+/// <summary>Обещание партнёру по коалиции.</summary>
+public sealed record PromiseSnapshot(string Party, string Law, string Variant, DateOnly Deadline);
+
 /// <summary>
 /// Политика страны в снимке: избирательная система и барьер, партии (правящие первыми, затем по опросам),
 /// взгляды классов [класс][ось], опросы по месяцам.
@@ -38,12 +60,22 @@ public sealed record PoliticsSnapshot(
     double Threshold,
     IReadOnlyList<PartySnapshot> Parties,
     IReadOnlyList<IReadOnlyList<double>> Views,
-    IReadOnlyList<PollSnapshot> Polls)
+    IReadOnlyList<PollSnapshot> Polls,
+    DateOnly? NextElection = null,
+    DateOnly? NextPresident = null,
+    IReadOnlyList<ElectionSnapshot>? Elections = null,
+    TalksSnapshot? Talks = null,
+    IReadOnlyList<PromiseSnapshot>? Promises = null,
+    bool CanCallEarlyElection = false,
+    bool TwoRounds = false)
 {
     public PartySnapshot? Party(string? id) => id == null ? null : Parties.FirstOrDefault(p => p.Id == id);
 
     /// <summary>Партия главы исполнительной власти.</summary>
     public PartySnapshot? Head => Parties.FirstOrDefault(p => p.Head);
+
+    /// <summary>Последние выборы (любые).</summary>
+    public ElectionSnapshot? LastElection => Elections is { Count: > 0 } e ? e[^1] : null;
 
     static readonly ConditionalWeakTable<CountryPolitics, Cached> Cache = new();
 
@@ -69,7 +101,17 @@ public sealed record PoliticsSnapshot(
             record.Threshold,
             parties,
             p.Views.Select(v => (IReadOnlyList<double>)v.ToArray()).ToList(),
-            p.Polls.Select(x => new PollSnapshot(x.Date, new Dictionary<string, double>(x.Shares, StringComparer.Ordinal))).ToList());
+            p.Polls.Select(x => new PollSnapshot(x.Date, new Dictionary<string, double>(x.Shares, StringComparer.Ordinal))).ToList(),
+            p.NextElection,
+            p.NextPresident,
+            p.Elections.Select(e => new ElectionSnapshot(e.Date, e.Kind, e.Turnout, new Dictionary<string, double>(e.Votes),
+                e.Runoff == null ? null : new Dictionary<string, double>(e.Runoff), new Dictionary<string, int>(e.Seats),
+                new Dictionary<string, string>(e.Candidates), e.Winner, e.Regions, e.PowerChanged)).ToList(),
+            p.Talks == null ? null : new TalksSnapshot(p.Talks.Date, p.Talks.Deadline,
+                p.Talks.Offers.Select(o => new OfferSnapshot(o.Party, o.Seats, o.Law, o.Variant, o.Refuses)).ToList()),
+            p.Promises.Select(x => new PromiseSnapshot(x.Party, x.Law, x.Variant, x.Deadline)).ToList(),
+            PoliticsActions.CanCallEarlyElection(world, country),
+            record.TwoRounds);
         Cache.AddOrUpdate(p, new Cached(p.Version, snapshot));
         return snapshot;
     }

@@ -59,7 +59,8 @@ public sealed class PoliticsBalance
     public IReadOnlyList<int> ProportionalParties { get; init; } = [5, 7];
     public IReadOnlyList<int> MixedParties { get; init; } = [4, 6];
     public IReadOnlyList<int> HybridParties { get; init; } = [4, 5];
-    public IReadOnlyList<int> AuthoritarianParties { get; init; } = [1, 3];
+    public IReadOnlyList<int> AuthoritarianParties { get; init; } = [2, 4];
+    public IReadOnlyList<int> OnePartyParties { get; init; } = [1, 3];
     /// <summary>Позиция партии = средние взгляды страны + FamilyScale × (позиция семейства − средняя) + разброс.</summary>
     public double FamilyScale { get; init; } = 0.8;
     public double PositionSpread { get; init; } = 8;
@@ -83,4 +84,32 @@ public sealed class PoliticsBalance
     public double BackfillDrift { get; init; } = 0.05;
     /// <summary>Сколько месяцев опросов хранится.</summary>
     public int PollHistory { get; init; } = 36;
+
+    // --- Выборы (MODEL.md, «Выборы»)
+
+    /// <summary>Явка: радикализм выше спокойного поднимает её, недовольство (удовлетворённость ниже 45) снижает; пределы.</summary>
+    public double TurnoutRadicalism { get; init; } = 0.5;
+    public double TurnoutApathy { get; init; } = 0.3;
+    public double TurnoutMin { get; init; } = 0.15;
+    public double TurnoutMax { get; init; } = 0.95;
+    /// <summary>Своя постоянная поправка явки у каждой страны (относительная, стандартное отклонение).</summary>
+    public double TurnoutSpread { get; init; } = 0.12;
+    /// <summary>Погрешность дня выборов: логарифмический разброс доли каждой партии.</summary>
+    public double ElectionNoise { get; init; } = 0.05;
+    /// <summary>На президентских выборах популярность кандидата весит ещё столько (сверх LeaderWeight).</summary>
+    public double CandidateWeight { get; init; } = 0.8;
+    /// <summary>Итоги по регионам: разброс взглядов региона, сдвиг за каждый порядок плотности, чувствительность.</summary>
+    public double RegionSpread { get; init; } = 12;
+    public double RegionDensity { get; init; } = 8;
+    public double RegionScale { get; init; } = 0.15;
+    /// <summary>Сколько итогов выборов хранится у страны.</summary>
+    public int ElectionsKept { get; init; } = 6;
+    /// <summary>Переговоры о коалиции: срок (месяцев), партия отказывается, если дальше по взглядам; требование закона —
+    /// если одобрение её избирателей не ниже DemandSupport; обещание надо выполнить за PromiseYears лет.</summary>
+    public int TalksMonths { get; init; } = 1;
+    public double CoalitionRefuse { get; init; } = 0.8;
+    public double DemandSupport { get; init; } = 0.6;
+    public int PromiseYears { get; init; } = 2;
+    /// <summary>Вероятность, что президент на старте уже на втором сроке (если сроков два).</summary>
+    public double SecondTermShare { get; init; } = 0.4;
 }

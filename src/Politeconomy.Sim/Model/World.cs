@@ -114,6 +114,15 @@ public sealed class World
     /// <summary>Взгляды, партии и опросы; null — политика не создана.</summary>
     public Politics.WorldPolitics? Politics { get; set; }
 
+    /// <summary>Правление игрока (с какой даты, показатели на начало); null — игрок ещё не выбрал страну.</summary>
+    public Politics.Reign? Reign { get; set; }
+
+    /// <summary>Игрок проиграл выборы и ещё не решил, продолжать ли.</summary>
+    public Politics.Defeat? Defeat { get; set; }
+
+    /// <summary>Итоги последнего закончившегося правления игрока.</summary>
+    public Politics.ReignSummary? LastReign { get; set; }
+
     /// <summary>История показателей по годам (для графиков); создаётся <see cref="History.HistoryModel.Setup"/>.</summary>
     public History.WorldHistory? History { get; set; }
 

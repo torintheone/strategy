@@ -22,11 +22,12 @@ public static class PartyFactory
         if (!record.Parties)
             return [];
         var b = data.PoliticsBalance;
-        var r = world.Random;
+        var r = PoliticsModel.Rng(world);
         var democracy = country.Regime == Regime.Democracy;
         var range = country.Regime switch
         {
             Regime.Hybrid => b.HybridParties,
+            Regime.Authoritarian when country.System == PoliticalSystem.OnePartyState => b.OnePartyParties,
             Regime.Authoritarian => b.AuthoritarianParties,
             _ => record.Electoral switch
             {
@@ -101,7 +102,7 @@ public static class PartyFactory
     /// <summary>Лидер партии: новый персонаж со взглядами партии.</summary>
     public static Character PartyLeader(World world, Country country, Party party)
     {
-        var leader = CharacterFactory.Create(world, country, null, leader: true);
+        var leader = CharacterFactory.Create(world, country, null, leader: true, PoliticsModel.Rng(world));
         Align(world, leader, party);
         return leader;
     }
@@ -111,7 +112,7 @@ public static class PartyFactory
     {
         c.Party = party.Id;
         for (var a = 0; a < PoliticalViews.Axes; a++)
-            c.Views[a] = Math.Clamp(party.Position[a] + world.Random.NextGaussian() * world.Data.PoliticsBalance.PositionSpread, -100, 100);
+            c.Views[a] = Math.Clamp(party.Position[a] + PoliticsModel.Rng(world).NextGaussian() * world.Data.PoliticsBalance.PositionSpread, -100, 100);
     }
 
     static string Pick(IReadOnlyList<(string Id, double Weight)> options, DeterministicRandom r)

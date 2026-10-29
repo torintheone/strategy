@@ -81,6 +81,8 @@ public static class Legislation
             world.Log(countryId, "law", $"{parliament.Name} отклонил закон {title}: за {v.Yes}, против {v.No}, нужно {v.Required}.");
         if (!v.Passed)
             return;
+        if (world.Reign is { } reign && reign.Country == countryId)
+            reign.LawsPassed++;
         laws.Transitions.RemoveAll(t => t.Law == bill.Law);
         laws.Transitions.Add(new LawTransition
         {

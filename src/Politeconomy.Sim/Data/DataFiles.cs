@@ -65,7 +65,8 @@ public sealed record PoliticsFile(
 /// <summary>
 /// Политика страны: тип системы, режим (democracy, hybrid, authoritarian), избирательная система парламента
 /// (majoritarian, proportional, mixed, none) и барьер в процентах, есть ли легальные партии, особое семейство партии
-/// власти, пометка и проверено ли человеком.
+/// власти, календарь выборов (срок парламента и ближайшие выборы «год-месяц»; у президентских и смешанных
+/// республик — срок президента, ближайшие выборы и есть ли второй тур), пометка и проверено ли человеком.
 /// </summary>
 public sealed record PoliticsRecord(
     string Id,
@@ -76,7 +77,12 @@ public sealed record PoliticsRecord(
     string Electoral = "proportional",
     double Threshold = 3,
     bool Parties = true,
-    string? RulingFamily = null);
+    string? RulingFamily = null,
+    int Term = 5,
+    string? NextElection = null,
+    int? PresidentTerm = null,
+    string? NextPresident = null,
+    bool TwoRounds = true);
 
 public sealed record ScenarioFile(
     string Id,

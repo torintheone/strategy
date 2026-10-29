@@ -19,6 +19,8 @@ public sealed class Character
     public double[] Views { get; set; } = new double[3];
     public List<string> Traits { get; set; } = [];
     public string? Party { get; set; }
+    /// <summary>Сколько сроков персонаж уже был главой (для ограничения сроков).</summary>
+    public int Terms { get; set; }
     /// <summary>Когда занял нынешний пост.</summary>
     public DateOnly Since { get; set; }
 

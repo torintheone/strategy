@@ -74,7 +74,7 @@ public static partial class DataValidator
     };
 
     static readonly HashSet<string> Formats = ["people", "money_big", "money", "percent", "percent_signed", "percent_gdp", "percent_gdp_signed", "years", "number0", "number1", "number2", "rating"];
-    static readonly HashSet<string> MapKinds = ["political", "bins", "diverging", "politics", "income", "region_density", "parties"];
+    static readonly HashSet<string> MapKinds = ["political", "bins", "diverging", "politics", "income", "region_density", "parties", "elections"];
 
     [GeneratedRegex("^#[0-9a-fA-F]{6}$")]
     private static partial Regex HexColor();

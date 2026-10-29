@@ -41,6 +41,8 @@ public sealed class MapModeView
         var controller = ControllerOf(region, snapshot);
         if (controller is null || !snapshot.Countries.TryGetValue(controller, out var country))
             return _palettes.Territory;
+        if (Mode.Kind == "elections")
+            return ElectionWinner(region, snapshot)?.Color ?? _palettes.NoData;
         return Mode.Kind switch
         {
             "political" => PoliticalColor(controller),
@@ -52,6 +54,13 @@ public sealed class MapModeView
             _ => _palettes.NoData,
         };
     }
+
+    /// <summary>Партия, победившая в регионе на последних выборах его страны (по принадлежности, а не по контролю).</summary>
+    public static PartySnapshot? ElectionWinner(MapRegion region, WorldSnapshot snapshot) =>
+        region.Country is { } owner && snapshot.Countries.TryGetValue(owner, out var country)
+        && country.Politics?.LastElection?.Regions.TryGetValue(region.Id, out var party) == true
+            ? country.Politics.Party(party)
+            : null;
 
     public string PoliticalColor(string country)
     {
@@ -109,10 +118,10 @@ public sealed class MapModeView
                     .ToList();
             case "income":
                 return _data.MapModes.IncomeGroups.Select(g => new LegendEntry(g.Color, g.Name)).ToList();
-            case "parties":
+            case "parties" or "elections":
                 return _data.Parties.Families.Append(_data.Parties.Power)
                     .Select(f => new LegendEntry(f.Color, f.Name))
-                    .Append(new LegendEntry(_palettes.NoData, "партий нет"))
+                    .Append(new LegendEntry(_palettes.NoData, Mode.Kind == "parties" ? "партий нет" : "выборов нет"))
                     .ToList();
             case "bins" or "diverging" or "region_density" when Mode.Thresholds is { Count: > 0 } t:
             {
@@ -142,6 +151,10 @@ public sealed class MapModeView
         var controller = ControllerOf(region, snapshot);
         if (controller is null || !snapshot.Countries.TryGetValue(controller, out var country))
             return "";
+        if (Mode.Kind == "elections")
+            return ElectionWinner(region, snapshot) is { } winner && region.Country is { } owner
+                ? $"Выборы {snapshot.Countries[owner].Politics!.LastElection!.Date.Year}: в регионе победила {Fmt.Quote(winner.Name)}"
+                : "Выборов нет";
         return Mode.Kind switch
         {
             "politics" => _data.Politics.Systems.GetValueOrDefault(WorldFactory.SystemId(country.System), ""),

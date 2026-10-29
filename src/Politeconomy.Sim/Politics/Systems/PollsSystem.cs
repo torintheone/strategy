@@ -32,7 +32,7 @@ public sealed class PollsSystem : ISimSystem
         var b = world.Data.PoliticsBalance;
         if (months > 0)
             foreach (var party in p.Parties)
-                party.Momentum += -b.MomentumReversion * party.Momentum + world.Random.NextGaussian() * b.MomentumSpread;
+                party.Momentum += -b.MomentumReversion * party.Momentum + PoliticsModel.Rng(world).NextGaussian() * b.MomentumSpread;
         var result = Polls.Compute(b, country, p, s, g, PoliticsModel.Majoritarian(world, country), world.Date,
             Polls.EconomicVote(b, world.Economy![country.Id]));
         var shares = new Dictionary<string, double>(StringComparer.Ordinal);
@@ -42,7 +42,7 @@ public sealed class PollsSystem : ISimSystem
             var party = p.Parties[i];
             party.Poll = months == 0 ? result.Shares[i] : party.Poll + (result.Shares[i] - party.Poll) / b.PollMonths;
             party.Voters = result.Voters[i];
-            published[i] = Math.Max(0.001, party.Poll + world.Random.NextGaussian() * b.PollNoise / 100);
+            published[i] = Math.Max(0.001, party.Poll + PoliticsModel.Rng(world).NextGaussian() * b.PollNoise / 100);
         }
         var total = published.Sum();
         for (var i = 0; i < p.Parties.Count; i++)

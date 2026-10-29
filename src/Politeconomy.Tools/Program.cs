@@ -109,6 +109,10 @@ int Run(string mode)
     }
     Record();
 
+    // Все выборы за прогон (у страны хранятся только последние, поэтому собираем по ходу).
+    var elections = new List<(string Country, Regime Regime, Politeconomy.Sim.Politics.ElectionResult Result)>();
+    var seen = new HashSet<Politeconomy.Sim.Politics.ElectionResult>(world.Politics!.Countries.Values.SelectMany(p => p.Elections));
+
     var end = world.Date.AddYears(years);
     timer.Restart();
     var days = 0;
@@ -121,6 +125,10 @@ int Run(string mode)
         days++;
         if (world.Date is { Month: 1, Day: 1 })
             Record();
+        if (world.Date.Day == 1)
+            foreach (var country in world.Countries)
+                foreach (var e in world.Politics!.Countries[country.Id].Elections.Where(seen.Add))
+                    elections.Add((country.Id, country.Regime, e));
     }
     Console.WriteLine($"Прогон: {years} лет ({days} дней) до {Fmt.Date(world.Date)} за {timer.Elapsed.TotalSeconds:F1} с; самый долгий день {worstDayMs:F2} мс.");
     if (mode == "run")
@@ -137,8 +145,40 @@ int Run(string mode)
     failures += PopulationCheck(history, data);
     failures += GrowthCheck(history);
     failures += RangeCheck(world);
+    failures += ElectionCheck(elections, years);
     Console.WriteLine(failures == 0 ? "Все проверки пройдены." : $"Нарушений: {failures}");
     return failures == 0 ? 0 : 1;
+}
+
+// Выборы правдоподобны (критерий этапа 4): в демократиях власть иногда меняется, но не всегда; явка в разумных
+// пределах; на выборах парламента ни одна партия в демократии не набирает больше 70%.
+static int ElectionCheck(List<(string Country, Regime Regime, Politeconomy.Sim.Politics.ElectionResult Result)> elections, int years)
+{
+    if (elections.Count == 0)
+        return 0;
+    Console.WriteLine();
+    var democratic = elections.Where(e => e.Regime == Regime.Democracy).ToList();
+    var changes = democratic.Count(e => e.Result.PowerChanged);
+    var changeShare = democratic.Count > 0 ? (double)changes / democratic.Count : 0;
+    var turnouts = elections.Select(e => e.Result.Turnout).OrderBy(t => t).ToList();
+    var landslides = democratic.Where(e => e.Result.Kind == "parliament" && e.Result.Votes.Values.DefaultIfEmpty(0).Max() > 0.7).ToList();
+    var dictators = elections.Where(e => e.Regime == Regime.Authoritarian && e.Result.PowerChanged).ToList();
+    Console.WriteLine($"Выборы за {years} лет: {elections.Count}, в демократиях {democratic.Count}; власть сменилась в {changeShare:P0} демократических выборов " +
+                      $"(норма 15–70%); явка от {turnouts[0]:P0} до {turnouts[^1]:P0}, медиана {turnouts[turnouts.Count / 2]:P0}; " +
+                      $"разгромов больше 70% в демократиях: {landslides.Count}; смен власти на выборах при авторитарном режиме: {dictators.Count}.");
+    var failures = 0;
+    void Fail(string text)
+    {
+        Console.Error.WriteLine("ОШИБКА " + text);
+        failures++;
+    }
+    if (democratic.Count > 0 && changeShare is < 0.15 or > 0.7)
+        Fail($"в демократиях власть меняется в {changeShare:P0} выборов — вне 15…70%");
+    if (turnouts[0] < 0.25 || turnouts[^1] > 0.95)
+        Fail($"явка от {turnouts[0]:P0} до {turnouts[^1]:P0} — вне 25…95%");
+    if (landslides.Count > democratic.Count / 50)
+        Fail($"в демократиях слишком много разгромов: {string.Join(", ", landslides.Take(5).Select(e => $"{e.Country} {e.Result.Date:yyyy}"))}");
+    return failures;
 }
 
 // Разогрев не должен уводить показатели далеко от данных: в норме страны с 90% мирового ВВП и 80% стран.
@@ -448,7 +488,12 @@ int PoliticsReport()
         Console.WriteLine("  министры: " + string.Join(", ", ministers));
         Console.WriteLine("  взгляды классов: " + string.Join("; ", p.Views.Select((v, k) =>
             $"{classes[k].ShortName ?? classes[k].Name} [{v[0]:F0} {v[1]:F0} {v[2]:F0}]")));
+        Console.WriteLine($"  выборы: парламент {p.NextElection:yyyy-MM}" + (p.NextPresident is { } next ? $", президент {next:yyyy-MM}" : "") +
+                          $"; сроков у главы {g.Leader.Terms}");
     }
+    if (runYears > 0)
+        foreach (var e in world.Journal.Where(e => ids.Contains(e.Country) && e.Kind is "election" or "coalition" or "leader"))
+            Console.WriteLine($"{e.Date:yyyy-MM-dd} {e.Country} {e.Text}");
     return 0;
 }
 

@@ -13,19 +13,19 @@ namespace Politeconomy.Sim.Politics;
 /// </summary>
 public static class PoliticsModel
 {
-    public static IReadOnlyList<ISimSystem> Systems() => [new ViewsSystem(), new PollsSystem()];
+    public static IReadOnlyList<ISimSystem> Systems() => [new ViewsSystem(), new PollsSystem(), new ElectionSystem()];
 
     public static void Setup(World world)
     {
         var data = world.Data;
         var b = data.PoliticsBalance;
-        var politics = new WorldPolitics();
+        var politics = WorldPolitics.Create(Rng(world).NextUInt64());
         world.Politics = politics;
         foreach (var country in world.Countries)
         {
             var s = world.Society![country.Id];
             var g = world.Government![country.Id];
-            var p = new CountryPolitics { Offset = PoliticalViews.CountryOffset(country, b, world.Random) };
+            var p = new CountryPolitics { Offset = PoliticalViews.CountryOffset(country, b, Rng(world)) };
             p.Views = data.Classes.Classes.Select((c, k) => PoliticalViews.Target(c, p.Offset, s.Satisfaction[k], s.Radicalism[k], b)).ToArray();
             politics.Countries[country.Id] = p;
             p.Parties = PartyFactory.Create(world, country, p, PoliticalViews.Mean(p.Views, s));
@@ -39,7 +39,21 @@ public static class PoliticsModel
             // Опрос ещё раз: теперь известно, кто правит (это влияет на привлекательность).
             PollsSystem.Update(world, country, p, s, g, months: 0);
             Backfill(world, p, b);
+            Elections.Schedule(world, country, p);
+            Elections.RecordStart(world, country, p);
+            g.Leader.Terms = StartTerms(world, country);
         }
+    }
+
+    /// <summary>
+    /// Сколько сроков глава уже отслужил на старте: если сроков два, с вероятностью SecondTermShare он на втором
+    /// (и на следующих выборах партия выдвинет преемника), иначе на первом.
+    /// </summary>
+    static int StartTerms(World world, Country country)
+    {
+        var law = world.Data.Laws.Laws.FirstOrDefault(l => l.Id == "term_limits");
+        var limit = law == null ? null : Laws.LawModel.StartVariant(law, country);
+        return limit == "two" && Rng(world).Chance(world.Data.PoliticsBalance.SecondTermShare) ? 2 : 1;
     }
 
     /// <summary>
@@ -52,7 +66,7 @@ public static class PoliticsModel
         for (var m = 1; m <= b.PollBackfill; m++)
         {
             foreach (var id in shares.Keys.ToList())
-                shares[id] *= Math.Exp(world.Random.NextGaussian() * b.BackfillDrift);
+                shares[id] *= Math.Exp(Rng(world).NextGaussian() * b.BackfillDrift);
             var total = shares.Values.Sum();
             p.Polls.Insert(0, new PollRecord(world.Date.AddMonths(-m), shares.ToDictionary(kv => kv.Key, kv => Math.Round(kv.Value / total, 4), StringComparer.Ordinal)));
         }
@@ -74,7 +88,9 @@ public static class PoliticsModel
                 seats = Seats.Allocate(record.Electoral, parties.Select(x => x.Poll).ToArray(), parliament.Seats, record.Threshold, b.MajoritarianPower);
             else
                 seats = Seats.LargestRemainder(parties.Select(x => x.Poll).ToArray(), 100);
-            ruling = Coalition.Form(parties, seats, b);
+            // В президентской республике главный соперник в коалицию не идёт: власть может быть «разделённой».
+            var largest = Enumerable.Range(0, parties.Count).OrderByDescending(i => seats[i]).ThenByDescending(i => parties[i].Poll).First();
+            ruling = Coalition.Form(parties, seats, b, largest, Elections.HasPresident(world, country) ? Coalition.Rival(seats, largest) : null);
         }
         else
         {
@@ -85,7 +101,7 @@ public static class PoliticsModel
             ruling = [0];
         }
         // Правительство у власти уже несколько лет (партия власти — давно).
-        var years = country.Regime == Regime.Democracy ? world.Random.Next(0, b.StartTenure + 1) : world.Random.Next(b.StartTenure, 3 * b.StartTenure);
+        var years = country.Regime == Regime.Democracy ? Rng(world).Next(0, b.StartTenure + 1) : Rng(world).Next(b.StartTenure, 3 * b.StartTenure);
         foreach (var i in ruling)
             (parties[i].Ruling, parties[i].RulingSince) = (true, world.Date.AddYears(-years));
         if (parliament.Exists)
@@ -131,7 +147,7 @@ public static class PoliticsModel
     static bool NonPartisan(World world, Country country, Character c)
     {
         var chance = country.Regime == Regime.Democracy ? 0.25 : 0.5;
-        return (c.Has("technocrat") || c.Has("silovik")) && world.Random.Chance(chance);
+        return (c.Has("technocrat") || c.Has("silovik")) && Rng(world).Chance(chance);
     }
 
     /// <summary>
@@ -151,9 +167,12 @@ public static class PoliticsModel
             PartyFactory.Align(world, c, party);
     }
 
+    /// <summary>Генератор случайных чисел политики (свой, чтобы не сбивать экономику; до создания политики — общий).</summary>
+    public static DeterministicRandom Rng(World world) => world.Politics?.Random ?? world.Random;
+
     /// <summary>Мажоритарная система: голос за мелкую партию «теряется», и её поддерживают меньше.</summary>
     public static bool Majoritarian(World world, Country country) =>
-        country.Regime == Regime.Democracy && world.Data.PoliticsOf(country.Id).Electoral == "majoritarian";
+        country.Regime == Regime.Democracy && Elections.Electoral(world, country) == "majoritarian";
 
     /// <summary>Партия главы исполнительной власти.</summary>
     public static Party? HeadParty(World world, string countryId) =>

@@ -9,11 +9,12 @@ namespace Politeconomy.Sim.Government;
 /// </summary>
 public static class CharacterFactory
 {
-    public static Character Create(World world, Country country, PostRecord? post, bool leader)
+    /// <summary>Random — чей генератор брать (по умолчанию общий генератор мира).</summary>
+    public static Character Create(World world, Country country, PostRecord? post, bool leader, DeterministicRandom? random = null)
     {
         var data = world.Data;
         var b = data.GovernmentBalance;
-        var r = world.Random;
+        var r = random ?? world.Random;
         var culture = CultureOf(data, country.Id);
         var income = (int)country.Income;
         var female = r.Chance(leader ? b.FemaleLeaderShare : Pick(b.FemaleShare, income));

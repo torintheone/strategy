@@ -35,6 +35,18 @@ public partial class Main : Node
     GovernmentScreen _government = null!;
     MinistryScreen _ministries = null!;
     PoliticsScreen _politicsScreen = null!;
+    ElectionResultsDialog _resultsDialog = null!;
+    CoalitionDialog _coalitionDialog = null!;
+    DefeatDialog _defeatDialog = null!;
+    ReignSummaryDialog _summaryDialog = null!;
+    ConfirmDialog _confirmDialog = null!;
+    // Какие выборы, переговоры, поражения и итоги игрок уже видел (окна показываются один раз).
+    readonly HashSet<string> _seenElections = new();
+    string? _seenFor;
+    DateOnly? _seenTalks;
+    DateOnly? _seenDefeat;
+    Politeconomy.Sim.Politics.ReignSummary? _seenSummary;
+    bool _dialogsPrimed;
     LawsScreen _laws = null!;
     BudgetScreen _budget = null!;
     bool _dossierBeforeScreen;
@@ -164,7 +176,7 @@ public partial class Main : Node
         _uiRoot.AddChild(_countryPanel);
         _countryPanel.Setup(_data);
         _countryPanel.Closed += () => SelectRegion(null);
-        _countryPanel.PlayAs += id => _host!.Post(w => w.PlayerCountry = id);
+        _countryPanel.PlayAs += id => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.PlayAs(w, id));
         _countryPanel.RegionChosen += id => SelectRegion(_map.Region(id), center: true);
 
         _countryPanel.GovernmentRequested += id => OpenGovernment(id);
@@ -205,6 +217,16 @@ public partial class Main : Node
         _uiRoot.AddChild(_politicsScreen);
         _politicsScreen.Setup(_data);
         _politicsScreen.Closed += CloseScreens;
+        _politicsScreen.ResultsRequested += id => ShowLastElection(id);
+        _politicsScreen.TalksRequested += id =>
+        {
+            if (_host?.Snapshot.Countries.GetValueOrDefault(id) is { } c)
+                _coalitionDialog.Show(id, CountryName(id), c);
+        };
+        _politicsScreen.EarlyElectionRequested += id => _confirmDialog.Show("Распустить парламент?",
+            "Досрочные выборы пройдут через два месяца. Если ваша партия проиграет, власть перейдёт к другим, и вам придётся решать — " +
+            "продолжать за новое правительство или закончить партию.", "Распустить",
+            () => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.CallEarlyElection(w, id)));
 
         _laws = new LawsScreen { Visible = false };
         _uiRoot.AddChild(_laws);
@@ -224,6 +246,31 @@ public partial class Main : Node
         _budget.AmendmentSubmitted += country => _host!.Post(w => Politeconomy.Sim.Budget.BudgetActions.SubmitAmendment(w, country));
         _budget.AmendmentDiscarded += country => _host!.Post(w => Politeconomy.Sim.Budget.BudgetActions.DiscardAmendment(w, country));
         _budget.RateChosen += (country, rate) => _host!.Post(w => Politeconomy.Sim.Budget.BudgetActions.SetRate(w, country, rate));
+
+        _resultsDialog = new ElectionResultsDialog();
+        _uiRoot.AddChild(_resultsDialog);
+        _resultsDialog.Setup();
+        _resultsDialog.MapRequested += ShowElectionMap;
+        _coalitionDialog = new CoalitionDialog();
+        _uiRoot.AddChild(_coalitionDialog);
+        _coalitionDialog.Setup(_data);
+        _coalitionDialog.Formed += (country, partners) =>
+            _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.FormCoalition(w, country, partners));
+        _defeatDialog = new DefeatDialog();
+        _uiRoot.AddChild(_defeatDialog);
+        _defeatDialog.Setup();
+        _defeatDialog.ContinueChosen += () => _host!.Post(Politeconomy.Sim.Politics.PoliticsActions.ContinueAfterDefeat);
+        _defeatDialog.EndChosen += () =>
+        {
+            CloseScreens();
+            _host!.Post(Politeconomy.Sim.Politics.PoliticsActions.EndReign);
+        };
+        _summaryDialog = new ReignSummaryDialog();
+        _uiRoot.AddChild(_summaryDialog);
+        _summaryDialog.Setup(_data);
+        _confirmDialog = new ConfirmDialog();
+        _uiRoot.AddChild(_confirmDialog);
+        _confirmDialog.Setup();
 
         _toasts = new Toasts();
         _uiRoot.AddChild(_toasts);
@@ -271,6 +318,7 @@ public partial class Main : Node
         if (_budget.Visible)
             _budget.Refresh(snapshot);
         Recolor(snapshot);
+        CheckDialogs(snapshot);
         if (_countryPanel.Visible)
             _countryPanel.Refresh(snapshot);
     }
@@ -366,6 +414,13 @@ public partial class Main : Node
     /// <summary>Клавиши; буквенные — по физическому положению, чтобы работали и в русской раскладке.</summary>
     void HandleKey(Key key, Key physical)
     {
+        // Пока открыто окно, клавиши его не обходят; Esc закрывает его (кроме окна поражения — там нужно решить).
+        if (DialogOpen)
+        {
+            if (key == Key.Escape && !_defeatDialog.Visible)
+                CloseDialogs();
+            return;
+        }
         if (physical is Key.G or Key.M or Key.P or Key.L or Key.B)
         {
             ToggleScreen(physical switch { Key.G => "government", Key.M => "ministries", Key.P => "politics", Key.L => "laws", _ => "budget" });
@@ -507,7 +562,7 @@ public partial class Main : Node
             case 0 when _smokeTime > 0.3:
                 _host!.SetSpeed(SimulationHost.MaxSpeed);
                 SelectCountry(_map.Country("RUS"), center: true);
-                _host.Post(w => w.PlayerCountry = "RUS");
+                _host.Post(w => Politeconomy.Sim.Politics.PoliticsActions.PlayAs(w, "RUS"));
                 // Захват региона: проверяем, что перекраска и досье переживают смену контроля.
                 _smokeOccupied = _map.Country("FRA")!.Regions[0].Id;
                 var occupied = _smokeOccupied;
@@ -545,6 +600,17 @@ public partial class Main : Node
                 OpenPolitics("DEU");
                 OpenPolitics("SAU");
                 OpenPolitics("RUS");
+                // Выборы: в стране игрока (окно итогов покажется само) и президентские в Бразилии; окна поражения и итогов.
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Politics.Elections.HoldPresident(w, w["BRA"]);
+                    Politeconomy.Sim.Politics.Elections.HoldParliament(w, w["RUS"]);
+                });
+                _defeatDialog.Show(new Politeconomy.Sim.Politics.Defeat(_data.Scenario.StartDate, "RUS", "А", "Б", "В"), "Россия");
+                _summaryDialog.Show(new Politeconomy.Sim.Politics.ReignSummary("RUS", _data.Scenario.StartDate, _data.Scenario.StartDate.AddYears(3),
+                    new Dictionary<string, double> { ["gdp_per_capita_usd"] = 10000 }, new Dictionary<string, double> { ["gdp_per_capita_usd"] = 12000 }, 1, 0, 3),
+                    "Россия");
+                CloseDialogs();
                 OpenLaws("RUS");
                 OpenBudget();
                 _smokeStep++;
@@ -560,6 +626,7 @@ public partial class Main : Node
                     && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "budget")
                     && snapshot.Countries["RUS"].History?.Series("gdp_growth_pct").Count >= 5
                     && snapshot.Countries["DEU"].Politics is { Parties.Count: >= 3, Polls.Count: >= 2 }
+                    && snapshot.Countries["RUS"].Politics?.Elections?.Count >= 2 && snapshot.Countries["BRA"].Politics?.LastElection?.Kind == "president"
                     && snapshot.Countries["DEU"].Stat("ruling_poll_pct") is { } ruling && double.IsFinite(ruling.Value);
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
@@ -619,7 +686,7 @@ public partial class Main : Node
             ("10_satisfaction", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "satisfaction"))),
             ("11_government", () =>
             {
-                _host!.Post(w => w.PlayerCountry = "BRA");
+                _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.PlayAs(w, "BRA"));
                 SetMode(_data.MapModes.Modes[0]);
                 OpenGovernment("BRA");
             }),
@@ -658,6 +725,46 @@ public partial class Main : Node
                 SelectRegion(null);
                 SetMode(_data.MapModes.Modes.First(m => m.Id == "parties"));
                 _camera.FitWorld(instant: true);
+            }),
+            // Выборы в стране игрока: окно итогов открывается само, когда появляется новый итог.
+            ("21_election_president", () => _host!.Post(w => Politeconomy.Sim.Politics.Elections.HoldPresident(w, w["BRA"]))),
+            ("22_election_parliament", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w => Politeconomy.Sim.Politics.Elections.HoldParliament(w, w["BRA"]));
+            }),
+            ("23_election_map", () =>
+            {
+                CloseDialogs();
+                _seenDefeat = _host!.Snapshot.Defeat?.Date;
+                _host.Post(Politeconomy.Sim.Politics.PoliticsActions.ContinueAfterDefeat);
+                ShowElectionMap();
+            }),
+            ("24_coalition", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Politics.PoliticsActions.PlayAs(w, "NLD");
+                    var p = w.Politics!["NLD"];
+                    var seats = p.Parties.Select(x => w.Government!["NLD"].Parliament.Factions.FirstOrDefault(f => f.Party == x.Id)?.Seats ?? 0).ToArray();
+                    Politeconomy.Sim.Politics.CoalitionTalksModel.Start(w, w["NLD"], Politeconomy.Sim.Politics.PoliticsModel.HeadParty(w, "NLD")!, seats);
+                });
+            }),
+            ("25_defeat", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w =>
+                {
+                    var p = w.Politics!["NLD"];
+                    var rival = p.Parties.Where(x => !x.Ruling && x.Leader != null).OrderByDescending(x => x.Poll).First();
+                    w.Defeat = new Politeconomy.Sim.Politics.Defeat(w.Date, "NLD", w.Government!["NLD"].Leader.Name, rival.Leader!.Name, rival.Name);
+                });
+            }),
+            ("26_summary", () =>
+            {
+                CloseDialogs();
+                _host!.Post(Politeconomy.Sim.Politics.PoliticsActions.EndReign);
             }),
         };
         if (_shotStep > 0)
@@ -781,6 +888,89 @@ public partial class Main : Node
         _laws.ShowCountry(countryId, _host.Snapshot);
         _rail.SetActive("laws");
         SetHovered(null, null);
+    }
+
+    bool DialogOpen => _resultsDialog.Visible || _coalitionDialog.Visible || _defeatDialog.Visible || _summaryDialog.Visible || _confirmDialog.Visible;
+
+    string CountryName(string id) => _data.Countries.Countries.First(c => c.Id == id).Name;
+
+    static string ElectionKey(string country, ElectionSnapshot e) => $"{country}/{e.Date}/{e.Kind}";
+
+    /// <summary>Запомнить всё, что уже есть, как просмотренное (на старте, при смене страны игрока, в обходе скриншотов).</summary>
+    void PrimeDialogs(WorldSnapshot snapshot)
+    {
+        _seenFor = snapshot.PlayerCountry;
+        if (_seenFor != null && snapshot.Countries[_seenFor].Politics?.Elections is { } elections)
+            foreach (var e in elections)
+                _seenElections.Add(ElectionKey(_seenFor, e));
+        _seenSummary = snapshot.LastReign;
+        _dialogsPrimed = true;
+    }
+
+    /// <summary>
+    /// Окна о стране игрока по одному: новые итоги выборов, поражение, переговоры о коалиции, итоги правления.
+    /// Пока окно открыто, время стоит.
+    /// </summary>
+    void CheckDialogs(WorldSnapshot snapshot)
+    {
+        if (!_dialogsPrimed || snapshot.PlayerCountry != _seenFor)
+            PrimeDialogs(snapshot);
+        if (DialogOpen)
+            return;
+        var player = snapshot.PlayerCountry;
+        var country = player != null ? snapshot.Countries[player] : null;
+        if (country?.Politics?.Elections?.FirstOrDefault(e => !_seenElections.Contains(ElectionKey(player!, e))) is { } election)
+        {
+            _seenElections.Add(ElectionKey(player!, election));
+            _resultsDialog.Show(CountryName(player!), country, election);
+            PauseForDialog();
+        }
+        else if (snapshot.Defeat is { } defeat && defeat.Date != _seenDefeat)
+        {
+            _seenDefeat = defeat.Date;
+            _defeatDialog.Show(defeat, CountryName(defeat.Country));
+            PauseForDialog();
+        }
+        else if (country?.Politics?.Talks is { } talks && talks.Date != _seenTalks)
+        {
+            _seenTalks = talks.Date;
+            _coalitionDialog.Show(player!, CountryName(player!), country);
+            PauseForDialog();
+        }
+        else if (snapshot.LastReign is { } summary && !ReferenceEquals(summary, _seenSummary))
+        {
+            _seenSummary = summary;
+            _summaryDialog.Show(summary, CountryName(summary.Country));
+        }
+    }
+
+    void PauseForDialog()
+    {
+        if (!_smoke)
+            _host?.SetPaused(true);
+    }
+
+    void CloseDialogs()
+    {
+        _resultsDialog.Visible = false;
+        _coalitionDialog.Visible = false;
+        _defeatDialog.Visible = false;
+        _summaryDialog.Visible = false;
+        _confirmDialog.Visible = false;
+    }
+
+    void ShowLastElection(string countryId)
+    {
+        if (_host?.Snapshot.Countries.GetValueOrDefault(countryId) is { Politics.LastElection: { } last } country)
+            _resultsDialog.Show(CountryName(countryId), country, last);
+    }
+
+    void ShowElectionMap()
+    {
+        CloseScreens();
+        SetMode(_data.MapModes.Modes.First(m => m.Id == "elections"));
+        if (_host?.Snapshot.PlayerCountry is { } id)
+            ShowAt(id, 2.5f);
     }
 
     void CloseScreens()

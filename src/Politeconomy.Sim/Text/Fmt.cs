@@ -98,6 +98,11 @@ public static class Fmt
     public static string Rating(double score) => Economy.Systems.RatingSystem.Letter(score);
 
     /// <summary>«1 января 2026».</summary>
+    /// <summary>
+    /// Название в кавычках-«ёлочках»; кавычки внутри становятся „лапками“: «Партия „Вера и семья“».
+    /// </summary>
+    public static string Quote(string name) => "«" + name.Replace('«', '„').Replace('»', '“') + "»";
+
     static readonly string[] ShortMonths = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
 
     /// <summary>Месяц и год коротко: «мар 2027» — для подписей на графиках.</summary>
