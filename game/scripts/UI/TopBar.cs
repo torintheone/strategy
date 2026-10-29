@@ -8,7 +8,7 @@ namespace Politeconomy.Game.UI;
 /// <summary>Верхняя панель: дата, пауза и скорость, ключевые показатели страны игрока.</summary>
 public partial class TopBar : GlassPanel
 {
-    static readonly string[] KeyStats = ["gdp_growth_pct", "inflation_pct", "unemployment_pct", "budget_balance_pct_gdp", "gov_debt_pct_gdp"];
+    static readonly string[] KeyStats = ["gdp_growth_pct", "inflation_pct", "unemployment_pct", "budget_balance_pct_gdp", "gov_debt_pct_gdp", "approval_pct"];
 
     GameData _data = null!;
     Label _date = null!;
@@ -82,9 +82,7 @@ public partial class TopBar : GlassPanel
         row.AddChild(new VSeparator());
 
         foreach (var id in KeyStats)
-            AddChip(row, id, id == "budget_balance_pct_gdp" ? "Бюджет" : data.Indicator(id).Name);
-        AddChip(row, "approval", "Одобрение");
-        _chips["approval"].Box.TooltipText = "Одобрение власти появится на этапе 4, когда заработает политика.";
+            AddChip(row, id, id switch { "budget_balance_pct_gdp" => "Бюджет", "approval_pct" => "Одобрение", _ => data.Indicator(id).Name });
     }
 
     void AddChip(HBoxContainer row, string id, string caption)

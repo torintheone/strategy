@@ -20,9 +20,13 @@ public static class ClassIncome
     /// <summary>Потоки по классам: зарплаты, прибыль и доходы от собственности, пенсии и пособия, налоги, итог после всего.</summary>
     public sealed record Flows(double[] Wages, double[] Profits, double[] Transfers, double[] Taxes, double[] Disposable);
 
+    /// <summary>Effect — поправки законов по ключу (минимальная зарплата, пенсии, пособия, налоги, доли прибыли).</summary>
     public static Flows Compute(GameData data, IReadOnlyList<ClassRecord> classes, CountryEconomy e, WorldEconomy economy,
-        ClassComposition.Result c)
+        ClassComposition.Result c, Func<string, double>? effect = null)
     {
+        effect ??= _ => 0;
+        var wageWeights = (double[])WageWeights.Clone();
+        wageWeights[ClassIds.Unskilled] *= Math.Max(0.1, 1 + effect("unskilled_wage"));
         const int n = ClassIds.Count;
         var b = data.Society;
         var industries = data.Industries.Industries;
@@ -42,7 +46,7 @@ public static class ClassIncome
         {
             value[i] = Math.Max(0, e.Output[i] * BudgetSystem.IndustryPrice(industries[i], e, economy, reference));
             for (var k = 0; k < n; k++)
-                weight[i] += WageWeights[k] * c.WagePeople[i, k];
+                weight[i] += wageWeights[k] * c.WagePeople[i, k];
             rate[i] = weight[i] > 0 ? (1 - industries[i].Alpha) * value[i] / weight[i] : 0;
         }
         var wageCap = b.WagePremiumMax * MedianRate(rate, weight);
@@ -55,7 +59,7 @@ public static class ClassIncome
             var bill = Math.Min((1 - ind.Alpha) * value[i], wageCap * weight[i]);
             if (weight[i] > 0)
                 for (var k = 0; k < n; k++)
-                    wages[k] += bill * WageWeights[k] * c.WagePeople[i, k] / weight[i];
+                    wages[k] += bill * wageWeights[k] * c.WagePeople[i, k] / weight[i];
             // Прибыль — остаток минус износ (не меньше четверти доли капитала).
             var profit = Math.Max(0.25 * ind.Alpha * value[i], value[i] - bill - ind.Depreciation * e.Capital[i] * e.Price);
             if (ind.Id == "agriculture")
@@ -71,13 +75,13 @@ public static class ClassIncome
             moved += wages[k] * (1 - c.DonorScale);
             wages[k] *= c.DonorScale;
         }
-        var movedWeight = c.Security * WageWeights[ClassIds.Officials] + c.SmallBusiness * WageWeights[ClassIds.SmallBusiness]
-            + c.Capitalists * WageWeights[ClassIds.Capitalists];
+        var movedWeight = c.Security * wageWeights[ClassIds.Officials] + c.SmallBusiness * wageWeights[ClassIds.SmallBusiness]
+            + c.Capitalists * wageWeights[ClassIds.Capitalists];
         if (movedWeight > 0)
         {
-            wages[ClassIds.Officials] += moved * c.Security * WageWeights[ClassIds.Officials] / movedWeight;
-            wages[ClassIds.SmallBusiness] += moved * c.SmallBusiness * WageWeights[ClassIds.SmallBusiness] / movedWeight;
-            wages[ClassIds.Capitalists] += moved * c.Capitalists * WageWeights[ClassIds.Capitalists] / movedWeight;
+            wages[ClassIds.Officials] += moved * c.Security * wageWeights[ClassIds.Officials] / movedWeight;
+            wages[ClassIds.SmallBusiness] += moved * c.SmallBusiness * wageWeights[ClassIds.SmallBusiness] / movedWeight;
+            wages[ClassIds.Capitalists] += moved * c.Capitalists * wageWeights[ClassIds.Capitalists] / movedWeight;
         }
 
         // Прибыль: крестьянам — их часть сельского хозяйства; остальное после налогов на прибыль, доходов
@@ -88,18 +92,19 @@ public static class ClassIncome
         // Налоги не забирают больше 70% прибыли (у малых стран бюджет бывает больше прибыли всех фирм).
         var business = businessProfit + (1 - b.FarmerProfitShare) * farmProfit;
         var pool = Math.Max(0.3 * business, business - revenue.Cit - revenue.Soe - revenue.Resource);
-        pool *= 1 - EconomyBalance.ByIncome(b.ForeignProfitShare, e.IncomeIndex);
+        pool *= 1 - Math.Clamp(EconomyBalance.ByIncome(b.ForeignProfitShare, e.IncomeIndex) + effect("foreign_profit"), 0, 0.9);
         var smallClaim = c.Heads[ClassIds.SmallBusiness];
         var bigClaim = c.Heads[ClassIds.Capitalists] * b.CapitalistWeight;
         var small = smallClaim + bigClaim > 0 ? pool * smallClaim / (smallClaim + bigClaim) : 0;
         profits[ClassIds.SmallBusiness] = small;
         var big = pool - small;
-        profits[ClassIds.Capitalists] = b.CapitalistTake * big;
+        var take = Math.Clamp(b.CapitalistTake + effect("capitalist_take"), 0.05, 0.95);
+        profits[ClassIds.Capitalists] = take * big;
         var propertyWeight = 0.0;
         for (var k = 0; k < n; k++)
             propertyWeight += classes[k].Property * c.Heads[k];
         for (var k = 0; k < n; k++)
-            profits[k] += propertyWeight > 0 ? (1 - b.CapitalistTake) * big * classes[k].Property * c.Heads[k] / propertyWeight : 0;
+            profits[k] += propertyWeight > 0 ? (1 - take) * big * classes[k].Property * c.Heads[k] / propertyWeight : 0;
 
         // Пенсии и пособия: доля зарплаты (пенсия — средней, пособие — неквалифицированного рабочего) на получателя, но не больше своей доли расходов на соцзащиту;
         // остальное (детские, по инвалидности, жильё) — семьям поровну на человека. Безработные ещё подрабатывают.
@@ -113,10 +118,10 @@ public static class ClassIncome
         var averageWage = workers > 0 ? wageSum / workers : 0;
         var social = revenue.SocialSpending;
         transfers[ClassIds.Pensioners] = Math.Min(b.PensionShare * social,
-            EconomyBalance.ByIncome(b.PensionReplacement, e.IncomeIndex) * averageWage * c.Heads[ClassIds.Pensioners]);
+            EconomyBalance.ByIncome(b.PensionReplacement, e.IncomeIndex) * Math.Max(0, 1 + effect("pension_replacement")) * averageWage * c.Heads[ClassIds.Pensioners]);
         var unskilledWage = c.Heads[ClassIds.Unskilled] > 0 ? wages[ClassIds.Unskilled] / c.Heads[ClassIds.Unskilled] : averageWage;
         transfers[ClassIds.Unemployed] = Math.Min(b.BenefitShare * social,
-            EconomyBalance.ByIncome(b.BenefitReplacement, e.IncomeIndex) * unskilledWage * c.Heads[ClassIds.Unemployed]);
+            EconomyBalance.ByIncome(b.BenefitReplacement, e.IncomeIndex) * Math.Max(0, 1 + effect("benefit_replacement")) * unskilledWage * c.Heads[ClassIds.Unemployed]);
         var families = c.Sizes.Sum() - c.Sizes[ClassIds.Pensioners];
         var familyBenefits = Math.Max(0, social - transfers[ClassIds.Pensioners] - transfers[ClassIds.Unemployed]);
         for (var k = 0; k < n; k++)
@@ -128,14 +133,17 @@ public static class ClassIncome
         var gross = new double[n];
         for (var k = 0; k < n; k++)
             gross[k] = wages[k] + profits[k] + transfers[k];
+        // Прогрессивность: веса налога в степени (1 + поправка закона) — у богатых растут, у бедных падают.
+        var progressivity = 1 + effect("tax_progressivity");
+        var taxWeights = b.TaxWeights.Select(w => Math.Pow(w, progressivity)).ToArray();
         var taxBase = 0.0;
         for (var k = 0; k < n; k++)
-            taxBase += b.TaxWeights[k] * gross[k];
+            taxBase += taxWeights[k] * gross[k];
         var disposable = new double[n];
         var total = 0.0;
         for (var k = 0; k < n; k++)
         {
-            taxes[k] = taxBase > 0 ? Math.Min(0.6 * gross[k], revenue.Direct * b.TaxWeights[k] * gross[k] / taxBase) : 0;
+            taxes[k] = taxBase > 0 ? Math.Min(0.6 * gross[k], revenue.Direct * taxWeights[k] * gross[k] / taxBase) : 0;
             disposable[k] = gross[k] - taxes[k];
             total += disposable[k];
         }

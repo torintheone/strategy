@@ -1,5 +1,6 @@
 using Politeconomy.Sim.Data;
 using Politeconomy.Sim.Engine;
+using Politeconomy.Sim.Laws;
 using Politeconomy.Sim.Model;
 
 namespace Politeconomy.Sim.Economy.Systems;
@@ -28,7 +29,7 @@ public sealed class ProductionSystem : EconomySystem
             if (world.Demography?.Countries.GetValueOrDefault(country.Id) is { } d)
             {
                 e.Population = d.Total;
-                e.LaborForce = d.LaborForce(world.Data.Demography.OlderParticipation);
+                e.LaborForce = d.LaborForce(Demography.DemographyModel.OlderParticipation(world, country.Id));
                 populationGrowth = d.LaborGrowth;
             }
             else
@@ -39,10 +40,14 @@ public sealed class ProductionSystem : EconomySystem
                 e.LaborForce *= monthly;
             }
 
-            e.PotentialGrowth = TargetGrowth(e, economy, b, years, populationGrowth);
+            // Законы сдвигают рост, естественную безработицу и цель по инфляции (поправки — в п. п.).
+            e.PotentialGrowth = TargetGrowth(e, economy, b, years, populationGrowth) + LawModel.Effect(world, country.Id, "potential_growth") / 100;
             var path = Math.Min(1, years / b.ForecastYears);
-            e.NaturalUnemployment = e.NaturalUnemploymentStart + (e.NaturalUnemploymentLong - e.NaturalUnemploymentStart) * path;
-            e.InflationTarget = e.InflationStart + (e.InflationLong - e.InflationStart) * path;
+            var labor = balance.Labor;
+            e.NaturalUnemployment = Math.Clamp(
+                e.NaturalUnemploymentStart + (e.NaturalUnemploymentLong - e.NaturalUnemploymentStart) * path
+                + LawModel.Effect(world, country.Id, "natural_unemployment") / 100, labor.NaturalMin, labor.NaturalMax);
+            e.InflationTarget = e.InflationStart + (e.InflationLong - e.InflationStart) * path + LawModel.Effect(world, country.Id, "inflation_target") / 100;
 
             var investment = e.InvestmentRate * e.RealGdp;
             var potentialLabor = e.LaborForce * (1 - e.NaturalUnemployment);

@@ -26,8 +26,9 @@ public static class ClassComposition
     public sealed record Result(double[] Heads, double[] Sizes, double[,] WagePeople, double DonorScale,
         double Security, double SmallBusiness, double Capitalists);
 
+    /// <summary>SmallBusiness и Vocational — поправки законов (доли): к доле мелкого бизнеса и к работникам с профессиональным образованием.</summary>
     public static Result Compute(IReadOnlyList<IndustryRecord> industries, CountryEconomy e, CountryDemography d,
-        double selfEmployed, double tertiary, SocietyBalance b, double olderParticipation)
+        double selfEmployed, double tertiary, SocietyBalance b, double olderParticipation, double smallBusiness = 0, double vocational = 0)
     {
         var heads = new double[ClassIds.Count];
         var labor = e.LaborForce;
@@ -55,7 +56,7 @@ public static class ClassComposition
                     Put(ClassIds.Officials, people);
                     break;
                 default:
-                    var (low, mid, high) = Skills(ind.Skills, tilt);
+                    var (low, mid, high) = Skills(ind.Skills, tilt, vocational);
                     Put(ClassIds.Unskilled, people * low);
                     Put(ind.Sector == "industry" ? ClassIds.Skilled : ClassIds.Clerks, people * mid);
                     Put(ClassIds.Professionals, people * high);
@@ -64,20 +65,20 @@ public static class ClassComposition
         }
 
         var security = b.SecurityShare * labor;
-        var smallBusiness = b.SmallBusinessShare * Math.Max(0, selfEmployed * employed - heads[ClassIds.Farmers]);
+        var owners = b.SmallBusinessShare * Math.Max(0, 1 + smallBusiness) * Math.Max(0, selfEmployed * employed - heads[ClassIds.Farmers]);
         var capitalists = b.CapitalistShare * employed;
         var donorTotal = Donors.Sum(k => heads[k]);
-        var wanted = security + smallBusiness + capitalists;
+        var wanted = security + owners + capitalists;
         var taken = Math.Min(wanted, 0.6 * donorTotal);
         var share = wanted > 0 ? taken / wanted : 0;
         var scale = donorTotal > 0 ? 1 - taken / donorTotal : 1;
         foreach (var k in Donors)
             heads[k] *= scale;
         security *= share;
-        smallBusiness *= share;
+        owners *= share;
         capitalists *= share;
         heads[ClassIds.Officials] += security;
-        heads[ClassIds.SmallBusiness] += smallBusiness;
+        heads[ClassIds.SmallBusiness] += owners;
         heads[ClassIds.Capitalists] += capitalists;
 
         heads[ClassIds.Unemployed] = labor * e.Unemployment;
@@ -90,17 +91,17 @@ public static class ClassComposition
             for (var k = 0; k < ClassIds.Count; k++)
                 if (k != ClassIds.Pensioners)
                     sizes[k] += dependents * heads[k] / households;
-        return new Result(heads, sizes, wagePeople, scale, security, smallBusiness, capitalists);
+        return new Result(heads, sizes, wagePeople, scale, security, owners, capitalists);
     }
 
     /// <summary>
     /// Доли работников отрасли без образования, с профессиональным и с высшим: высшее — умножается на «наклон»
     /// по охвату высшим образованием, профессиональное — на корень из него, остальное — без образования.
     /// </summary>
-    public static (double Low, double Mid, double High) Skills(IReadOnlyList<double> typical, double tilt)
+    public static (double Low, double Mid, double High) Skills(IReadOnlyList<double> typical, double tilt, double vocational = 0)
     {
         var high = typical[2] * tilt;
-        var mid = typical[1] * Math.Sqrt(tilt);
+        var mid = typical[1] * Math.Sqrt(tilt) * Math.Max(0, 1 + vocational);
         var low = Math.Max(0.02, 1 - high - mid);
         var sum = low + mid + high;
         return (low / sum, mid / sum, high / sum);

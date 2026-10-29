@@ -23,7 +23,7 @@ public sealed class FiscalPlanSystem : EconomySystem
             var e = economy[country.Id];
             if (MustDefault(e, economy, balance.Budget))
                 Restructure(e, balance.Budget, world.Date.Year);
-            Plan(e, revenues, balance.Budget);
+            Plan(e, revenues, balance.Budget, BudgetSystem.LawSpending(world, country.Id, world.Data.Budget.Spending));
         }
     }
 
@@ -58,7 +58,8 @@ public sealed class FiscalPlanSystem : EconomySystem
         e.LastDefaultYear = year;
     }
 
-    public static void Plan(CountryEconomy e, IReadOnlyList<RevenueRecord> revenues, FiscalBalance b)
+    /// <summary>LawSpending — расходы по законам поверх плана (доля ВВП): план учитывает их, но сами они не масштабируются.</summary>
+    public static void Plan(CountryEconomy e, IReadOnlyList<RevenueRecord> revenues, FiscalBalance b, double lawSpending = 0)
     {
         var structural = e.StructuralGdp;
         if (structural <= 0)
@@ -67,7 +68,8 @@ public sealed class FiscalPlanSystem : EconomySystem
         for (var k = 0; k < revenues.Count; k++)
             revenue += e.Revenue[k] / (1 + (revenues[k].Elasticity - 1) * (revenues[k].Base is "resources" or "imports" ? 0 : e.Gap));
         var revenueRatio = revenue / structural;
-        var spendingRatio = e.SpendingPlan.Sum();
+        var planned = e.SpendingPlan.Sum();
+        var spendingRatio = planned + lawSpending;
         var current = revenueRatio - spendingRatio;
 
         var nominalGrowth = (1 + e.PotentialGrowth) * (1 + e.Expectations) - 1;
@@ -80,8 +82,8 @@ public sealed class FiscalPlanSystem : EconomySystem
         var step = Math.Clamp(b.ConsolidationSpeed * gap, -limit, limit);
         e.PrimaryBalancePlan = current + step;
 
-        var newSpending = Math.Max(b.SpendingFloor, revenueRatio - e.PrimaryBalancePlan);
-        var scale = spendingRatio > 0 ? newSpending / spendingRatio : 1;
+        var newSpending = Math.Max(b.SpendingFloor + lawSpending, revenueRatio - e.PrimaryBalancePlan);
+        var scale = planned > 0 ? Math.Max(0, newSpending - lawSpending) / planned : 1;
         for (var k = 0; k < e.SpendingPlan.Length; k++)
             e.SpendingPlan[k] *= scale;
     }

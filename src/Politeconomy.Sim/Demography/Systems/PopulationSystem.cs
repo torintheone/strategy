@@ -24,11 +24,13 @@ public sealed class PopulationSystem : ISimSystem
         foreach (var country in world.Countries)
         {
             var d = demography[country.Id];
-            var laborBefore = d.LaborForce(b.OlderParticipation);
+            var older = DemographyModel.OlderParticipation(world, country.Id);
+            var laborBefore = d.LaborForce(older);
             var total = d.Total;
             var (births, deaths) = DemographyModel.MonthlyVitals(d);
             var boys = births * d.SexRatioAtBirth / (1 + d.SexRatioAtBirth);
-            var migration = d.NetMigrationRate * migrationFade * total / 12;
+            var migration = d.NetMigrationRate * migrationFade * total / 12
+                            * (1 + Laws.LawModel.Effect(world, country.Id, "migration") * Math.Sign(d.NetMigrationRate));
 
             Step(d.Female, d.MortalityFemale, births - boys);
             Step(d.Male, d.MortalityMale, boys);
@@ -42,7 +44,7 @@ public sealed class PopulationSystem : ISimSystem
             var room = Math.Max(0, b.UrbanMax - d.UrbanPct) / Math.Max(1, b.UrbanMax - d.UrbanPct0);
             d.UrbanPct = Math.Clamp(d.UrbanPct + d.UrbanChange * room / 12, 0, 100);
 
-            var laborAfter = d.LaborForce(b.OlderParticipation);
+            var laborAfter = d.LaborForce(older);
             d.LaborGrowth = laborBefore > 0 ? Math.Pow(laborAfter / laborBefore, 12) - 1 : 0;
             d.PushHistory(births, deaths, migration);
         }

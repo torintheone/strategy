@@ -30,7 +30,7 @@ public sealed class ClassesSystem : ISimSystem
             var composition = SocietyModel.Compose(world, country);
             Move(s, composition.Sizes);
             s.Heads = composition.Heads;
-            var flows = ClassIncome.Compute(data, classes, e, economy, composition);
+            var flows = ClassIncome.Compute(data, classes, e, economy, composition, key => Laws.LawModel.Effect(world, country.Id, key));
             UpdateLiving(world, e, s, flows.Disposable, classes, b);
             for (var k = 0; k < ClassIds.Count; k++)
                 s.Savings[k] = Math.Max(0, s.Savings[k] + (s.Income[k] * classes[k].Saving - s.Savings[k] * b.SavingsDecay) / 12);

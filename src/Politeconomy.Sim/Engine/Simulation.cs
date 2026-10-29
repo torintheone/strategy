@@ -5,6 +5,7 @@ namespace Politeconomy.Sim.Engine;
 /// <summary>Порядок систем внутри шага — фиксированный, описан в MODEL.md.</summary>
 public enum SimPhase
 {
+    Laws = 5,
     Economy = 10,
     LaborMarket = 20,
     PricesAndInflation = 30,

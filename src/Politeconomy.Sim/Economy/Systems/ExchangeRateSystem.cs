@@ -1,5 +1,6 @@
 using Politeconomy.Sim.Data;
 using Politeconomy.Sim.Engine;
+using Politeconomy.Sim.Laws;
 using Politeconomy.Sim.Model;
 
 namespace Politeconomy.Sim.Economy.Systems;
@@ -42,7 +43,9 @@ public sealed class ExchangeRateSystem : EconomySystem
             cur.RealRateDifference = realRate;
             var commodity = cur.Members.Sum(id => weights[id] * (economy[id].OilNet * logOil + economy[id].OresNet * logOres));
             var norm = -b.CommodityCurrency * commodity;
-            var sigma = EconomyBalance.ByIncome(b.Shock, economy[cur.Home].IncomeIndex);
+            // Валютный контроль страны-эмитента гасит скачки курса.
+            var sigma = EconomyBalance.ByIncome(b.Shock, economy[cur.Home].IncomeIndex)
+                        * Math.Max(0, 1 + LawModel.Effect(world, cur.Home, "exchange_volatility"));
             cur.LogReal += b.Reversion * (norm - cur.LogReal) - b.RateDifferential * change + Shock(world, economy, sigma);
             cur.LogReal = Math.Clamp(cur.LogReal, -1.5, 1.5);
             cur.ExchangeRate = Math.Exp(cur.LogReal + cur.LogPrice - Math.Log(reference.Price));

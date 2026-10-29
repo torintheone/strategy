@@ -61,6 +61,15 @@ public static partial class DataValidator
         ["standard_of_living"] = (0, 100),
         ["satisfaction"] = (0, 100),
         ["radicalism"] = (0, 100),
+        ["democracy_index"] = (0, 100),
+        ["rule_of_law_index"] = (0, 100),
+        ["judicial_independence_index"] = (0, 100),
+        ["press_freedom_index"] = (0, 100),
+        ["civil_liberties_index"] = (0, 100),
+        ["corruption_index"] = (0, 100),
+        ["government_effectiveness"] = (0, 100),
+        ["legitimacy"] = (0, 100),
+        ["approval_pct"] = (0, 100),
     };
 
     static readonly HashSet<string> Formats = ["people", "money_big", "money", "percent", "percent_signed", "percent_gdp", "percent_gdp_signed", "years", "number0", "number1", "number2", "rating"];
@@ -271,6 +280,7 @@ public static partial class DataValidator
 
         ValidateEconomy(data, Add);
         ValidateGovernment(data, Add);
+        ValidateLaws(data, Add);
         return problems;
     }
 

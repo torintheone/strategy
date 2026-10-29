@@ -33,7 +33,8 @@ public sealed class SocietyStatsSystem : ISimSystem
                 new StatFactor("Перемены в уровне жизни", s.MoodChange, "number1_signed"),
                 new StatFactor("Сам уровень жизни", s.MoodLevel, "number1_signed"),
                 new StatFactor("Страх безработицы", -s.MoodFear, "number1_signed"),
-                new StatFactor("Инфляция", -s.MoodInflation, "number1_signed"));
+                new StatFactor("Инфляция", -s.MoodInflation, "number1_signed"),
+                new StatFactor("Законы", s.MoodLaws, "number1_signed"));
             Set("radicalism", s.Average(s.Radicalism));
         }
     }

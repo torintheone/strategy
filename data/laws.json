@@ -1,0 +1,2601 @@
+{
+ "_comment": "Законы. groups — 11 групп. effects — что означает каждый эффект (название, единица, пояснение); значения в вариантах складываются: эффект закона — разница между нынешним вариантом и вариантом страны на старте (модель на старте совпадает с данными), у индексов институтов (index.*) — тоже от уровня на старте. laws[]: id, group, name, post (какое ведомство готовит закон), description, drafting_months (подготовка при средней компетентности министра), transition_months (за сколько месяцев эффект набирает полную силу), constitutional (нужно две трети парламента), variants[] (id, name, description, effects, attitudes — отношение классов от −3 до +3), start — вариант на старте: default, затем по группе дохода (income), типу системы (system), режиму (regime) и отдельным странам (countries); более частное правило побеждает.",
+ "groups": [
+  {
+   "id": "economy",
+   "name": "Экономика и собственность"
+  },
+  {
+   "id": "labor",
+   "name": "Труд"
+  },
+  {
+   "id": "taxes",
+   "name": "Налоги"
+  },
+  {
+   "id": "social",
+   "name": "Социальная защита"
+  },
+  {
+   "id": "health",
+   "name": "Здравоохранение"
+  },
+  {
+   "id": "education",
+   "name": "Образование"
+  },
+  {
+   "id": "civil",
+   "name": "Гражданские права"
+  },
+  {
+   "id": "security",
+   "name": "Безопасность"
+  },
+  {
+   "id": "migration",
+   "name": "Миграция"
+  },
+  {
+   "id": "ecology",
+   "name": "Экология"
+  },
+  {
+   "id": "constitution",
+   "name": "Выборы и конституция"
+  }
+ ],
+ "effects": {
+  "natural_unemployment": {
+   "name": "Естественная безработица",
+   "unit": "п. п.",
+   "description": "к уровню безработицы, к которому тянется рынок труда"
+  },
+  "potential_growth": {
+   "name": "Рост экономики",
+   "unit": "п. п. в год",
+   "description": "к росту потенциального ВВП"
+  },
+  "credibility": {
+   "name": "Доверие к центробанку",
+   "unit": "",
+   "description": "доля ожиданий, которые держатся цели по инфляции"
+  },
+  "inflation_target": {
+   "name": "Цель по инфляции",
+   "unit": "п. п.",
+   "description": "к цели центробанка"
+  },
+  "monetary_control": {
+   "name": "Ставку ставит правительство",
+   "unit": "",
+   "description": "1 — центробанк подчиняется правительству"
+  },
+  "food_inflation": {
+   "name": "Рост цен на еду",
+   "unit": "доля",
+   "description": "сколько мировых цен на еду доходит до прилавка"
+  },
+  "exchange_volatility": {
+   "name": "Колебания курса",
+   "unit": "доля",
+   "description": "к размеру случайных скачков курса"
+  },
+  "spread": {
+   "name": "Премия за риск по долгу",
+   "unit": "п. п.",
+   "description": "к ставке, под которую занимает государство"
+  },
+  "revenue.pit": {
+   "name": "Сборы налога на доходы",
+   "unit": "доля",
+   "description": ""
+  },
+  "revenue.cit": {
+   "name": "Сборы налога на прибыль",
+   "unit": "доля",
+   "description": ""
+  },
+  "revenue.vat": {
+   "name": "Сборы НДС",
+   "unit": "доля",
+   "description": ""
+  },
+  "revenue.social": {
+   "name": "Сборы социальных взносов",
+   "unit": "доля",
+   "description": ""
+  },
+  "revenue.excise": {
+   "name": "Сборы акцизов",
+   "unit": "доля",
+   "description": ""
+  },
+  "revenue.property": {
+   "name": "Сборы налога на имущество",
+   "unit": "доля",
+   "description": ""
+  },
+  "revenue.soe": {
+   "name": "Доходы госпредприятий",
+   "unit": "доля",
+   "description": ""
+  },
+  "spending.social": {
+   "name": "Расходы на пенсии и пособия",
+   "unit": "% ВВП",
+   "description": ""
+  },
+  "spending.health": {
+   "name": "Расходы на здравоохранение",
+   "unit": "% ВВП",
+   "description": ""
+  },
+  "spending.education": {
+   "name": "Расходы на образование",
+   "unit": "% ВВП",
+   "description": ""
+  },
+  "spending.defense": {
+   "name": "Расходы на оборону",
+   "unit": "% ВВП",
+   "description": ""
+  },
+  "spending.courts": {
+   "name": "Расходы на суды",
+   "unit": "% ВВП",
+   "description": ""
+  },
+  "pension_replacement": {
+   "name": "Размер пенсий",
+   "unit": "доля",
+   "description": "к пенсии относительно зарплаты"
+  },
+  "benefit_replacement": {
+   "name": "Пособие по безработице",
+   "unit": "доля",
+   "description": "к пособию относительно зарплаты"
+  },
+  "unskilled_wage": {
+   "name": "Зарплаты неквалифицированных рабочих",
+   "unit": "доля",
+   "description": "к их доле в фонде оплаты"
+  },
+  "tax_progressivity": {
+   "name": "Прогрессивность налогов",
+   "unit": "",
+   "description": "насколько сильнее платят богатые"
+  },
+  "unemployment_fear": {
+   "name": "Страх потерять работу",
+   "unit": "доля",
+   "description": "к тому, насколько безработица пугает людей"
+  },
+  "small_business": {
+   "name": "Мелкий бизнес",
+   "unit": "доля",
+   "description": "к доле самозанятых, у которых своё дело"
+  },
+  "tertiary": {
+   "name": "Охват высшим образованием",
+   "unit": "доля",
+   "description": ""
+  },
+  "vocational": {
+   "name": "Работники с профессиональным образованием",
+   "unit": "доля",
+   "description": ""
+  },
+  "foreign_profit": {
+   "name": "Доля прибыли иностранцев",
+   "unit": "доля",
+   "description": ""
+  },
+  "capitalist_take": {
+   "name": "Доля прибыли крупных владельцев",
+   "unit": "доля",
+   "description": ""
+  },
+  "older_participation": {
+   "name": "Работающие пенсионного возраста",
+   "unit": "доля",
+   "description": "к доле людей 65+ в рабочей силе"
+  },
+  "fertility": {
+   "name": "Рождаемость",
+   "unit": "доля",
+   "description": ""
+  },
+  "migration": {
+   "name": "Миграционный поток",
+   "unit": "доля",
+   "description": ""
+  },
+  "life_expectancy": {
+   "name": "Продолжительность жизни",
+   "unit": "лет",
+   "description": ""
+  },
+  "radicalism": {
+   "name": "Радикализм",
+   "unit": "пункты",
+   "description": "ко всем классам"
+  },
+  "organization.skilled": {
+   "name": "Организованность квалифицированных рабочих",
+   "unit": "",
+   "description": ""
+  },
+  "organization.unskilled": {
+   "name": "Организованность неквалифицированных рабочих",
+   "unit": "",
+   "description": ""
+  },
+  "index.democracy": {
+   "name": "Демократичность",
+   "unit": "пункты",
+   "description": ""
+  },
+  "index.rule_of_law": {
+   "name": "Верховенство права",
+   "unit": "пункты",
+   "description": ""
+  },
+  "index.judicial_independence": {
+   "name": "Независимость судов",
+   "unit": "пункты",
+   "description": ""
+  },
+  "index.press_freedom": {
+   "name": "Свобода прессы",
+   "unit": "пункты",
+   "description": ""
+  },
+  "index.civil_liberties": {
+   "name": "Гражданские свободы",
+   "unit": "пункты",
+   "description": ""
+  },
+  "index.corruption": {
+   "name": "Коррупция",
+   "unit": "пункты",
+   "description": ""
+  }
+ },
+ "laws": [
+  {
+   "id": "central_bank",
+   "group": "economy",
+   "name": "Независимость центробанка",
+   "post": "central_bank",
+   "description": "Кто ставит ключевую ставку: центробанк по своим правилам или правительство.",
+   "drafting_months": 3,
+   "transition_months": 3,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "independent",
+     "name": "Независимый центробанк",
+     "description": "Ставку ставит центробанк, чтобы держать инфляцию у цели. Рынки ему доверяют.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "government",
+     "name": "Центробанк подчинён правительству",
+     "description": "Ставку ставит правительство. Инфляция выше, доверие к деньгам ниже.",
+     "effects": {
+      "credibility": -0.15,
+      "inflation_target": 1.5,
+      "monetary_control": 1
+     },
+     "attitudes": {
+      "capitalists": -1,
+      "professionals": -1,
+      "officials": 1,
+      "pensioners": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "independent",
+    "regime": {
+     "authoritarian": "government"
+    }
+   }
+  },
+  {
+   "id": "price_controls",
+   "group": "economy",
+   "name": "Регулирование цен",
+   "post": "economy",
+   "description": "Ограничивает ли государство цены в магазинах.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "none",
+     "name": "Свободные цены",
+     "description": "Цены устанавливает рынок.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "essentials",
+     "name": "Контроль цен на продукты первой необходимости",
+     "description": "Хлеб, молоко и крупы не дорожают быстрее, но производителям это невыгодно.",
+     "effects": {
+      "food_inflation": -0.4,
+      "potential_growth": -0.1,
+      "index.corruption": 2
+     },
+     "attitudes": {
+      "unskilled": 1,
+      "unemployed": 2,
+      "pensioners": 2,
+      "farmers": -2,
+      "small_business": -1,
+      "capitalists": -1
+     }
+    },
+    {
+     "id": "broad",
+     "name": "Широкий контроль цен",
+     "description": "Государство назначает цены на многие товары. Полки пустеют, растёт чёрный рынок.",
+     "effects": {
+      "food_inflation": -0.7,
+      "potential_growth": -0.4,
+      "index.corruption": 5
+     },
+     "attitudes": {
+      "unemployed": 2,
+      "pensioners": 2,
+      "unskilled": 1,
+      "farmers": -3,
+      "small_business": -2,
+      "capitalists": -2,
+      "professionals": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "none",
+    "regime": {
+     "authoritarian": "essentials"
+    },
+    "countries": {
+     "VEN": "broad",
+     "CUB": "broad",
+     "PRK": "broad"
+    }
+   }
+  },
+  {
+   "id": "state_ownership",
+   "group": "economy",
+   "name": "Государственная собственность",
+   "post": "economy",
+   "description": "Сколько крупных предприятий принадлежит государству.",
+   "drafting_months": 5,
+   "transition_months": 24,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "privatization",
+     "name": "Приватизация",
+     "description": "Государство продаёт свои предприятия частным владельцам.",
+     "effects": {
+      "revenue.soe": -0.5,
+      "potential_growth": 0.15,
+      "capitalist_take": 0.05
+     },
+     "attitudes": {
+      "capitalists": 2,
+      "small_business": 1,
+      "professionals": 1,
+      "officials": -1,
+      "skilled": -1,
+      "unskilled": -1
+     }
+    },
+    {
+     "id": "mixed",
+     "name": "Смешанная экономика",
+     "description": "Государству принадлежат часть инфраструктуры и стратегических отраслей.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "nationalization",
+     "name": "Национализация ключевых отраслей",
+     "description": "Крупные предприятия переходят государству: прибыль идёт в бюджет, но работают они хуже.",
+     "effects": {
+      "revenue.soe": 1.0,
+      "potential_growth": -0.3,
+      "capitalist_take": -0.15,
+      "foreign_profit": -0.05
+     },
+     "attitudes": {
+      "capitalists": -3,
+      "small_business": -1,
+      "officials": 2,
+      "skilled": 1,
+      "unskilled": 1,
+      "unemployed": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "mixed",
+    "income": {
+     "high": "privatization"
+    },
+    "system": {
+     "one_party_state": "nationalization"
+    },
+    "countries": {
+     "VEN": "nationalization",
+     "BLR": "nationalization",
+     "TKM": "nationalization"
+    }
+   }
+  },
+  {
+   "id": "foreign_investment",
+   "group": "economy",
+   "name": "Иностранные инвестиции",
+   "post": "industry",
+   "description": "Могут ли иностранцы покупать предприятия и строить заводы.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "open",
+     "name": "Открыто для инвесторов",
+     "description": "Иностранцы вкладывают деньги и технологии, но часть прибыли уходит за границу.",
+     "effects": {
+      "potential_growth": 0.15,
+      "foreign_profit": 0.05
+     },
+     "attitudes": {
+      "professionals": 1,
+      "skilled": 1,
+      "capitalists": -1
+     }
+    },
+    {
+     "id": "restricted",
+     "name": "С ограничениями",
+     "description": "В стратегические отрасли иностранцев не пускают.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "closed",
+     "name": "Закрыто",
+     "description": "Иностранные вложения почти запрещены. Свои владельцы защищены, но технологии приходят медленно.",
+     "effects": {
+      "potential_growth": -0.25,
+      "foreign_profit": -0.08
+     },
+     "attitudes": {
+      "capitalists": 1,
+      "officials": 1,
+      "professionals": -2
+     }
+    }
+   ],
+   "start": {
+    "default": "open",
+    "regime": {
+     "authoritarian": "restricted"
+    },
+    "countries": {
+     "PRK": "closed",
+     "ERI": "closed",
+     "TKM": "closed"
+    }
+   }
+  },
+  {
+   "id": "capital_controls",
+   "group": "economy",
+   "name": "Движение капитала",
+   "post": "finance",
+   "description": "Можно ли свободно выводить деньги из страны и менять валюту.",
+   "drafting_months": 2,
+   "transition_months": 2,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "free",
+     "name": "Свободное движение капитала",
+     "description": "Деньги свободно входят в страну и выходят из неё.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "controls",
+     "name": "Валютный контроль",
+     "description": "Вывод денег ограничен: курс спокойнее, но инвесторы требуют премию за риск.",
+     "effects": {
+      "exchange_volatility": -0.4,
+      "spread": 0.5,
+      "potential_growth": -0.1
+     },
+     "attitudes": {
+      "capitalists": -2,
+      "professionals": -1,
+      "officials": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "free",
+    "regime": {
+     "authoritarian": "controls"
+    },
+    "countries": {
+     "ARG": "controls",
+     "NGA": "controls",
+     "EGY": "controls"
+    }
+   }
+  },
+  {
+   "id": "business_regulation",
+   "group": "economy",
+   "name": "Регулирование бизнеса",
+   "post": "economy",
+   "description": "Сколько разрешений, проверок и отчётов нужно, чтобы вести дело.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "light",
+     "name": "Минимальное",
+     "description": "Открыть и вести дело просто. Меньше поводов для взяток.",
+     "effects": {
+      "potential_growth": 0.1,
+      "small_business": 0.2,
+      "index.corruption": -2
+     },
+     "attitudes": {
+      "small_business": 2,
+      "capitalists": 1,
+      "professionals": 1,
+      "officials": -1
+     }
+    },
+    {
+     "id": "standard",
+     "name": "Обычное",
+     "description": "Обычные для страны правила.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "heavy",
+     "name": "Жёсткое",
+     "description": "Много разрешений и проверок: дело идёт медленно, чиновники сильнее.",
+     "effects": {
+      "potential_growth": -0.15,
+      "small_business": -0.25,
+      "index.corruption": 4
+     },
+     "attitudes": {
+      "small_business": -2,
+      "capitalists": -1,
+      "officials": 1,
+      "clerks": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "standard",
+    "income": {
+     "low": "heavy"
+    }
+   }
+  },
+  {
+   "id": "minimum_wage",
+   "group": "labor",
+   "name": "Минимальная зарплата",
+   "post": "labor",
+   "description": "Ниже какой зарплаты платить нельзя.",
+   "drafting_months": 3,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "none",
+     "name": "Нет",
+     "description": "Зарплату определяет только рынок.",
+     "effects": {
+      "natural_unemployment": -0.3,
+      "unskilled_wage": -0.05
+     },
+     "attitudes": {
+      "unskilled": -3,
+      "skilled": -1,
+      "small_business": 2,
+      "capitalists": 1
+     }
+    },
+    {
+     "id": "low",
+     "name": "Низкая",
+     "description": "Минимум есть, но он невысокий.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "medium",
+     "name": "Средняя",
+     "description": "Минимум заметно поднимает самые низкие зарплаты, но часть мест исчезает.",
+     "effects": {
+      "natural_unemployment": 0.4,
+      "unskilled_wage": 0.06
+     },
+     "attitudes": {
+      "unskilled": 2,
+      "skilled": 1,
+      "small_business": -1,
+      "capitalists": -1,
+      "unemployed": -1
+     }
+    },
+    {
+     "id": "high",
+     "name": "Высокая",
+     "description": "Высокий минимум: рабочие живут лучше, но мелкому бизнесу тяжело и безработица растёт.",
+     "effects": {
+      "natural_unemployment": 1.2,
+      "unskilled_wage": 0.12
+     },
+     "attitudes": {
+      "unskilled": 3,
+      "skilled": 1,
+      "small_business": -3,
+      "capitalists": -2,
+      "unemployed": -2
+     }
+    }
+   ],
+   "start": {
+    "default": "low",
+    "income": {
+     "high": "medium"
+    }
+   }
+  },
+  {
+   "id": "working_week",
+   "group": "labor",
+   "name": "Рабочая неделя",
+   "post": "labor",
+   "description": "Сколько часов в неделю можно работать без сверхурочных.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "h48",
+     "name": "48 часов",
+     "description": "Длинная рабочая неделя: больше выпуск, меньше отдыха.",
+     "effects": {
+      "potential_growth": 0.05,
+      "natural_unemployment": -0.1
+     },
+     "attitudes": {
+      "unskilled": -2,
+      "skilled": -2,
+      "clerks": -1,
+      "capitalists": 2,
+      "small_business": 1
+     }
+    },
+    {
+     "id": "h40",
+     "name": "40 часов",
+     "description": "Обычная пятидневка.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "h35",
+     "name": "35 часов",
+     "description": "Короткая неделя: люди довольны, но выпуск ниже.",
+     "effects": {
+      "potential_growth": -0.15,
+      "natural_unemployment": 0.2
+     },
+     "attitudes": {
+      "unskilled": 2,
+      "skilled": 2,
+      "clerks": 2,
+      "professionals": 1,
+      "capitalists": -2,
+      "small_business": -2
+     }
+    }
+   ],
+   "start": {
+    "default": "h40",
+    "income": {
+     "low": "h48",
+     "lower_middle": "h48"
+    }
+   }
+  },
+  {
+   "id": "unions",
+   "group": "labor",
+   "name": "Профсоюзы",
+   "post": "labor",
+   "description": "Могут ли работники объединяться и вести переговоры с работодателями.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "banned",
+     "name": "Запрещены",
+     "description": "Независимых профсоюзов нет.",
+     "effects": {
+      "organization.unskilled": -0.15,
+      "organization.skilled": -0.25,
+      "unskilled_wage": -0.03,
+      "index.civil_liberties": -10
+     },
+     "attitudes": {
+      "skilled": -3,
+      "unskilled": -2,
+      "capitalists": 2
+     }
+    },
+    {
+     "id": "restricted",
+     "name": "Ограничены",
+     "description": "Профсоюзы есть, но забастовки почти невозможны.",
+     "effects": {
+      "organization.skilled": -0.1,
+      "index.civil_liberties": -4
+     },
+     "attitudes": {
+      "skilled": -1,
+      "capitalists": 1
+     }
+    },
+    {
+     "id": "free",
+     "name": "Свободны",
+     "description": "Работники свободно вступают в профсоюзы и бастуют.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "collective",
+     "name": "Обязательные коллективные договоры",
+     "description": "Зарплаты целых отраслей договариваются между профсоюзами и работодателями.",
+     "effects": {
+      "organization.skilled": 0.15,
+      "organization.unskilled": 0.1,
+      "unskilled_wage": 0.04,
+      "natural_unemployment": 0.3
+     },
+     "attitudes": {
+      "skilled": 2,
+      "unskilled": 1,
+      "clerks": 1,
+      "capitalists": -2,
+      "small_business": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "free",
+    "regime": {
+     "authoritarian": "restricted"
+    },
+    "countries": {
+     "PRK": "banned",
+     "ERI": "banned",
+     "SAU": "banned",
+     "ARE": "banned",
+     "QAT": "banned",
+     "TKM": "banned",
+     "DNK": "collective",
+     "SWE": "collective",
+     "NOR": "collective",
+     "FIN": "collective",
+     "ISL": "collective",
+     "AUT": "collective",
+     "BEL": "collective",
+     "DEU": "collective"
+    }
+   }
+  },
+  {
+   "id": "employment_protection",
+   "group": "labor",
+   "name": "Защита от увольнений",
+   "post": "labor",
+   "description": "Насколько трудно работодателю уволить работника.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "weak",
+     "name": "Слабая",
+     "description": "Уволить легко: бизнес охотнее нанимает, но люди боятся потерять работу.",
+     "effects": {
+      "natural_unemployment": -0.3,
+      "unemployment_fear": 0.2,
+      "potential_growth": 0.05
+     },
+     "attitudes": {
+      "skilled": -2,
+      "unskilled": -1,
+      "clerks": -2,
+      "capitalists": 2,
+      "small_business": 1
+     }
+    },
+    {
+     "id": "medium",
+     "name": "Средняя",
+     "description": "Обычные правила увольнения.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "strong",
+     "name": "Сильная",
+     "description": "Уволить трудно: у работающих спокойнее на душе, но новых людей нанимают неохотно.",
+     "effects": {
+      "natural_unemployment": 0.6,
+      "unemployment_fear": -0.3,
+      "potential_growth": -0.1
+     },
+     "attitudes": {
+      "skilled": 2,
+      "clerks": 2,
+      "unskilled": 1,
+      "capitalists": -2,
+      "small_business": -2,
+      "unemployed": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "medium",
+    "countries": {
+     "FRA": "strong",
+     "ITA": "strong",
+     "ESP": "strong",
+     "PRT": "strong",
+     "GRC": "strong",
+     "DEU": "strong",
+     "USA": "weak",
+     "SGP": "weak"
+    }
+   }
+  },
+  {
+   "id": "informal_economy",
+   "group": "labor",
+   "name": "Теневая экономика",
+   "post": "finance",
+   "description": "Как государство относится к работе без договора и налогов.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "tolerated",
+     "name": "Смотрит сквозь пальцы",
+     "description": "Неформальная работа — привычное дело.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "fight",
+     "name": "Борьба с теневой экономикой",
+     "description": "Проверки и штрафы: налогов собирается больше, но часть мелкого бизнеса закрывается.",
+     "effects": {
+      "revenue.pit": 0.08,
+      "revenue.vat": 0.05,
+      "revenue.social": 0.08,
+      "small_business": -0.15,
+      "natural_unemployment": 0.2,
+      "index.corruption": -2
+     },
+     "attitudes": {
+      "small_business": -2,
+      "unskilled": -1,
+      "clerks": 1,
+      "officials": 1,
+      "professionals": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "tolerated",
+    "income": {
+     "high": "fight"
+    }
+   }
+  },
+  {
+   "id": "income_tax_scale",
+   "group": "taxes",
+   "name": "Шкала налога на доходы",
+   "post": "finance",
+   "description": "Одинаковая ставка налога для всех или растущая с доходом.",
+   "drafting_months": 3,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "flat",
+     "name": "Плоская",
+     "description": "Одна ставка для всех: богатые платят меньше, собирать проще.",
+     "effects": {
+      "tax_progressivity": -0.5,
+      "revenue.pit": -0.08
+     },
+     "attitudes": {
+      "capitalists": 2,
+      "professionals": 2,
+      "small_business": 1,
+      "unskilled": -1,
+      "unemployed": -1
+     }
+    },
+    {
+     "id": "moderate",
+     "name": "Умеренно прогрессивная",
+     "description": "Чем выше доход, тем выше ставка, но без крайностей.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "steep",
+     "name": "Сильно прогрессивная",
+     "description": "Богатые платят намного больше. Собирается больше, но часть доходов прячут.",
+     "effects": {
+      "tax_progressivity": 0.5,
+      "revenue.pit": 0.1,
+      "potential_growth": -0.05
+     },
+     "attitudes": {
+      "capitalists": -3,
+      "professionals": -2,
+      "small_business": -1,
+      "unskilled": 1,
+      "unemployed": 1,
+      "pensioners": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "moderate",
+    "countries": {
+     "BGR": "flat",
+     "ROU": "flat",
+     "HUN": "flat",
+     "EST": "flat",
+     "GEO": "flat",
+     "KAZ": "flat",
+     "BLR": "flat",
+     "MKD": "flat",
+     "BIH": "flat",
+     "SWE": "steep",
+     "DNK": "steep",
+     "FIN": "steep",
+     "BEL": "steep",
+     "FRA": "steep",
+     "AUT": "steep"
+    }
+   }
+  },
+  {
+   "id": "wealth_tax",
+   "group": "taxes",
+   "name": "Налог на богатство",
+   "post": "finance",
+   "description": "Платят ли самые богатые налог с самого имущества, а не только с доходов.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "none",
+     "name": "Нет",
+     "description": "Богатство не облагается отдельно.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "moderate",
+     "name": "Умеренный",
+     "description": "Небольшой налог на крупные состояния.",
+     "effects": {
+      "revenue.property": 0.4,
+      "capitalist_take": -0.03,
+      "foreign_profit": 0.02
+     },
+     "attitudes": {
+      "capitalists": -2,
+      "professionals": -1,
+      "unskilled": 1,
+      "unemployed": 1,
+      "clerks": 1
+     }
+    },
+    {
+     "id": "high",
+     "name": "Высокий",
+     "description": "Крупные состояния облагаются заметно. Часть капитала уходит за границу.",
+     "effects": {
+      "revenue.property": 1.0,
+      "capitalist_take": -0.08,
+      "foreign_profit": 0.05,
+      "potential_growth": -0.1
+     },
+     "attitudes": {
+      "capitalists": -3,
+      "professionals": -2,
+      "small_business": -1,
+      "unskilled": 2,
+      "unemployed": 2,
+      "clerks": 1,
+      "pensioners": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "none",
+    "countries": {
+     "ESP": "moderate",
+     "NOR": "moderate",
+     "CHE": "moderate"
+    }
+   }
+  },
+  {
+   "id": "vat_reduced",
+   "group": "taxes",
+   "name": "Льготный НДС на продукты",
+   "post": "finance",
+   "description": "Платится ли полный НДС с еды и лекарств.",
+   "drafting_months": 2,
+   "transition_months": 1,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "no",
+     "name": "Без льгот",
+     "description": "С продуктов и лекарств платится полный налог.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "essentials",
+     "name": "Льготная ставка на продукты и лекарства",
+     "description": "Еда и лекарства дешевле, бюджет недополучает.",
+     "effects": {
+      "revenue.vat": -0.12,
+      "food_inflation": -0.1
+     },
+     "attitudes": {
+      "unskilled": 2,
+      "unemployed": 2,
+      "pensioners": 2,
+      "farmers": 1,
+      "clerks": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "essentials",
+    "income": {
+     "low": "no"
+    }
+   }
+  },
+  {
+   "id": "investment_incentives",
+   "group": "taxes",
+   "name": "Льготы инвесторам",
+   "post": "economy",
+   "description": "Особые экономические зоны и налоговые каникулы для тех, кто строит заводы.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "none",
+     "name": "Нет",
+     "description": "Все платят налоги одинаково.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "zones",
+     "name": "Особые экономические зоны",
+     "description": "В отдельных зонах налог на прибыль ниже.",
+     "effects": {
+      "revenue.cit": -0.08,
+      "potential_growth": 0.1,
+      "index.corruption": 1
+     },
+     "attitudes": {
+      "capitalists": 2,
+      "skilled": 1,
+      "small_business": -1
+     }
+    },
+    {
+     "id": "broad",
+     "name": "Широкие льготы",
+     "description": "Крупные инвесторы почти не платят налог на прибыль.",
+     "effects": {
+      "revenue.cit": -0.25,
+      "potential_growth": 0.15,
+      "capitalist_take": 0.03,
+      "index.corruption": 3
+     },
+     "attitudes": {
+      "capitalists": 3,
+      "skilled": 1,
+      "small_business": -1,
+      "unskilled": -1,
+      "clerks": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "zones",
+    "income": {
+     "high": "none"
+    }
+   }
+  },
+  {
+   "id": "sin_taxes",
+   "group": "taxes",
+   "name": "Акцизы на алкоголь и табак",
+   "post": "health",
+   "description": "Насколько дорожают алкоголь и сигареты из-за налога.",
+   "drafting_months": 2,
+   "transition_months": 3,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "low",
+     "name": "Низкие",
+     "description": "Алкоголь и табак дешёвые.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "high",
+     "name": "Высокие",
+     "description": "Пьют и курят меньше, люди живут дольше, бюджет получает больше.",
+     "effects": {
+      "revenue.excise": 0.3,
+      "life_expectancy": 0.4
+     },
+     "attitudes": {
+      "unskilled": -2,
+      "skilled": -1,
+      "farmers": -1,
+      "professionals": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "low",
+    "income": {
+     "high": "high"
+    }
+   }
+  },
+  {
+   "id": "pension_system",
+   "group": "social",
+   "name": "Пенсионная система",
+   "post": "labor",
+   "description": "Пенсии платят из взносов нынешних работников или из личных накоплений.",
+   "drafting_months": 6,
+   "transition_months": 24,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "payg",
+     "name": "Распределительная",
+     "description": "Работающие платят взносы, из них платят пенсии.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "mixed",
+     "name": "Смешанная",
+     "description": "Часть взносов копится на личном счёте.",
+     "effects": {
+      "pension_replacement": -0.05,
+      "potential_growth": 0.05
+     },
+     "attitudes": {
+      "pensioners": -1,
+      "professionals": 1,
+      "capitalists": 1
+     }
+    },
+    {
+     "id": "funded",
+     "name": "Накопительная",
+     "description": "Пенсия — это личные накопления: сегодняшним пенсионерам достаётся меньше, у экономики больше инвестиций.",
+     "effects": {
+      "pension_replacement": -0.15,
+      "potential_growth": 0.1,
+      "capitalist_take": 0.02
+     },
+     "attitudes": {
+      "pensioners": -3,
+      "clerks": -1,
+      "unskilled": -1,
+      "professionals": 1,
+      "capitalists": 2
+     }
+    }
+   ],
+   "start": {
+    "default": "payg",
+    "countries": {
+     "CHL": "funded",
+     "AUS": "funded",
+     "KAZ": "funded",
+     "MEX": "mixed",
+     "PER": "mixed",
+     "COL": "mixed",
+     "SWE": "mixed"
+    }
+   }
+  },
+  {
+   "id": "retirement_age",
+   "group": "social",
+   "name": "Пенсионный возраст",
+   "post": "labor",
+   "description": "С какого возраста можно выйти на пенсию.",
+   "drafting_months": 4,
+   "transition_months": 36,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "a60",
+     "name": "60 лет",
+     "description": "Ранняя пенсия: люди рады, бюджету тяжело, работников меньше.",
+     "effects": {
+      "older_participation": -0.05,
+      "spending.social": 0.6
+     },
+     "attitudes": {
+      "pensioners": 2,
+      "skilled": 2,
+      "unskilled": 1,
+      "clerks": 1,
+      "capitalists": -1
+     }
+    },
+    {
+     "id": "a63",
+     "name": "63 года",
+     "description": "Чуть раньше обычного.",
+     "effects": {
+      "older_participation": -0.02,
+      "spending.social": 0.2
+     },
+     "attitudes": {
+      "skilled": 1,
+      "clerks": 1
+     }
+    },
+    {
+     "id": "a65",
+     "name": "65 лет",
+     "description": "Обычный возраст выхода на пенсию.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "a67",
+     "name": "67 лет",
+     "description": "Поздняя пенсия: бюджету легче, работников больше, но люди недовольны.",
+     "effects": {
+      "older_participation": 0.04,
+      "spending.social": -0.4
+     },
+     "attitudes": {
+      "skilled": -3,
+      "unskilled": -2,
+      "clerks": -2,
+      "pensioners": -1,
+      "capitalists": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "a65",
+    "income": {
+     "low": "a60",
+     "lower_middle": "a60"
+    },
+    "countries": {
+     "RUS": "a63",
+     "BLR": "a63",
+     "KAZ": "a63",
+     "FRA": "a63",
+     "UKR": "a60",
+     "CHN": "a60",
+     "VNM": "a60",
+     "ITA": "a67",
+     "DNK": "a67",
+     "NLD": "a67",
+     "GRC": "a67",
+     "NOR": "a67",
+     "ISL": "a67",
+     "DEU": "a67",
+     "USA": "a67"
+    }
+   }
+  },
+  {
+   "id": "unemployment_benefits",
+   "group": "social",
+   "name": "Пособие по безработице",
+   "post": "labor",
+   "description": "Сколько получает человек, потерявший работу.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "none",
+     "name": "Нет",
+     "description": "Безработные живут на помощь родных.",
+     "effects": {
+      "benefit_replacement": -0.6,
+      "natural_unemployment": -0.2
+     },
+     "attitudes": {
+      "unemployed": -3,
+      "unskilled": -1,
+      "capitalists": 1
+     }
+    },
+    {
+     "id": "minimal",
+     "name": "Минимальное",
+     "description": "Небольшое пособие на несколько месяцев.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "generous",
+     "name": "Щедрое",
+     "description": "Пособие почти как зарплата: безработным легче, но искать работу они не спешат.",
+     "effects": {
+      "benefit_replacement": 0.6,
+      "natural_unemployment": 0.5,
+      "spending.social": 0.4
+     },
+     "attitudes": {
+      "unemployed": 3,
+      "unskilled": 1,
+      "skilled": 1,
+      "capitalists": -1,
+      "small_business": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "minimal",
+    "income": {
+     "low": "none",
+     "high": "generous"
+    },
+    "countries": {
+     "USA": "minimal",
+     "JPN": "minimal",
+     "KOR": "minimal",
+     "AUS": "minimal",
+     "NZL": "minimal",
+     "CAN": "minimal"
+    }
+   }
+  },
+  {
+   "id": "child_benefits",
+   "group": "social",
+   "name": "Детские пособия",
+   "post": "labor",
+   "description": "Помогает ли государство семьям с детьми.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "none",
+     "name": "Нет",
+     "description": "Семьи растят детей сами.",
+     "effects": {
+      "fertility": -0.03
+     },
+     "attitudes": {}
+    },
+    {
+     "id": "moderate",
+     "name": "Умеренные",
+     "description": "Небольшие выплаты на детей.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "generous",
+     "name": "Щедрые",
+     "description": "Большие выплаты и льготы семьям: детей рождается больше.",
+     "effects": {
+      "fertility": 0.08,
+      "spending.social": 0.6
+     },
+     "attitudes": {
+      "unskilled": 1,
+      "skilled": 1,
+      "clerks": 1,
+      "farmers": 1,
+      "capitalists": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "moderate",
+    "income": {
+     "low": "none"
+    },
+    "countries": {
+     "HUN": "generous",
+     "POL": "generous",
+     "FRA": "generous"
+    }
+   }
+  },
+  {
+   "id": "basic_income",
+   "group": "social",
+   "name": "Безусловный базовый доход",
+   "post": "labor",
+   "description": "Ежемесячная выплата каждому жителю просто так.",
+   "drafting_months": 8,
+   "transition_months": 12,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "no",
+     "name": "Нет",
+     "description": "Помощь получают только нуждающиеся.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "yes",
+     "name": "Есть",
+     "description": "Деньги получает каждый. Бедность уходит, но это очень дорого, и часть людей работает меньше.",
+     "effects": {
+      "spending.social": 6.0,
+      "natural_unemployment": 0.5
+     },
+     "attitudes": {
+      "unemployed": 3,
+      "unskilled": 2,
+      "farmers": 2,
+      "pensioners": 1,
+      "capitalists": -3,
+      "professionals": -2,
+      "small_business": -1,
+      "officials": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "no"
+   }
+  },
+  {
+   "id": "health_system",
+   "group": "health",
+   "name": "Модель здравоохранения",
+   "post": "health",
+   "description": "Кто платит за лечение: сам человек, страховка или государство.",
+   "drafting_months": 6,
+   "transition_months": 24,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "private",
+     "name": "Частная",
+     "description": "Лечение за свой счёт: дешевле бюджету, хуже бедным.",
+     "effects": {
+      "spending.health": -1.0,
+      "life_expectancy": -0.5
+     },
+     "attitudes": {
+      "capitalists": 1,
+      "professionals": 1,
+      "unskilled": -2,
+      "unemployed": -2,
+      "pensioners": -2
+     }
+    },
+    {
+     "id": "insurance",
+     "name": "Страховая",
+     "description": "Обязательное медицинское страхование за счёт взносов.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "state",
+     "name": "Государственная",
+     "description": "Лечение бесплатно для всех за счёт бюджета.",
+     "effects": {
+      "spending.health": 1.0,
+      "life_expectancy": 0.5
+     },
+     "attitudes": {
+      "unskilled": 2,
+      "unemployed": 2,
+      "pensioners": 2,
+      "clerks": 1,
+      "capitalists": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "insurance",
+    "income": {
+     "low": "private"
+    },
+    "countries": {
+     "GBR": "state",
+     "SWE": "state",
+     "NOR": "state",
+     "DNK": "state",
+     "FIN": "state",
+     "ITA": "state",
+     "ESP": "state",
+     "PRT": "state",
+     "CAN": "state",
+     "CUB": "state",
+     "NZL": "state",
+     "IRL": "state",
+     "USA": "private"
+    }
+   }
+  },
+  {
+   "id": "tobacco_alcohol",
+   "group": "health",
+   "name": "Ограничения табака и алкоголя",
+   "post": "health",
+   "description": "Где и когда можно курить и продавать алкоголь.",
+   "drafting_months": 2,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "mild",
+     "name": "Мягкие",
+     "description": "Курить и покупать алкоголь можно почти везде.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "strict",
+     "name": "Строгие",
+     "description": "Запрет курения в общественных местах, продажа алкоголя по времени.",
+     "effects": {
+      "life_expectancy": 0.6,
+      "revenue.excise": 0.05
+     },
+     "attitudes": {
+      "unskilled": -1,
+      "skilled": -1,
+      "farmers": -1,
+      "professionals": 1,
+      "pensioners": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "mild",
+    "income": {
+     "high": "strict"
+    }
+   }
+  },
+  {
+   "id": "higher_education",
+   "group": "education",
+   "name": "Высшее образование",
+   "post": "education",
+   "description": "Платное или бесплатное обучение в вузах.",
+   "drafting_months": 5,
+   "transition_months": 48,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "paid",
+     "name": "Платное",
+     "description": "Учатся те, кто может заплатить.",
+     "effects": {
+      "tertiary": -0.2
+     },
+     "attitudes": {
+      "professionals": -1,
+      "clerks": -1,
+      "skilled": -1,
+      "capitalists": 1
+     }
+    },
+    {
+     "id": "mixed",
+     "name": "Бюджетные места",
+     "description": "Часть студентов учится бесплатно, часть — за деньги.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "free",
+     "name": "Бесплатное",
+     "description": "Учатся все, кто сдал экзамены: специалистов со временем больше.",
+     "effects": {
+      "tertiary": 0.2,
+      "spending.education": 0.5
+     },
+     "attitudes": {
+      "clerks": 2,
+      "skilled": 2,
+      "professionals": 1,
+      "unskilled": 1,
+      "capitalists": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "mixed",
+    "countries": {
+     "DEU": "free",
+     "FRA": "free",
+     "NOR": "free",
+     "FIN": "free",
+     "SWE": "free",
+     "DNK": "free",
+     "AUT": "free",
+     "CZE": "free",
+     "ARG": "free",
+     "BRA": "free",
+     "USA": "paid",
+     "GBR": "paid",
+     "JPN": "paid",
+     "KOR": "paid",
+     "CHL": "paid",
+     "AUS": "paid"
+    }
+   }
+  },
+  {
+   "id": "compulsory_schooling",
+   "group": "education",
+   "name": "Обязательное образование",
+   "post": "education",
+   "description": "Сколько лет ребёнок обязан учиться в школе.",
+   "drafting_months": 4,
+   "transition_months": 60,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "y9",
+     "name": "9 лет",
+     "description": "Многие уходят из школы рано.",
+     "effects": {
+      "tertiary": -0.1
+     },
+     "attitudes": {}
+    },
+    {
+     "id": "y11",
+     "name": "11 лет",
+     "description": "Обычная полная школа.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "y12",
+     "name": "12 лет",
+     "description": "Длинная школа: выпускники лучше подготовлены.",
+     "effects": {
+      "tertiary": 0.08,
+      "spending.education": 0.3
+     },
+     "attitudes": {
+      "clerks": 1,
+      "professionals": 1,
+      "farmers": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "y11",
+    "income": {
+     "low": "y9",
+     "high": "y12"
+    }
+   }
+  },
+  {
+   "id": "vocational_colleges",
+   "group": "education",
+   "name": "Профессиональные колледжи",
+   "post": "education",
+   "description": "Готовит ли государство рабочих и техников под нужды заводов.",
+   "drafting_months": 4,
+   "transition_months": 36,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "none",
+     "name": "Нет системы",
+     "description": "Рабочие учатся на месте.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "yes",
+     "name": "Колледжи под нужды отраслей",
+     "description": "Больше квалифицированных рабочих и техников.",
+     "effects": {
+      "vocational": 0.15,
+      "spending.education": 0.2
+     },
+     "attitudes": {
+      "skilled": 1,
+      "unskilled": 1,
+      "capitalists": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "none",
+    "income": {
+     "high": "yes"
+    }
+   }
+  },
+  {
+   "id": "press_freedom",
+   "group": "civil",
+   "name": "Свобода прессы",
+   "post": "justice",
+   "description": "Могут ли газеты, телевидение и блогеры критиковать власть.",
+   "drafting_months": 2,
+   "transition_months": 3,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "censorship",
+     "name": "Цензура",
+     "description": "Критика власти запрещена. Недовольство не видно, но и не исчезает.",
+     "effects": {
+      "index.press_freedom": -45,
+      "index.democracy": -10,
+      "radicalism": -2
+     },
+     "attitudes": {
+      "professionals": -3,
+      "clerks": -1,
+      "officials": 1
+     }
+    },
+    {
+     "id": "restricted",
+     "name": "Ограничена",
+     "description": "Крупные СМИ под контролем, критиков преследуют выборочно.",
+     "effects": {
+      "index.press_freedom": -20,
+      "index.democracy": -5,
+      "radicalism": -1
+     },
+     "attitudes": {
+      "professionals": -2,
+      "officials": 1
+     }
+    },
+    {
+     "id": "free",
+     "name": "Свободна",
+     "description": "СМИ свободно критикуют власть.",
+     "effects": {},
+     "attitudes": {}
+    }
+   ],
+   "start": {
+    "default": "free",
+    "regime": {
+     "hybrid": "restricted",
+     "authoritarian": "censorship"
+    }
+   }
+  },
+  {
+   "id": "assembly",
+   "group": "civil",
+   "name": "Свобода собраний",
+   "post": "interior",
+   "description": "Можно ли выходить на митинги и демонстрации.",
+   "drafting_months": 2,
+   "transition_months": 1,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "banned",
+     "name": "Запрещены",
+     "description": "Любые протесты разгоняют. Недовольство копится.",
+     "effects": {
+      "index.civil_liberties": -30,
+      "index.democracy": -10,
+      "radicalism": 3
+     },
+     "attitudes": {
+      "professionals": -2,
+      "skilled": -1,
+      "unskilled": -1,
+      "officials": 1
+     }
+    },
+    {
+     "id": "permit",
+     "name": "С разрешения властей",
+     "description": "Митинг нужно согласовать, и согласуют не всегда.",
+     "effects": {
+      "index.civil_liberties": -12,
+      "index.democracy": -4,
+      "radicalism": 1
+     },
+     "attitudes": {
+      "professionals": -1,
+      "officials": 1
+     }
+    },
+    {
+     "id": "free",
+     "name": "Свободны",
+     "description": "Люди свободно выходят на улицы.",
+     "effects": {},
+     "attitudes": {}
+    }
+   ],
+   "start": {
+    "default": "free",
+    "regime": {
+     "hybrid": "permit",
+     "authoritarian": "banned"
+    }
+   }
+  },
+  {
+   "id": "internet",
+   "group": "civil",
+   "name": "Интернет",
+   "post": "intelligence",
+   "description": "Свободен ли доступ к иностранным сайтам и соцсетям.",
+   "drafting_months": 3,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "free",
+     "name": "Свободный",
+     "description": "Доступ ко всем сайтам.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "filtered",
+     "name": "Фильтрация",
+     "description": "Часть сайтов и соцсетей заблокирована.",
+     "effects": {
+      "index.press_freedom": -10,
+      "index.civil_liberties": -8,
+      "potential_growth": -0.05
+     },
+     "attitudes": {
+      "professionals": -2,
+      "clerks": -1,
+      "officials": 1
+     }
+    },
+    {
+     "id": "sovereign",
+     "name": "Суверенный интернет",
+     "description": "Страна почти отрезана от мировой сети.",
+     "effects": {
+      "index.press_freedom": -25,
+      "index.civil_liberties": -15,
+      "potential_growth": -0.2
+     },
+     "attitudes": {
+      "professionals": -3,
+      "clerks": -2,
+      "small_business": -1,
+      "officials": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "free",
+    "regime": {
+     "authoritarian": "filtered"
+    },
+    "countries": {
+     "CHN": "sovereign",
+     "PRK": "sovereign",
+     "IRN": "sovereign",
+     "TKM": "sovereign",
+     "ERI": "sovereign"
+    }
+   }
+  },
+  {
+   "id": "anti_corruption",
+   "group": "civil",
+   "name": "Борьба с коррупцией",
+   "post": "prosecutor",
+   "description": "Есть ли независимое ведомство, которое ловит взяточников.",
+   "drafting_months": 4,
+   "transition_months": 12,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "none",
+     "name": "Нет",
+     "description": "Коррупцию никто всерьёз не ищет.",
+     "effects": {
+      "index.corruption": 8
+     },
+     "attitudes": {
+      "officials": 1,
+      "professionals": -1
+     }
+    },
+    {
+     "id": "agency",
+     "name": "Антикоррупционное ведомство",
+     "description": "Ведомство есть, работает как может.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "strong",
+     "name": "Ведомство с особыми полномочиями",
+     "description": "Независимые следователи и суды по коррупции.",
+     "effects": {
+      "index.corruption": -12,
+      "index.rule_of_law": 8,
+      "spending.courts": 0.1
+     },
+     "attitudes": {
+      "officials": -2,
+      "capitalists": -1,
+      "professionals": 2,
+      "clerks": 1,
+      "small_business": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "agency",
+    "income": {
+     "low": "none"
+    }
+   }
+  },
+  {
+   "id": "conscription",
+   "group": "security",
+   "name": "Воинская служба",
+   "post": "defense",
+   "description": "Как набирается армия.",
+   "drafting_months": 4,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "professional",
+     "name": "Контрактная армия",
+     "description": "Служат добровольцы за зарплату.",
+     "effects": {
+      "spending.defense": 0.2
+     },
+     "attitudes": {
+      "skilled": 1,
+      "unskilled": 1,
+      "clerks": 1
+     }
+    },
+    {
+     "id": "conscription",
+     "name": "Призыв",
+     "description": "Молодые мужчины служат обязательно.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "universal",
+     "name": "Всеобщая воинская обязанность",
+     "description": "Служат все, долго, с резервом до старости.",
+     "effects": {
+      "spending.defense": -0.1,
+      "potential_growth": -0.1
+     },
+     "attitudes": {
+      "unskilled": -2,
+      "skilled": -2,
+      "clerks": -1,
+      "professionals": -2,
+      "officials": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "professional",
+    "countries": {
+     "RUS": "conscription",
+     "UKR": "conscription",
+     "KOR": "conscription",
+     "TUR": "conscription",
+     "EGY": "conscription",
+     "IRN": "conscription",
+     "VNM": "conscription",
+     "SGP": "conscription",
+     "FIN": "conscription",
+     "EST": "conscription",
+     "GRC": "conscription",
+     "CHE": "conscription",
+     "NOR": "conscription",
+     "DNK": "conscription",
+     "AUT": "conscription",
+     "CYP": "conscription",
+     "BLR": "conscription",
+     "AZE": "conscription",
+     "ARM": "conscription",
+     "GEO": "conscription",
+     "KAZ": "conscription",
+     "UZB": "conscription",
+     "BRA": "conscription",
+     "LTU": "conscription",
+     "LVA": "conscription",
+     "SWE": "conscription",
+     "THA": "conscription",
+     "DZA": "conscription",
+     "MAR": "conscription",
+     "TWN": "conscription",
+     "CUB": "conscription",
+     "ISR": "universal",
+     "PRK": "universal",
+     "ERI": "universal"
+    }
+   }
+  },
+  {
+   "id": "police_powers",
+   "group": "security",
+   "name": "Полномочия полиции",
+   "post": "interior",
+   "description": "Что полиция может делать без решения суда.",
+   "drafting_months": 3,
+   "transition_months": 3,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "limited",
+     "name": "Ограниченные",
+     "description": "Полиция действует только по решению суда.",
+     "effects": {
+      "index.civil_liberties": 5,
+      "radicalism": 1
+     },
+     "attitudes": {
+      "professionals": 1,
+      "officials": -1
+     }
+    },
+    {
+     "id": "standard",
+     "name": "Обычные",
+     "description": "Обычные для страны правила.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "broad",
+     "name": "Широкие",
+     "description": "Задержания и обыски без суда.",
+     "effects": {
+      "index.civil_liberties": -15,
+      "index.rule_of_law": -5,
+      "radicalism": -2
+     },
+     "attitudes": {
+      "professionals": -2,
+      "officials": 2,
+      "capitalists": 1,
+      "pensioners": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "standard",
+    "regime": {
+     "authoritarian": "broad"
+    }
+   }
+  },
+  {
+   "id": "surveillance",
+   "group": "security",
+   "name": "Слежка спецслужб",
+   "post": "intelligence",
+   "description": "Могут ли спецслужбы читать переписку и слушать звонки.",
+   "drafting_months": 3,
+   "transition_months": 3,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "court",
+     "name": "Только по решению суда",
+     "description": "Слежка — только с разрешения суда.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "broad",
+     "name": "Широкая",
+     "description": "Спецслужбы следят за кем считают нужным.",
+     "effects": {
+      "index.civil_liberties": -12,
+      "index.democracy": -4,
+      "radicalism": -1
+     },
+     "attitudes": {
+      "professionals": -2,
+      "officials": 2
+     }
+    }
+   ],
+   "start": {
+    "default": "court",
+    "regime": {
+     "authoritarian": "broad"
+    }
+   }
+  },
+  {
+   "id": "immigration",
+   "group": "migration",
+   "name": "Иммиграция",
+   "post": "interior",
+   "description": "Пускает ли страна приезжих на работу.",
+   "drafting_months": 3,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "open",
+     "name": "Открытая",
+     "description": "Приезжих много: работников хватает, но местные рабочие недовольны конкуренцией.",
+     "effects": {
+      "migration": 0.5,
+      "natural_unemployment": 0.1
+     },
+     "attitudes": {
+      "capitalists": 2,
+      "professionals": 1,
+      "unskilled": -2,
+      "skilled": -1,
+      "pensioners": -1
+     }
+    },
+    {
+     "id": "quotas",
+     "name": "По квотам",
+     "description": "Приезжают по квотам под нужды экономики.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "closed",
+     "name": "Закрытая",
+     "description": "Приезжих почти нет.",
+     "effects": {
+      "migration": -0.6
+     },
+     "attitudes": {
+      "unskilled": 1,
+      "skilled": 1,
+      "pensioners": 1,
+      "capitalists": -2,
+      "professionals": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "quotas",
+    "countries": {
+     "ARE": "open",
+     "QAT": "open",
+     "KWT": "open",
+     "BHR": "open",
+     "SAU": "open",
+     "OMN": "open",
+     "SGP": "open",
+     "JPN": "closed",
+     "KOR": "closed",
+     "PRK": "closed",
+     "CHN": "closed"
+    }
+   }
+  },
+  {
+   "id": "environmental_standards",
+   "group": "ecology",
+   "name": "Экологические нормы",
+   "post": "energy",
+   "description": "Насколько строго ограничены выбросы заводов и электростанций.",
+   "drafting_months": 4,
+   "transition_months": 24,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "weak",
+     "name": "Слабые",
+     "description": "Заводам дешевле, людям — грязнее.",
+     "effects": {
+      "potential_growth": 0.05,
+      "life_expectancy": -0.3
+     },
+     "attitudes": {
+      "capitalists": 2,
+      "skilled": 1,
+      "professionals": -2
+     }
+    },
+    {
+     "id": "medium",
+     "name": "Средние",
+     "description": "Обычные нормы.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "strict",
+     "name": "Строгие",
+     "description": "Чище воздух и вода, но промышленности дороже.",
+     "effects": {
+      "potential_growth": -0.1,
+      "life_expectancy": 0.4
+     },
+     "attitudes": {
+      "professionals": 2,
+      "clerks": 1,
+      "capitalists": -2,
+      "skilled": -1,
+      "farmers": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "medium",
+    "income": {
+     "low": "weak",
+     "high": "strict"
+    }
+   }
+  },
+  {
+   "id": "carbon_tax",
+   "group": "ecology",
+   "name": "Налог на выбросы углерода",
+   "post": "energy",
+   "description": "Платят ли за выбросы парниковых газов.",
+   "drafting_months": 3,
+   "transition_months": 12,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "none",
+     "name": "Нет",
+     "description": "Выбросы бесплатны.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "moderate",
+     "name": "Умеренный",
+     "description": "Топливо и электричество немного дороже, бюджет получает больше.",
+     "effects": {
+      "revenue.excise": 0.15,
+      "potential_growth": -0.05
+     },
+     "attitudes": {
+      "professionals": 1,
+      "capitalists": -1,
+      "farmers": -1,
+      "skilled": -1
+     }
+    },
+    {
+     "id": "high",
+     "name": "Высокий",
+     "description": "Ощутимо дороже бензин и электричество.",
+     "effects": {
+      "revenue.excise": 0.4,
+      "potential_growth": -0.12
+     },
+     "attitudes": {
+      "professionals": 2,
+      "capitalists": -2,
+      "farmers": -2,
+      "skilled": -2,
+      "unskilled": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "none",
+    "countries": {
+     "NOR": "moderate",
+     "CHE": "moderate",
+     "FIN": "moderate",
+     "DNK": "moderate",
+     "FRA": "moderate",
+     "DEU": "moderate",
+     "NLD": "moderate",
+     "IRL": "moderate",
+     "CAN": "moderate",
+     "GBR": "moderate",
+     "SWE": "high"
+    }
+   }
+  },
+  {
+   "id": "term_limits",
+   "group": "constitution",
+   "name": "Сроки главы государства",
+   "post": "chief_of_staff",
+   "description": "Сколько раз один человек может возглавлять страну.",
+   "drafting_months": 4,
+   "transition_months": 1,
+   "constitutional": true,
+   "variants": [
+    {
+     "id": "one",
+     "name": "Один срок",
+     "description": "Глава меняется после каждого срока.",
+     "effects": {
+      "index.democracy": 3
+     },
+     "attitudes": {
+      "professionals": 1
+     }
+    },
+    {
+     "id": "two",
+     "name": "Два срока",
+     "description": "Не больше двух сроков подряд.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "none",
+     "name": "Без ограничений",
+     "description": "Один человек может править сколько угодно.",
+     "effects": {
+      "index.democracy": -10
+     },
+     "attitudes": {
+      "professionals": -2,
+      "clerks": -1,
+      "officials": 1
+     }
+    }
+   ],
+   "start": {
+    "default": "two",
+    "regime": {
+     "authoritarian": "none"
+    },
+    "system": {
+     "parliamentary_republic": "none",
+     "constitutional_monarchy": "none"
+    },
+    "countries": {
+     "MEX": "one",
+     "KOR": "one",
+     "PHL": "one",
+     "PRY": "one",
+     "GTM": "one",
+     "HND": "one",
+     "COL": "one"
+    }
+   }
+  },
+  {
+   "id": "electoral_system",
+   "group": "constitution",
+   "name": "Избирательная система",
+   "post": "chief_of_staff",
+   "description": "Как распределяются места в парламенте.",
+   "drafting_months": 4,
+   "transition_months": 12,
+   "constitutional": true,
+   "variants": [
+    {
+     "id": "majoritarian",
+     "name": "Мажоритарная",
+     "description": "В каждом округе побеждает один кандидат: обычно две большие партии.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "mixed",
+     "name": "Смешанная",
+     "description": "Половина мест по округам, половина по спискам партий.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "proportional",
+     "name": "Пропорциональная",
+     "description": "Места по доле голосов: партий больше, нужны коалиции.",
+     "effects": {
+      "index.democracy": 2
+     },
+     "attitudes": {}
+    }
+   ],
+   "start": {
+    "default": "proportional",
+    "countries": {
+     "USA": "majoritarian",
+     "GBR": "majoritarian",
+     "CAN": "majoritarian",
+     "IND": "majoritarian",
+     "FRA": "majoritarian",
+     "AUS": "majoritarian",
+     "RUS": "mixed",
+     "JPN": "mixed",
+     "KOR": "mixed",
+     "DEU": "mixed",
+     "MEX": "mixed",
+     "HUN": "mixed",
+     "ITA": "mixed",
+     "TWN": "mixed"
+    }
+   }
+  },
+  {
+   "id": "emergency_powers",
+   "group": "constitution",
+   "name": "Чрезвычайное положение",
+   "post": "chief_of_staff",
+   "description": "Кто может ввести чрезвычайное положение и править без парламента.",
+   "drafting_months": 3,
+   "transition_months": 1,
+   "constitutional": true,
+   "variants": [
+    {
+     "id": "parliament",
+     "name": "Только с согласия парламента",
+     "description": "Чрезвычайное положение утверждает парламент.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "decree",
+     "name": "Указом главы",
+     "description": "Глава может ввести его сам.",
+     "effects": {
+      "index.democracy": -6,
+      "index.rule_of_law": -6
+     },
+     "attitudes": {
+      "officials": 1,
+      "professionals": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "parliament",
+    "regime": {
+     "authoritarian": "decree"
+    }
+   }
+  },
+  {
+   "id": "judicial_independence",
+   "group": "constitution",
+   "name": "Независимость судов",
+   "post": "justice",
+   "description": "Подчиняются ли судьи власти.",
+   "drafting_months": 5,
+   "transition_months": 24,
+   "constitutional": true,
+   "variants": [
+    {
+     "id": "dependent",
+     "name": "Суды зависимы",
+     "description": "Суды решают так, как нужно власти.",
+     "effects": {
+      "index.judicial_independence": -40,
+      "index.rule_of_law": -25,
+      "index.corruption": 8
+     },
+     "attitudes": {
+      "officials": 2,
+      "capitalists": -1,
+      "professionals": -2,
+      "small_business": -1
+     }
+    },
+    {
+     "id": "partial",
+     "name": "Частично независимы",
+     "description": "В обычных делах суды независимы, в политических — нет.",
+     "effects": {
+      "index.judicial_independence": -15,
+      "index.rule_of_law": -8,
+      "index.corruption": 3
+     },
+     "attitudes": {
+      "officials": 1,
+      "professionals": -1
+     }
+    },
+    {
+     "id": "independent",
+     "name": "Независимы",
+     "description": "Судьи несменяемы и решают по закону.",
+     "effects": {},
+     "attitudes": {}
+    }
+   ],
+   "start": {
+    "default": "independent",
+    "regime": {
+     "hybrid": "partial",
+     "authoritarian": "dependent"
+    }
+   }
+  }
+ ]
+}

@@ -40,6 +40,8 @@ public sealed class CountryDemography
     public double UrbanPct0 { get; set; }
     /// <summary>Рост доли горожан на старте, процентных пунктов в год.</summary>
     public double UrbanChange { get; set; }
+    /// <summary>Сколько лет жизни добавили законы в прошлом году (чтобы без прогноза прибавлять только изменение).</summary>
+    public double LifeFromLaws { get; set; }
     /// <summary>Рост рабочей силы, годовой темп по последнему месяцу.</summary>
     public double LaborGrowth { get; set; }
 

@@ -1,5 +1,6 @@
 using Politeconomy.Sim.Data;
 using Politeconomy.Sim.Engine;
+using Politeconomy.Sim.Laws;
 using Politeconomy.Sim.Model;
 using Politeconomy.Sim.Society.Systems;
 
@@ -36,7 +37,7 @@ public static class SocietyModel
             s.Heads = composition.Heads;
             s.Size = composition.Sizes;
             var e = economy[country.Id];
-            var flows = ClassIncome.Compute(data, classes, e, economy, composition);
+            var flows = ClassIncome.Compute(data, classes, e, economy, composition, key => Laws.LawModel.Effect(world, country.Id, key));
             s.Scale = CalibrateScale(country, e, flows.Disposable, classes);
             ClassesSystem.UpdateLiving(world, e, s, flows.Disposable, classes, b);
             for (var k = 0; k < ClassIds.Count; k++)
@@ -63,8 +64,11 @@ public static class SocietyModel
         var d = world.Demography![country.Id];
         var richer = Math.Max(0.1, IncomeGrowth(e));
         var selfEmployed = Math.Clamp(S("self_employed_pct", 30) / 100, 0, 0.98);
-        var tertiary = Math.Min(b.TertiaryCeiling, S("tertiary_enrollment_pct", 40) * Math.Pow(richer, b.TertiaryGrowth));
-        return ClassComposition.Compute(world.Data.Industries.Industries, e, d, selfEmployed, tertiary, b, world.Data.Demography.OlderParticipation);
+        var tertiary = Math.Min(b.TertiaryCeiling, S("tertiary_enrollment_pct", 40) * Math.Pow(richer, b.TertiaryGrowth)
+                                                   * Math.Max(0, 1 + LawModel.Effect(world, country.Id, "tertiary")));
+        return ClassComposition.Compute(world.Data.Industries.Industries, e, d, selfEmployed, tertiary, b,
+            Demography.DemographyModel.OlderParticipation(world, country.Id),
+            LawModel.Effect(world, country.Id, "small_business"), LawModel.Effect(world, country.Id, "vocational"));
     }
 
     /// <summary>Во сколько раз реальный ВВП на душу выше стартового.</summary>

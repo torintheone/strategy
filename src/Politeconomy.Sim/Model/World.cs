@@ -108,6 +108,9 @@ public sealed class World
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 
+    /// <summary>Законы стран: действующие варианты, законопроекты, поправки к модели; создаются <see cref="Laws.LawModel.Setup"/>.</summary>
+    public Laws.WorldLaws? Laws { get; set; }
+
     /// <summary>Журнал важных событий: отставки, назначения, голосования. Новые — в конце.</summary>
     public List<JournalEntry> Journal { get; set; } = [];
 

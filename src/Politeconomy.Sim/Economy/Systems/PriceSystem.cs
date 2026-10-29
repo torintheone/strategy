@@ -1,5 +1,6 @@
 using Politeconomy.Sim.Data;
 using Politeconomy.Sim.Engine;
+using Politeconomy.Sim.Laws;
 using Politeconomy.Sim.Model;
 
 namespace Politeconomy.Sim.Economy.Systems;
@@ -27,12 +28,15 @@ public sealed class PriceSystem : EconomySystem
             var depreciation = Math.Log(e.ExchangeRate / e.YearAgo(e.ExchangeHistory));
             e.DemandPart = b.DemandPressure * e.Gap;
             e.ImportPart = b.ImportPassThrough * Math.Min(e.Imports, 1) * (depreciation + worldInflation - e.Expectations);
-            e.CommodityPart = e.FoodWeight * b.FoodPassThrough * food + b.EnergyWeight * b.EnergyPassThrough * energy;
+            // Контроль цен и льготный НДС ослабляют передачу мировых цен на еду (поправка законов — доля).
+            var foodPass = b.FoodPassThrough * Math.Max(0, 1 + LawModel.Effect(world, country.Id, "food_inflation"));
+            e.CommodityPart = e.FoodWeight * foodPass * food + b.EnergyWeight * b.EnergyPassThrough * energy;
             e.InflationPull = e.Expectations + e.DemandPart + e.ImportPart + e.CommodityPart;
 
             e.Inflation += b.Adjustment * (e.InflationPull - e.Inflation) + Shock(world, economy, b.Shock);
             e.Inflation = Math.Clamp(e.Inflation, b.InflationMin, b.InflationMax);
-            var anchor = e.Credibility * e.InflationTarget + (1 - e.Credibility) * e.Inflation;
+            var credibility = Math.Clamp(e.Credibility + LawModel.Effect(world, country.Id, "credibility"), 0.05, 0.95);
+            var anchor = credibility * e.InflationTarget + (1 - credibility) * e.Inflation;
             e.Expectations += b.Expectations * (anchor - e.Expectations);
             e.Price *= Math.Pow(1 + e.Inflation, 1.0 / 12);
         }

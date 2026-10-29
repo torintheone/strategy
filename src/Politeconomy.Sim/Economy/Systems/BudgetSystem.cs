@@ -1,5 +1,6 @@
 using Politeconomy.Sim.Data;
 using Politeconomy.Sim.Engine;
+using Politeconomy.Sim.Laws;
 using Politeconomy.Sim.Model;
 
 namespace Politeconomy.Sim.Economy.Systems;
@@ -22,6 +23,8 @@ public sealed class BudgetSystem : EconomySystem
         var b = balance.Budget;
         var reference = Reference(economy);
         var socialIndex = spending.Select((s, k) => (s, k)).FirstOrDefault(t => t.s.Id == "social").k;
+        var revenueKeys = revenues.Select(r => "revenue." + r.Id).ToArray();
+        var spendingKeys = spending.Select(s => "spending." + s.Id).ToArray();
 
         foreach (var country in world.Countries)
         {
@@ -39,12 +42,14 @@ public sealed class BudgetSystem : EconomySystem
             e.NominalGdp = nominal;
             e.ResourceGdp = resources;
 
+            // Законы меняют собираемость налогов (доля) и добавляют расходы (% ВВП) поверх бюджетного плана.
             for (var k = 0; k < revenues.Count; k++)
-                e.Revenue[k] = e.RevenueRate[k] * EconomyCalibration.RevenueBase(revenues[k], e, e.Gap);
+                e.Revenue[k] = e.RevenueRate[k] * Math.Max(0, 1 + LawModel.Effect(world, country.Id, revenueKeys[k]))
+                               * EconomyCalibration.RevenueBase(revenues[k], e, e.Gap);
 
             var structural = e.StructuralGdp;
             for (var k = 0; k < spending.Count; k++)
-                e.Spending[k] = e.SpendingPlan[k] * structural;
+                e.Spending[k] = Math.Max(0, e.SpendingPlan[k] + LawModel.Effect(world, country.Id, spendingKeys[k]) / 100) * structural;
             var stabilizer = EconomyBalance.ByIncome(b.Stabilizers, e.IncomeIndex) * (e.Unemployment - e.NaturalUnemployment) * structural;
             e.Spending[socialIndex] = Math.Max(0.5 * e.Spending[socialIndex], e.Spending[socialIndex] + stabilizer);
 
@@ -101,6 +106,10 @@ public sealed class BudgetSystem : EconomySystem
             _ => e.Price,
         };
     }
+
+    /// <summary>Сколько законы добавляют к расходам бюджета, в долях ВВП (сумма по статьям).</summary>
+    public static double LawSpending(World world, string country, IReadOnlyList<SpendingRecord> spending) =>
+        spending.Sum(s => LawModel.Effect(world, country, "spending." + s.Id)) / 100;
 
     /// <summary>Курс прошлого месяца — последняя запись в истории.</summary>
     static double LastExchange(CountryEconomy e)

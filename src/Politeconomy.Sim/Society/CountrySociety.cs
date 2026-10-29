@@ -44,6 +44,7 @@ public sealed class CountrySociety
     public double MoodLevel { get; set; }
     public double MoodFear { get; set; }
     public double MoodInflation { get; set; }
+    public double MoodLaws { get; set; }
 
     [JsonIgnore]
     public double Total => Size.Sum();

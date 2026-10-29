@@ -1,5 +1,6 @@
 using Politeconomy.Sim.Data;
 using Politeconomy.Sim.Engine;
+using Politeconomy.Sim.Laws;
 using Politeconomy.Sim.Model;
 
 namespace Politeconomy.Sim.Economy.Systems;
@@ -17,10 +18,11 @@ public sealed class RatingSystem : EconomySystem
     protected override void Run(World world, WorldEconomy economy, EconomyBalance balance)
     {
         foreach (var country in world.Countries)
-            Assess(balance, economy, economy[country.Id]);
+            Assess(balance, economy, economy[country.Id], LawModel.Effect(world, country.Id, "spread") / 100);
     }
 
-    public static void Assess(EconomyBalance balance, WorldEconomy economy, CountryEconomy e)
+    /// <summary>Рейтинг и премия за риск. ExtraSpread — надбавка от законов (валютный контроль), доля.</summary>
+    public static void Assess(EconomyBalance balance, WorldEconomy economy, CountryEconomy e, double extraSpread = 0)
     {
         var b = balance.Rating;
         var ppp = e.Ppp0 * (e.RealGdp / e.RealGdp0) / (e.Population / e.Population0);
@@ -42,7 +44,7 @@ public sealed class RatingSystem : EconomySystem
             score = Math.Min(score, cap);
         }
         e.Rating = Math.Clamp(score, 0, 21);
-        e.Spread = Math.Min(b.SpreadMax, b.SpreadBase * Math.Exp(b.SpreadSlope * (21 - e.Rating)));
+        e.Spread = Math.Min(b.SpreadMax, b.SpreadBase * Math.Exp(b.SpreadSlope * (21 - e.Rating))) + extraSpread;
     }
 
     /// <summary>Год по календарю модели (старт — 2026, во время разогрева календарь стоит).</summary>

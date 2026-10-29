@@ -39,7 +39,8 @@ public sealed class VitalRatesSystem : ISimSystem
                 d.BaseFertility += speed * (b.FertilityFloor - d.BaseFertility);
             }
             d.BaseFertility = Math.Clamp(d.BaseFertility, 0.5, 8);
-            d.Fertility = d.BaseFertility * (1 - b.FertilityUnemployment * UnemploymentGap(world, country.Id));
+            d.Fertility = d.BaseFertility * (1 - b.FertilityUnemployment * UnemploymentGap(world, country.Id))
+                          * Math.Max(0.5, 1 + Laws.LawModel.Effect(world, country.Id, "fertility"));
 
             if (path != null && year <= lastPathYear)
             {
@@ -51,10 +52,22 @@ public sealed class VitalRatesSystem : ISimSystem
                 var room = Math.Clamp((85 - d.LifeExpectancy) / 25, 0, 1);
                 d.LifeExpectancy += b.LifeGainMin + b.LifeGainExtra * room;
             }
-            d.LifeExpectancy = Math.Clamp(d.LifeExpectancy, 30, 95);
+            d.LifeExpectancy = Math.Clamp(d.LifeExpectancy + LifeFromLaws(world, d, country.Id, path != null && year <= lastPathYear), 30, 95);
             d.InfantMortality = Math.Max(1.5, d.InfantMortality0 * Math.Exp(-0.05 * (d.LifeExpectancy - d.LifeExpectancy0)));
             DemographyModel.UpdateMortality(d, b);
         }
+    }
+
+    /// <summary>
+    /// Поправка законов к продолжительности жизни (медицина, акцизы, экология): прибавляется к прогнозу каждый год;
+    /// без прогноза жизнь удлиняется от своего прошлого значения, поэтому туда идёт только изменение поправки.
+    /// </summary>
+    static double LifeFromLaws(World world, CountryDemography d, string id, bool usesPath)
+    {
+        var effect = Laws.LawModel.Effect(world, id, "life_expectancy");
+        var change = effect - d.LifeFromLaws;
+        d.LifeFromLaws = effect;
+        return usesPath ? effect : change;
     }
 
     /// <summary>Безработица выше естественной, в процентных пунктах.</summary>

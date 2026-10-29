@@ -262,5 +262,26 @@
    "noise": 0.03,
    "constitutional": 0.6667
   }
+ },
+ "laws": {
+  "_comment": "Законы и институты (MODEL.md, «Законы» и «Институты»). Удовлетворённость класса меняется на attitude_weight за единицу отношения к закону. Одобрение законопроекта = 0,5 + 0,5·th(сдвиг отношения, взвешенный по влиянию / support_scale). Подготовка = срок × (drafting_base − компетентность министра / 100) в пределах drafting_min…drafting_max, у реформатора × reformer_speed. Индексы институтов на старте — по режиму (демократия, гибридный, авторитарный); коррупция — по группе дохода плюс поправка режима. Одобрение власти = approval_base + approval_satisfaction × (удовлетворённость − 50) + approval_popularity × (популярность главы − 45).",
+  "attitude_weight": 1.5,
+  "support_scale": 1.0,
+  "drafting_base": 1.6,
+  "drafting_min": 0.6,
+  "drafting_max": 1.4,
+  "reformer_speed": 0.75,
+  "history": 12,
+  "democracy": [85, 50, 15],
+  "rule_of_law": [75, 42, 25],
+  "judicial_independence": [80, 40, 15],
+  "press_freedom": [80, 40, 12],
+  "civil_liberties": [85, 50, 20],
+  "corruption": [70, 60, 48, 28],
+  "corruption_regime": [-6, 2, 10],
+  "corruption_ministers": 0.3,
+  "approval_base": 50,
+  "approval_satisfaction": 1.5,
+  "approval_popularity": 0.25
  }
 }

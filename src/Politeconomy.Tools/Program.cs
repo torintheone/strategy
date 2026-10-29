@@ -10,8 +10,9 @@ using Politeconomy.Sim.Text;
 // Консольные инструменты Politeconomy: проверка данных и прогоны мира без графики.
 //   validate            — проверить data/*.json (ссылки, диапазоны, палитры, коэффициенты)
 //   run [--years N]     — прогнать мир N лет без графики и показать время шага
-//   check [--years N]   — прогон и проверки правдоподобия (по умолчанию 50 лет):
-//                         разогрев не уводит показатели от данных, мировой рост 1–5% в год, нет NaN и выходов за диапазоны
+//   check [--years N] [--random-laws] — прогон и проверки правдоподобия (по умолчанию 50 лет):
+//                         разогрев не уводит показатели от данных, мировой рост 1–5% в год, нет NaN и выходов за диапазоны;
+//                         с --random-laws у каждой страны случайные варианты всех законов (проверка устойчивости модели)
 //   report [--years N] [--country ISO] — таблица показателей стран по годам
 //   classes [--years N] [--country ISO] — классы стран: численность, доходы, уровень жизни, настроение, влияние
 //   government [--country ISO] [--years N] — правительство и парламент страны, журнал отставок
@@ -77,6 +78,18 @@ int Run(string mode)
     var sim = start.Simulation;
     var world = sim.World;
     Console.WriteLine($"Новая партия с разогревом {data.Scenario.WarmupMonths} мес. за {timer.Elapsed.TotalSeconds:F1} с.");
+    if (args.Contains("--random-laws"))
+    {
+        var random = new DeterministicRandom(12345);
+        foreach (var country in world.Countries)
+        {
+            var laws = world.Laws![country.Id];
+            foreach (var law in data.Laws.Laws)
+                laws.Current[law.Id] = law.Variants[random.Next(0, law.Variants.Count)].Id;
+            Politeconomy.Sim.Laws.LawModel.Recompute(data, laws, world.Date);
+        }
+        Console.WriteLine("У всех стран случайные варианты законов.");
+    }
     var failures = 0;
     if (start.Warmup is { } warmup)
         failures += WarmupCheck(warmup, mode == "check");

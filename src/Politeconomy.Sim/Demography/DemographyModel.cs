@@ -96,6 +96,10 @@ public static class DemographyModel
         d.MortalityMale = MortalityModel.Rates(d.LifeExpectancyMale, d.InfantMortality * femaleShare * b.InfantMaleExcess, b);
     }
 
+    /// <summary>Доля людей 65+ в рабочей силе с поправкой законов о пенсионном возрасте.</summary>
+    public static double OlderParticipation(World world, string country) =>
+        Math.Clamp(world.Data.Demography.OlderParticipation + Laws.LawModel.Effect(world, country, "older_participation"), 0, 0.6);
+
     /// <summary>Значение прогноза на год: линейно между точками, за краями — крайнее значение.</summary>
     public static double PathValue(IReadOnlyList<int> years, IReadOnlyList<double> values, double year)
     {

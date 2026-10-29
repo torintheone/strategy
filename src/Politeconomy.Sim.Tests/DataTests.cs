@@ -114,6 +114,7 @@ public class DataTests
         Classes = d.Classes,
         Government = d.Government,
         Cultures = d.Cultures,
+        Laws = d.Laws,
         Benchmarks = d.Benchmarks,
     };
 }

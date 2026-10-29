@@ -23,6 +23,7 @@ public sealed class GameData
     public required PopulationFile Population { get; init; }
     public required ClassesFile Classes { get; init; }
     public required GovernmentFile Government { get; init; }
+    public required LawsFile Laws { get; init; }
     /// <summary>Культуры имён из папки data/names/, по одной на файл.</summary>
     public required IReadOnlyList<CultureRecord> Cultures { get; init; }
     /// <summary>Ориентиры для проверок правдоподобия (прогноз ООН); в игре не используются.</summary>
@@ -47,6 +48,14 @@ public sealed class GameData
     public GovernmentBalance GovernmentBalance => Balance.Government ?? DefaultGovernment;
 
     static readonly GovernmentBalance DefaultGovernment = new();
+
+    /// <summary>Коэффициенты законов и институтов; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public LawsBalance LawsBalance => Balance.Laws ?? DefaultLaws;
+
+    static readonly LawsBalance DefaultLaws = new();
+
+    public LawRecord Law(string id) =>
+        Laws.Laws.FirstOrDefault(l => l.Id == id) ?? throw new KeyNotFoundException($"Нет закона «{id}» в data/laws.json");
 
     public IndicatorDef Indicator(string id) =>
         Indicators.Indicators.FirstOrDefault(i => i.Id == id)
@@ -75,6 +84,7 @@ public sealed class GameData
             Population = Read(directory, "population.json", ctx.PopulationFile),
             Classes = Read(directory, "classes.json", ctx.ClassesFile),
             Government = Read(directory, "government.json", ctx.GovernmentFile),
+            Laws = Read(directory, "laws.json", ctx.LawsFile),
             Cultures = ReadCultures(directory),
             Benchmarks = File.Exists(Path.Combine(directory, "benchmarks", "population.json"))
                 ? Read(directory, Path.Combine("benchmarks", "population.json"), ctx.BenchmarksFile)

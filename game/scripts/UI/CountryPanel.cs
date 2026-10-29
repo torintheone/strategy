@@ -23,6 +23,8 @@ public partial class CountryPanel : GlassPanel
             "death_rate", "net_migration_rate", "age_0_14_pct", "age_65_plus_pct", "urban_pct", "labor_force", "gini",
             "electricity_access_pct"]),
         ("Классы", ["standard_of_living", "satisfaction", "radicalism"]),
+        ("Власть", ["approval_pct", "legitimacy", "democracy_index", "rule_of_law_index", "judicial_independence_index",
+            "press_freedom_index", "civil_liberties_index", "corruption_index", "government_effectiveness"]),
     ];
 
     GameData _data = null!;
