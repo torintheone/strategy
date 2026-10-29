@@ -34,6 +34,8 @@ public static partial class DataValidator
                 add("government.json", $"пост {p.Id} встречается дважды");
             foreach (var s in p.Spending.Where(s => !spending.Contains(s)))
                 add("government.json", $"пост {p.Id}: статьи расходов «{s}» нет в budget.json");
+            foreach (var s in (p.Stats ?? []).Where(s => data.Indicators.Indicators.All(i => i.Id != s)))
+                add("government.json", $"пост {p.Id}: показателя «{s}» нет в indicators.json");
         }
         if (g.Posts.Count != 18)
             add("government.json", $"постов в правительстве {g.Posts.Count}, по ТЗ — 18");
@@ -44,6 +46,23 @@ public static partial class DataValidator
                 add("government.json", $"черта {t.Id} встречается дважды");
             if (t.Weight <= 0)
                 add("government.json", $"черта {t.Id}: вес должен быть больше нуля");
+        }
+
+        // --- history.json
+        var h = data.History;
+        if (h.LastYear < h.FirstYear)
+            add("history.json", "последний год раньше первого");
+        foreach (var (country, rows) in h.Countries)
+        {
+            if (!ids.Contains(country))
+                add("history.json", $"страна {country} не найдена в countries.json");
+            foreach (var (key, row) in rows)
+            {
+                if (row.Count != h.LastYear - h.FirstYear + 1)
+                    add("history.json", $"{country}.{key}: значений не столько, сколько лет");
+                if (data.Indicators.Indicators.All(i => i.Id != key))
+                    add("history.json", $"{country}: показателя «{key}» нет в indicators.json");
+            }
         }
 
         // --- names/*.json: у каждой страны ровно одна культура, имена — кириллицей

@@ -190,5 +190,6 @@ public sealed record CityRecord(
 [JsonSerializable(typeof(BenchmarksFile))]
 [JsonSerializable(typeof(GovernmentFile))]
 [JsonSerializable(typeof(LawsFile))]
+[JsonSerializable(typeof(HistoryFile))]
 [JsonSerializable(typeof(CultureRecord))]
 internal sealed partial class DataJsonContext : JsonSerializerContext;

@@ -28,6 +28,14 @@ public partial class RailButton : Button
                     DrawLine(c + new Vector2(i * 7, -1), c + new Vector2(i * 7, 8), color, w + 0.6f, true);
                 DrawLine(c + new Vector2(-12, 11), c + new Vector2(12, 11), color, w, true);
                 break;
+            case "ministries":
+                // Портфель: корпус, ручка, полоса с застёжкой.
+                DrawPolyline([c + new Vector2(-11, -5), c + new Vector2(11, -5), c + new Vector2(11, 10), c + new Vector2(-11, 10),
+                    c + new Vector2(-11, -5)], color, w, true);
+                DrawPolyline([c + new Vector2(-4, -5), c + new Vector2(-4, -9), c + new Vector2(4, -9), c + new Vector2(4, -5)], color, w, true);
+                DrawLine(c + new Vector2(-11, 1), c + new Vector2(11, 1), color, w, true);
+                DrawRect(new Rect2(c + new Vector2(-2.5f, -0.5f), new Vector2(5, 4)), color);
+                break;
             case "laws":
                 // Документ с загнутым углом и строками.
                 DrawPolyline([c + new Vector2(-8, -11), c + new Vector2(4, -11), c + new Vector2(9, -6), c + new Vector2(9, 11),

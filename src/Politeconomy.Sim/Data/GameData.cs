@@ -24,6 +24,8 @@ public sealed class GameData
     public required ClassesFile Classes { get; init; }
     public required GovernmentFile Government { get; init; }
     public required LawsFile Laws { get; init; }
+    /// <summary>История показателей за 10 лет до старта (для графиков ведомств).</summary>
+    public required HistoryFile History { get; init; }
     /// <summary>Культуры имён из папки data/names/, по одной на файл.</summary>
     public required IReadOnlyList<CultureRecord> Cultures { get; init; }
     /// <summary>Ориентиры для проверок правдоподобия (прогноз ООН); в игре не используются.</summary>
@@ -90,6 +92,7 @@ public sealed class GameData
             Classes = Read(directory, "classes.json", ctx.ClassesFile),
             Government = Read(directory, "government.json", ctx.GovernmentFile),
             Laws = Read(directory, "laws.json", ctx.LawsFile),
+            History = Read(directory, "history.json", ctx.HistoryFile),
             Cultures = ReadCultures(directory),
             Benchmarks = File.Exists(Path.Combine(directory, "benchmarks", "population.json"))
                 ? Read(directory, Path.Combine("benchmarks", "population.json"), ctx.BenchmarksFile)

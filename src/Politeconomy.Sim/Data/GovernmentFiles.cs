@@ -12,7 +12,7 @@ public sealed record GovernmentFile(
 /// <summary>Тип политической системы: как называется глава и какой у страны парламент (real, formal, none).</summary>
 public sealed record SystemRecord(string Id, string Leader, string Parliament, string ParliamentName);
 
-/// <summary>Пост в правительстве и его ведомство. Spending — статьи бюджета ведомства.</summary>
+/// <summary>Пост в правительстве и его ведомство. Spending — статьи бюджета ведомства, Stats — показатели на экране ведомства.</summary>
 public sealed record PostRecord(
     string Id,
     string Name,
@@ -20,7 +20,8 @@ public sealed record PostRecord(
     string Short,
     IReadOnlyList<string> Spending,
     bool Security = false,
-    bool Finance = false);
+    bool Finance = false,
+    IReadOnlyList<string>? Stats = null);
 
 /// <summary>Черта персонажа: прибавки к его качествам и как часто она встречается.</summary>
 public sealed record TraitRecord(

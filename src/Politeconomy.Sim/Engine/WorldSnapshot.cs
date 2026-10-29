@@ -47,8 +47,17 @@ public sealed class WorldSnapshot
             }
             var government = world.Government?.Countries.GetValueOrDefault(c.Id) is { } g ? GovernmentSnapshot.Capture(world, c, g) : null;
             var laws = world.Laws?.Countries.GetValueOrDefault(c.Id) is { } l ? LawsSnapshot.Capture(world.Date, l) : null;
+            var history = world.History is { } h && h.Values.TryGetValue(c.Id, out var rows) ? HistorySnapshot.Capture(h, rows) : null;
+            double[]? spending = null;
+            if (world.Economy?.Countries.GetValueOrDefault(c.Id) is { } e)
+            {
+                var gdp = Math.Max(1e-9, e.NominalGdp);
+                spending = new double[e.Spending.Length];
+                for (var k = 0; k < spending.Length; k++)
+                    spending[k] = e.Spending[k] / gdp;
+            }
             countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal),
-                ages, classes, government, c.Regime, laws);
+                ages, classes, government, c.Regime, laws, history, spending);
         }
         var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var r in world.Regions)
@@ -92,7 +101,7 @@ public sealed record ClassSnapshot(string Id, double Size, double Share, double 
 
 /// <summary>
 /// Страна в снимке. Ages — численность по пятилетним группам: сначала 17 групп мужчин, затем 17 женщин.
-/// Classes — классы в порядке data/classes.json.
+/// Classes — классы в порядке data/classes.json. Spending — расходы бюджета по статьям data/budget.json в долях ВВП.
 /// </summary>
 public sealed record CountrySnapshot(
     string Id,
@@ -103,7 +112,9 @@ public sealed record CountrySnapshot(
     IReadOnlyList<ClassSnapshot>? Classes = null,
     GovernmentSnapshot? Government = null,
     Regime Regime = Regime.Democracy,
-    LawsSnapshot? Laws = null)
+    LawsSnapshot? Laws = null,
+    HistorySnapshot? History = null,
+    IReadOnlyList<double>? Spending = null)
 {
     public StatValue? Stat(string id) => Stats.GetValueOrDefault(id);
 }

@@ -16,6 +16,7 @@ using Politeconomy.Sim.Text;
 //   report [--years N] [--country ISO] — таблица показателей стран по годам
 //   classes [--years N] [--country ISO] — классы стран: численность, доходы, уровень жизни, настроение, влияние
 //   government [--country ISO] [--years N] — правительство и парламент страны, журнал отставок
+//   ministry [--country ISO] [--years N] — доклады всех министров страны (как на экране «Ведомства»)
 // Общий ключ: --data <папка> — где лежит data/ (по умолчанию ищется рядом и выше).
 
 var command = args.FirstOrDefault() ?? "help";
@@ -24,7 +25,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -66,6 +67,8 @@ switch (command)
         return Classes();
     case "government":
         return Government();
+    case "ministry":
+        return Ministry();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -383,6 +386,32 @@ int Government()
     if (runYears > 0)
         foreach (var e in world.Journal.Where(e => ids.Contains(e.Country)).TakeLast(20))
             Console.WriteLine($"{e.Date:yyyy-MM-dd} {e.Country} {e.Text}");
+    return 0;
+}
+
+int Ministry()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 0;
+    if (runYears > 0)
+        sim.RunUntil(sim.World.Date.AddYears(runYears));
+    var id = Option("--country") ?? "BRA";
+    var snapshot = WorldSnapshot.Capture(sim.World, 1, true, 1);
+    var country = snapshot.Countries[id];
+    Console.WriteLine($"{sim.World[id].Name}, {snapshot.Date:yyyy-MM-dd}");
+    foreach (var post in data.Government.Posts)
+    {
+        var minister = country.Government?.Minister(post.Id);
+        Console.WriteLine();
+        Console.WriteLine($"{post.Ministry} — {minister?.Name}");
+        foreach (var line in MinistryReport.Lines(data, post, country, snapshot, minister))
+            Console.WriteLine("  • " + line);
+        foreach (var stat in post.Stats ?? [])
+        {
+            var series = country.History?.Series(stat) ?? [];
+            Console.WriteLine($"    {stat}: " + string.Join(" ", series.TakeLast(10).Select(p => $"{p.Year % 100:D2}:{p.Value:G4}")));
+        }
+    }
     return 0;
 }
 

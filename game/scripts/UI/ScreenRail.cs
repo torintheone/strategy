@@ -2,7 +2,7 @@ using Godot;
 
 namespace Politeconomy.Game.UI;
 
-/// <summary>Левая колонка кнопок: экраны правительства, законов, бюджета. Горячие клавиши — в подсказках.</summary>
+/// <summary>Левая колонка кнопок: экраны правительства, ведомств, законов, бюджета. Горячие клавиши — в подсказках.</summary>
 public partial class ScreenRail : GlassPanel
 {
     readonly Dictionary<string, RailButton> _buttons = new();

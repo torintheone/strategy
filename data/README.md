@@ -59,9 +59,13 @@ dotnet run --project src/Politeconomy.Tools -- validate
 
 Собирается `tools/build_world.py`. `groups` — подписи 17 возрастных групп. `countries[]`: `id`, `year`, `female` и `male` — численность по группам 0–4 … 75–79, 80+ (сумма равна населению страны), `fertility` (детей на женщину), `adolescent_fertility` (рождений на 1000 женщин 15–19 лет), `life_expectancy_female` и `life_expectancy_male`, `infant_mortality` (на 1000 родившихся), `net_migration` (человек в год, среднее за 2015–2025), `urban_pct`, `urban_change` (п. п. в год), `path` — прогноз по годам: `years`, `fertility`, `life_expectancy` (может отсутствовать).
 
+## history.json
+
+Собирается `tools/build_world.py` из тех же снимков Всемирного банка и МВФ, что и `countries.json`. История показателей до старта игры для графиков ведомств: `first_year` и `last_year` (2016–2025), `countries` — для каждой страны показатель → значения по годам (`null` — данных за год нет). Ключи показателей — из `indicators.json`. Дальше историю пишет модель (MODEL.md, «История показателей»).
+
 ## government.json
 
-`systems[]` — для каждого типа политической системы: `id`, `leader` (как называется глава исполнительной власти — это игрок), `parliament` (`real` — голосует всерьёз, `formal` — одобряет почти всё, `none` — власть правит указами), `parliament_name`. Авторитарный режим делает любой парламент формальным. `leader_titles` — особые названия главы для стран (Германия — «Федеральный канцлер»). `posts[]` — 18 постов правительства: `id`, `name` (должность), `ministry` (ведомство), `short` (подпись на карточке), `spending` (статьи бюджета ведомства из `budget.json`), `security` (силовой пост), `finance` (экономический пост). `traits[]` — черты персонажей: `id`, `name`, `description`, прибавки `competence`, `loyalty`, `corruption`, `popularity` и `weight` (как часто встречается). `parliament_seats` — число мест в парламенте для стран, где оно известно.
+`systems[]` — для каждого типа политической системы: `id`, `leader` (как называется глава исполнительной власти — это игрок), `parliament` (`real` — голосует всерьёз, `formal` — одобряет почти всё, `none` — власть правит указами), `parliament_name`. Авторитарный режим делает любой парламент формальным. `leader_titles` — особые названия главы для стран (Германия — «Федеральный канцлер»). `posts[]` — 18 постов правительства: `id`, `name` (должность), `ministry` (ведомство), `short` (подпись на карточке), `spending` (статьи бюджета ведомства из `budget.json`), `security` (силовой пост), `finance` (экономический пост), `stats` (до четырёх показателей из `indicators.json` для графиков и доклада на экране «Ведомства»). `traits[]` — черты персонажей: `id`, `name`, `description`, прибавки `competence`, `loyalty`, `corruption`, `popularity` и `weight` (как часто встречается). `parliament_seats` — число мест в парламенте для стран, где оно известно.
 
 ## laws.json
 

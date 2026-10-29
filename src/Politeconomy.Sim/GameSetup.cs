@@ -33,13 +33,14 @@ public static class GameSetup
         GovernmentModel.Setup(world);
         LawModel.Setup(world);
         world.Budgets = new Budget.WorldBudgets();
+        History.HistoryModel.Setup(world);
         return new Start(new Simulation(world, Systems()), report);
     }
 
     /// <summary>Все системы модели: законы, экономика, демография, классы, правительство (порядок внутри месяца — по фазам).</summary>
     public static IReadOnlyList<ISimSystem> Systems() =>
         [.. LawModel.Systems(), .. EconomyModel.Systems(), new Budget.Systems.BudgetCycleSystem(), .. DemographyModel.Systems(),
-            .. SocietyModel.Systems(), .. GovernmentModel.Systems()];
+            .. SocietyModel.Systems(), .. GovernmentModel.Systems(), .. History.HistoryModel.Systems()];
 
     /// <summary>Подключить системы модели к миру из сохранения.</summary>
     public static Simulation Resume(World world)

@@ -100,6 +100,17 @@ INDICATORS = [
     ("tertiary_enrollment_pct", [("wb", "SE.TER.ENRR")], 2010, "median"),
 ]
 GNI_ATLAS = "NY.GNP.PCAP.CD"
+# История показателей за 10 лет до старта — для графиков на экранах ведомств (data/history.json).
+HISTORY_FROM, HISTORY_TO = 2016, 2025
+HISTORY_KEYS = [
+    "population", "population_growth_pct", "gdp_usd", "gdp_per_capita_usd", "gdp_ppp_per_capita", "gdp_growth_pct", "inflation_pct",
+    "unemployment_pct", "gov_debt_pct_gdp", "budget_balance_pct_gdp", "gov_revenue_pct_gdp", "gov_spending_pct_gdp",
+    "current_account_pct_gdp", "exports_pct_gdp", "imports_pct_gdp", "agriculture_pct_gdp", "industry_pct_gdp",
+    "manufacturing_pct_gdp", "investment_pct_gdp", "resource_rents_pct_gdp", "employment_agriculture_pct", "life_expectancy",
+    "fertility_rate", "urban_pct", "age_0_14_pct", "age_65_plus_pct", "military_pct_gdp", "electricity_access_pct",
+    "tertiary_enrollment_pct", "gini",
+]
+HISTORY_EXTRA = {"birth_rate": [("wb", "SP.DYN.CBRT.IN")], "death_rate": [("wb", "SP.DYN.CDRT.IN")]}
 # Правдоподобные пределы: значение вне них считаем ошибкой источника и заполняем как пропуск.
 PLAUSIBLE = {"investment_pct_gdp": (3, 70), "consumption_private_pct_gdp": (20, 120), "consumption_gov_pct_gdp": (2, 60)}
 # Ренту усредняем за несколько лет: в отдельные годы она скачет вместе с ценами на сырьё.
@@ -561,6 +572,34 @@ AGE_GROUPS = ["0004", "0509", "1014", "1519", "2024", "2529", "3034", "3539", "4
               "6064", "6569", "7074", "7579", "80UP"]
 # Похожие страны для государств без данных Всемирного банка.
 DEMOGRAPHY_DONORS = {"TWN": "KOR", "SOL": "SOM", "CYN": "CYP"}
+
+
+def build_history(records: list[dict], wb: dict, imf: dict) -> dict:
+    """Значения показателей по годам HISTORY_FROM…HISTORY_TO: в каждом году — первый источник, где есть значение."""
+    sources = {key: [s for s in srcs if s[0] in ("wb", "imf")] for key, srcs, _, _ in INDICATORS if key in HISTORY_KEYS}
+    sources.update(HISTORY_EXTRA)
+    years = list(range(HISTORY_FROM, HISTORY_TO + 1))
+    out = {}
+    for rec in records:
+        stats = {}
+        for key, srcs in sources.items():
+            row = []
+            for year in years:
+                value = None
+                for src in srcs:
+                    if src[0] == "wb" and rec["_wb"]:
+                        value = series(wb, src[1], rec["_wb"]).get(year)
+                    elif src[0] == "imf" and rec["_imf"]:
+                        hit = series(imf, src[1], rec["_imf"]).get(year)
+                        value = hit * src[2] if hit is not None else None
+                    if value is not None:
+                        break
+                row.append(None if value is None else round(value, 4))
+            if any(v is not None for v in row):
+                stats[key] = row
+        if stats:
+            out[rec["id"]] = stats
+    return {"first_year": HISTORY_FROM, "last_year": HISTORY_TO, "countries": out}
 
 
 def build_population(records: list[dict], countries: list[dict], wb: dict, projections: dict) -> tuple[dict, dict]:
@@ -1057,6 +1096,9 @@ def main() -> None:
     write_json(DATA / "population.json", {"built": built, **population}, compact=True)
     (DATA / "benchmarks").mkdir(exist_ok=True)
     write_json(DATA / "benchmarks" / "population.json", benchmarks)
+    history = build_history(records, wb["values"], imf["values"])
+    print(f"  история {HISTORY_FROM}–{HISTORY_TO}: стран {len(history['countries'])}")
+    write_json(DATA / "history.json", {"built": built, **history}, compact=True)
     write_json(DATA / "regions.json", {
         "built": built,
         "sources": {"geonames": "GeoNames (CC BY 4.0), население приведено к населению страны",
