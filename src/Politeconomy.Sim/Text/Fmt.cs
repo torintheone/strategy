@@ -94,9 +94,21 @@ public static class Fmt
         "июля", "августа", "сентября", "октября", "ноября", "декабря",
     ];
 
-    /// <summary>«1 января 2026».</summary>
     /// <summary>Кредитный рейтинг по шкале 0–21: 21 — AAA, 0 — D.</summary>
     public static string Rating(double score) => Economy.Systems.RatingSystem.Letter(score);
 
+    /// <summary>«1 января 2026».</summary>
     public static string Date(DateOnly d) => $"{d.Day}{Nbsp}{Months[d.Month - 1]} {d.Year}";
+
+    /// <summary>Число с существительным в нужной форме: Plural(5, "год", "года", "лет") → «5 лет».</summary>
+    public static string Plural(long n, string one, string few, string many)
+    {
+        var tens = Math.Abs(n) % 100;
+        var units = tens % 10;
+        var word = tens is >= 11 and <= 14 ? many : units == 1 ? one : units is >= 2 and <= 4 ? few : many;
+        return $"{n}{Nbsp}{word}";
+    }
+
+    /// <summary>Возраст: «41 год», «43 года», «45 лет».</summary>
+    public static string Age(int years) => Plural(years, "год", "года", "лет");
 }

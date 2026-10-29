@@ -163,6 +163,8 @@ public static partial class DataValidator
                 Add("politics.json", $"{p.Id}: тип системы «{p.System}» не описан в разделе systems");
             try { WorldFactory.ParseSystem(p.System); }
             catch (DataException e) { Add("politics.json", $"{p.Id}: {e.Message}"); }
+            try { WorldFactory.ParseRegime(p.Regime); }
+            catch (DataException e) { Add("politics.json", $"{p.Id}: {e.Message}"); }
         }
         foreach (var id in ids.Where(id => !seenPolitics.Contains(id)))
             Add("politics.json", $"нет политической системы для страны {id}");
@@ -268,6 +270,7 @@ public static partial class DataValidator
                 Add("balance.json", "скорости времени должны быть положительными и расти");
 
         ValidateEconomy(data, Add);
+        ValidateGovernment(data, Add);
         return problems;
     }
 

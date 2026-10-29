@@ -75,13 +75,16 @@ public sealed class ClassMoodSystem : ISimSystem
 
     /// <summary>
     /// Влияние = доля в населении^a × доля в доходах^b × организованность × близость к власти, в процентах.
-    /// При выборной власти больше весит численность, без выборов — богатство, госаппарат и капитал.
+    /// При демократии больше весит численность, при авторитарном режиме — богатство, госаппарат и капитал,
+    /// гибридный режим — посередине.
     /// </summary>
     static void UpdateInfluence(Country country, CountrySociety s, SocietyBalance b)
     {
         const int n = ClassIds.Count;
-        var elected = SocietyModel.Elected(country.System);
-        var (numbers, wealth) = elected ? (b.DemocracyNumbers, b.DemocracyWealth) : (b.AutocracyNumbers, b.AutocracyWealth);
+        // Доля «выборности» власти: демократия — 1, гибридный режим — половина, авторитарный — 0.
+        var t = SocietyModel.Openness(country.Regime);
+        var numbers = t * b.DemocracyNumbers + (1 - t) * b.AutocracyNumbers;
+        var wealth = t * b.DemocracyWealth + (1 - t) * b.AutocracyWealth;
         var population = s.Total;
         var income = 0.0;
         for (var k = 0; k < n; k++)
@@ -91,12 +94,12 @@ public sealed class ClassMoodSystem : ISimSystem
         {
             if (population <= 0 || income <= 0 || s.Size[k] <= 0)
                 continue;
-            var proximity = elected ? 1 : k switch
+            var proximity = 1 + (1 - t) * (k switch
             {
-                ClassIds.Officials => b.AutocracyOfficials,
-                ClassIds.Capitalists => b.AutocracyCapital,
-                _ => 1,
-            };
+                ClassIds.Officials => b.AutocracyOfficials - 1,
+                ClassIds.Capitalists => b.AutocracyCapital - 1,
+                _ => 0,
+            });
             raw[k] = Math.Pow(s.Size[k] / population, numbers) * Math.Pow(s.Income[k] * s.Size[k] / income, wealth)
                 * s.Organization[k] * proximity;
         }

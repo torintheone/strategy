@@ -34,6 +34,14 @@ public enum PoliticalSystem
     MilitaryRegime,
 }
 
+/// <summary>Режим: насколько власть на деле сменяема. Демократия — свободные выборы, гибридный — с перекосом, авторитарный — без.</summary>
+public enum Regime
+{
+    Democracy,
+    Hybrid,
+    Authoritarian,
+}
+
 public enum IncomeGroup
 {
     Low,
@@ -48,6 +56,7 @@ public sealed class Country
     public required string Id { get; init; }
     public required CountryRecord Info { get; init; }
     public required PoliticalSystem System { get; set; }
+    public Regime Regime { get; set; }
     public required IncomeGroup Income { get; set; }
 
     /// <summary>Текущие показатели. Значения неизменяемые: модель заменяет запись целиком.</summary>
@@ -73,6 +82,9 @@ public sealed class Region
     public bool IsOccupied => Controller != Owner;
 }
 
+/// <summary>Запись журнала: дата, страна, вид (appointment, retirement, vote…) и текст для игрока.</summary>
+public sealed record JournalEntry(DateOnly Date, string Country, string Kind, string Text);
+
 /// <summary>Полное состояние партии. Меняется только в потоке симуляции.</summary>
 public sealed class World
 {
@@ -92,6 +104,22 @@ public sealed class World
 
     /// <summary>Классы населения; создаются <see cref="Society.SocietyModel.Setup"/>.</summary>
     public Society.WorldSociety? Society { get; set; }
+
+    /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
+    public Government.WorldGovernment? Government { get; set; }
+
+    /// <summary>Журнал важных событий: отставки, назначения, голосования. Новые — в конце.</summary>
+    public List<JournalEntry> Journal { get; set; } = [];
+
+    public const int JournalLimit = 300;
+
+    /// <summary>Записать событие в журнал (старые записи сверх лимита удаляются).</summary>
+    public void Log(string country, string kind, string text)
+    {
+        Journal.Add(new JournalEntry(Date, country, kind, text));
+        if (Journal.Count > JournalLimit)
+            Journal.RemoveRange(0, Journal.Count - JournalLimit);
+    }
 
     readonly Dictionary<string, Country> _byId = new(StringComparer.Ordinal);
     readonly Dictionary<string, Region> _regionsById = new(StringComparer.Ordinal);

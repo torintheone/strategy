@@ -112,6 +112,8 @@ public class DataTests
         Budget = d.Budget,
         Population = d.Population,
         Classes = d.Classes,
+        Government = d.Government,
+        Cultures = d.Cultures,
         Benchmarks = d.Benchmarks,
     };
 }

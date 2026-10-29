@@ -22,6 +22,9 @@ public sealed class GameData
     public required BudgetFile Budget { get; init; }
     public required PopulationFile Population { get; init; }
     public required ClassesFile Classes { get; init; }
+    public required GovernmentFile Government { get; init; }
+    /// <summary>Культуры имён из папки data/names/, по одной на файл.</summary>
+    public required IReadOnlyList<CultureRecord> Cultures { get; init; }
     /// <summary>Ориентиры для проверок правдоподобия (прогноз ООН); в игре не используются.</summary>
     public BenchmarksFile? Benchmarks { get; init; }
 
@@ -39,6 +42,11 @@ public sealed class GameData
     public SocietyBalance Society => Balance.Society ?? DefaultSociety;
 
     static readonly SocietyBalance DefaultSociety = new();
+
+    /// <summary>Коэффициенты правительства и парламента; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public GovernmentBalance GovernmentBalance => Balance.Government ?? DefaultGovernment;
+
+    static readonly GovernmentBalance DefaultGovernment = new();
 
     public IndicatorDef Indicator(string id) =>
         Indicators.Indicators.FirstOrDefault(i => i.Id == id)
@@ -66,10 +74,23 @@ public sealed class GameData
             Budget = Read(directory, "budget.json", ctx.BudgetFile),
             Population = Read(directory, "population.json", ctx.PopulationFile),
             Classes = Read(directory, "classes.json", ctx.ClassesFile),
+            Government = Read(directory, "government.json", ctx.GovernmentFile),
+            Cultures = ReadCultures(directory),
             Benchmarks = File.Exists(Path.Combine(directory, "benchmarks", "population.json"))
                 ? Read(directory, Path.Combine("benchmarks", "population.json"), ctx.BenchmarksFile)
                 : null,
         };
+    }
+
+    static IReadOnlyList<CultureRecord> ReadCultures(string directory)
+    {
+        var folder = Path.Combine(directory, "names");
+        if (!System.IO.Directory.Exists(folder))
+            throw new DataException($"Не найдена папка с именами {folder}");
+        return System.IO.Directory.GetFiles(folder, "*.json")
+            .OrderBy(f => f, StringComparer.Ordinal)
+            .Select(f => Read(directory, Path.Combine("names", Path.GetFileName(f)), DataJsonContext.Default.CultureRecord))
+            .ToList();
     }
 
     static T Read<T>(string directory, string file, JsonTypeInfo<T> type)

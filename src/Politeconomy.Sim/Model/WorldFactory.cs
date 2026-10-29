@@ -16,6 +16,7 @@ public static class WorldFactory
                 Id = record.Id,
                 Info = record,
                 System = politics.TryGetValue(record.Id, out var p) ? ParseSystem(p.System) : PoliticalSystem.PresidentialRepublic,
+                Regime = p is null ? Regime.Democracy : ParseRegime(p.Regime),
                 Income = ParseIncome(record.IncomeGroup),
             };
             foreach (var (key, s) in record.Stats)
@@ -64,6 +65,22 @@ public static class WorldFactory
         PoliticalSystem.OnePartyState => "one_party_state",
         PoliticalSystem.MilitaryRegime => "military_regime",
         _ => throw new ArgumentOutOfRangeException(nameof(system)),
+    };
+
+    public static Regime ParseRegime(string id) => id switch
+    {
+        "democracy" => Regime.Democracy,
+        "hybrid" => Regime.Hybrid,
+        "authoritarian" => Regime.Authoritarian,
+        _ => throw new DataException($"Неизвестный режим «{id}»"),
+    };
+
+    public static string RegimeId(Regime regime) => regime switch
+    {
+        Regime.Democracy => "democracy",
+        Regime.Hybrid => "hybrid",
+        Regime.Authoritarian => "authoritarian",
+        _ => throw new ArgumentOutOfRangeException(nameof(regime)),
     };
 
     public static IncomeGroup ParseIncome(string id) => id switch

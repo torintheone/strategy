@@ -59,9 +59,11 @@ public sealed record ControlRecord(string Region, string Controller, string Note
 
 public sealed record PoliticsFile(
     IReadOnlyDictionary<string, string> Systems,
-    IReadOnlyList<PoliticsRecord> Countries);
+    IReadOnlyList<PoliticsRecord> Countries,
+    IReadOnlyDictionary<string, string>? Regimes = null);
 
-public sealed record PoliticsRecord(string Id, string System, string Note, bool Reviewed);
+/// <summary>Политика страны: тип системы, режим (democracy, hybrid, authoritarian), пометка и проверено ли человеком.</summary>
+public sealed record PoliticsRecord(string Id, string System, string Note, bool Reviewed, string Regime = "democracy");
 
 public sealed record ScenarioFile(
     string Id,
@@ -73,7 +75,7 @@ public sealed record ScenarioFile(
     string? PlayerCountry);
 
 public sealed record BalanceFile(TimeBalance Time, EconomyBalance? Economy = null, DemographyBalance? Demography = null,
-    SocietyBalance? Society = null);
+    SocietyBalance? Society = null, GovernmentBalance? Government = null);
 
 public sealed record TimeBalance(IReadOnlyList<double> DaysPerSecond);
 
@@ -185,4 +187,6 @@ public sealed record CityRecord(
 [JsonSerializable(typeof(PopulationFile))]
 [JsonSerializable(typeof(ClassesFile))]
 [JsonSerializable(typeof(BenchmarksFile))]
+[JsonSerializable(typeof(GovernmentFile))]
+[JsonSerializable(typeof(CultureRecord))]
 internal sealed partial class DataJsonContext : JsonSerializerContext;

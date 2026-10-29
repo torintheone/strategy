@@ -93,7 +93,11 @@ public static class SocietyModel
     /// <summary>Сколько долларов по ППС 2026 года в одной местной единице сегодня.</summary>
     public static double PppFactor(Economy.CountryEconomy e) => e.NominalGdp > 0 ? PppGdp(e) / e.NominalGdp : 0;
 
-    /// <summary>Выборная власть: при ней влияние класса больше зависит от численности.</summary>
-    public static bool Elected(PoliticalSystem system) => system is PoliticalSystem.PresidentialRepublic
-        or PoliticalSystem.ParliamentaryRepublic or PoliticalSystem.SemiPresidential or PoliticalSystem.ConstitutionalMonarchy;
+    /// <summary>Насколько власть сменяема на выборах: демократия — 1, гибридный режим — 0,5, авторитарный — 0.</summary>
+    public static double Openness(Regime regime) => regime switch
+    {
+        Regime.Democracy => 1,
+        Regime.Hybrid => 0.5,
+        _ => 0,
+    };
 }

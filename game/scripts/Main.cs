@@ -31,6 +31,9 @@ public partial class Main : Node
     ModePanel _modePanel = null!;
     CountryPanel _countryPanel = null!;
     HoverCard _hoverCard = null!;
+    ScreenRail _rail = null!;
+    GovernmentScreen _government = null!;
+    Toasts _toasts = null!;
     Control _uiRoot = null!;
 
     MapModeView _mode = null!;
@@ -159,12 +162,36 @@ public partial class Main : Node
         _countryPanel.PlayAs += id => _host!.Post(w => w.PlayerCountry = id);
         _countryPanel.RegionChosen += id => SelectRegion(_map.Region(id), center: true);
 
+        _countryPanel.GovernmentRequested += id => OpenGovernment(id);
+
+        _rail = new ScreenRail();
+        _uiRoot.AddChild(_rail);
+        _rail.Setup([("government", "government", "Правительство и парламент (G)")]);
+        _rail.ScreenChosen += id =>
+        {
+            if (id == "government")
+                ToggleGovernment();
+        };
+
+        _government = new GovernmentScreen { Visible = false };
+        _uiRoot.AddChild(_government);
+        _government.Setup(_data);
+        _government.Closed += CloseScreens;
+        _government.CandidatesRequested += (country, post) =>
+            _host!.Post(w => Politeconomy.Sim.Government.GovernmentActions.RequestCandidates(w, country, post));
+        _government.Appointed += (country, post, index) =>
+            _host!.Post(w => Politeconomy.Sim.Government.GovernmentActions.Appoint(w, country, post, index));
+
+        _toasts = new Toasts();
+        _uiRoot.AddChild(_toasts);
+        _toasts.Setup();
+
         _hoverCard = new HoverCard();
         _uiRoot.AddChild(_hoverCard);
         _hoverCard.Setup();
 
         // Когда курсор уходит на панель, карта не должна подсвечивать регион под ней.
-        foreach (var panel in new Control[] { _topBar, _modePanel, _countryPanel })
+        foreach (var panel in new Control[] { _topBar, _modePanel, _countryPanel, _rail, _government })
             panel.MouseEntered += () => SetHovered(null, null);
     }
 
@@ -187,8 +214,11 @@ public partial class Main : Node
         var snapshot = _host.Snapshot;
         if (snapshot.Version == _shownVersion)
             return;
+        _toasts.Feed(snapshot.Journal, snapshot.PlayerCountry, silent: _shownVersion < 0);
         _shownVersion = snapshot.Version;
         _topBar.Show(snapshot);
+        if (_government.Visible)
+            _government.Refresh(snapshot);
         Recolor(snapshot);
         if (_countryPanel.Visible)
             _countryPanel.Refresh(snapshot);
@@ -277,13 +307,19 @@ public partial class Main : Node
                 SetHovered(region, country);
                 break;
             case InputEventKey { Pressed: true, Echo: false } key:
-                HandleKey(key.Keycode);
+                HandleKey(key.Keycode, key.PhysicalKeycode);
                 break;
         }
     }
 
-    void HandleKey(Key key)
+    /// <summary>Клавиши; буквенные — по физическому положению, чтобы работали и в русской раскладке.</summary>
+    void HandleKey(Key key, Key physical)
     {
+        if (physical == Key.G)
+        {
+            ToggleGovernment();
+            return;
+        }
         switch (key)
         {
             case Key.Space:
@@ -293,7 +329,10 @@ public partial class Main : Node
                 _host!.SetSpeed((int)(key - Key.Key1) + 1);
                 return;
             case Key.Escape:
-                SelectRegion(null);
+                if (_government.Visible)
+                    CloseScreens();
+                else
+                    SelectRegion(null);
                 return;
             case Key.Equal or Key.KpAdd:
                 _camera.ZoomAt(_camera.GetViewportRect().Size / 2, 1.3f);
@@ -436,6 +475,13 @@ public partial class Main : Node
                     SetHovered(region, region.Country is { } c ? _map.Country(c) : null);
                 SelectCountry(_map.Country("TUV"));
                 SelectRegion(_map.Region(_smokeOccupied!));
+                // Правительство: экран открывается, министр меняется, в журнале появляется запись.
+                OpenGovernment("RUS");
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Government.GovernmentActions.RequestCandidates(w, "RUS", "health");
+                    Politeconomy.Sim.Government.GovernmentActions.Appoint(w, "RUS", "health", 0);
+                });
                 _smokeStep++;
                 break;
             case 2 when _smokeTime > 3 && (_host!.Snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) || _smokeTime > 20):
@@ -443,15 +489,17 @@ public partial class Main : Node
                 var snapshot = _host!.Snapshot;
                 var inflation = snapshot.Countries["RUS"].Stat("inflation_pct");
                 var classes = snapshot.Countries["RUS"].Classes;
+                var appointed = snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "appointment")
+                    && snapshot.Countries["RUS"].Government is { Ministers.Count: 18 };
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
                     && inflation is { Source: StatSources.Model, Factors.Count: > 0 } && double.IsFinite(inflation.Value)
-                    && classes is { Count: 10 } && classes.All(c => double.IsFinite(c.Satisfaction));
+                    && classes is { Count: 10 } && classes.All(c => double.IsFinite(c.Satisfaction)) && appointed;
                 if (_host.Error != null)
                     GD.PrintErr(_host.Error.ToString());
                 GD.Print($"SMOKE {(ok ? "OK" : "FAIL")}: дата {snapshot.Date:yyyy-MM-dd}, стран {snapshot.Countries.Count}, " +
                          $"регионов {_map.Regions.Count}, занято {snapshot.Occupied.Count}, инфляция в России {inflation?.Value:F2}%, " +
-                         $"удовлетворённость {snapshot.Countries["RUS"].Stat("satisfaction")?.Value:F0}, " +
+                         $"удовлетворённость {snapshot.Countries["RUS"].Stat("satisfaction")?.Value:F0}, назначение {(appointed ? "есть" : "нет")}, " +
                          $"шаг {_host.LastStepMs:F2} мс");
                 GetTree().Quit(ok ? 0 : 1);
                 _smokeStep++;
@@ -499,6 +547,14 @@ public partial class Main : Node
                 _countryPanel.ScrollToSection("Классы");
             }),
             ("10_satisfaction", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "satisfaction"))),
+            ("11_government", () =>
+            {
+                _host!.Post(w => w.PlayerCountry = "BRA");
+                SetMode(_data.MapModes.Modes[0]);
+                OpenGovernment("BRA");
+            }),
+            ("12_candidates", () => _government.ChooseReplacement("finance")),
+            ("13_parliament_china", () => OpenGovernment("CHN")),
         };
         if (_shotStep > 0)
         {
@@ -516,6 +572,39 @@ public partial class Main : Node
         views[_shotStep].Setup();
         _shotStep++;
         _shotFrames = 0;
+    }
+
+    /// <summary>Экран правительства: страны игрока, а если игрок ещё не выбрал страну — выбранной на карте.</summary>
+    void ToggleGovernment()
+    {
+        if (_government.Visible)
+        {
+            CloseScreens();
+            return;
+        }
+        var id = _host?.Snapshot.PlayerCountry ?? _selectedCountry?.Id;
+        if (id == null)
+        {
+            _toasts.Push("Выберите страну на карте или начните игру за неё — тогда откроется её правительство.");
+            _rail.SetActive(null);
+            return;
+        }
+        OpenGovernment(id);
+    }
+
+    void OpenGovernment(string countryId)
+    {
+        if (_host == null)
+            return;
+        _government.ShowCountry(countryId, _host.Snapshot);
+        _rail.SetActive("government");
+        SetHovered(null, null);
+    }
+
+    void CloseScreens()
+    {
+        _government.Visible = false;
+        _rail.SetActive(null);
     }
 
     /// <summary>Показать страну в центре экрана с масштабом «во столько-то раз ближе, чем весь мир».</summary>

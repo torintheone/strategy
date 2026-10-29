@@ -15,12 +15,16 @@ public sealed class WorldSnapshot
     public required IReadOnlyDictionary<string, CountrySnapshot> Countries { get; init; }
     /// <summary>Регионы, которые контролирует не их владелец: регион → контролирующая страна.</summary>
     public required IReadOnlyDictionary<string, string> Occupied { get; init; }
+    /// <summary>Последние записи журнала (отставки, назначения, голосования), новые — в конце.</summary>
+    public IReadOnlyList<JournalEntry> Journal { get; init; } = [];
     /// <summary>Валюта каждой страны: код, режим курса, якорь и сколько стран ею пользуются.</summary>
     public required IReadOnlyDictionary<string, CurrencySnapshot> Currencies { get; init; }
     public required long Version { get; init; }
 
     /// <summary>Кто контролирует регион: оккупант или, если его нет, владелец.</summary>
     public string ControllerOf(string regionId, string owner) => Occupied.GetValueOrDefault(regionId, owner);
+
+    const int JournalShown = 60;
 
     public static WorldSnapshot Capture(World world, int speed, bool paused, long version)
     {
@@ -39,8 +43,9 @@ public sealed class WorldSnapshot
                     classes.Add(new ClassSnapshot(world.Data.Classes.Classes[k].Id, s.Size[k], total > 0 ? s.Size[k] / total * 100 : 0,
                         s.Income[k], s.Savings[k], s.StandardOfLiving[k], s.Expectations[k], s.Satisfaction[k], s.Radicalism[k], s.Influence[k]));
             }
+            var government = world.Government?.Countries.GetValueOrDefault(c.Id) is { } g ? GovernmentSnapshot.Capture(world, c, g) : null;
             countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal),
-                ages, classes);
+                ages, classes, government, c.Regime);
         }
         var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var r in world.Regions)
@@ -66,6 +71,7 @@ public sealed class WorldSnapshot
             Countries = countries,
             Occupied = occupied,
             Currencies = currencies,
+            Journal = world.Journal.Count <= JournalShown ? world.Journal.ToList() : world.Journal.GetRange(world.Journal.Count - JournalShown, JournalShown),
             Version = version,
         };
     }
@@ -90,7 +96,9 @@ public sealed record CountrySnapshot(
     IncomeGroup Income,
     IReadOnlyDictionary<string, StatValue> Stats,
     IReadOnlyList<double>? Ages = null,
-    IReadOnlyList<ClassSnapshot>? Classes = null)
+    IReadOnlyList<ClassSnapshot>? Classes = null,
+    GovernmentSnapshot? Government = null,
+    Regime Regime = Regime.Democracy)
 {
     public StatValue? Stat(string id) => Stats.GetValueOrDefault(id);
 }

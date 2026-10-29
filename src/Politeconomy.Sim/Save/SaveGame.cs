@@ -10,7 +10,7 @@ namespace Politeconomy.Sim.Save;
 /// <summary>Сохранение партии: состояние мира в JSON, сжатое gzip. Постоянные данные берутся из data/.</summary>
 public static class SaveGame
 {
-    public const int FormatVersion = 4;
+    public const int FormatVersion = 5;
 
     public static SaveState Capture(World world) => new(
         FormatVersion,
@@ -29,7 +29,8 @@ public static class SaveGame
                     .OrderBy(kv => kv.Key, StringComparer.Ordinal)
                     .Select(kv => new StatState(kv.Key, kv.Value.Value, kv.Value.Year, kv.Value.Source, kv.Value.Method, kv.Value.N,
                         kv.Value.Factors?.ToList()))
-                    .ToList()))
+                    .ToList(),
+                WorldFactory.RegimeId(c.Regime)))
             .ToList(),
         world.Regions
             .Where(r => r.IsOccupied)
@@ -38,7 +39,9 @@ public static class SaveGame
             .ToList(),
         world.Economy,
         world.Demography,
-        world.Society);
+        world.Society,
+        world.Government,
+        world.Journal);
 
     public static void Write(World world, Stream output)
     {
@@ -85,6 +88,7 @@ public static class SaveGame
                 Info = record,
                 System = WorldFactory.ParseSystem(cs.System),
                 Income = WorldFactory.ParseIncome(cs.Income),
+                Regime = WorldFactory.ParseRegime(cs.Regime),
             };
             foreach (var s in cs.Stats)
                 country.Stats[s.Key] = new StatValue(s.Value, s.Year, s.Source, s.Method, s.N, s.Factors);
@@ -109,6 +113,8 @@ public static class SaveGame
             Economy = state.Economy,
             Demography = state.Demography,
             Society = state.Society,
+            Government = state.Government,
+            Journal = state.Journal ?? [],
         };
     }
 
@@ -131,12 +137,14 @@ public sealed record SaveState(
     List<RegionState>? Occupied = null,
     Economy.WorldEconomy? Economy = null,
     Demography.WorldDemography? Demography = null,
-    Society.WorldSociety? Society = null);
+    Society.WorldSociety? Society = null,
+    Government.WorldGovernment? Government = null,
+    List<JournalEntry>? Journal = null);
 
 /// <summary>Регион, который контролирует не владелец.</summary>
 public sealed record RegionState(string Id, string Controller);
 
-public sealed record CountryState(string Id, string System, string Income, List<StatState> Stats);
+public sealed record CountryState(string Id, string System, string Income, List<StatState> Stats, string Regime = "democracy");
 
 public sealed record StatState(string Key, double Value, int? Year, string Source, string? Method, int? N,
     List<StatFactor>? Factors = null);

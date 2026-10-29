@@ -3,6 +3,7 @@ using Politeconomy.Sim;
 using Politeconomy.Sim.Data;
 using Politeconomy.Sim.Economy;
 using Politeconomy.Sim.Engine;
+using Politeconomy.Sim.Government;
 using Politeconomy.Sim.Model;
 using Politeconomy.Sim.Text;
 
@@ -13,6 +14,7 @@ using Politeconomy.Sim.Text;
 //                         разогрев не уводит показатели от данных, мировой рост 1–5% в год, нет NaN и выходов за диапазоны
 //   report [--years N] [--country ISO] — таблица показателей стран по годам
 //   classes [--years N] [--country ISO] — классы стран: численность, доходы, уровень жизни, настроение, влияние
+//   government [--country ISO] [--years N] — правительство и парламент страны, журнал отставок
 // Общий ключ: --data <папка> — где лежит data/ (по умолчанию ищется рядом и выше).
 
 var command = args.FirstOrDefault() ?? "help";
@@ -61,6 +63,8 @@ switch (command)
         return Trace();
     case "classes":
         return Classes();
+    case "government":
+        return Government();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -336,6 +340,36 @@ int Classes()
         sim.RunUntil(world.Date.AddYears(runYears));
         Print();
     }
+    return 0;
+}
+
+// Правительство страны: глава, министры с качествами и чертами, парламент; с --years N — журнал за эти годы.
+int Government()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 0;
+    if (runYears > 0)
+        sim.RunUntil(world.Date.AddYears(runYears));
+    string[] ids = Option("--country") is { } one ? [one] : ["RUS", "USA", "CHN", "DEU", "IND", "BRA", "NGA", "SAU", "JPN", "VNM"];
+    var traits = data.Government.Traits.ToDictionary(t => t.Id, t => t.Name);
+    foreach (var id in ids)
+    {
+        var country = world[id];
+        var g = world.Government![id];
+        var p = g.Parliament;
+        string Line(Character c) =>
+            $"{c.Name} ({(c.Female ? "ж" : "м")}, {c.Age(world.Date)}) комп {c.Competence:F0} лоял {c.Loyalty:F0} корр {c.Corruption:F0} поп {c.Popularity:F0}" +
+            (c.Traits.Count > 0 ? " — " + string.Join(", ", c.Traits.Select(t => traits[t])) : "");
+        Console.WriteLine();
+        Console.WriteLine($"{country.Name} ({WorldFactory.RegimeId(country.Regime)}): {Politeconomy.Sim.Government.GovernmentModel.LeaderTitle(data, country)} {Line(g.Leader)}");
+        Console.WriteLine($"  {p.Name}: {p.Kind}, мест {p.Seats}, правящий блок {p.RulingSeats}, дисциплина {p.Discipline:F2}");
+        foreach (var post in data.Government.Posts)
+            Console.WriteLine($"  {post.Name,-36} {Line(g.Ministers[post.Id])}");
+    }
+    if (runYears > 0)
+        foreach (var e in world.Journal.Where(e => ids.Contains(e.Country)).TakeLast(20))
+            Console.WriteLine($"{e.Date:yyyy-MM-dd} {e.Country} {e.Text}");
     return 0;
 }
 

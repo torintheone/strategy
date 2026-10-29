@@ -2,6 +2,7 @@ using Politeconomy.Sim.Data;
 using Politeconomy.Sim.Demography;
 using Politeconomy.Sim.Economy;
 using Politeconomy.Sim.Engine;
+using Politeconomy.Sim.Government;
 using Politeconomy.Sim.Model;
 using Politeconomy.Sim.Save;
 using Politeconomy.Sim.Society;
@@ -28,12 +29,13 @@ public static class GameSetup
             world.Economy = economy;
         }
         SocietyModel.Setup(world);
+        GovernmentModel.Setup(world);
         return new Start(new Simulation(world, Systems()), report);
     }
 
-    /// <summary>Все системы модели: экономика, демография, классы (порядок внутри месяца — по фазам).</summary>
+    /// <summary>Все системы модели: экономика, демография, классы, правительство (порядок внутри месяца — по фазам).</summary>
     public static IReadOnlyList<ISimSystem> Systems() =>
-        [.. EconomyModel.Systems(), .. DemographyModel.Systems(), .. SocietyModel.Systems()];
+        [.. EconomyModel.Systems(), .. DemographyModel.Systems(), .. SocietyModel.Systems(), .. GovernmentModel.Systems()];
 
     /// <summary>Подключить системы модели к миру из сохранения.</summary>
     public static Simulation Resume(World world) => new(world, Systems());

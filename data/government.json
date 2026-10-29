@@ -1,0 +1,46 @@
+{
+ "_comment": "Правительство. systems — для каждого типа политической системы: leader — как называется глава исполнительной власти (это игрок), parliament — какой парламент: real (голосует всерьёз), formal (одобряет почти всё), none (власть правит указами), parliament_name — название. Авторитарный режим делает любой парламент формальным. leader_titles — особые названия главы для отдельных стран. posts — 18 постов правительства: name — должность, ministry — ведомство, short — подпись иконки, spending — статьи бюджета ведомства (из budget.json), security — силовой пост (чаще достаётся силовикам), finance — экономический пост (чаще технократам). traits — черты персонажей: прибавки к компетентности, лояльности, коррупции и популярности, weight — как часто встречается. parliament_seats — число мест в парламенте (нижней палате) для стран, где оно известно; у остальных — по закону кубического корня от населения.",
+ "systems": [
+  {"id": "presidential_republic", "leader": "Президент", "parliament": "real", "parliament_name": "Парламент"},
+  {"id": "parliamentary_republic", "leader": "Премьер-министр", "parliament": "real", "parliament_name": "Парламент"},
+  {"id": "semi_presidential", "leader": "Президент", "parliament": "real", "parliament_name": "Парламент"},
+  {"id": "constitutional_monarchy", "leader": "Премьер-министр", "parliament": "real", "parliament_name": "Парламент"},
+  {"id": "absolute_monarchy", "leader": "Монарх", "parliament": "formal", "parliament_name": "Консультативный совет"},
+  {"id": "one_party_state", "leader": "Генеральный секретарь", "parliament": "formal", "parliament_name": "Народное собрание"},
+  {"id": "military_regime", "leader": "Председатель военного совета", "parliament": "none", "parliament_name": "Военный совет"}
+ ],
+ "leader_titles": {"DEU": "Федеральный канцлер", "AUT": "Федеральный канцлер", "AFG": "Верховный правитель", "IRN": "Президент"},
+ "posts": [
+  {"id": "economy", "name": "Министр экономики", "ministry": "Министерство экономики", "short": "Экономика", "spending": [], "finance": true},
+  {"id": "finance", "name": "Министр финансов", "ministry": "Министерство финансов", "short": "Финансы", "spending": [], "finance": true},
+  {"id": "labor", "name": "Министр труда и социальной защиты", "ministry": "Министерство труда и социальной защиты", "short": "Труд", "spending": ["social"]},
+  {"id": "health", "name": "Министр здравоохранения", "ministry": "Министерство здравоохранения", "short": "Здоровье", "spending": ["health"]},
+  {"id": "education", "name": "Министр образования", "ministry": "Министерство образования", "short": "Образование", "spending": ["education", "culture"]},
+  {"id": "science", "name": "Министр науки", "ministry": "Министерство науки", "short": "Наука", "spending": ["science"]},
+  {"id": "transport", "name": "Министр транспорта", "ministry": "Министерство транспорта", "short": "Транспорт", "spending": ["transport"]},
+  {"id": "energy", "name": "Министр энергетики", "ministry": "Министерство энергетики", "short": "Энергетика", "spending": ["energy"]},
+  {"id": "agriculture", "name": "Министр сельского хозяйства", "ministry": "Министерство сельского хозяйства", "short": "Село", "spending": ["agriculture"]},
+  {"id": "industry", "name": "Министр промышленности и торговли", "ministry": "Министерство промышленности и торговли", "short": "Промышленность", "spending": ["industry"]},
+  {"id": "interior", "name": "Министр внутренних дел", "ministry": "Министерство внутренних дел", "short": "МВД", "spending": ["police"], "security": true},
+  {"id": "defense", "name": "Министр обороны", "ministry": "Министерство обороны", "short": "Оборона", "spending": ["defense"], "security": true},
+  {"id": "foreign", "name": "Министр иностранных дел", "ministry": "Министерство иностранных дел", "short": "МИД", "spending": ["foreign"]},
+  {"id": "justice", "name": "Министр юстиции", "ministry": "Министерство юстиции", "short": "Юстиция", "spending": ["courts"]},
+  {"id": "central_bank", "name": "Глава центрального банка", "ministry": "Центральный банк", "short": "ЦБ", "spending": [], "finance": true},
+  {"id": "chief_of_staff", "name": "Руководитель администрации", "ministry": "Администрация главы государства", "short": "Администрация", "spending": ["administration"]},
+  {"id": "prosecutor", "name": "Генеральный прокурор", "ministry": "Генеральная прокуратура", "short": "Прокуратура", "spending": [], "security": true},
+  {"id": "intelligence", "name": "Директор спецслужбы", "ministry": "Спецслужба", "short": "Спецслужба", "spending": [], "security": true}
+ ],
+ "traits": [
+  {"id": "technocrat", "name": "Технократ", "description": "Знает своё дело, но не умеет нравиться людям.", "competence": 15, "popularity": -5, "weight": 1.0},
+  {"id": "populist", "name": "Популист", "description": "Говорит то, что хотят услышать, а дела ведёт хуже.", "competence": -8, "popularity": 15, "weight": 0.8},
+  {"id": "reformer", "name": "Реформатор", "description": "Готовит законы быстрее и не боится перемен.", "competence": 5, "loyalty": -5, "weight": 0.7},
+  {"id": "silovik", "name": "Силовик", "description": "Вышел из армии, полиции или спецслужб. Верен порядку и начальству.", "loyalty": 10, "popularity": -3, "weight": 0.6},
+  {"id": "charismatic", "name": "Харизматичный", "description": "Умеет говорить с людьми и камерой.", "popularity": 20, "weight": 0.6},
+  {"id": "corrupt", "name": "Коррупционер", "description": "Путает государственный карман со своим.", "corruption": 35, "loyalty": -5, "weight": 0.5}
+ ],
+ "parliament_seats": {
+  "RUS": 450, "USA": 435, "CHN": 2977, "IND": 543, "DEU": 630, "GBR": 650, "FRA": 577, "JPN": 465, "BRA": 513, "ITA": 400,
+  "ESP": 350, "CAN": 343, "AUS": 151, "TUR": 600, "UKR": 450, "POL": 460, "IDN": 580, "MEX": 500, "KOR": 300, "IRN": 290,
+  "EGY": 596, "NGA": 360, "PAK": 336, "BGD": 350, "ZAF": 400, "ARG": 257, "KAZ": 98, "BLR": 110, "NLD": 150, "SWE": 349
+ }
+}

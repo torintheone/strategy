@@ -50,6 +50,7 @@ public partial class CountryPanel : GlassPanel
     public event Action? Closed;
     public event Action<string>? PlayAs;
     public event Action<string>? RegionChosen;
+    public event Action<string>? GovernmentRequested;
 
     public string? CountryId => _countryId;
 
@@ -127,6 +128,13 @@ public partial class CountryPanel : GlassPanel
         column.AddChild(_play);
         _playing = UiTheme.Text("Вы управляете этой страной", 14, UiTheme.Medium, UiTheme.Accent);
         column.AddChild(_playing);
+        var governmentButton = new Button { Text = "Правительство и парламент", FocusMode = FocusModeEnum.None };
+        governmentButton.Pressed += () =>
+        {
+            if (_countryId != null)
+                GovernmentRequested?.Invoke(_countryId);
+        };
+        column.AddChild(governmentButton);
 
         var scroll = _scroll = new ScrollContainer
         {
@@ -209,6 +217,11 @@ public partial class CountryPanel : GlassPanel
             AddFact("Регион мира", record.Subregion);
             AddFact("Строй", _data.Politics.Systems.GetValueOrDefault(WorldFactory.SystemId(country.System), "—"),
                 politics is null ? null : PoliticsTooltip(politics));
+            AddFact("Режим", _data.Politics.Regimes?.GetValueOrDefault(WorldFactory.RegimeId(country.Regime)) ?? "—",
+                "Насколько власть на деле сменяема: демократия — свободные выборы, гибридный режим — выборы с перекосом в пользу власти, авторитарный — выборы формальны или их нет.");
+            if (country.Government is { } g)
+                AddFact("Глава", $"{g.Leader.Name} ({g.LeaderTitle.ToLowerInvariant()})",
+                    "Глава исполнительной власти. Подробнее — кнопка «Правительство и парламент» ниже или клавиша G.");
             AddFact("Доход", _data.MapModes.IncomeGroups.FirstOrDefault(g => g.Id == WorldFactory.IncomeId(country.Income))?.Name ?? "—",
                 "Уровень дохода на душу населения: низкий, ниже среднего, выше среднего или высокий.");
             if (snapshot.Currencies.GetValueOrDefault(id) is { } currency)

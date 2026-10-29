@@ -1,5 +1,5 @@
 {
- "_comment": "Черновик классификации политических систем на 1 января 2026 года. Составлен Claude Code; пользователь проверяет. Поле reviewed=true ставится после проверки.",
+ "_comment": "Черновик классификации политических систем и режимов на 1 января 2026 года. Составлен Claude Code; пользователь проверяет. system — тип политической системы (кто формирует правительство), regime — насколько власть на деле сменяема: democracy — свободные выборы, hybrid — выборы есть, но с перекосом в пользу власти, authoritarian — выборы формальны или их нет. Поле reviewed=true ставится после проверки.",
  "systems": {
   "presidential_republic": "Президентская республика",
   "parliamentary_republic": "Парламентская республика",
@@ -9,1192 +9,1395 @@
   "one_party_state": "Однопартийное государство",
   "military_regime": "Военный режим"
  },
+ "regimes": {
+  "democracy": "Демократия",
+  "hybrid": "Гибридный режим",
+  "authoritarian": "Авторитарный режим"
+ },
  "countries": [
   {
    "id": "AFG",
    "system": "military_regime",
+   "regime": "authoritarian",
    "note": "Теократический эмират движения «Талибан»; международно не признан",
    "reviewed": false
   },
   {
    "id": "AGO",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "ALB",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "AND",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "Парламентское соправительство (княжество)",
    "reviewed": false
   },
   {
    "id": "ARE",
    "system": "absolute_monarchy",
+   "regime": "authoritarian",
    "note": "Федерация абсолютных монархий",
    "reviewed": false
   },
   {
    "id": "ARG",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "ARM",
    "system": "parliamentary_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "ATG",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "AUS",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "AUT",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "AZE",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BDI",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BEL",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BEN",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BFA",
    "system": "military_regime",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BGD",
    "system": "parliamentary_republic",
+   "regime": "hybrid",
    "note": "С 2024 года временное правительство; выборы в 2026 году",
    "reviewed": false
   },
   {
    "id": "BGR",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BHR",
    "system": "absolute_monarchy",
+   "regime": "authoritarian",
    "note": "Формально конституционная монархия; правительство назначает король",
    "reviewed": false
   },
   {
    "id": "BHS",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BIH",
    "system": "parliamentary_republic",
+   "regime": "hybrid",
    "note": "Коллективное президентство из трёх членов",
    "reviewed": false
   },
   {
    "id": "BLR",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BLZ",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BOL",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BRA",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BRB",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BRN",
    "system": "absolute_monarchy",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BTN",
    "system": "constitutional_monarchy",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "BWA",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "Президент — глава правительства, избирается парламентом",
    "reviewed": false
   },
   {
    "id": "CAF",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "CAN",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "CHE",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "Коллегиальное правительство — Федеральный совет",
    "reviewed": false
   },
   {
    "id": "CHL",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "CHN",
    "system": "one_party_state",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "CIV",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "CMR",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "COD",
    "system": "semi_presidential",
+   "regime": "authoritarian",
    "note": "Президент доминирует",
    "reviewed": false
   },
   {
    "id": "COG",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "COL",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "COM",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "CPV",
    "system": "semi_presidential",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "CRI",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "CUB",
    "system": "one_party_state",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "CYN",
    "system": "semi_presidential",
+   "regime": "democracy",
    "note": "Признан только Турцией; Республика Кипр считает эту территорию своей",
    "reviewed": false
   },
   {
    "id": "CYP",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "CZE",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "DEU",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "DJI",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "DMA",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "DNK",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "DOM",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "DZA",
    "system": "semi_presidential",
+   "regime": "authoritarian",
    "note": "Президент доминирует",
    "reviewed": false
   },
   {
    "id": "ECU",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "EGY",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "Формально смешанная система; президент доминирует",
    "reviewed": false
   },
   {
    "id": "ERI",
    "system": "one_party_state",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "ESP",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "EST",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "ETH",
    "system": "parliamentary_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "FIN",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "FJI",
    "system": "parliamentary_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "FRA",
    "system": "semi_presidential",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "FSM",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "Президент избирается конгрессом",
    "reviewed": false
   },
   {
    "id": "GAB",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "Конституция 2024 года, выборы 2025 года",
    "reviewed": false
   },
   {
    "id": "GBR",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "GEO",
    "system": "parliamentary_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "GHA",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "GIN",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "Переход от военного правления: президентские выборы в декабре 2025 года",
    "reviewed": false
   },
   {
    "id": "GMB",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "GNB",
    "system": "military_regime",
+   "regime": "authoritarian",
    "note": "Военный переворот в ноябре 2025 года",
    "reviewed": false
   },
   {
    "id": "GNQ",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "GRC",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "GRD",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "GTM",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "GUY",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "HND",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "HRV",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "HTI",
    "system": "semi_presidential",
+   "regime": "authoritarian",
    "note": "Переходный президентский совет",
    "reviewed": false
   },
   {
    "id": "HUN",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "IDN",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "IND",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "IRL",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "IRN",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "Теократия: высшая власть у верховного лидера",
    "reviewed": false
   },
   {
    "id": "IRQ",
    "system": "parliamentary_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "ISL",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "ISR",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "ITA",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "JAM",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "JOR",
    "system": "absolute_monarchy",
+   "regime": "authoritarian",
    "note": "Есть выборный парламент, но правительство назначает король",
    "reviewed": false
   },
   {
    "id": "JPN",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "KAZ",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "KEN",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "KGZ",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "KHM",
    "system": "constitutional_monarchy",
+   "regime": "authoritarian",
    "note": "Доминирующая партия",
    "reviewed": false
   },
   {
    "id": "KIR",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "KNA",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "KOR",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "KWT",
    "system": "absolute_monarchy",
+   "regime": "authoritarian",
    "note": "Парламент приостановлен с 2024 года",
    "reviewed": false
   },
   {
    "id": "LAO",
    "system": "one_party_state",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "LBN",
    "system": "parliamentary_republic",
+   "regime": "authoritarian",
    "note": "Конфессиональное распределение постов",
    "reviewed": false
   },
   {
    "id": "LBR",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "LBY",
    "system": "parliamentary_republic",
+   "regime": "authoritarian",
    "note": "Страна фактически разделена; переходные органы власти",
    "reviewed": false
   },
   {
    "id": "LCA",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "LIE",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "Сильные полномочия князя",
    "reviewed": false
   },
   {
    "id": "LKA",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "LSO",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "LTU",
    "system": "semi_presidential",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "LUX",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "LVA",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MAR",
    "system": "constitutional_monarchy",
+   "regime": "hybrid",
    "note": "Премьер — от победившей партии, но у короля широкие полномочия",
    "reviewed": false
   },
   {
    "id": "MCO",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "Сильные полномочия князя",
    "reviewed": false
   },
   {
    "id": "MDA",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MDG",
    "system": "military_regime",
+   "regime": "authoritarian",
    "note": "Военный переворот в октябре 2025 года",
    "reviewed": false
   },
   {
    "id": "MDV",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MEX",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MHL",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "Президент избирается парламентом",
    "reviewed": false
   },
   {
    "id": "MKD",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MLI",
    "system": "military_regime",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MLT",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MMR",
    "system": "military_regime",
+   "regime": "authoritarian",
    "note": "Выборы под контролем военных в 2025–2026 годах",
    "reviewed": false
   },
   {
    "id": "MNE",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MNG",
    "system": "semi_presidential",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MOZ",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MRT",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MUS",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MWI",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "MYS",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "NAM",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "NER",
    "system": "military_regime",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "NGA",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "NIC",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "Совместное президентство супругов с 2025 года",
    "reviewed": false
   },
   {
    "id": "NLD",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "NOR",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "NPL",
    "system": "parliamentary_republic",
+   "regime": "hybrid",
    "note": "Временное правительство после протестов 2025 года; выборы в 2026 году",
    "reviewed": false
   },
   {
    "id": "NRU",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "Президент избирается парламентом",
    "reviewed": false
   },
   {
    "id": "NZL",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "OMN",
    "system": "absolute_monarchy",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "PAK",
    "system": "parliamentary_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "PAN",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "PER",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "Частая смена президентов",
    "reviewed": false
   },
   {
    "id": "PHL",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "PLW",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "PNG",
    "system": "constitutional_monarchy",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "POL",
    "system": "semi_presidential",
+   "regime": "democracy",
    "note": "Президент с правом вето",
    "reviewed": false
   },
   {
    "id": "PRK",
    "system": "one_party_state",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "PRT",
    "system": "semi_presidential",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "PRY",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "PSE",
    "system": "semi_presidential",
+   "regime": "authoritarian",
    "note": "Государство-наблюдатель ООН; выборов не было с 2006 года, Газа и Западный берег разделены",
    "reviewed": false
   },
   {
    "id": "QAT",
    "system": "absolute_monarchy",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "ROU",
    "system": "semi_presidential",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "RUS",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "Формально смешанная система; президент доминирует",
    "reviewed": false
   },
   {
    "id": "RWA",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SAU",
    "system": "absolute_monarchy",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SDN",
    "system": "military_regime",
+   "regime": "authoritarian",
    "note": "Гражданская война",
    "reviewed": false
   },
   {
    "id": "SEN",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SGP",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "Доминирующая партия",
    "reviewed": false
   },
   {
    "id": "SLB",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SLE",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SLV",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SMR",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "Два капитана-регента",
    "reviewed": false
   },
   {
    "id": "SOL",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "Непризнанное государство; Сомали считает Сомалиленд своей частью",
    "reviewed": false
   },
   {
    "id": "SOM",
    "system": "parliamentary_republic",
+   "regime": "authoritarian",
    "note": "Президент избирается парламентом; федерация",
    "reviewed": false
   },
   {
    "id": "SRB",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SSD",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "Переходный период",
    "reviewed": false
   },
   {
    "id": "STP",
    "system": "semi_presidential",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SUR",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "Президент избирается парламентом",
    "reviewed": false
   },
   {
    "id": "SVK",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SVN",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SWE",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SWZ",
    "system": "absolute_monarchy",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SYC",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "SYR",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "Переходный период после 2024 года",
    "reviewed": false
   },
   {
    "id": "TCD",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "Переход от военного правления завершён выборами 2024 года",
    "reviewed": false
   },
   {
    "id": "TGO",
    "system": "parliamentary_republic",
+   "regime": "authoritarian",
    "note": "Конституция 2024 года: глава правительства — председатель совета министров",
    "reviewed": false
   },
   {
    "id": "THA",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "TJK",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "TKM",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "TLS",
    "system": "semi_presidential",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "TON",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "TTO",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "TUN",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "TUR",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "TUV",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "TWN",
    "system": "semi_presidential",
+   "regime": "democracy",
    "note": "Признан небольшим числом государств; КНР считает Тайвань своей провинцией",
    "reviewed": false
   },
   {
    "id": "TZA",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "UGA",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "UKR",
    "system": "semi_presidential",
+   "regime": "hybrid",
    "note": "Военное положение",
    "reviewed": false
   },
   {
    "id": "URY",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "USA",
    "system": "presidential_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "UZB",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "VCT",
    "system": "constitutional_monarchy",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "VEN",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "VNM",
    "system": "one_party_state",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   },
   {
    "id": "VUT",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "WSM",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "",
    "reviewed": false
   },
   {
    "id": "XKX",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "Частично признанное государство; Сербия считает Косово своей частью",
    "reviewed": false
   },
   {
    "id": "YEM",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "Гражданская война; президентский совет",
    "reviewed": false
   },
   {
    "id": "ZAF",
    "system": "parliamentary_republic",
+   "regime": "democracy",
    "note": "Президент избирается парламентом",
    "reviewed": false
   },
   {
    "id": "ZMB",
    "system": "presidential_republic",
+   "regime": "hybrid",
    "note": "",
    "reviewed": false
   },
   {
    "id": "ZWE",
    "system": "presidential_republic",
+   "regime": "authoritarian",
    "note": "",
    "reviewed": false
   }
