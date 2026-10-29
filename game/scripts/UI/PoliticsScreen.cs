@@ -276,7 +276,7 @@ public partial class PoliticsScreen : GlassPanel
         name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         name.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         top.AddChild(name);
-        var poll = UiTheme.Text(Fmt.Value("percent", party.Poll * 100), 20, UiTheme.Numbers, UiTheme.TextPrimary);
+        var poll = UiTheme.Text(Fmt.Value("percent", Published(party) * 100), 20, UiTheme.Numbers, UiTheme.TextPrimary);
         poll.SizeFlagsVertical = SizeFlags.ShrinkBegin;
         poll.TooltipText = "Доля в опросах среди определившихся избирателей";
         poll.MouseFilter = MouseFilterEnum.Pass;
@@ -361,7 +361,9 @@ public partial class PoliticsScreen : GlassPanel
             vote.AddThemeConstantOverride("separation", 6);
             vote.AddChild(Dot(best.Color));
             var text = UiTheme.Text($"{best.Short} {Fmt.Number(share, 0)}%", 12, UiTheme.Medium, UiTheme.TextSecondary);
+            text.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             text.ClipText = true;
+            text.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
             text.TooltipText = $"{classes[k].Name}: чаще всего голосуют за «{best.Name}»";
             text.MouseFilter = MouseFilterEnum.Pass;
             vote.AddChild(text);
@@ -369,6 +371,10 @@ public partial class PoliticsScreen : GlassPanel
             _views.AddChild(row);
         }
     }
+
+    /// <summary>Доля партии в последнем опубликованном опросе (как на графике), иначе — расчётная.</summary>
+    double Published(PartySnapshot party) =>
+        _shown?.Polls.LastOrDefault()?.Shares.TryGetValue(party.Id, out var v) == true ? v : party.Poll;
 
     /// <summary>Средние взгляды взрослых: классы взвешены их долей среди избирателей (по опросам).</summary>
     static double[] Mean(CountrySnapshot country, PoliticsSnapshot p)
