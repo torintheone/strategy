@@ -29,7 +29,7 @@ public partial class DefeatDialog : ModalDialog
         ClearContent();
         Title.Text = "Вы проиграли выборы";
         Subtitle.Text = $"{countryName}, {Fmt.Date(defeat.Date)}";
-        Content.AddChild(Line($"Победила партия {Fmt.Quote(defeat.NewParty)}. {defeat.OldLeader} уходит в оппозицию, страну возглавляет {defeat.NewLeader}.", 15,
+        Content.AddChild(Line($"Победила {Fmt.Quote(defeat.NewParty)}. {defeat.OldLeader} уходит в оппозицию, страну возглавляет {defeat.NewLeader}.", 15,
             UiTheme.TextPrimary));
         Content.AddChild(Line("Можно продолжить игру за новое правительство: те же страна и экономика, но другие партия, министры и обещания. " +
                               "Или закончить партию и посмотреть итоги своего правления.", 14));

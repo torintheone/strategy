@@ -46,7 +46,7 @@ public partial class CoalitionDialog : ModalDialog
         ClearContent();
         _rows.Clear();
         Title.Text = $"Переговоры о коалиции: {countryName}";
-        Subtitle.Text = $"У партии {Fmt.Quote(head?.Name ?? "")} {Fmt.Number(_headSeats, 0)} мест из {Fmt.Number(_seats, 0)} — для большинства нужно " +
+        Subtitle.Text = $"У {Fmt.Quote(head?.Name ?? "")} {Fmt.Number(_headSeats, 0)} мест из {Fmt.Number(_seats, 0)} — для большинства нужно " +
                         $"{Fmt.Number(_seats / 2 + 1, 0)}. Решите до {Fmt.Date(talks.Deadline)}, иначе коалицию соберут без вас.";
         foreach (var offer in talks.Offers.OrderBy(o => o.Refuses).ThenByDescending(o => o.Seats))
         {

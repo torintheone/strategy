@@ -40,7 +40,7 @@ public partial class ElectionResultsDialog : ModalDialog
         var winner = p.Party(r.Winner);
         var outcome = r.Kind == "president"
             ? $"Избран{(Female(country, r) ? "а" : "")} {r.Candidates.GetValueOrDefault(r.Winner ?? "", "")} ({winner?.Short})."
-            : $"Больше всех мест — у партии {Fmt.Quote(winner?.Name ?? "")}.";
+            : $"Больше всех мест у {Fmt.Quote(winner?.Name ?? "")}.";
         outcome += r.PowerChanged ? " Власть сменилась." : " Власть осталась у прежней партии.";
         Content.AddChild(Line(outcome, 15, r.PowerChanged ? UiTheme.Accent : UiTheme.TextPrimary, UiTheme.Medium));
         Visible = true;
