@@ -113,7 +113,7 @@ public partial class GovernmentScreen : GlassPanel
         var row = new HBoxContainer();
         row.AddThemeConstantOverride("separation", 16);
         card.AddChild(row);
-        _leaderPortrait = new Portrait { CustomMinimumSize = new Vector2(104, 136) };
+        _leaderPortrait = new Portrait { CustomMinimumSize = new Vector2(104, 136), SizeFlagsVertical = SizeFlags.ShrinkBegin };
         row.AddChild(_leaderPortrait);
         var info = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         info.AddThemeConstantOverride("separation", 4);
@@ -125,8 +125,8 @@ public partial class GovernmentScreen : GlassPanel
         _leaderInfo = UiTheme.Text("", 13, null, UiTheme.TextSecondary);
         _leaderInfo.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         info.AddChild(_leaderInfo);
-        _leaderCompetence = new Meter { CustomMinimumSize = new Vector2(260, 16) };
-        _leaderPopularity = new Meter { CustomMinimumSize = new Vector2(260, 16) };
+        _leaderCompetence = new Meter { CustomMinimumSize = new Vector2(320, 16), SizeFlagsHorizontal = SizeFlags.ShrinkBegin };
+        _leaderPopularity = new Meter { CustomMinimumSize = new Vector2(320, 16), SizeFlagsHorizontal = SizeFlags.ShrinkBegin };
         info.AddChild(_leaderCompetence);
         info.AddChild(_leaderPopularity);
         _leaderCard = card;

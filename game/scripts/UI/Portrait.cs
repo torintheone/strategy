@@ -33,7 +33,7 @@ public partial class Portrait : Control
         DrawPolygon([Vector2.Zero, new Vector2(s.X, 0), s, new Vector2(0, s.Y)], [top, top, bottom, bottom]);
 
         var body = new Color(0.07f, 0.085f, 0.11f);
-        var hair = _age >= 60 ? new Color(0.62f, 0.64f, 0.67f) : new Color(0.05f, 0.06f, 0.08f);
+        var hair = _age >= 60 ? new Color(0.36f, 0.38f, 0.41f) : new Color(0.04f, 0.05f, 0.07f);
         var cx = s.X / 2;
         var headR = s.X * 0.17f;
         var headY = s.Y * 0.40f;
@@ -47,12 +47,23 @@ public partial class Portrait : Control
         DrawRect(new Rect2(cx - headR * 0.45f, headY + headR * 0.6f, headR * 0.9f, headR * 1.2f), body);
         // Голова.
         DrawCircle(new Vector2(cx, headY), headR, body);
-        if (!_female && _age >= 60)
-            DrawArc(new Vector2(cx, headY), headR, Mathf.Pi * 1.05f, Mathf.Pi * 1.95f, 24, hair, headR * 0.28f, true);
-        else if (!_female)
-            DrawArc(new Vector2(cx, headY), headR, Mathf.Pi * 1.05f, Mathf.Pi * 1.95f, 24, hair.Lightened(0.05f), headR * 0.22f, true);
+        // Короткая стрижка: шапка волос на макушке (у пожилых — седая).
+        if (!_female)
+            DrawColoredPolygon(Cap(new Vector2(cx, headY), headR), hair);
         // Тонкая рамка.
         DrawRect(new Rect2(Vector2.Zero, s), new Color(1, 1, 1, 0.08f), false, 1);
+    }
+
+    /// <summary>Верхняя часть головы — сегмент круга чуть выше середины.</summary>
+    static Vector2[] Cap(Vector2 center, float r)
+    {
+        var points = new List<Vector2>();
+        for (var i = 0; i <= 16; i++)
+        {
+            var a = Mathf.Pi * (1.08f + 0.84f * i / 16);
+            points.Add(center + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * (r + 0.6f));
+        }
+        return points.ToArray();
     }
 
     static Vector2[] Ellipse(Vector2 center, float rx, float ry)
