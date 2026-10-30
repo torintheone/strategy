@@ -14,7 +14,8 @@ public static class MinistryReport
     static readonly HashSet<string> LowerIsBetter =
     [
         "inflation_pct", "unemployment_pct", "gov_debt_pct_gdp", "corruption_index", "radicalism", "death_rate", "interest_pct_gdp",
-        "bond_yield_pct",
+        "bond_yield_pct", "infant_mortality", "disease_burden_pct", "crime_index", "pollution_index", "housing_price_index",
+        "housing_shortage_pct", "power_shortage_pct", "electricity_price_index", "energy_import_dependence_pct",
     ];
 
     /// <summary>Показатели, у которых нет «лучше» или «хуже» — только значение.</summary>
@@ -93,6 +94,16 @@ public static class MinistryReport
             yield return "Одобрение власти низкое.";
         if (Has("corruption_index") && S("corruption_index") > 65)
             yield return "Коррупция высокая: взятки берут и в министерствах, и в судах.";
+        if (Has("power_shortage_pct") && S("power_shortage_pct") > 1)
+            yield return $"Не хватает {Fmt.Number(S("power_shortage_pct"), 1)}% электричества: веерные отключения останавливают заводы. Нужны новые станции и деньги на них.";
+        else if (Has("power_shortage_pct") && S("power_reserve_pct") < 3)
+            yield return "Запас мощности почти исчерпан: засушливый год или авария обернутся отключениями.";
+        if (Has("crime_index") && S("crime_index") > 60)
+            yield return "Преступность высокая: людям страшно выходить на улицу.";
+        if (Has("pollution_index") && S("pollution_index") > 70)
+            yield return "Воздух и вода сильно загрязнены: люди болеют и живут меньше.";
+        if (Has("housing_price_index") && S("housing_shortage_pct") > 15)
+            yield return "Жилья не хватает: цены растут, молодые семьи откладывают детей.";
     }
 
     static string About(CharacterSnapshot m)
