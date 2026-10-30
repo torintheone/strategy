@@ -41,6 +41,8 @@ public partial class MinistryScreen : GlassPanel
     Label _infrastructureCaption = null!;
     VBoxContainer _projects = null!;
     Label _projectsCaption = null!;
+    ScrollContainer _detail = null!;
+    bool _scrollToInfrastructure;
     string? _countryId;
     string _postId = "";
     CountrySnapshot? _shown;
@@ -133,7 +135,7 @@ public partial class MinistryScreen : GlassPanel
 
     Control BuildDetail()
     {
-        var scroll = new ScrollContainer
+        var scroll = _detail = new ScrollContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
@@ -292,8 +294,22 @@ public partial class MinistryScreen : GlassPanel
     }
 
     /// <summary>Выбрать ведомство (для обхода скриншотов и переходов с других экранов).</summary>
+    /// <summary>Прокрутить к инфраструктуре и стройкам (после ближайшей перерисовки).</summary>
+    public void ScrollToInfrastructure()
+    {
+        _scrollToInfrastructure = true;
+        Callable.From(ApplyScroll).CallDeferred();
+    }
+
+    void ApplyScroll()
+    {
+        if (_scrollToInfrastructure && _infrastructureCaption.Visible)
+            _detail.ScrollVertical = Math.Max(0, (int)_infrastructureCaption.Position.Y - 8);
+    }
+
     public void SelectPost(string postId)
     {
+        _scrollToInfrastructure = false;
         _postId = postId;
         foreach (var (id, button) in _rows)
             button.SetPressedNoSignal(id == postId);
@@ -365,6 +381,8 @@ public partial class MinistryScreen : GlassPanel
         RenderEnergy(post, country);
         RenderInfrastructure(post, country);
         RenderProjects(post, country, snapshot.Date, player);
+        if (_scrollToInfrastructure)
+            Callable.From(ApplyScroll).CallDeferred();
         RenderBudget(post, country, player);
         RenderPrograms(post, country, player);
         RenderLaws(post, country);

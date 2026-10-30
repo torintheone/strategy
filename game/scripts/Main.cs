@@ -978,6 +978,7 @@ public partial class Main : Node
                     Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, "BRA", "railway", "loan", "CHN");
                     Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, "BRA", "highways", "budget");
                 });
+                _ministries.ScrollToInfrastructure();
             }),
         };
         if (_shotStep > 0)
