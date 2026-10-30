@@ -26,7 +26,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -82,6 +82,8 @@ switch (command)
         return EducationReport();
     case "living":
         return LivingReport();
+    case "energy":
+        return EnergyReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -169,8 +171,27 @@ int Run(string mode)
     failures += ProtestsCheck(unrest);
     failures += PowerCheck(world, startRegimes);
     failures += LivingCheck(world);
+    failures += EnergyCheck(world);
     Console.WriteLine(failures == 0 ? "Все проверки пройдены." : $"Нарушений: {failures}");
     return failures == 0 ? 0 : 1;
+}
+
+// Энергетика в конце прогона: отключения (нехватка больше 5%) — не больше чем у двадцатой части стран, цена
+// электричества в среднем — от 50 до 200 к старту.
+static int EnergyCheck(World world)
+{
+    var all = world.Energy!.Countries;
+    var blackouts = all.Where(kv => kv.Value.Shortage > 0.05).Select(kv => kv.Key).ToList();
+    var price = all.Values.Average(c => c.Price);
+    var lowCarbon = world.Countries.Average(c => c.Stat("low_carbon_power_pct"));
+    Console.WriteLine($"Энергетика: отключения (нехватка больше 5%) у {blackouts.Count} стран{(blackouts.Count > 0 ? " (" + string.Join(", ", blackouts.Take(10)) + ")" : "")}, " +
+                      $"цена электричества в среднем {price:F0} к старту, чистое электричество {lowCarbon:F0}% в среднем по странам.");
+    if (blackouts.Count > all.Count / 20 || price is < 50 or > 200)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: энергетика ушла слишком далеко от старта");
+        return 1;
+    }
+    return 0;
 }
 
 // Жильё, преступность, загрязнение в конце прогона: острая нехватка жилья (больше 30%) — не больше чем у десятой части
@@ -591,6 +612,43 @@ int EducationReport()
                               $"капитал {e.HumanCapital * 100,5:F1}; к росту {e.Effects.GetValueOrDefault("potential_growth"),5:F2} п. п.");
         }
     }
+    return 0;
+}
+
+// Энергетика: спрос, мощность по типам, стройка, нехватка, цена в нескольких странах и в мире.
+int EnergyReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 30;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "DEU", "FRA", "CHN", "IND", "BRA", "RUS", "NGA", "ZAF", "SAU", "PAK", "ZMB"];
+    var plants = data.Energy.Plants;
+    var shortageYears = new Dictionary<string, int>();
+    for (var year = 0; year <= runYears; year++)
+    {
+        if (year > 0)
+            sim.RunUntil(world.Date.AddYears(1));
+        foreach (var (id, c) in world.Energy!.Countries)
+            if (c.Shortage > 0.01)
+                shortageYears[id] = shortageYears.GetValueOrDefault(id) + 1;
+        if (year % 10 != 0)
+            continue;
+        Console.WriteLine($"{world.Date.Year}:");
+        foreach (var id in ids)
+        {
+            var c = world.Energy![id];
+            var country = world[id];
+            var total = c.Generation.Sum();
+            Console.WriteLine($"  {country.Name,-16} спрос {c.Demand,7:F0} ТВт·ч, запас {country.Stat("power_reserve_pct"),5:F0}%, нехватка {c.Shortage * 100,4:F1}%, " +
+                              $"цена {c.Price,4:F0}, деньги {c.Funding,4:F2}, доступ {c.Access,3:F0}%, рост спроса {c.Growth * 100,4:F1}%; " +
+                              string.Join(" ", plants.Select((p, t) => $"{p.Id} {(total > 0 ? c.Generation[t] / total * 100 : 0),3:F0}%/{c.Capacity[t],5:F0}+{c.Building[t],4:F0}")));
+        }
+        var all = world.Energy!.Countries.Values.ToList();
+        Console.WriteLine($"  Мир: с нехваткой больше 1% — {all.Count(c => c.Shortage > 0.01)} стран, больше 5% — {all.Count(c => c.Shortage > 0.05)}; " +
+                          $"чистое электричество {world.Countries.Average(c => c.Stat("low_carbon_power_pct")):F0}% (в среднем по странам), " +
+                          $"цена в среднем {all.Average(c => c.Price):F0}");
+    }
+    Console.WriteLine("Дольше всех с нехваткой (лет): " + string.Join(", ", shortageYears.OrderByDescending(kv => kv.Value).Take(15).Select(kv => $"{kv.Key} {kv.Value}")));
     return 0;
 }
 

@@ -35,6 +35,8 @@ public partial class MinistryScreen : GlassPanel
     VBoxContainer _laws = null!;
     VBoxContainer _programs = null!;
     Label _programsCaption = null!;
+    VBoxContainer _energy = null!;
+    Label _energyCaption = null!;
     string? _countryId;
     string _postId = "";
     CountrySnapshot? _shown;
@@ -163,6 +165,12 @@ public partial class MinistryScreen : GlassPanel
         for (var i = 0; i < most; i++)
             grid.AddChild(BuildChartCard());
 
+        _energyCaption = UiTheme.Text("ЭНЕРГОСИСТЕМА", 11, UiTheme.MapCountryFont, UiTheme.Accent);
+        column.AddChild(_energyCaption);
+        _energy = new VBoxContainer();
+        _energy.AddThemeConstantOverride("separation", 6);
+        column.AddChild(_energy);
+
         var budgetHeader = new HBoxContainer();
         column.AddChild(budgetHeader);
         var budgetCaption = UiTheme.Text("БЮДЖЕТ ВЕДОМСТВА", 11, UiTheme.MapCountryFont, UiTheme.Accent);
@@ -284,7 +292,8 @@ public partial class MinistryScreen : GlassPanel
         var month = (snapshot.Date.Year, snapshot.Date.Month);
         if (_shown != null && month == _shownMonth && player == _shownPlayer && ReferenceEquals(country.Government, _shown.Government)
             && ReferenceEquals(country.Laws, _shown.Laws) && ReferenceEquals(country.History, _shown.History)
-            && (country.Programs ?? []).SequenceEqual(_shown.Programs ?? []))
+            && (country.Programs ?? []).SequenceEqual(_shown.Programs ?? [])
+            && country.Energy?.Shortage == _shown.Energy?.Shortage && country.Energy?.Available == _shown.Energy?.Available)
             return;
         _shown = country;
         _shownPlayer = player;
@@ -334,6 +343,7 @@ public partial class MinistryScreen : GlassPanel
         }
 
         RenderCharts(post, country, snapshot.Date);
+        RenderEnergy(post, country);
         RenderBudget(post, country, player);
         RenderPrograms(post, country, player);
         RenderLaws(post, country);
@@ -362,6 +372,60 @@ public partial class MinistryScreen : GlassPanel
             note.Text = series.Count == 0 ? "Прошлых лет в данных нет: график начнётся с первого года игры." : "";
             note.Visible = series.Count == 0;
         }
+    }
+
+    /// <summary>Энергосистема (министерство энергетики): спрос и выработка, нехватка, станции по типам — мощность, стройка, выработка.</summary>
+    void RenderEnergy(PostRecord post, CountrySnapshot country)
+    {
+        foreach (var child in _energy.GetChildren())
+            child.QueueFree();
+        var energy = post.Id == "energy" ? country.Energy : null;
+        _energyCaption.Visible = _energy.Visible = energy != null;
+        if (energy == null)
+            return;
+        var reserve = energy.Need > 0 ? (energy.Available / energy.Need - 1) * 100 : 0;
+        var trade = energy.Imports switch
+        {
+            > 0.05 => $" Импорт — {Fmt.Number(energy.Imports, 1)} ТВт·ч.",
+            < -0.05 => $" Экспорт — {Fmt.Number(-energy.Imports, 1)} ТВт·ч.",
+            _ => "",
+        };
+        var summary = UiTheme.Text($"Спрос — {Fmt.Number(energy.Demand, 1)} ТВт·ч в год, станции могут выработать {Fmt.Number(energy.Available, 1)} " +
+                                   $"(запас {Fmt.Value("percent_signed", reserve)}).{trade} Денег на стройку станций — {Fmt.Value("percent", energy.Funding * 100)} от обычного.",
+            14, null, UiTheme.TextSecondary);
+        summary.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _energy.AddChild(summary);
+        if (energy.Shortage > 0.001)
+        {
+            var warning = UiTheme.Text($"Не хватает {Fmt.Value("percent", energy.Shortage * 100)} электричества: веерные отключения режут выпуск заводов и злят людей.",
+                14, UiTheme.SemiBold, UiTheme.Critical);
+            warning.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            _energy.AddChild(warning);
+        }
+        var grid = new GridContainer { Columns = 4, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        grid.AddThemeConstantOverride("h_separation", 24);
+        grid.AddThemeConstantOverride("v_separation", 4);
+        void Cell(string text, bool header, bool number)
+        {
+            var label = UiTheme.Text(text, header ? 12 : 14, number && !header ? UiTheme.Numbers : null, header ? UiTheme.TextMuted : UiTheme.TextPrimary);
+            if (!number)
+                label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            else
+                label.HorizontalAlignment = HorizontalAlignment.Right;
+            grid.AddChild(label);
+        }
+        Cell("Станции", true, false);
+        Cell("Мощность", true, true);
+        Cell("Строится", true, true);
+        Cell("Выработка", true, true);
+        foreach (var p in energy.Plants)
+        {
+            Cell(p.Name, false, false);
+            Cell($"{Fmt.Number(p.Capacity, p.Capacity < 10 ? 1 : 0)} ГВт", false, true);
+            Cell(p.Building >= 0.05 ? $"{Fmt.Number(p.Building, p.Building < 10 ? 1 : 0)} ГВт" : "—", false, true);
+            Cell(Fmt.Value("percent", p.Share), false, true);
+        }
+        _energy.AddChild(grid);
     }
 
     void RenderBudget(PostRecord post, CountrySnapshot country, bool player)

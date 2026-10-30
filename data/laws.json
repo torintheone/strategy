@@ -39,7 +39,7 @@
   },
   {
    "id": "ecology",
-   "name": "Экология"
+   "name": "Энергетика и экология"
   },
   {
    "id": "constitution",
@@ -144,6 +144,11 @@
   },
   "spending.courts": {
    "name": "Расходы на суды",
+   "unit": "% ВВП",
+   "description": ""
+  },
+  "spending.energy": {
+   "name": "Расходы на энергетику",
    "unit": "% ВВП",
    "description": ""
   },
@@ -296,6 +301,26 @@
    "name": "Загрязнение",
    "unit": "доля",
    "description": "к загрязнению воздуха и воды"
+  },
+  "power_demand": {
+   "name": "Спрос на электричество",
+   "unit": "доля",
+   "description": ""
+  },
+  "power_investment": {
+   "name": "Деньги на электростанции",
+   "unit": "доля",
+   "description": "к скорости стройки"
+  },
+  "power_access": {
+   "name": "Электрификация",
+   "unit": "доля",
+   "description": "к темпу подключения домов к сетям"
+  },
+  "power_renewables": {
+   "name": "Поддержка ветра и солнца",
+   "unit": "доля",
+   "description": "к желанию их строить"
   }
  },
  "laws": [
@@ -2430,6 +2455,153 @@
      "CAN": "moderate",
      "GBR": "moderate",
      "SWE": "high"
+    }
+   }
+  },
+  {
+   "id": "energy_strategy",
+   "group": "ecology",
+   "name": "Энергетическая стратегия",
+   "post": "energy",
+   "description": "Какие электростанции государство помогает строить.",
+   "drafting_months": 4,
+   "transition_months": 12,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "market",
+     "name": "Рынок решает",
+     "description": "Строят то, что дешевле.",
+     "effects": {},
+     "attitudes": {}
+    },
+    {
+     "id": "coal",
+     "name": "Ставка на уголь",
+     "description": "Угольные станции дёшевы и надёжны, но воздух от них грязнее.",
+     "effects": {},
+     "attitudes": {
+      "skilled": 1,
+      "capitalists": 1,
+      "professionals": -2
+     }
+    },
+    {
+     "id": "gas",
+     "name": "Ставка на газ",
+     "description": "Газовые станции строятся быстро, но электричество дорожает вместе с газом.",
+     "effects": {},
+     "attitudes": {
+      "capitalists": 1
+     }
+    },
+    {
+     "id": "nuclear",
+     "name": "Атомная энергетика",
+     "description": "АЭС строят долго и дорого, зато потом энергия дешёвая и чистая.",
+     "effects": {},
+     "attitudes": {
+      "professionals": 1,
+      "skilled": 1,
+      "clerks": -1
+     }
+    },
+    {
+     "id": "green",
+     "name": "Зелёная энергетика",
+     "description": "Ветер и солнце: чисто, но пока дорого; с каждым годом они дешевеют.",
+     "effects": {},
+     "attitudes": {
+      "professionals": 2,
+      "clerks": 1,
+      "capitalists": -1,
+      "skilled": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "market",
+    "countries": {
+     "FRA": "nuclear",
+     "DEU": "green",
+     "DNK": "green",
+     "GBR": "green",
+     "IND": "coal",
+     "POL": "coal",
+     "ZAF": "coal"
+    }
+   }
+  },
+  {
+   "id": "electricity_tariffs",
+   "group": "economy",
+   "name": "Тарифы на электричество",
+   "post": "energy",
+   "description": "Сколько люди платят за свет.",
+   "drafting_months": 3,
+   "transition_months": 6,
+   "constitutional": false,
+   "variants": [
+    {
+     "id": "market",
+     "name": "Рыночные",
+     "description": "Люди платят полную цену, и у энергетиков есть деньги на новые станции.",
+     "effects": {},
+     "attitudes": {
+      "capitalists": 1,
+      "unskilled": -2,
+      "pensioners": -2,
+      "unemployed": -1
+     }
+    },
+    {
+     "id": "regulated",
+     "name": "Регулируемые",
+     "description": "Государство сдерживает тарифы: людям спокойнее, энергетикам меньше денег на стройку.",
+     "effects": {
+      "power_investment": -0.15
+     },
+     "attitudes": {}
+    },
+    {
+     "id": "subsidized",
+     "name": "Субсидируемые",
+     "description": "Свет дешёвый за счёт бюджета: его тратят больше, а станций строят меньше.",
+     "effects": {
+      "spending.energy": 0.5,
+      "power_demand": 0.08,
+      "power_investment": -0.3
+     },
+     "attitudes": {
+      "unskilled": 2,
+      "pensioners": 2,
+      "farmers": 1,
+      "unemployed": 1,
+      "capitalists": -1,
+      "professionals": -1
+     }
+    }
+   ],
+   "start": {
+    "default": "regulated",
+    "income": {
+     "high": "market"
+    },
+    "countries": {
+     "SAU": "subsidized",
+     "KWT": "subsidized",
+     "ARE": "subsidized",
+     "QAT": "subsidized",
+     "OMN": "subsidized",
+     "BHR": "subsidized",
+     "IRN": "subsidized",
+     "IRQ": "subsidized",
+     "DZA": "subsidized",
+     "LBY": "subsidized",
+     "VEN": "subsidized",
+     "TKM": "subsidized",
+     "UZB": "subsidized",
+     "EGY": "subsidized"
     }
    }
   },

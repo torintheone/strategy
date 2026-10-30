@@ -8,7 +8,7 @@
   data/map/cities.json  — города с привязкой к регионам
 
 Показатели берутся из снимков в tools/sources/ (их скачивает tools/fetch_sources.py
-в GitHub Actions), геометрия — из Natural Earth 1:10m (скачивается в tools/.cache).
+в GitHub Actions, данные об электроэнергетике — tools/fetch_energy.py), геометрия — из Natural Earth 1:10m (скачивается в tools/.cache).
 Нужны Python-пакеты из tools/requirements.txt и mapshaper: «npm install --prefix tools».
 
 Запуск:  python tools/build_world.py [--refresh]
@@ -52,7 +52,7 @@ LATEST_YEAR = 2025
 SIMPLIFY = "10%"
 
 # Показатель -> источники по приоритету, самый ранний допустимый год, способ заполнения пропусков.
-# Источник: ("wb", код), ("imf", код, множитель) или ("ne", поле Natural Earth, множитель).
+# Источник: ("wb", код), ("imf", код, множитель), ("owid", столбец energy-data) или ("ne", поле Natural Earth, множитель).
 INDICATORS = [
     ("population", [("wb", "SP.POP.TOTL"), ("imf", "LP", 1e6), ("ne", "POP_EST", 1)], 2015, "required"),
     ("gdp_usd", [("wb", "NY.GDP.MKTP.CD"), ("imf", "NGDPD", 1e9), ("ne", "GDP_MD", 1e6)], 2015, "derived"),
@@ -98,6 +98,15 @@ INDICATORS = [
     # состав классов (этап 2)
     ("self_employed_pct", [("wb", "SL.EMP.SELF.ZS")], 2015, "median"),
     ("tertiary_enrollment_pct", [("wb", "SE.TER.ENRR")], 2010, "median"),
+    # электроэнергетика (этап 5): спрос на человека, доли выработки по источникам, чистый импорт
+    ("electricity_kwh_per_capita", [("owid", "electricity_demand_per_capita")], 2015, "median"),
+    ("power_coal_pct", [("owid", "coal_share_elec")], 2015, "median"),
+    ("power_gas_pct", [("owid", "gas_share_elec")], 2015, "median"),
+    ("power_oil_pct", [("owid", "oil_share_elec")], 2015, "median"),
+    ("power_nuclear_pct", [("owid", "nuclear_share_elec")], 2015, "median"),
+    ("power_hydro_pct", [("owid", "hydro_share_elec")], 2015, "median"),
+    ("power_renewables_pct", [("owid", "other_renewables_share_elec_total")], 2015, "median"),
+    ("power_imports_pct", [("owid", "net_elec_imports_share_demand")], 2015, "median"),
 ]
 GNI_ATLAS = "NY.GNP.PCAP.CD"
 # История показателей за 10 лет до старта — для графиков на экранах ведомств (data/history.json).
@@ -324,7 +333,7 @@ def country_records(ref: dict[str, dict], ref_all: dict[str, dict], extras: list
     return records
 
 
-def build_countries(records: list[dict], wb: dict, imf: dict, bis: dict) -> list[dict]:
+def build_countries(records: list[dict], wb: dict, imf: dict, bis: dict, owid: dict) -> list[dict]:
     countries = []
     for rec in records:
         entry = {k: v for k, v in rec.items() if not k.startswith("_")}
@@ -344,6 +353,9 @@ def build_countries(records: list[dict], wb: dict, imf: dict, bis: dict) -> list
                     hit = latest(series(imf, src[1], rec["_imf"]), min_year)
                     found = (hit[0] * src[2], hit[1]) if hit else None
                     label = f"imf:{src[1]}"
+                elif src[0] == "owid":
+                    found = latest(series(owid, src[1], rec["id"]), min_year)
+                    label = f"owid:{src[1]}"
                 elif src[0] == "ne" and key in rec["_ne_stats"] and rec["_ne"].get(src[1]):
                     year = rec["_ne"].get("POP_YEAR" if key == "population" else "GDP_YEAR")
                     found = (float(rec["_ne"][src[1]]) * src[2], int(year) if year else None)
@@ -1038,6 +1050,7 @@ def main() -> None:
     wb = load_snapshot("wb_wdi.json")
     imf = load_snapshot("imf_weo.json")
     bis = load_snapshot("bis_policy_rates.json")
+    owid = load_snapshot("owid_energy.json")
     projections = load_snapshot("wb_projections.json")["values"]
     geonames = load_snapshot("geonames_admin.json")["admin"]
     print(f"  членов ООН: {len(un)}, других государств: {len(extras)}")
@@ -1054,7 +1067,7 @@ def main() -> None:
 
     print("3/4 Показатели стран")
     records = country_records(ref, {c["cca3"]: c for c in ref_all}, extras, ne_by_owner, capitals)
-    countries = build_countries(records, wb["values"], imf["values"], bis["rates"])
+    countries = build_countries(records, wb["values"], imf["values"], bis["rates"], owid["values"])
     check_currencies(countries)
     filled = sum(1 for c in countries for s in c["stats"].values() if not is_measured(s))
     total = sum(len(c["stats"]) for c in countries)
@@ -1084,11 +1097,12 @@ def main() -> None:
             "wb": "Всемирный банк, World Development Indicators (CC BY 4.0)",
             "imf": "МВФ, World Economic Outlook",
             "bis": "Банк международных расчётов, ключевые ставки центробанков",
+            "owid": "Our World in Data, energy-data (Ember, Energy Institute; CC BY 4.0)",
             "natural_earth": "Natural Earth (общественное достояние)",
             "fill": "Пропуск заполнен медианой по похожим странам",
             "derived": "Вычислено из других показателей",
         },
-        "snapshots": {"wb": wb["retrieved"], "imf": imf["retrieved"], "bis": bis["retrieved"]},
+        "snapshots": {"wb": wb["retrieved"], "imf": imf["retrieved"], "bis": bis["retrieved"], "owid": owid["retrieved"]},
         "countries": countries,
     })
     population, benchmarks = build_population(records, countries, wb["values"], projections)

@@ -704,6 +704,7 @@ public partial class Main : Node
                     && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "program")
                     && snapshot.Countries["RUS"].Stat("crime_index") is { Factors.Count: > 0 } && snapshot.Countries["RUS"].Stat("pollution_index") is { } pollution
                     && double.IsFinite(pollution.Value) && snapshot.Countries["RUS"].Programs?.Contains("mortgage_subsidy") == true
+                    && snapshot.Countries["RUS"].Energy is { Plants.Count: 6, Demand: > 0 } && snapshot.Countries["RUS"].Stat("power_shortage_pct") is { Factors.Count: 3 }
                     && snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 };
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
@@ -937,6 +938,21 @@ public partial class Main : Node
                 _ministries.SelectPost("labor");
             }),
             ("41_ministry_interior", () => _ministries.SelectPost("interior")),
+            ("42_ministry_energy", () => _ministries.SelectPost("energy")),
+            // Авария: половина станций Бразилии выходит из строя — веерные отключения.
+            ("43_energy_blackout", () => _host!.Post(w =>
+            {
+                var energy = w.Energy!["BRA"];
+                for (var t = 0; t < energy.Capacity.Length; t++)
+                    energy.Capacity[t] *= 0.5;
+                Politeconomy.Sim.Energy.EnergyModel.Update(w, w["BRA"], energy);
+            })),
+            ("44_map_low_carbon", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "low_carbon"));
+                _camera.FitWorld(instant: true);
+            }),
         };
         if (_shotStep > 0)
         {

@@ -54,7 +54,7 @@ public static class LawModel
         "unemployment_fear", "small_business", "tertiary", "vocational", "foreign_profit", "capitalist_take",
         "older_participation", "fertility", "migration", "life_expectancy", "radicalism", "legitimacy",
         "protest_rate", "protest_escalation", "disperse", "health_access", "health_capacity", "disease_burden",
-        "housing_build", "housing_price", "crime", "pollution",
+        "housing_build", "housing_price", "crime", "pollution", "power_demand", "power_investment", "power_access", "power_renewables",
     };
 
     /// <summary>Индексы институтов, которые законы могут сдвигать (index.*).</summary>
@@ -88,7 +88,7 @@ public static class LawModel
 
     /// <summary>
     /// Поправка к модели по ключу эффекта: от законов, давления групп интересов, протестов и репрессий, человеческого
-    /// капитала, здоровья и старения, программ ведомств, жилья, преступности, коррупции и загрязнения (0, если поправок нет).
+    /// капитала, здоровья и старения, программ ведомств, жилья, преступности, коррупции и загрязнения, энергетики (0, если поправок нет).
     /// </summary>
     public static double Effect(World world, string country, string key) =>
         (world.Laws?.Countries.GetValueOrDefault(country)?.Effect(key) ?? 0)
@@ -98,7 +98,8 @@ public static class LawModel
         + (world.Education?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0)
         + (world.Health?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0)
         + (world.Programs?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0)
-        + (world.Living?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0);
+        + (world.Living?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0)
+        + (world.Energy?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0);
 
     /// <summary>
     /// Пересчитать поправки страны: для каждого закона — эффект нынешнего варианта (в переходный период — между

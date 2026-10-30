@@ -97,7 +97,7 @@ public sealed record BalanceFile(TimeBalance Time, EconomyBalance? Economy = nul
     SocietyBalance? Society = null, GovernmentBalance? Government = null, LawsBalance? Laws = null,
     BudgetCycleBalance? BudgetCycle = null, PoliticsBalance? Politics = null, InterestGroupsBalance? InterestGroups = null,
     UnrestBalance? Unrest = null, PowerBalance? Power = null, EducationBalance? Education = null,
-    HealthBalance? Health = null, LivingBalance? Living = null);
+    HealthBalance? Health = null, LivingBalance? Living = null, EnergyBalance? Energy = null);
 
 public sealed record TimeBalance(IReadOnlyList<double> DaysPerSecond);
 
@@ -215,5 +215,6 @@ public sealed record CityRecord(
 [JsonSerializable(typeof(PartiesFile))]
 [JsonSerializable(typeof(InterestGroupsFile))]
 [JsonSerializable(typeof(ProgramsFile))]
+[JsonSerializable(typeof(EnergyFile))]
 [JsonSerializable(typeof(CultureRecord))]
 internal sealed partial class DataJsonContext : JsonSerializerContext;

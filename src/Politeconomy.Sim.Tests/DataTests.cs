@@ -119,6 +119,7 @@ public class DataTests
         Parties = d.Parties,
         InterestGroups = d.InterestGroups,
         Programs = d.Programs,
+        Energy = d.Energy,
         Benchmarks = d.Benchmarks,
     };
 }

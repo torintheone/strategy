@@ -15,8 +15,8 @@ public static partial class DataValidator
         var countries = data.Countries.Countries.Select(c => c.Id).ToHashSet(StringComparer.Ordinal);
         foreach (var key in laws.Effects.Keys.Where(k => !LawModel.IsKnownEffect(data, k)))
             add(file, $"эффект «{key}» модель не умеет применять");
-        if (laws.Laws.Count != 40)
-            add(file, $"законов {laws.Laws.Count}, на этапе 3 — 40");
+        if (laws.Laws.Count < 40)
+            add(file, $"законов {laws.Laws.Count}, а нужно не меньше 40 (этап 3)");
         var ids = new HashSet<string>(StringComparer.Ordinal);
         foreach (var law in laws.Laws)
         {

@@ -1,0 +1,21 @@
+{
+ "_comment": "Электроэнергетика (MODEL.md, «Энергетика»). Поля описаны в data/README.md.",
+ "plants": [
+  {"id": "coal", "name": "Угольные", "stat": "power_coal_pct", "capacity_factor": 0.75, "build_years": 4, "life_years": 45, "capex": 40, "fuel": "ores", "fuel_cost": 30, "resource": "coal_rents_pct_gdp", "co2": 1.0, "pollution": 1.0, "base": false, "weight": 1.0},
+  {"id": "gas", "name": "Газовые", "stat": "power_gas_pct", "capacity_factor": 0.7, "build_years": 2, "life_years": 35, "capex": 25, "fuel": "oil", "fuel_cost": 45, "resource": "gas_rents_pct_gdp", "co2": 0.45, "pollution": 0.25, "base": false, "weight": 1.0},
+  {"id": "oil", "name": "Мазутные и дизельные", "stat": "power_oil_pct", "capacity_factor": 0.6, "build_years": 2, "life_years": 35, "capex": 30, "fuel": "oil", "fuel_cost": 110, "resource": "oil_rents_pct_gdp", "co2": 0.8, "pollution": 0.6, "base": false, "weight": 0.15},
+  {"id": "nuclear", "name": "Атомные", "stat": "power_nuclear_pct", "capacity_factor": 0.9, "build_years": 8, "life_years": 50, "capex": 85, "fuel": null, "fuel_cost": 10, "co2": 0, "pollution": 0, "base": true, "weight": 0.5, "min_income": 2},
+  {"id": "hydro", "name": "Гидроэлектростанции", "stat": "power_hydro_pct", "capacity_factor": 0.45, "build_years": 6, "life_years": 80, "capex": 45, "fuel": null, "fuel_cost": 0, "co2": 0, "pollution": 0, "base": true, "weight": 0.6},
+  {"id": "renewables", "name": "Ветер, солнце, биотопливо", "stat": "power_renewables_pct", "capacity_factor": 0.28, "build_years": 1, "life_years": 25, "capex": 55, "fuel": null, "fuel_cost": 0, "co2": 0, "pollution": 0.05, "base": true, "weight": 1.5, "cost_decline": 0.04}
+ ],
+ "strategies": {
+  "market": {},
+  "coal": {"coal": 3},
+  "gas": {"gas": 3},
+  "nuclear": {"nuclear": 5},
+  "green": {"renewables": 3, "coal": 0.3, "oil": 0.5, "gas": 0.7}
+ },
+ "carbon_prices": {"none": 0, "moderate": 0.5, "high": 1.2},
+ "tariffs": {"market": 1, "regulated": 0.4, "subsidized": 0.1},
+ "intensity": {"agriculture": 0.5, "oil_gas": 1.2, "coal_ores": 2.0, "food": 1.0, "light": 1.0, "chemicals": 2.5, "metallurgy": 3.0, "machinery": 1.2, "electronics": 1.2, "pharma": 1.0, "defense": 1.0, "construction": 0.5, "trade": 0.8, "transport": 0.6, "finance": 0.4, "it_comm": 1.5, "tourism": 0.8, "education": 0.5, "health": 0.8, "public_admin": 0.5}
+}

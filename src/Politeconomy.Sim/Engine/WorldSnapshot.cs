@@ -62,8 +62,9 @@ public sealed class WorldSnapshot
             }
             var politics = world.Politics?.Countries.GetValueOrDefault(c.Id) is { } pc ? PoliticsSnapshot.Capture(world, c, pc) : null;
             var programs = world.Programs?.Countries.GetValueOrDefault(c.Id)?.Current.Order(StringComparer.Ordinal).ToList();
+            var energy = world.Energy?.Countries.GetValueOrDefault(c.Id) is { } en ? EnergySnapshot.Capture(world, en) : null;
             countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal),
-                ages, classes, government, c.Regime, laws, history, spending, politics, programs);
+                ages, classes, government, c.Regime, laws, history, spending, politics, programs, energy);
         }
         var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var r in world.Regions)
@@ -128,7 +129,29 @@ public sealed record CountrySnapshot(
     HistorySnapshot? History = null,
     IReadOnlyList<double>? Spending = null,
     PoliticsSnapshot? Politics = null,
-    IReadOnlyList<string>? Programs = null)
+    IReadOnlyList<string>? Programs = null,
+    EnergySnapshot? Energy = null)
 {
     public StatValue? Stat(string id) => Stats.GetValueOrDefault(id);
 }
+
+/// <summary>
+/// Энергосистема в снимке: спрос и возможная выработка (ТВт·ч в год), нехватка (доля спроса), импорт (ТВт·ч, минус —
+/// экспорт), деньги на стройку (1 — как на старте) и станции по типам из data/energy.json.
+/// </summary>
+public sealed record EnergySnapshot(double Demand, double Available, double Need, double Shortage, double Imports, double Funding,
+    IReadOnlyList<PlantSnapshot> Plants)
+{
+    public static EnergySnapshot Capture(World world, Energy.CountryEnergy c)
+    {
+        var plants = world.Data.Energy.Plants;
+        var total = c.Generation.Sum();
+        var list = new List<PlantSnapshot>(plants.Count);
+        for (var t = 0; t < plants.Count && t < c.Capacity.Length; t++)
+            list.Add(new PlantSnapshot(plants[t].Id, plants[t].Name, c.Capacity[t], c.Building[t], total > 0 ? c.Generation[t] / total * 100 : 0));
+        return new EnergySnapshot(c.Demand, Energy.EnergyModel.Available(world, c), c.Demand * (1 - c.ImportShare), c.Shortage, c.Imports, c.Funding, list);
+    }
+}
+
+/// <summary>Станции одного типа: мощность и строящаяся мощность (ГВт), доля в выработке (%).</summary>
+public sealed record PlantSnapshot(string Id, string Name, double Capacity, double Building, double Share);

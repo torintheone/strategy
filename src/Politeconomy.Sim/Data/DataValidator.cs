@@ -83,6 +83,13 @@ public static partial class DataValidator
         ["housing_shortage_pct"] = (0, 100),
         ["crime_index"] = (0, 100),
         ["pollution_index"] = (0, 100),
+        ["electricity_kwh_per_capita"] = (0, 60000),
+        ["power_shortage_pct"] = (0, 100),
+        ["power_reserve_pct"] = (-100, 1000),
+        ["power_imports_pct"] = (-400, 100),
+        ["electricity_price_index"] = (5, 2000),
+        ["low_carbon_power_pct"] = (0, 100),
+        ["energy_import_dependence_pct"] = (0, 100),
         ["approval_pct"] = (0, 100),
         ["ruling_poll_pct"] = (0, 100),
     };
@@ -135,6 +142,7 @@ public static partial class DataValidator
                 var knownSource = s.Source.StartsWith("wb:", StringComparison.Ordinal)
                     || s.Source.StartsWith("imf:", StringComparison.Ordinal)
                     || s.Source.StartsWith("bis:", StringComparison.Ordinal)
+                    || s.Source.StartsWith("owid:", StringComparison.Ordinal)
                     || s.Source is StatSources.Fill or StatSources.Derived or "natural_earth";
                 if (!knownSource)
                     Add("countries.json", $"{c.Id}.{key}: неизвестный источник «{s.Source}»");
@@ -299,6 +307,7 @@ public static partial class DataValidator
         ValidatePolitics(data, Add);
         ValidateGroups(data, Add);
         ValidatePrograms(data, Add);
+        ValidateEnergy(data, Add);
         return problems;
     }
 

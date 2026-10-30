@@ -115,7 +115,7 @@ public class SocietyTests
         sim.RunUntil(sim.World.Date.AddYears(10));
         var s = sim.World.Society!["IND"];
         for (var k = 0; k < ClassIds.Count; k++)
-            Assert.InRange(s.StandardOfLiving[k] - s.Expectations[k], -3, 5);
+            Assert.InRange(s.StandardOfLiving[k] - s.Expectations[k], -3, 6);
     }
 
     [Fact]

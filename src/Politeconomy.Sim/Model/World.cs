@@ -117,6 +117,9 @@ public sealed class World
     /// <summary>Жильё, преступность, загрязнение; создаются <see cref="Living.LivingModel.Setup"/>.</summary>
     public Living.WorldLiving? Living { get; set; }
 
+    /// <summary>Электроэнергетика: станции, спрос, нехватка, цена; создаётся <see cref="Energy.EnergyModel.Setup"/>.</summary>
+    public Energy.WorldEnergy? Energy { get; set; }
+
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 
