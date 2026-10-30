@@ -78,6 +78,8 @@ switch (command)
         return GroupsReport();
     case "protests":
         return ProtestsReport();
+    case "education":
+        return EducationReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -540,6 +542,29 @@ int Ministry()
         {
             var series = country.History?.Series(stat) ?? [];
             Console.WriteLine($"    {stat}: " + string.Join(" ", series.TakeLast(10).Select(p => $"{p.Year % 100:D2}:{p.Value:G4}")));
+        }
+    }
+    return 0;
+}
+
+// Образование: охват, выпуск, запас в рабочей силе, качество и человеческий капитал по годам в нескольких странах.
+int EducationReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 30;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "DEU", "KOR", "CHN", "IND", "BRA", "NGA", "ETH"];
+    for (var year = 0; year <= runYears; year += 10)
+    {
+        if (year > 0)
+            sim.RunUntil(world.Date.AddYears(10));
+        Console.WriteLine($"{world.Date.Year}:");
+        foreach (var id in ids)
+        {
+            var e = world.Education![id];
+            Console.WriteLine($"  {world[id].Name,-16} высшее: охват {e.Tertiary,5:F1}%, выпуск {e.TertiaryGraduates,5:F1}, в рабочей силе {e.TertiaryStock,5:F1}; " +
+                              $"проф. {e.VocationalStock,4:F2}; грамотность {e.Literacy,4:F0}%; качество {e.Quality,3:F0}; финансирование {e.Funding,4:F2}; " +
+                              $"капитал {e.HumanCapital * 100,5:F1}; к росту {e.Effects.GetValueOrDefault("potential_growth"),5:F2} п. п.");
         }
     }
     return 0;

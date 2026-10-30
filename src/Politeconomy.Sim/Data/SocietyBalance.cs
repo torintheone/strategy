@@ -17,9 +17,6 @@ public sealed class SocietyBalance
     public double TertiaryReference { get; init; } = 45;
     public double SkillTiltMin { get; init; } = 0.3;
     public double SkillTiltMax { get; init; } = 1.4;
-    /// <summary>С ростом дохода на душу в N раз охват высшим образованием растёт в N^TertiaryGrowth раз (не выше TertiaryCeiling).</summary>
-    public double TertiaryGrowth { get; init; } = 0.5;
-    public double TertiaryCeiling { get; init; } = 100;
 
     // --- Доходы
     /// <summary>Доля прибыли, которая уходит иностранным владельцам (после налогов и доходов госпредприятий).</summary>

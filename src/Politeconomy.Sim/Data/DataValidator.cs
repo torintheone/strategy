@@ -70,6 +70,9 @@ public static partial class DataValidator
         ["government_effectiveness"] = (0, 100),
         ["legitimacy"] = (0, 100),
         ["unrest_index"] = (0, 100),
+        ["education_quality"] = (0, 100),
+        ["literacy_pct"] = (0, 100),
+        ["human_capital"] = (30, 300),
         ["approval_pct"] = (0, 100),
         ["ruling_poll_pct"] = (0, 100),
     };

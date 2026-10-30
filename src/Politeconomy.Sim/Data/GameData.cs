@@ -83,6 +83,11 @@ public sealed class GameData
 
     static readonly PowerBalance DefaultPower = new();
 
+    /// <summary>Коэффициенты образования; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public EducationBalance EducationBalance => Balance.Education ?? DefaultEducation;
+
+    static readonly EducationBalance DefaultEducation = new();
+
     /// <summary>Политика страны из data/politics.json.</summary>
     public PoliticsRecord PoliticsOf(string country) =>
         Politics.Countries.FirstOrDefault(c => c.Id == country) ?? throw new KeyNotFoundException($"Нет страны «{country}» в data/politics.json");

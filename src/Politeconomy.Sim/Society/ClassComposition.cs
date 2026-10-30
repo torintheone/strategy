@@ -26,14 +26,19 @@ public static class ClassComposition
     public sealed record Result(double[] Heads, double[] Sizes, double[,] WagePeople, double DonorScale,
         double Security, double SmallBusiness, double Capitalists);
 
-    /// <summary>SmallBusiness и Vocational — поправки законов (доли): к доле мелкого бизнеса и к работникам с профессиональным образованием.</summary>
+    /// <summary>
+    /// SmallBusiness — поправка законов к доле мелкого бизнеса; Vocational — прирост профессионального образования в
+    /// рабочей силе (доля). Tertiary — охват высшим образованием на старте (от него «наклон» к специалистам),
+    /// HigherGrowth — во сколько раз высшего образования в рабочей силе стало больше, чем на старте.
+    /// </summary>
     public static Result Compute(IReadOnlyList<IndustryRecord> industries, CountryEconomy e, CountryDemography d,
-        double selfEmployed, double tertiary, SocietyBalance b, double olderParticipation, double smallBusiness = 0, double vocational = 0)
+        double selfEmployed, double tertiary, SocietyBalance b, double olderParticipation, double smallBusiness = 0, double vocational = 0,
+        double higherGrowth = 1)
     {
         var heads = new double[ClassIds.Count];
         var labor = e.LaborForce;
         var employed = labor * (1 - e.Unemployment);
-        var tilt = Math.Clamp(tertiary / b.TertiaryReference, b.SkillTiltMin, b.SkillTiltMax);
+        var tilt = Math.Clamp(tertiary / b.TertiaryReference, b.SkillTiltMin, b.SkillTiltMax) * Math.Clamp(higherGrowth, 0.3, 3);
         var wagePeople = new double[industries.Count, ClassIds.Count];
         for (var i = 0; i < industries.Count; i++)
         {

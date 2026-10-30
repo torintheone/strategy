@@ -105,6 +105,9 @@ public sealed class World
     /// <summary>Классы населения; создаются <see cref="Society.SocietyModel.Setup"/>.</summary>
     public Society.WorldSociety? Society { get; set; }
 
+    /// <summary>Образование: охват, качество, квалификация рабочей силы; создаётся <see cref="Education.EducationModel.Setup"/>.</summary>
+    public Education.WorldEducation? Education { get; set; }
+
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 

@@ -86,13 +86,15 @@ public static class LawModel
         world.Laws?.Countries.GetValueOrDefault(country)?.Current.GetValueOrDefault("central_bank") == "government";
 
     /// <summary>
-    /// Поправка к модели по ключу эффекта: от законов, давления групп интересов, протестов и репрессий (0, если поправок нет).
+    /// Поправка к модели по ключу эффекта: от законов, давления групп интересов, протестов и репрессий, человеческого
+    /// капитала (0, если поправок нет).
     /// </summary>
     public static double Effect(World world, string country, string key) =>
         (world.Laws?.Countries.GetValueOrDefault(country)?.Effect(key) ?? 0)
         + (world.Politics?.Countries.GetValueOrDefault(country) is { } p
             ? p.GroupEffects.GetValueOrDefault(key) + p.ProtestEffects.GetValueOrDefault(key)
-            : 0);
+            : 0)
+        + (world.Education?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0);
 
     /// <summary>
     /// Пересчитать поправки страны: для каждого закона — эффект нынешнего варианта (в переходный период — между

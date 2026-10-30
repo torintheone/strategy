@@ -906,6 +906,11 @@ public partial class Main : Node
                 _host.Post(Politeconomy.Sim.Politics.PoliticsActions.ContinueAfterDefeat);
                 OpenSociety("BRA");
             }),
+            ("37_ministry_education", () =>
+            {
+                OpenMinistries("DEU");
+                _ministries.SelectPost("education");
+            }),
         };
         if (_shotStep > 0)
         {

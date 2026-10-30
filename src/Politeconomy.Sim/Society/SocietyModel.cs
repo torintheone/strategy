@@ -53,8 +53,8 @@ public static class SocietyModel
     }
 
     /// <summary>
-    /// Состав классов по текущей экономике и населению страны. Пока нет модели образования (этап 5), охват высшим
-    /// образованием растёт вместе с доходом на душу — как в среднем по миру.
+    /// Состав классов по текущей экономике и населению страны. Квалификация работников — из модели образования:
+    /// высшее и профессиональное образование в рабочей силе (с задержкой в годы после изменения охвата).
     /// </summary>
     public static ClassComposition.Result Compose(World world, Country country)
     {
@@ -62,13 +62,14 @@ public static class SocietyModel
         var b = world.Data.Society;
         var e = world.Economy![country.Id];
         var d = world.Demography![country.Id];
-        var richer = Math.Max(0.1, IncomeGrowth(e));
         var selfEmployed = Math.Clamp(S("self_employed_pct", 30) / 100, 0, 0.98);
-        var tertiary = Math.Min(b.TertiaryCeiling, S("tertiary_enrollment_pct", 40) * Math.Pow(richer, b.TertiaryGrowth)
-                                                   * Math.Max(0, 1 + LawModel.Effect(world, country.Id, "tertiary")));
+        var education = world.Education?.Countries.GetValueOrDefault(country.Id);
+        var tertiary = S("tertiary_enrollment_pct", 40);
+        var vocational = education != null ? education.VocationalStock - 1 : 0;
+        var growth = education is { Tertiary0: > 0 } ? education.TertiaryStock / education.Tertiary0 : 1;
         return ClassComposition.Compute(world.Data.Industries.Industries, e, d, selfEmployed, tertiary, b,
             Demography.DemographyModel.OlderParticipation(world, country.Id),
-            LawModel.Effect(world, country.Id, "small_business"), LawModel.Effect(world, country.Id, "vocational"));
+            LawModel.Effect(world, country.Id, "small_business"), vocational, growth);
     }
 
     /// <summary>Во сколько раз реальный ВВП на душу выше стартового.</summary>
