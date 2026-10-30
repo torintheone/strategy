@@ -15,16 +15,21 @@ public static class PartyFactory
     static readonly (string Id, double Weight)[] LeftBig = [("social_democrat", 1), ("socialist", 0.3), ("populist", 0.2)];
     static readonly (string Id, double Weight)[] RightBig = [("conservative", 1), ("nationalist", 0.2), ("religious", 0.2)];
 
-    public static List<Party> Create(World world, Country country, CountryPolitics politics, double[] mean)
+    /// <summary>
+    /// Партии страны. Force — создать и там, где по данным партий нет (после революции); regime — по какому режиму
+    /// выбирать число партий и есть ли партия власти (по умолчанию — нынешний режим страны).
+    /// </summary>
+    public static List<Party> Create(World world, Country country, CountryPolitics politics, double[] mean, bool force = false, Regime? regime = null)
     {
         var data = world.Data;
         var record = data.PoliticsOf(country.Id);
-        if (!record.Parties)
+        if (!record.Parties && !force)
             return [];
         var b = data.PoliticsBalance;
         var r = PoliticsModel.Rng(world);
-        var democracy = country.Regime == Regime.Democracy;
-        var range = country.Regime switch
+        var mode = regime ?? country.Regime;
+        var democracy = mode == Regime.Democracy;
+        var range = mode switch
         {
             Regime.Hybrid => b.HybridParties,
             Regime.Authoritarian when country.System == PoliticalSystem.OnePartyState => b.OnePartyParties,
@@ -91,7 +96,7 @@ public static class PartyFactory
                     : Math.Clamp(b.OrganizationMean + r.NextGaussian() * b.OrganizationSpread, 0.1, 0.95),
                 Founded = world.Date.Year - r.Next(power ? 10 : 2, power ? 60 : 50),
                 Power = power,
-                Loyal = country.Regime == Regime.Authoritarian && !power,
+                Loyal = mode == Regime.Authoritarian && !power,
             };
             party.Leader = PartyLeader(world, country, party);
             parties.Add(party);

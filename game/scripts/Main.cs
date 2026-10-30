@@ -656,6 +656,8 @@ public partial class Main : Node
                 OpenPolitics("RUS");
                 OpenSociety("RUS");
                 OpenSociety("BRA");
+                OpenSociety("SEN");
+                OpenPolitics("SAU");
                 // Выборы: в стране игрока (окно итогов покажется само) и президентские в Бразилии; окна поражения и итогов.
                 _host!.Post(w =>
                 {
@@ -666,6 +668,10 @@ public partial class Main : Node
                     // Протест в России: митинги специалистов; ответ — разгон.
                     var protest = Politeconomy.Sim.Politics.ProtestModel.Start(w, w["RUS"], w.Politics!["RUS"], Politeconomy.Sim.Society.ClassIds.Professionals, "mood", 1);
                     Politeconomy.Sim.Politics.PoliticsActions.RespondToProtest(w, "RUS", protest.Id, "disperse");
+                    // Смена власти без выборов в чужих странах: переворот, дворцовый переворот, революция.
+                    Politeconomy.Sim.Politics.PowerModel.MilitaryCoup(w, w["SEN"], w.Politics!["SEN"]);
+                    Politeconomy.Sim.Politics.PowerModel.PalaceCoup(w, w["PRK"], w.Politics!["PRK"]);
+                    Politeconomy.Sim.Politics.PowerModel.Revolution(w, w["SAU"], w.Politics!["SAU"], Politeconomy.Sim.Society.ClassIds.Professionals);
                 });
                 _defeatDialog.Show(new Politeconomy.Sim.Politics.Defeat(_data.Scenario.StartDate, "RUS", "А", "Б", "В"), "Россия");
                 _summaryDialog.Show(new Politeconomy.Sim.Politics.ReignSummary("RUS", _data.Scenario.StartDate, _data.Scenario.StartDate.AddYears(3),
@@ -690,7 +696,8 @@ public partial class Main : Node
                     && snapshot.Countries["RUS"].Politics?.Elections?.Count >= 2 && snapshot.Countries["BRA"].Politics?.LastElection?.Kind == "president"
                     && snapshot.Countries["DEU"].Stat("ruling_poll_pct") is { } ruling && double.IsFinite(ruling.Value)
                     && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "campaign")
-                    && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "protest");
+                    && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "protest")
+                    && snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 };
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
                     && inflation is { Source: StatSources.Model, Factors.Count: > 0 } && double.IsFinite(inflation.Value)
@@ -885,6 +892,19 @@ public partial class Main : Node
                 });
                 SetMode(_data.MapModes.Modes.First(m => m.Id == "unrest"));
                 _camera.FitWorld(instant: true);
+            }),
+            // Военный переворот в стране игрока: окно потери власти открывается само.
+            ("35_coup", () =>
+            {
+                SetMode(_data.MapModes.Modes[0]);
+                _host!.Post(w => Politeconomy.Sim.Politics.PowerModel.MilitaryCoup(w, w["BRA"], w.Politics!["BRA"]));
+            }),
+            ("36_junta", () =>
+            {
+                CloseDialogs();
+                _seenDefeat = _host!.Snapshot.Defeat;
+                _host.Post(Politeconomy.Sim.Politics.PoliticsActions.ContinueAfterDefeat);
+                OpenSociety("BRA");
             }),
         };
         if (_shotStep > 0)

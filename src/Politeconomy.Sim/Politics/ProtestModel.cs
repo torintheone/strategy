@@ -282,6 +282,13 @@ public static class ProtestModel
                         sec.PoliceStrain += b.FailedStrain;
                     protest.Stage = Math.Min(Stages.Length - 1, protest.Stage + 1);
                     result = (army ? "армия не справилась" : "полиция не справилась") + " — протест разгорается";
+                    // Армия не подавила восстание — власть падает.
+                    if (army && protest.Stage >= Stages.Length - 1)
+                    {
+                        world.Log(country.Id, "protest", $"{title}: {result}.");
+                        PowerModel.Revolution(world, country, p, k);
+                        return result;
+                    }
                 }
                 Loyalty(world, country, p);
                 break;

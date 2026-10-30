@@ -127,8 +127,9 @@ public static class Elections
         {
             // Президент (или партия власти) остаётся; парламентское большинство собирается вокруг его партии.
             var anchor = head == null ? largest : parties.IndexOf(head);
+            // Главы от партии нет (после хунты или революции без президентских выборов) — правительство возглавит лидер крупнейшей.
             Cabinet.Form(world, country, Coalition.Form(parties, seats, b, anchor, Coalition.Rival(seats, anchor)).Select(i => parties[i].Id).ToList(),
-                parties[anchor], null);
+                parties[anchor], head == null && !HasPresident(world, country) ? parties[anchor].Leader : null);
         }
         else if (Enumerable.Range(0, parties.Count).Where(i => parties[i].Ruling).Sum(i => seats[i]) * 2 > parliament.Seats)
             // Правящая коалиция сохранила большинство — правит дальше.

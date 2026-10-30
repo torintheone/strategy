@@ -119,6 +119,8 @@ int Run(string mode)
     var elections = new List<(string Country, Regime Regime, Politeconomy.Sim.Politics.ElectionResult Result)>();
     var seen = new HashSet<Politeconomy.Sim.Politics.ElectionResult>(world.Politics!.Countries.Values.SelectMany(p => p.Elections));
 
+    // Строй и режим стран на старте — чтобы увидеть, сколько их сменилось без выборов.
+    var startRegimes = world.Countries.ToDictionary(c => c.Id, c => (c.System, c.Regime));
     // Протесты по месяцам: сколько стран-месяцев с массовыми протестами и с восстаниями.
     var unrest = (Months: 0, Any: 0, Mass: 0, Uprising: 0);
     var end = world.Date.AddYears(years);
@@ -161,8 +163,32 @@ int Run(string mode)
     failures += ElectionCheck(elections, years);
     failures += GroupsCheck(world, data);
     failures += ProtestsCheck(unrest);
+    failures += PowerCheck(world, startRegimes);
     Console.WriteLine(failures == 0 ? "Все проверки пройдены." : $"Нарушений: {failures}");
     return failures == 0 ? 0 : 1;
+}
+
+// Смена власти без выборов за прогон: сколько каких событий; режимы не должны массово рушиться.
+static int PowerCheck(World world, Dictionary<string, (PoliticalSystem System, Regime Regime)> start)
+{
+    var changes = world.Politics!.Countries.SelectMany(kv => kv.Value.Changes.Select(c => (Country: kv.Key, Change: c))).ToList();
+    var kinds = changes.GroupBy(x => x.Change.Kind).ToDictionary(g => g.Key, g => g.Count());
+    string[] order = ["no_confidence", "impeachment", "palace_coup", "military_coup", "handover", "revolution"];
+    string[] names = ["вотумов недоверия", "импичментов", "дворцовых переворотов", "военных переворотов", "передач власти хунтой", "революций"];
+    Console.WriteLine("Смена власти без выборов: " + string.Join(", ", order.Select((k, i) => $"{names[i]} {kinds.GetValueOrDefault(k)}")) + ".");
+    var military = world.Countries.Count(c => c.System == PoliticalSystem.MilitaryRegime);
+    var militaryStart = start.Values.Count(x => x.System == PoliticalSystem.MilitaryRegime);
+    var democracies = world.Countries.Count(c => c.Regime == Regime.Democracy);
+    var democraciesStart = start.Values.Count(x => x.Regime == Regime.Democracy);
+    Console.WriteLine($"  военных режимов: было {militaryStart}, стало {military}; демократий: было {democraciesStart}, стало {democracies}. " +
+                      "Чаще всего: " + string.Join(", ", changes.GroupBy(x => x.Country).OrderByDescending(g => g.Count()).Take(8).Select(g => $"{g.Key} {g.Count()}")));
+    var failures = 0;
+    if (military > militaryStart + 25 || democracies < democraciesStart * 0.8 || kinds.GetValueOrDefault("military_coup") > 150)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: перевороты слишком часты");
+        failures++;
+    }
+    return failures;
 }
 
 // Протесты: массовые идут в 0,1–15% стран-месяцев (в кризисных странах), восстания — не больше 2%.

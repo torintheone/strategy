@@ -14,7 +14,11 @@ public sealed class Reign
 }
 
 /// <summary>Игрок проиграл выборы: кто победил. Ждёт решения игрока — продолжить за новое правительство или закончить.</summary>
-public sealed record Defeat(DateOnly Date, string Country, string OldLeader, string NewLeader, string NewParty);
+/// <summary>
+/// Игрок потерял власть: на выборах (Reason = election) или без выборов (no_confidence, impeachment, palace_coup,
+/// military_coup, revolution). Ждёт решения игрока — продолжить за новое правительство или закончить.
+/// </summary>
+public sealed record Defeat(DateOnly Date, string Country, string OldLeader, string NewLeader, string NewParty, string Reason = "election");
 
 /// <summary>Итоги закончившегося правления: показатели на начало и на конец.</summary>
 public sealed record ReignSummary(

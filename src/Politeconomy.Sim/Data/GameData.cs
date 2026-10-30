@@ -78,6 +78,11 @@ public sealed class GameData
 
     static readonly UnrestBalance DefaultUnrest = new();
 
+    /// <summary>Коэффициенты смены власти без выборов; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public PowerBalance PowerBalance => Balance.Power ?? DefaultPower;
+
+    static readonly PowerBalance DefaultPower = new();
+
     /// <summary>Политика страны из data/politics.json.</summary>
     public PoliticsRecord PoliticsOf(string country) =>
         Politics.Countries.FirstOrDefault(c => c.Id == country) ?? throw new KeyNotFoundException($"Нет страны «{country}» в data/politics.json");

@@ -88,6 +88,11 @@ public sealed class CountryPolitics
     /// <summary>Индекс беспорядков (0–100) и удар протестов по выпуску в месяц (доля разрыва выпуска).</summary>
     public double Unrest { get; set; }
     public double UnrestOutput { get; set; }
+    /// <summary>Смены власти без выборов (новые в конце) и хунта, если у власти военные после переворота.</summary>
+    public List<PowerChange> Changes { get; set; } = [];
+    public Junta? Junta { get; set; }
+    /// <summary>Когда сформировано нынешнее правительство (после выборов, вотума, переворота) — первые месяцы его не свергают.</summary>
+    public DateOnly? Formed { get; set; }
     /// <summary>Номер для id следующей новой партии.</summary>
     public int NextParty { get; set; } = 1;
     /// <summary>Растёт при каждом изменении — по нему снимок понимает, что пора пересобраться.</summary>

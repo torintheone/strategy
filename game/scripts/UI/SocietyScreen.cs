@@ -152,6 +152,8 @@ public partial class SocietyScreen : GlassPanel
                 header.AddChild(arrest);
             }
         }
+        if (p.Security is { } security)
+            _unrest.AddChild(ThreatsLine(security));
         if (p.Protests is not { Count: > 0 } protests)
         {
             _unrest.AddChild(Wrapped("Протестов нет. Они начинаются, когда класс радикален, зол и организован; поводом может стать и закон, " +
@@ -182,6 +184,28 @@ public partial class SocietyScreen : GlassPanel
             }
             _unrest.AddChild(row);
         }
+    }
+
+    /// <summary>Угрозы власти за месяц: что и с какой вероятностью может её сменить без выборов.</summary>
+    static Control ThreatsLine(SecuritySnapshot security)
+    {
+        var parts = new List<string>();
+        if (security.Threats is { } t)
+            foreach (var (name, chance) in new[] { ("вотум недоверия", t.NoConfidence), ("импичмент", t.Impeachment), ("дворцовый переворот", t.PalaceCoup),
+                         ("военный переворот", t.MilitaryCoup), ("революция", t.Revolution) })
+                if (chance >= 0.001)
+                    parts.Add($"{name} — {Fmt.Number(chance * 100, chance < 0.01 ? 1 : 0)}% в месяц");
+        var text = parts.Count == 0 ? "Угроз власти сейчас нет: элиты спокойны, армия лояльна, парламент не собирается отправлять правительство в отставку."
+            : "Угрозы власти: " + string.Join(", ", parts) + ".";
+        if (security.Junta)
+            text = "У власти военные. " + (security.HandOver is { } d ? $"Обещают вернуть власть гражданским к {Fmt.Date(d)}. " : "Сроков передачи власти не называют. ") + text;
+        var total = security.Threats?.Total ?? 0;
+        var label = Wrapped(text, 13, total >= 0.03 ? UiTheme.Critical : total >= 0.005 ? UiTheme.Accent : UiTheme.TextMuted);
+        label.TooltipText = "Вотум недоверия — когда у правительства нет большинства или его не любят; импичмент — при скандале или очень низком одобрении; " +
+                            "дворцовый переворот — когда недовольны элиты и падает легитимность; военный переворот — когда армия нелояльна; " +
+                            "революция — когда идёт восстание, а армия не готова его подавить.";
+        label.MouseFilter = MouseFilterEnum.Pass;
+        return label;
     }
 
     static string ResponseName(string response) => response switch

@@ -48,6 +48,7 @@ public static class Cabinet
                 world.Defeat = new Defeat(world.Date, country.Id, oldHead.Name, newHead.Name, headParty.Name);
         }
         Rebalance(world, country, partyChanged);
+        p.Formed = world.Date;
         g.Version++;
         p.Version++;
     }

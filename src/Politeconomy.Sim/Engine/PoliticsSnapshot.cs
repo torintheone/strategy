@@ -133,8 +133,13 @@ public sealed record ProtestSnapshot(
     double DisperseChance,
     bool Army);
 
-/// <summary>Силовики: лояльность полиции и армии, репрессии (0–100), можно ли сейчас арестовать оппозицию и кого.</summary>
-public sealed record SecuritySnapshot(double PoliceLoyalty, double ArmyLoyalty, double Repression, bool CanArrest, string? ArrestTarget, DateOnly? NextArrest);
+/// <summary>
+/// Силовики: лояльность полиции и армии, репрессии (0–100), можно ли сейчас арестовать оппозицию и кого; угрозы власти —
+/// вероятности за месяц (вотум недоверия, импичмент, дворцовый и военный переворот, революция); у хунты — когда она
+/// обещает вернуть власть гражданским.
+/// </summary>
+public sealed record SecuritySnapshot(double PoliceLoyalty, double ArmyLoyalty, double Repression, bool CanArrest, string? ArrestTarget, DateOnly? NextArrest,
+    PowerModel.Threats? Threats = null, bool Junta = false, DateOnly? HandOver = null);
 
 /// <summary>
 /// Политика страны в снимке: избирательная система и барьер, партии (правящие первыми, затем по опросам),
@@ -159,7 +164,8 @@ public sealed record PoliticsSnapshot(
     IReadOnlyList<GroupSnapshot>? Groups = null,
     IReadOnlyList<ProtestSnapshot>? Protests = null,
     SecuritySnapshot? Security = null,
-    double Unrest = 0)
+    double Unrest = 0,
+    IReadOnlyList<PowerChange>? Changes = null)
 {
     public PartySnapshot? Party(string? id) => id == null ? null : Parties.FirstOrDefault(p => p.Id == id);
 
@@ -210,8 +216,10 @@ public sealed record PoliticsSnapshot(
             CaptureGroups(world, country, p),
             CaptureProtests(world, country, p),
             new SecuritySnapshot(p.Security.PoliceLoyalty, p.Security.ArmyLoyalty, p.Security.Repression, ProtestModel.CanArrest(world, country.Id),
-                ProtestModel.Target(p)?.Id, p.Security.Arrests?.AddMonths(world.Data.UnrestBalance.ArrestCooldown)),
-            p.Unrest);
+                ProtestModel.Target(p)?.Id, p.Security.Arrests?.AddMonths(world.Data.UnrestBalance.ArrestCooldown),
+                PowerModel.Estimate(world, country, p), p.Junta != null, p.Junta?.HandOver),
+            p.Unrest,
+            p.Changes.ToList());
         Cache.AddOrUpdate(p, new Cached(p.Version, snapshot));
         return snapshot;
     }
