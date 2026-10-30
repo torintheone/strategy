@@ -94,6 +94,11 @@ public sealed class GameData
 
     static readonly HealthBalance DefaultHealth = new();
 
+    /// <summary>Коэффициенты жилья, преступности, коррупции и экологии; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public LivingBalance LivingBalance => Balance.Living ?? DefaultLiving;
+
+    static readonly LivingBalance DefaultLiving = new();
+
     /// <summary>Политика страны из data/politics.json.</summary>
     public PoliticsRecord PoliticsOf(string country) =>
         Politics.Countries.FirstOrDefault(c => c.Id == country) ?? throw new KeyNotFoundException($"Нет страны «{country}» в data/politics.json");

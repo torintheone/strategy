@@ -78,6 +78,11 @@ public static partial class DataValidator
         ["health_access_pct"] = (0, 100),
         ["disease_burden_pct"] = (0, 30),
         ["infant_mortality"] = (0, 200),
+        ["housing_m2_per_person"] = (2, 120),
+        ["housing_price_index"] = (10, 1000),
+        ["housing_shortage_pct"] = (0, 100),
+        ["crime_index"] = (0, 100),
+        ["pollution_index"] = (0, 100),
         ["approval_pct"] = (0, 100),
         ["ruling_poll_pct"] = (0, 100),
     };

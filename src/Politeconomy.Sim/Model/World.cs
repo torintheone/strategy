@@ -114,6 +114,9 @@ public sealed class World
     /// <summary>Программы ведомств: какие работают сейчас и на старте.</summary>
     public Health.WorldPrograms? Programs { get; set; }
 
+    /// <summary>Жильё, преступность, загрязнение; создаются <see cref="Living.LivingModel.Setup"/>.</summary>
+    public Living.WorldLiving? Living { get; set; }
+
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 

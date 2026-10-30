@@ -35,6 +35,7 @@ public static class GameSetup
         Politics.PoliticsModel.Setup(world);
         LawModel.Setup(world);
         Health.HealthModel.Setup(world);
+        Living.LivingModel.Setup(world);
         Politics.InterestGroupsModel.Setup(world);
         Politics.ProtestModel.Setup(world);
         world.Budgets = new Budget.WorldBudgets();
@@ -45,7 +46,8 @@ public static class GameSetup
     /// <summary>Все системы модели: законы, экономика, демография, классы, правительство, политика (порядок внутри месяца — по фазам).</summary>
     public static IReadOnlyList<ISimSystem> Systems() =>
         [.. LawModel.Systems(), .. EconomyModel.Systems(), new Budget.Systems.BudgetCycleSystem(), .. DemographyModel.Systems(),
-            .. Education.EducationModel.Systems(), .. Health.HealthModel.Systems(), .. SocietyModel.Systems(), .. GovernmentModel.Systems(), .. Politics.PoliticsModel.Systems(),
+            .. Education.EducationModel.Systems(), .. Health.HealthModel.Systems(), .. Living.LivingModel.Systems(),
+            .. SocietyModel.Systems(), .. GovernmentModel.Systems(), .. Politics.PoliticsModel.Systems(),
             .. History.HistoryModel.Systems()];
 
     /// <summary>Подключить системы модели к миру из сохранения.</summary>

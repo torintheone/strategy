@@ -26,7 +26,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -80,6 +80,8 @@ switch (command)
         return ProtestsReport();
     case "education":
         return EducationReport();
+    case "living":
+        return LivingReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -166,8 +168,30 @@ int Run(string mode)
     failures += GroupsCheck(world, data);
     failures += ProtestsCheck(unrest);
     failures += PowerCheck(world, startRegimes);
+    failures += LivingCheck(world);
     Console.WriteLine(failures == 0 ? "Все проверки пройдены." : $"Нарушений: {failures}");
     return failures == 0 ? 0 : 1;
+}
+
+// Жильё, преступность, загрязнение в конце прогона: острая нехватка жилья (больше 30%) — не больше чем у десятой части
+// стран, преступность и загрязнение в среднем не уходят от старта дальше чем на 15 пунктов.
+static int LivingCheck(World world)
+{
+    var all = world.Living!.Countries.Values.ToList();
+    var shortage = all.Count(c => c.Housing < c.Desired * 0.7);
+    var crime = all.Average(c => c.Crime - c.Crime0);
+    var pollution = all.Average(c => c.Pollution - c.Pollution0);
+    Console.WriteLine($"Условия жизни: острая нехватка жилья у {shortage} стран из {all.Count}; преступность в среднем {crime:+0.0;-0.0} к старту, " +
+                      $"загрязнение {pollution:+0.0;-0.0}. Больше всего выросла преступность: " +
+                      string.Join(", ", world.Living.Countries.OrderByDescending(kv => kv.Value.Crime - kv.Value.Crime0).Take(5).Select(kv => $"{kv.Key} {kv.Value.Crime0:F0}→{kv.Value.Crime:F0}")) +
+                      "; загрязнение: " +
+                      string.Join(", ", world.Living.Countries.OrderByDescending(kv => kv.Value.Pollution - kv.Value.Pollution0).Take(5).Select(kv => $"{kv.Key} {kv.Value.Pollution0:F0}→{kv.Value.Pollution:F0}")));
+    if (shortage > all.Count / 10 || Math.Abs(crime) > 15 || Math.Abs(pollution) > 15)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: условия жизни ушли слишком далеко от старта");
+        return 1;
+    }
+    return 0;
 }
 
 // Смена власти без выборов за прогон: сколько каких событий; режимы не должны массово рушиться.
@@ -566,6 +590,38 @@ int EducationReport()
                               $"проф. {e.VocationalStock,4:F2}; грамотность {e.Literacy,4:F0}%; качество {e.Quality,3:F0}; финансирование {e.Funding,4:F2}; " +
                               $"капитал {e.HumanCapital * 100,5:F1}; к росту {e.Effects.GetValueOrDefault("potential_growth"),5:F2} п. п.");
         }
+    }
+    return 0;
+}
+
+// Жильё, преступность, коррупция, загрязнение: как меняются за десятилетия в нескольких странах и в мире.
+int LivingReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 30;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "DEU", "JPN", "CHN", "IND", "BRA", "RUS", "NGA", "ZAF", "MEX"];
+    for (var year = 0; year <= runYears; year += 10)
+    {
+        if (year > 0)
+            sim.RunUntil(world.Date.AddYears(10));
+        Console.WriteLine($"{world.Date.Year}:");
+        foreach (var id in ids)
+        {
+            var c = world.Living![id];
+            var country = world[id];
+            Console.WriteLine($"  {country.Name,-16} жильё {c.Housing,5:F1} м² (хотят {c.Desired,5:F1}, цены {country.Stat("housing_price_index"),4:F0}); " +
+                              $"преступность {c.Crime,4:F0} (старт {c.Crime0,3:F0}); коррупция {country.Stat("corruption_index"),3:F0} (старт {c.Corruption0,3:F0}); " +
+                              $"загрязнение {c.Pollution,4:F0} (старт {c.Pollution0,3:F0}); настроение {c.Mood.Average(),5:F1}; " +
+                              $"к росту {c.Effects.GetValueOrDefault("potential_growth"),5:F2} п. п., к жизни {c.Effects.GetValueOrDefault("life_expectancy"),5:F2} лет");
+            if (year > 0 && country.Stats["crime_index"].Factors is { } causes)
+                Console.WriteLine("      преступность: " + string.Join(", ", causes.Select(f => $"{f.Label} {f.Value:+0.0;-0.0}")));
+        }
+        var all = world.Living!.Countries.Values.ToList();
+        Console.WriteLine($"  Мир: нехватка жилья у {all.Count(c => c.Housing < c.Desired * 0.9)} стран из {all.Count}, " +
+                          $"преступность выросла больше чем на 10 у {all.Count(c => c.Crime > c.Crime0 + 10)}, " +
+                          $"загрязнение выросло больше чем на 10 у {all.Count(c => c.Pollution > c.Pollution0 + 10)}, " +
+                          $"средние: преступность {all.Average(c => c.Crime):F0}, загрязнение {all.Average(c => c.Pollution):F0}");
     }
     return 0;
 }

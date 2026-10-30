@@ -669,8 +669,9 @@ public partial class Main : Node
                     // Протест в России: митинги специалистов; ответ — разгон.
                     var protest = Politeconomy.Sim.Politics.ProtestModel.Start(w, w["RUS"], w.Politics!["RUS"], Politeconomy.Sim.Society.ClassIds.Professionals, "mood", 1);
                     Politeconomy.Sim.Politics.PoliticsActions.RespondToProtest(w, "RUS", protest.Id, "disperse");
-                    // Программа ведомства: скрининги в России.
+                    // Программы ведомств: скрининги и социальное жильё в России.
                     Politeconomy.Sim.Health.ProgramModel.Toggle(w, "RUS", "screening");
+                    Politeconomy.Sim.Health.ProgramModel.Toggle(w, "RUS", "social_housing");
                     // Смена власти без выборов в чужих странах: переворот, дворцовый переворот, революция.
                     Politeconomy.Sim.Politics.PowerModel.MilitaryCoup(w, w["SEN"], w.Politics!["SEN"]);
                     Politeconomy.Sim.Politics.PowerModel.PalaceCoup(w, w["PRK"], w.Politics!["PRK"]);
@@ -701,6 +702,8 @@ public partial class Main : Node
                     && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "campaign")
                     && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "protest")
                     && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "program")
+                    && snapshot.Countries["RUS"].Stat("crime_index") is { Factors.Count: > 0 } && snapshot.Countries["RUS"].Stat("pollution_index") is { } pollution
+                    && double.IsFinite(pollution.Value) && snapshot.Countries["RUS"].Programs?.Contains("social_housing") == true
                     && snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 };
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
@@ -921,6 +924,19 @@ public partial class Main : Node
                 OpenMinistries("BRA");
                 _ministries.SelectPost("health");
             }),
+            ("39_map_pollution", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "pollution"));
+                _camera.FitWorld(instant: true);
+            }),
+            ("40_ministry_labor", () =>
+            {
+                _host!.Post(w => Politeconomy.Sim.Health.ProgramModel.Toggle(w, "BRA", "social_housing"));
+                OpenMinistries("BRA");
+                _ministries.SelectPost("labor");
+            }),
+            ("41_ministry_interior", () => _ministries.SelectPost("interior")),
         };
         if (_shotStep > 0)
         {

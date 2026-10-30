@@ -276,6 +276,26 @@
    "name": "Коррупция",
    "unit": "пункты",
    "description": ""
+  },
+  "housing_build": {
+   "name": "Строительство жилья",
+   "unit": "доля",
+   "description": "к вводу нового жилья"
+  },
+  "housing_price": {
+   "name": "Цены на жильё",
+   "unit": "доля",
+   "description": ""
+  },
+  "crime": {
+   "name": "Преступность",
+   "unit": "доля",
+   "description": "к уровню преступности"
+  },
+  "pollution": {
+   "name": "Загрязнение",
+   "unit": "доля",
+   "description": "к загрязнению воздуха и воды"
   }
  },
  "laws": [
@@ -930,7 +950,8 @@
       "revenue.social": 0.08,
       "small_business": -0.15,
       "natural_unemployment": 0.2,
-      "index.corruption": -2
+      "index.corruption": -2,
+      "crime": -0.05
      },
      "attitudes": {
       "small_business": -2,
@@ -2141,7 +2162,8 @@
      "effects": {
       "index.civil_liberties": 5,
       "radicalism": 1,
-      "disperse": -0.1
+      "disperse": -0.1,
+      "crime": 0.05
      },
      "attitudes": {
       "professionals": 1,
@@ -2164,7 +2186,8 @@
       "index.rule_of_law": -5,
       "radicalism": -2,
       "disperse": 0.1,
-      "protest_rate": -0.1
+      "protest_rate": -0.1,
+      "crime": -0.1
      },
      "attitudes": {
       "professionals": -2,
@@ -2302,7 +2325,7 @@
      "description": "Заводам дешевле, людям — грязнее.",
      "effects": {
       "potential_growth": 0.05,
-      "life_expectancy": -0.3
+      "pollution": 0.25
      },
      "attitudes": {
       "capitalists": 2,
@@ -2323,7 +2346,7 @@
      "description": "Чище воздух и вода, но промышленности дороже.",
      "effects": {
       "potential_growth": -0.1,
-      "life_expectancy": 0.4
+      "pollution": -0.3
      },
      "attitudes": {
       "professionals": 2,
@@ -2365,7 +2388,8 @@
      "description": "Топливо и электричество немного дороже, бюджет получает больше.",
      "effects": {
       "revenue.excise": 0.15,
-      "potential_growth": -0.05
+      "potential_growth": -0.05,
+      "pollution": -0.08
      },
      "attitudes": {
       "professionals": 1,
@@ -2380,7 +2404,8 @@
      "description": "Ощутимо дороже бензин и электричество.",
      "effects": {
       "revenue.excise": 0.4,
-      "potential_growth": -0.12
+      "potential_growth": -0.12,
+      "pollution": -0.18
      },
      "attitudes": {
       "professionals": 2,

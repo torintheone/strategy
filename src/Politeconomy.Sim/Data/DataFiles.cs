@@ -97,7 +97,7 @@ public sealed record BalanceFile(TimeBalance Time, EconomyBalance? Economy = nul
     SocietyBalance? Society = null, GovernmentBalance? Government = null, LawsBalance? Laws = null,
     BudgetCycleBalance? BudgetCycle = null, PoliticsBalance? Politics = null, InterestGroupsBalance? InterestGroups = null,
     UnrestBalance? Unrest = null, PowerBalance? Power = null, EducationBalance? Education = null,
-    HealthBalance? Health = null);
+    HealthBalance? Health = null, LivingBalance? Living = null);
 
 public sealed record TimeBalance(IReadOnlyList<double> DaysPerSecond);
 

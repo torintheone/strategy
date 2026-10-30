@@ -1,10 +1,13 @@
 {
- "_comment": "Программы ведомств (MODEL.md, «Здравоохранение», «Программы»). Поля описаны в data/README.md.",
+ "_comment": "Программы ведомств (MODEL.md, «Здравоохранение», «Жильё, преступность, коррупция, экология», «Программы»). Поля описаны в data/README.md.",
  "programs": [
   {"id": "vaccination", "post": "health", "name": "Вакцинация", "description": "Прививки детям и взрослым по национальному календарю.", "cost": 0.05, "effects": {"life_expectancy": 0.4, "disease_burden": -0.08}, "start": [false, true, true, true]},
   {"id": "screening", "post": "health", "name": "Скрининги", "description": "Регулярные обследования: рак, сердце, диабет находят на ранней стадии.", "cost": 0.15, "effects": {"life_expectancy": 0.5, "disease_burden": -0.05}, "start": [false, false, true, true]},
   {"id": "rural_medicine", "post": "health", "name": "Медицина на селе", "description": "Фельдшерские пункты, выездные врачи и санавиация для деревень.", "cost": 0.2, "effects": {"health_access": 8, "life_expectancy": 0.2}, "start": [false, false, false, true]},
   {"id": "high_tech_care", "post": "health", "name": "Высокотехнологичная помощь", "description": "Кардиохирургия, онкология, трансплантация — бесплатно по квотам.", "cost": 0.3, "effects": {"life_expectancy": 0.6, "health_capacity": 0.05}, "start": [false, false, false, true], "min_doctors": 1.5},
-  {"id": "drug_coverage", "post": "health", "name": "Лекарственное обеспечение", "description": "Бесплатные лекарства пенсионерам и хронически больным.", "cost": 0.25, "effects": {"life_expectancy": 0.3, "disease_burden": -0.04}, "start": [false, false, false, true]}
+  {"id": "drug_coverage", "post": "health", "name": "Лекарственное обеспечение", "description": "Бесплатные лекарства пенсионерам и хронически больным.", "cost": 0.25, "effects": {"life_expectancy": 0.3, "disease_burden": -0.04}, "start": [false, false, false, true]},
+  {"id": "social_housing", "post": "labor", "name": "Социальное жильё", "description": "Государство строит квартиры и сдаёт их недорого семьям с невысоким доходом.", "cost": 0.3, "effects": {"housing_build": 0.25, "housing_price": -0.05}, "start": [false, false, false, true]},
+  {"id": "mortgage_subsidy", "post": "labor", "name": "Льготная ипотека", "description": "Государство доплачивает банкам часть процента: строят больше, но и цены растут.", "cost": 0.15, "effects": {"housing_build": 0.12, "housing_price": 0.08}, "start": [false, false, true, false]},
+  {"id": "police_patrols", "post": "interior", "name": "Патрулирование улиц", "description": "Больше полицейских на улицах и камер наблюдения в городах.", "cost": 0.12, "effects": {"crime": -0.12}, "start": [false, false, true, true]}
  ]
 }
