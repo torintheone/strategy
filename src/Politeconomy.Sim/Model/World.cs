@@ -120,6 +120,9 @@ public sealed class World
     /// <summary>Электроэнергетика: станции, спрос, нехватка, цена; создаётся <see cref="Energy.EnergyModel.Setup"/>.</summary>
     public Energy.WorldEnergy? Energy { get; set; }
 
+    /// <summary>Инфраструктура и стройки игрока; создаётся <see cref="Infrastructure.InfrastructureModel.Setup"/>.</summary>
+    public Infrastructure.WorldInfrastructure? Infrastructure { get; set; }
+
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 

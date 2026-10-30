@@ -98,6 +98,10 @@ public static class MinistryReport
             yield return $"Не хватает {Fmt.Number(S("power_shortage_pct"), 1)}% электричества: веерные отключения останавливают заводы. Нужны новые станции и деньги на них.";
         else if (Has("power_shortage_pct") && S("power_reserve_pct") < 3)
             yield return "Запас мощности почти исчерпан: засушливый год или авария обернутся отключениями.";
+        if (Has("infrastructure_index") && S("infrastructure_index") < 100)
+            yield return "Инфраструктура перегружена: заводы и порты упираются в потолок. Нужны новые стройки и деньги на обслуживание.";
+        if (Has("infrastructure_condition_pct") && S("infrastructure_condition_pct") < 55)
+            yield return "Дороги и сети обветшали: без ремонта они выдерживают всё меньше.";
         if (Has("crime_index") && S("crime_index") > 60)
             yield return "Преступность высокая: людям страшно выходить на улицу.";
         if (Has("pollution_index") && S("pollution_index") > 70)

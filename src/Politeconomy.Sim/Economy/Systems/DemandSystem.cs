@@ -30,7 +30,7 @@ public sealed class DemandSystem : EconomySystem
             var shock = Shock(world, economy, EconomyBalance.ByIncome(b.Shock, e.IncomeIndex));
             e.GapCore = Math.Clamp(b.GapPersistence * e.GapCore - b.RateSensitivity * rateGap + shock, b.GapMin, b.GapMax);
 
-            var primaryDeficit = e.NominalGdp > 0 ? (e.TotalSpending - e.TotalRevenue) / e.NominalGdp : 0;
+            var primaryDeficit = (e.NominalGdp > 0 ? (e.TotalSpending - e.TotalRevenue) / e.NominalGdp : 0) + e.ProjectFlow;
             e.PrimaryDeficitSmooth += (primaryDeficit - e.PrimaryDeficitSmooth) / b.FiscalImpulseMonths;
             e.FiscalImpulse = b.FiscalMultiplier * (primaryDeficit - e.PrimaryDeficitSmooth);
 

@@ -37,6 +37,10 @@ public partial class MinistryScreen : GlassPanel
     Label _programsCaption = null!;
     VBoxContainer _energy = null!;
     Label _energyCaption = null!;
+    VBoxContainer _infrastructure = null!;
+    Label _infrastructureCaption = null!;
+    VBoxContainer _projects = null!;
+    Label _projectsCaption = null!;
     string? _countryId;
     string _postId = "";
     CountrySnapshot? _shown;
@@ -50,6 +54,8 @@ public partial class MinistryScreen : GlassPanel
     public event Action? BudgetRequested;
     /// <summary>Включить или выключить программу ведомства (страна, программа).</summary>
     public event Action<string, string>? ProgramToggled;
+    /// <summary>Игрок хочет начать стройку: страна, стройка.</summary>
+    public event Action<string, string>? ProjectRequested;
 
     public string? CountryId => _countryId;
 
@@ -170,6 +176,18 @@ public partial class MinistryScreen : GlassPanel
         _energy = new VBoxContainer();
         _energy.AddThemeConstantOverride("separation", 6);
         column.AddChild(_energy);
+
+        _infrastructureCaption = UiTheme.Text("ИНФРАСТРУКТУРА", 11, UiTheme.MapCountryFont, UiTheme.Accent);
+        column.AddChild(_infrastructureCaption);
+        _infrastructure = new VBoxContainer();
+        _infrastructure.AddThemeConstantOverride("separation", 6);
+        column.AddChild(_infrastructure);
+
+        _projectsCaption = UiTheme.Text("СТРОЙКИ", 11, UiTheme.MapCountryFont, UiTheme.Accent);
+        column.AddChild(_projectsCaption);
+        _projects = new VBoxContainer();
+        _projects.AddThemeConstantOverride("separation", 6);
+        column.AddChild(_projects);
 
         var budgetHeader = new HBoxContainer();
         column.AddChild(budgetHeader);
@@ -293,7 +311,8 @@ public partial class MinistryScreen : GlassPanel
         if (_shown != null && month == _shownMonth && player == _shownPlayer && ReferenceEquals(country.Government, _shown.Government)
             && ReferenceEquals(country.Laws, _shown.Laws) && ReferenceEquals(country.History, _shown.History)
             && (country.Programs ?? []).SequenceEqual(_shown.Programs ?? [])
-            && country.Energy?.Shortage == _shown.Energy?.Shortage && country.Energy?.Available == _shown.Energy?.Available)
+            && country.Energy?.Shortage == _shown.Energy?.Shortage && country.Energy?.Available == _shown.Energy?.Available
+            && country.Infrastructure?.Projects.Count == _shown.Infrastructure?.Projects.Count)
             return;
         _shown = country;
         _shownPlayer = player;
@@ -344,6 +363,8 @@ public partial class MinistryScreen : GlassPanel
 
         RenderCharts(post, country, snapshot.Date);
         RenderEnergy(post, country);
+        RenderInfrastructure(post, country);
+        RenderProjects(post, country, snapshot.Date, player);
         RenderBudget(post, country, player);
         RenderPrograms(post, country, player);
         RenderLaws(post, country);
@@ -426,6 +447,111 @@ public partial class MinistryScreen : GlassPanel
             Cell(Fmt.Value("percent", p.Share), false, true);
         }
         _energy.AddChild(grid);
+    }
+
+    /// <summary>Инфраструктура ведомства: загрузка (нагрузка к тому, что выдерживает), состояние, что строится.</summary>
+    void RenderInfrastructure(PostRecord post, CountrySnapshot country)
+    {
+        foreach (var child in _infrastructure.GetChildren())
+            child.QueueFree();
+        var types = country.Infrastructure?.Types.Where(t => t.Post == post.Id).ToList() ?? [];
+        _infrastructureCaption.Visible = _infrastructure.Visible = types.Count > 0;
+        if (types.Count == 0)
+            return;
+        var note = UiTheme.Text("Загрузка больше 100% — перегрузка: отрасли, которые на это опираются, теряют выпуск. Без денег на обслуживание " +
+                                "состояние падает, и выдерживает объект меньше.", 13, null, UiTheme.TextMuted);
+        note.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _infrastructure.AddChild(note);
+        var grid = new GridContainer { Columns = 4, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        grid.AddThemeConstantOverride("h_separation", 24);
+        grid.AddThemeConstantOverride("v_separation", 4);
+        void Cell(string text, bool header, bool number, Color? color = null)
+        {
+            var label = UiTheme.Text(text, header ? 12 : 14, number && !header ? UiTheme.Numbers : null, color ?? (header ? UiTheme.TextMuted : UiTheme.TextPrimary));
+            if (!number)
+                label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            else
+                label.HorizontalAlignment = HorizontalAlignment.Right;
+            grid.AddChild(label);
+        }
+        Cell("Вид", true, false);
+        Cell("Загрузка", true, true);
+        Cell("Состояние", true, true);
+        Cell("Строится", true, true);
+        foreach (var t in types)
+        {
+            Cell(t.Name, false, false);
+            if (!t.Applies)
+            {
+                Cell("нет выхода к морю", false, true, UiTheme.TextMuted);
+                Cell("", false, true);
+                Cell("", false, true);
+                continue;
+            }
+            Cell(Fmt.Value("percent", t.Load), false, true, t.Load > 100 ? UiTheme.Critical : null);
+            Cell(Fmt.Value("percent", t.Condition), false, true, t.Condition < 50 ? UiTheme.Critical : null);
+            Cell(t.Building >= 0.5 ? "+" + Fmt.Value("percent", t.Building) : "—", false, true);
+        }
+        _infrastructure.AddChild(grid);
+    }
+
+    /// <summary>Стройки ведомства: идущие (сколько готово, до какого срока, как платят) и те, что можно начать (у своей страны).</summary>
+    void RenderProjects(PostRecord post, CountrySnapshot country, DateOnly date, bool player)
+    {
+        foreach (var child in _projects.GetChildren())
+            child.QueueFree();
+        var running = country.Infrastructure?.Projects.Where(p => p.Post == post.Id && (!p.Done || p.Concession > date)).ToList() ?? [];
+        var offers = player ? country.Infrastructure?.Offers?.Where(o => o.Post == post.Id).ToList() ?? [] : [];
+        _projectsCaption.Visible = _projects.Visible = running.Count > 0 || offers.Count > 0;
+        foreach (var p in running)
+        {
+            var how = p.Financing switch
+            {
+                "loan" => "в кредит: " + (_data.Countries.Countries.FirstOrDefault(c => c.Id == p.Lender)?.Name ?? p.Lender),
+                "ppp" => "концессия",
+                _ => "из бюджета",
+            };
+            var state = p.Done
+                ? $"построено; люди платят за пользование до {Fmt.Date(p.Concession!.Value)}"
+                : $"готово {Fmt.Value("percent", p.Progress(date) * 100)}, срок — {Fmt.Date(p.Ends)}";
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 10);
+            var name = UiTheme.Text(p.Name, 14, UiTheme.SemiBold, UiTheme.TextPrimary);
+            name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            row.AddChild(name);
+            row.AddChild(UiTheme.Text($"{how} · {Fmt.Number(p.Cost, 2)}% ВВП · {state}", 13, null, UiTheme.TextSecondary));
+            _projects.AddChild(row);
+        }
+        if (offers.Count == 0)
+            return;
+        _projects.AddChild(UiTheme.Text("Можно начать:", 12, null, UiTheme.TextMuted));
+        foreach (var o in offers)
+        {
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 10);
+            var text = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+            text.AddThemeConstantOverride("separation", 0);
+            text.AddChild(UiTheme.Text(o.Name, 14, UiTheme.SemiBold, o.Unavailable == null ? UiTheme.TextPrimary : UiTheme.TextMuted));
+            var details = UiTheme.Text(o.Unavailable ?? $"{o.Effect}. {Fmt.Number(o.Cost, 2)}% ВВП, {Fmt.Plural(o.Months, "месяц", "месяца", "месяцев")}.",
+                12, null, UiTheme.TextMuted);
+            details.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            text.AddChild(details);
+            row.AddChild(text);
+            if (o.Unavailable == null)
+            {
+                var button = new Button { Text = "Начать", FocusMode = FocusModeEnum.None, CustomMinimumSize = new Vector2(110, 30) };
+                button.AddThemeFontSizeOverride("font_size", 13);
+                button.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+                var id = o.Id;
+                button.Pressed += () =>
+                {
+                    if (_countryId != null)
+                        ProjectRequested?.Invoke(_countryId, id);
+                };
+                row.AddChild(button);
+            }
+            _projects.AddChild(row);
+        }
     }
 
     void RenderBudget(PostRecord post, CountrySnapshot country, bool player)

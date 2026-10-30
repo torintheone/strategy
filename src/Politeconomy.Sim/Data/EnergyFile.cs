@@ -17,7 +17,8 @@ public sealed record EnergyFile(
 /// МВт·ч; Pollution — вклад в загрязнение (уголь — 1); Base — работает всегда (атом, гидро, ветер и солнце), остальные
 /// догружаются по спросу; Weight — склонность строить; MinIncome — с какой группы дохода такие станции строят те, у
 /// кого их не было; CostDecline — на сколько в год дешевеет (ветер и солнце); Resource — рента своего топлива
-/// (показатель страны): у кого оно есть, те строят такие станции охотнее.
+/// (показатель страны): у кого оно есть, те строят такие станции охотнее; CostPerGw — сколько стоит построить 1 ГВт
+/// (млрд долларов; для строек игрока).
 /// </summary>
 public sealed record PlantRecord(
     string Id,
@@ -35,7 +36,8 @@ public sealed record PlantRecord(
     double Weight,
     int MinIncome = 0,
     double CostDecline = 0,
-    string? Resource = null);
+    string? Resource = null,
+    double CostPerGw = 1);
 
 // Коэффициенты энергетики из data/balance.json (раздел energy). Списки из четырёх чисел — по группам дохода.
 

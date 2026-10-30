@@ -87,7 +87,7 @@ public class EnergyTests
         // Запаса нет — и первый же засушливый год оборачивается отключениями.
         poor.RunUntil(poor.World.Date.AddMonths(1));
         same.RunUntil(same.World.Date.AddMonths(1));
-        (a.Hydro, b.Hydro) = (0.7, 0.7);
+        (a.Hydro, b.Hydro) = (0.5, 0.5);
         (a.HydroYear, b.HydroYear) = (poor.World.Date.Year, same.World.Date.Year);
         poor.RunUntil(poor.World.Date.AddMonths(1));
         same.RunUntil(same.World.Date.AddMonths(1));

@@ -93,7 +93,8 @@ public static class HealthModel
                        * (1 + programs.GetValueOrDefault("health_capacity"));
         h.Index = Math.Pow(capacity, 1 - b.AccessWeight) * Math.Pow(h.Access / h.Access0, b.AccessWeight);
         var before = h.Burden;
-        h.Burden = Math.Clamp(h.Burden0 / Math.Pow(h.Index, b.BurdenElasticity) * (1 + programs.GetValueOrDefault("disease_burden")), 0.5, 30);
+        h.Burden = Math.Clamp(h.Burden0 / Math.Pow(h.Index, b.BurdenElasticity) * (1 + programs.GetValueOrDefault("disease_burden")
+                   + (world.Infrastructure?.Countries.GetValueOrDefault(country.Id)?.Effects.GetValueOrDefault("disease_burden") ?? 0)), 0.5, 30);
 
         h.Effects["life_expectancy"] = b.LifeScale * Math.Log(Math.Max(0.05, h.Index));
         // Меньше болеют — больше работают: изменение доли рабочего времени (годовой темп) — к росту.

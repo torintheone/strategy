@@ -44,6 +44,7 @@ public partial class Main : Node
     ConfirmDialog _confirmDialog = null!;
     DebateDialog _debateDialog = null!;
     ProtestDialog _protestDialog = null!;
+    ProjectDialog _projectDialog = null!;
     readonly HashSet<string> _seenProtests = new();
     string? _seenCampaign;
     string? _seenDebate;
@@ -222,6 +223,7 @@ public partial class Main : Node
         };
         _ministries.BudgetRequested += OpenBudget;
         _ministries.ProgramToggled += (country, program) => _host!.Post(w => Politeconomy.Sim.Health.ProgramModel.Toggle(w, country, program));
+        _ministries.ProjectRequested += ShowProject;
 
         _politicsScreen = new PoliticsScreen { Visible = false };
         _uiRoot.AddChild(_politicsScreen);
@@ -318,6 +320,11 @@ public partial class Main : Node
         _protestDialog.Setup(_data);
         _protestDialog.Answered += (id, protest, response) =>
             _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.RespondToProtest(w, id, protest, response));
+        _projectDialog = new ProjectDialog();
+        _uiRoot.AddChild(_projectDialog);
+        _projectDialog.Setup(_data);
+        _projectDialog.Chosen += (id, project, financing, lender) =>
+            _host!.Post(w => Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, id, project, financing, lender));
 
         _toasts = new Toasts();
         _uiRoot.AddChild(_toasts);
@@ -672,6 +679,8 @@ public partial class Main : Node
                     // Программы ведомств: скрининги и льготная ипотека в России (на старте их нет).
                     Politeconomy.Sim.Health.ProgramModel.Toggle(w, "RUS", "screening");
                     Politeconomy.Sim.Health.ProgramModel.Toggle(w, "RUS", "mortgage_subsidy");
+                    // Стройка: автомагистрали из бюджета.
+                    Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, "RUS", "highways", "budget");
                     // Смена власти без выборов в чужих странах: переворот, дворцовый переворот, революция.
                     Politeconomy.Sim.Politics.PowerModel.MilitaryCoup(w, w["SEN"], w.Politics!["SEN"]);
                     Politeconomy.Sim.Politics.PowerModel.PalaceCoup(w, w["PRK"], w.Politics!["PRK"]);
@@ -705,6 +714,7 @@ public partial class Main : Node
                     && snapshot.Countries["RUS"].Stat("crime_index") is { Factors.Count: > 0 } && snapshot.Countries["RUS"].Stat("pollution_index") is { } pollution
                     && double.IsFinite(pollution.Value) && snapshot.Countries["RUS"].Programs?.Contains("mortgage_subsidy") == true
                     && snapshot.Countries["RUS"].Energy is { Plants.Count: 6, Demand: > 0 } && snapshot.Countries["RUS"].Stat("power_shortage_pct") is { Factors.Count: 3 }
+                    && snapshot.Countries["RUS"].Infrastructure is { Projects.Count: 1, Offers.Count: > 0 } && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "project")
                     && snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 };
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
@@ -953,6 +963,22 @@ public partial class Main : Node
                 SetMode(_data.MapModes.Modes.First(m => m.Id == "low_carbon"));
                 _camera.FitWorld(instant: true);
             }),
+            ("45_ministry_transport", () =>
+            {
+                OpenMinistries("BRA");
+                _ministries.SelectPost("transport");
+            }),
+            ("46_project_dialog", () => ShowProject("BRA", "railway")),
+            // Стройки: железная дорога в кредит у Китая и автомагистрали из бюджета.
+            ("47_projects", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, "BRA", "railway", "loan", "CHN");
+                    Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, "BRA", "highways", "budget");
+                });
+            }),
         };
         if (_shotStep > 0)
         {
@@ -1092,7 +1118,7 @@ public partial class Main : Node
     }
 
     bool DialogOpen => _resultsDialog.Visible || _coalitionDialog.Visible || _defeatDialog.Visible || _summaryDialog.Visible || _confirmDialog.Visible
-                       || _debateDialog.Visible || _protestDialog.Visible;
+                       || _debateDialog.Visible || _protestDialog.Visible || _projectDialog.Visible;
 
     string CountryName(string id) => _data.Countries.Countries.First(c => c.Id == id).Name;
 
@@ -1192,6 +1218,15 @@ public partial class Main : Node
         _confirmDialog.Visible = false;
         _debateDialog.Visible = false;
         _protestDialog.Visible = false;
+        _projectDialog.Visible = false;
+    }
+
+    /// <summary>Окно новой стройки: что даст, цена, срок и способы оплаты.</summary>
+    void ShowProject(string countryId, string projectId)
+    {
+        if (_host?.Snapshot.Countries.GetValueOrDefault(countryId)?.Infrastructure?.Offers?.FirstOrDefault(o => o.Id == projectId) is not { } offer)
+            return;
+        _projectDialog.Show(countryId, _data.Countries.Countries.First(c => c.Id == countryId).Name, offer);
     }
 
     void ShowProtest(string countryId, int protestId)

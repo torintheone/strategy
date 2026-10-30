@@ -120,6 +120,7 @@ public class DataTests
         InterestGroups = d.InterestGroups,
         Programs = d.Programs,
         Energy = d.Energy,
+        Infrastructure = d.Infrastructure,
         Benchmarks = d.Benchmarks,
     };
 }

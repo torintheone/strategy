@@ -38,6 +38,10 @@ public sealed class ClassMoodSystem : ISimSystem
             if (lawMood != null && world.Energy?.Countries.GetValueOrDefault(country.Id)?.Mood is { Length: > 0 } power)
                 for (var k = 0; k < lawMood.Length && k < power.Length; k++)
                     lawMood[k] += power[k];
+            // Плата за пользование дорогами и портами, построенными в концессию.
+            if (lawMood != null && world.Infrastructure?.Countries.GetValueOrDefault(country.Id)?.Mood is { Length: > 0 } fees)
+                for (var k = 0; k < lawMood.Length && k < fees.Length; k++)
+                    lawMood[k] += fees[k];
             // Скандал (раскрытые фальсификации) радикализирует всех, как закон с поправкой «радикализм».
             var scandal = world.Data.PoliticsBalance.ScandalRadicalism * Politics.PoliticsModel.Scandal(world, country.Id);
             Update(country, world.Economy![country.Id], society[country.Id], classes, b, months: 1,

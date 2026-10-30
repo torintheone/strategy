@@ -63,8 +63,9 @@ public sealed class WorldSnapshot
             var politics = world.Politics?.Countries.GetValueOrDefault(c.Id) is { } pc ? PoliticsSnapshot.Capture(world, c, pc) : null;
             var programs = world.Programs?.Countries.GetValueOrDefault(c.Id)?.Current.Order(StringComparer.Ordinal).ToList();
             var energy = world.Energy?.Countries.GetValueOrDefault(c.Id) is { } en ? EnergySnapshot.Capture(world, en) : null;
+            var infrastructure = world.Infrastructure?.Countries.GetValueOrDefault(c.Id) is { } inf ? InfrastructureSnapshot.Capture(world, c, inf) : null;
             countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal),
-                ages, classes, government, c.Regime, laws, history, spending, politics, programs, energy);
+                ages, classes, government, c.Regime, laws, history, spending, politics, programs, energy, infrastructure);
         }
         var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var r in world.Regions)
@@ -130,7 +131,8 @@ public sealed record CountrySnapshot(
     IReadOnlyList<double>? Spending = null,
     PoliticsSnapshot? Politics = null,
     IReadOnlyList<string>? Programs = null,
-    EnergySnapshot? Energy = null)
+    EnergySnapshot? Energy = null,
+    InfrastructureSnapshot? Infrastructure = null)
 {
     public StatValue? Stat(string id) => Stats.GetValueOrDefault(id);
 }
@@ -155,3 +157,53 @@ public sealed record EnergySnapshot(double Demand, double Available, double Need
 
 /// <summary>Станции одного типа: мощность и строящаяся мощность (ГВт), доля в выработке (%).</summary>
 public sealed record PlantSnapshot(string Id, string Name, double Capacity, double Building, double Share);
+
+/// <summary>
+/// Инфраструктура в снимке: виды (загрузка — нагрузка к тому, что выдерживает, %; состояние, %; строится — % к
+/// мощности), стройки игрока и — только у страны игрока — что можно начать.
+/// </summary>
+public sealed record InfrastructureSnapshot(IReadOnlyList<InfrastructureTypeSnapshot> Types, IReadOnlyList<ProjectSnapshot> Projects,
+    IReadOnlyList<ProjectOfferSnapshot>? Offers)
+{
+    public static InfrastructureSnapshot Capture(World world, Country country, Infrastructure.CountryInfrastructure c)
+    {
+        var data = world.Data;
+        var types = new List<InfrastructureTypeSnapshot>(data.Infrastructure.Types.Count);
+        for (var t = 0; t < data.Infrastructure.Types.Count && t < c.Capacity.Length; t++)
+        {
+            var type = data.Infrastructure.Types[t];
+            var usable = c.Capacity[t] * c.Condition[t];
+            types.Add(new InfrastructureTypeSnapshot(type.Id, type.Name, type.Post, c.Need[t] > 0,
+                usable > 0 ? c.Need[t] / usable * 100 : 0, c.Condition[t] * 100, c.Capacity[t] > 0 ? c.Building[t] / c.Capacity[t] * 100 : 0));
+        }
+        var projects = c.Projects.Select(p =>
+        {
+            var record = data.Infrastructure.Projects.First(x => x.Id == p.Template);
+            return new ProjectSnapshot(p.Id, p.Template, p.Name, Infrastructure.InfrastructureModel.Post(data, record), p.Financing, p.Lender,
+                p.Cost * 100, p.Started, p.Ends, p.Done, p.Concession);
+        }).ToList();
+        List<ProjectOfferSnapshot>? offers = null;
+        if (world.PlayerCountry == country.Id)
+            offers = data.Infrastructure.Projects.Select(r =>
+            {
+                var o = Infrastructure.InfrastructureModel.Quote(world, country, r);
+                return new ProjectOfferSnapshot(r.Id, r.Name, r.Description, Infrastructure.InfrastructureModel.Post(data, r), o.Cost * 100, o.Months,
+                    o.Effect, o.Unavailable, o.PppAllowed);
+            }).ToList();
+        return new InfrastructureSnapshot(types, projects, offers);
+    }
+}
+
+public sealed record InfrastructureTypeSnapshot(string Id, string Name, string Post, bool Applies, double Load, double Condition, double Building);
+
+/// <summary>Стройка игрока: цена — % ВВП; Concession — до какой даты люди платят за пользование.</summary>
+public sealed record ProjectSnapshot(int Id, string Template, string Name, string Post, string Financing, string? Lender, double Cost,
+    DateOnly Started, DateOnly Ends, bool Done, DateOnly? Concession)
+{
+    public double Progress(DateOnly date) => Done ? 1
+        : Math.Clamp((date.DayNumber - Started.DayNumber) / (double)Math.Max(1, Ends.DayNumber - Started.DayNumber), 0, 1);
+}
+
+/// <summary>Стройка, которую можно начать: цена (% ВВП), срок (мес.), что даст, почему нельзя, можно ли в концессию.</summary>
+public sealed record ProjectOfferSnapshot(string Id, string Name, string Description, string Post, double Cost, int Months, string Effect,
+    string? Unavailable, bool PppAllowed);

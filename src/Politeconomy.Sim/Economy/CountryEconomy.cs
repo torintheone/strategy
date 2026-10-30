@@ -78,6 +78,8 @@ public sealed class CountryEconomy
     public double Gap { get; set; }
     public double FiscalImpulse { get; set; }
     public double PrimaryDeficitSmooth { get; set; }
+    /// <summary>Стройки не из бюджета (кредит, концессия) — доля ВВП в год: дают спросу такой же толчок, как дефицит бюджета.</summary>
+    public double ProjectFlow { get; set; }
     public double InvestmentRate { get; set; }
     public double Exports { get; set; }
     public double Imports { get; set; }

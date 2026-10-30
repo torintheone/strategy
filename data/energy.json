@@ -1,12 +1,12 @@
 {
  "_comment": "Электроэнергетика (MODEL.md, «Энергетика»). Поля описаны в data/README.md.",
  "plants": [
-  {"id": "coal", "name": "Угольные", "stat": "power_coal_pct", "capacity_factor": 0.75, "build_years": 4, "life_years": 45, "capex": 40, "fuel": "ores", "fuel_cost": 30, "resource": "coal_rents_pct_gdp", "co2": 1.0, "pollution": 1.0, "base": false, "weight": 1.0},
-  {"id": "gas", "name": "Газовые", "stat": "power_gas_pct", "capacity_factor": 0.7, "build_years": 2, "life_years": 35, "capex": 25, "fuel": "oil", "fuel_cost": 45, "resource": "gas_rents_pct_gdp", "co2": 0.45, "pollution": 0.25, "base": false, "weight": 1.0},
-  {"id": "oil", "name": "Мазутные и дизельные", "stat": "power_oil_pct", "capacity_factor": 0.6, "build_years": 2, "life_years": 35, "capex": 30, "fuel": "oil", "fuel_cost": 110, "resource": "oil_rents_pct_gdp", "co2": 0.8, "pollution": 0.6, "base": false, "weight": 0.15},
-  {"id": "nuclear", "name": "Атомные", "stat": "power_nuclear_pct", "capacity_factor": 0.9, "build_years": 8, "life_years": 50, "capex": 85, "fuel": null, "fuel_cost": 10, "co2": 0, "pollution": 0, "base": true, "weight": 0.5, "min_income": 2},
-  {"id": "hydro", "name": "Гидроэлектростанции", "stat": "power_hydro_pct", "capacity_factor": 0.45, "build_years": 6, "life_years": 80, "capex": 45, "fuel": null, "fuel_cost": 0, "co2": 0, "pollution": 0, "base": true, "weight": 0.6},
-  {"id": "renewables", "name": "Ветер, солнце, биотопливо", "stat": "power_renewables_pct", "capacity_factor": 0.28, "build_years": 1, "life_years": 25, "capex": 55, "fuel": null, "fuel_cost": 0, "co2": 0, "pollution": 0.05, "base": true, "weight": 1.5, "cost_decline": 0.04}
+  {"id": "coal", "name": "Угольные", "stat": "power_coal_pct", "capacity_factor": 0.75, "build_years": 4, "life_years": 45, "capex": 40, "fuel": "ores", "fuel_cost": 30, "resource": "coal_rents_pct_gdp", "co2": 1.0, "pollution": 1.0, "base": false, "weight": 1.0, "cost_per_gw": 2.0},
+  {"id": "gas", "name": "Газовые", "stat": "power_gas_pct", "capacity_factor": 0.7, "build_years": 2, "life_years": 35, "capex": 25, "fuel": "oil", "fuel_cost": 45, "resource": "gas_rents_pct_gdp", "co2": 0.45, "pollution": 0.25, "base": false, "weight": 1.0, "cost_per_gw": 1.0},
+  {"id": "oil", "name": "Мазутные и дизельные", "stat": "power_oil_pct", "capacity_factor": 0.6, "build_years": 2, "life_years": 35, "capex": 30, "fuel": "oil", "fuel_cost": 110, "resource": "oil_rents_pct_gdp", "co2": 0.8, "pollution": 0.6, "base": false, "weight": 0.15, "cost_per_gw": 1.0},
+  {"id": "nuclear", "name": "Атомные", "stat": "power_nuclear_pct", "capacity_factor": 0.9, "build_years": 8, "life_years": 50, "capex": 85, "fuel": null, "fuel_cost": 10, "co2": 0, "pollution": 0, "base": true, "weight": 0.5, "min_income": 2, "cost_per_gw": 7.0},
+  {"id": "hydro", "name": "Гидроэлектростанции", "stat": "power_hydro_pct", "capacity_factor": 0.45, "build_years": 6, "life_years": 80, "capex": 45, "fuel": null, "fuel_cost": 0, "co2": 0, "pollution": 0, "base": true, "weight": 0.6, "cost_per_gw": 3.0},
+  {"id": "renewables", "name": "Ветер, солнце, биотопливо", "stat": "power_renewables_pct", "capacity_factor": 0.28, "build_years": 1, "life_years": 25, "capex": 55, "fuel": null, "fuel_cost": 0, "co2": 0, "pollution": 0.05, "base": true, "weight": 1.5, "cost_decline": 0.04, "cost_per_gw": 1.2}
  ],
  "strategies": {
   "market": {},

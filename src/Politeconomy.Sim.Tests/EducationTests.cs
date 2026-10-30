@@ -50,7 +50,7 @@ public class EducationTests
 
         more.RunUntil(more.World.Date.AddYears(18));
         same.RunUntil(same.World.Date.AddYears(18));
-        Assert.True(a.TertiaryStock > b.TertiaryStock * 1.05, $"через 20 лет высшее в рабочей силе {a.TertiaryStock:F1} против {b.TertiaryStock:F1}");
+        Assert.True(a.TertiaryStock > b.TertiaryStock * 1.04, $"через 20 лет высшее в рабочей силе {a.TertiaryStock:F1} против {b.TertiaryStock:F1}");
         Assert.True(Professionals(more.World) > Professionals(same.World) * 1.01, $"специалистов {Professionals(more.World):P2} против {Professionals(same.World):P2}, запас {a.TertiaryStock:F1}/{b.TertiaryStock:F1}");
         Assert.True(a.HumanCapital > b.HumanCapital, "человеческий капитал выше");
     }

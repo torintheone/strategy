@@ -68,7 +68,7 @@ public static class EnergyModel
                 Generation = new double[plants.Count], Share0 = shares,
                 Demand = demand, Demand0 = demand, ImportShare = imports, Growth = growth,
                 Access = Stat(country, "electricity_access_pct", 100), Households = b.Households[income],
-                Business0 = Business(world, e), Population0 = d.Total, Income0 = SocietyModel.IncomeGrowth(e),
+                Business0 = Business(world, country.Id, e), Population0 = d.Total, Income0 = SocietyModel.IncomeGrowth(e),
                 Spending0 = Spending(world, country, "energy"), Investment0 = e.InvestmentRate,
                 Corruption0 = Stat(country, "corruption_index", 50), HydroYear = world.Date.Year,
                 Cut = new double[data.Industries.Industries.Count], Mood = new double[ClassIds.Count],
@@ -103,7 +103,7 @@ public static class EnergyModel
         }
 
         // Спрос: отрасли по электроёмкости, население — по доходу и доступу к сетям; энергоэффективность растёт.
-        var business = c.Business0 > 0 ? Business(world, e, c.Cut) / c.Business0 : 1;
+        var business = c.Business0 > 0 ? Business(world, country.Id, e) / c.Business0 : 1;
         var income = c.Income0 > 0 ? SocietyModel.IncomeGrowth(e) / c.Income0 : 1;
         var households = d.Total / c.Population0 * Math.Pow(Math.Max(0.1, income), b.HouseholdIncome) * c.Access / c.Access0;
         var demand = c.Demand0 * ((1 - c.Households) * business + c.Households * households)
@@ -315,26 +315,28 @@ public static class EnergyModel
     }
 
     /// <summary>
-    /// Выпуск отраслей, взвешенный по электроёмкости, — каким он был бы без отключений: иначе нехватка сама себя
-    /// «гасит» (заводы стоят — и спрос на электричество падает до того, что есть).
+    /// Выпуск отраслей, взвешенный по электроёмкости, — каким он был бы без отключений и перегрузки дорог и портов:
+    /// иначе нехватка сама себя «гасит» (заводы стоят — и спрос на электричество падает до того, что есть).
     /// </summary>
-    static double Business(World world, Economy.CountryEconomy e, double[]? cut = null)
+    static double Business(World world, string country, Economy.CountryEconomy e)
     {
         var industries = world.Data.Industries.Industries;
         var sum = 0.0;
         for (var i = 0; i < industries.Count && i < e.Output.Length; i++)
-            sum += Intensity(world.Data, industries[i].Id) * e.Output[i] / (cut != null && i < cut.Length ? 1 - cut[i] : 1);
+            sum += Intensity(world.Data, industries[i].Id) * e.Output[i] / Math.Max(0.1, Economy.Supply.Factor(world, country, i));
         return sum;
     }
 
     static double Intensity(GameData data, string industry) => data.Energy.Intensity.GetValueOrDefault(industry, 1);
 
-    /// <summary>Расходы бюджета на статью (доля ВВП): план плюс поправки законов, без денег программ.</summary>
+    /// <summary>Расходы бюджета на статью (доля ВВП): план плюс поправки законов, без денег программ и строек.</summary>
     static double Spending(World world, Country country, string item)
     {
         var k = world.Data.Budget.Spending.ToList().FindIndex(s => s.Id == item);
         var e = world.Economy![country.Id];
-        var programs = world.Programs?.Countries.GetValueOrDefault(country.Id)?.Effects.GetValueOrDefault("spending." + item) ?? 0;
+        // Деньги программ и строек игрока идут на сами программы и стройки, а не энергетикам.
+        var programs = (world.Programs?.Countries.GetValueOrDefault(country.Id)?.Effects.GetValueOrDefault("spending." + item) ?? 0)
+                       + (world.Infrastructure?.Countries.GetValueOrDefault(country.Id)?.Effects.GetValueOrDefault("spending." + item) ?? 0);
         return k < 0 || k >= e.SpendingPlan.Length ? 0
             : Math.Max(0, e.SpendingPlan[k] + (LawModel.Effect(world, country.Id, "spending." + item) - programs) / 100);
     }

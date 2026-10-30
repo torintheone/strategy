@@ -90,6 +90,8 @@ public static partial class DataValidator
         ["electricity_price_index"] = (5, 2000),
         ["low_carbon_power_pct"] = (0, 100),
         ["energy_import_dependence_pct"] = (0, 100),
+        ["infrastructure_index"] = (0, 200),
+        ["infrastructure_condition_pct"] = (0, 100),
         ["approval_pct"] = (0, 100),
         ["ruling_poll_pct"] = (0, 100),
     };
@@ -308,6 +310,7 @@ public static partial class DataValidator
         ValidateGroups(data, Add);
         ValidatePrograms(data, Add);
         ValidateEnergy(data, Add);
+        ValidateInfrastructure(data, Add);
         return problems;
     }
 

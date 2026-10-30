@@ -26,7 +26,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -84,6 +84,8 @@ switch (command)
         return LivingReport();
     case "energy":
         return EnergyReport();
+    case "infrastructure":
+        return InfrastructureReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -172,8 +174,26 @@ int Run(string mode)
     failures += PowerCheck(world, startRegimes);
     failures += LivingCheck(world);
     failures += EnergyCheck(world);
+    failures += InfrastructureCheck(world);
     Console.WriteLine(failures == 0 ? "Все проверки пройдены." : $"Нарушений: {failures}");
     return failures == 0 ? 0 : 1;
+}
+
+// Инфраструктура в конце прогона: перегрузка, которая режет выпуск больше чем на 5%, — не больше чем у двадцатой
+// части стран; среднее состояние — от 55 до 95%.
+static int InfrastructureCheck(World world)
+{
+    var all = world.Infrastructure!.Countries;
+    var choked = all.Where(kv => kv.Value.Cut.Max() > 0.05).Select(kv => kv.Key).ToList();
+    var condition = world.Countries.Average(c => c.Stat("infrastructure_condition_pct"));
+    Console.WriteLine($"Инфраструктура: перегрузка режет выпуск больше 5% у {choked.Count} стран{(choked.Count > 0 ? " (" + string.Join(", ", choked.Take(10)) + ")" : "")}, " +
+                      $"состояние в среднем {condition:F0}%.");
+    if (choked.Count > all.Count / 20 || condition is < 55 or > 95)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: инфраструктура ушла слишком далеко от старта");
+        return 1;
+    }
+    return 0;
 }
 
 // Энергетика в конце прогона: отключения (нехватка больше 5%) — не больше чем у двадцатой части стран, цена
@@ -612,6 +632,41 @@ int EducationReport()
                               $"капитал {e.HumanCapital * 100,5:F1}; к росту {e.Effects.GetValueOrDefault("potential_growth"),5:F2} п. п.");
         }
     }
+    return 0;
+}
+
+// Инфраструктура: нагрузка, состояние, деньги и перегрузка по видам в нескольких странах и в мире.
+int InfrastructureReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 30;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "DEU", "CHN", "IND", "BRA", "RUS", "NGA", "ETH", "SAU", "VNM"];
+    var types = data.Infrastructure.Types;
+    var tight = new Dictionary<string, int>();
+    for (var year = 0; year <= runYears; year++)
+    {
+        if (year > 0)
+            sim.RunUntil(world.Date.AddYears(1));
+        foreach (var (id, c) in world.Infrastructure!.Countries)
+            if (c.Coverage.Any(x => x < 0.99))
+                tight[id] = tight.GetValueOrDefault(id) + 1;
+        if (year % 10 != 0)
+            continue;
+        Console.WriteLine($"{world.Date.Year}:");
+        foreach (var id in ids)
+        {
+            var c = world.Infrastructure![id];
+            var country = world[id];
+            Console.WriteLine($"  {country.Name,-16} индекс {country.Stat("infrastructure_index"),4:F0}, состояние {country.Stat("infrastructure_condition_pct"),3:F0}%, " +
+                              $"потери выпуска {c.Cut.Max() * 100,4:F1}%; " +
+                              string.Join(" ", types.Select((t, k) => $"{t.Id} {c.Capacity[k] * c.Condition[k] / Math.Max(1e-9, c.Need[k]) * 100,3:F0}/{c.Condition[k] * 100,2:F0}/{c.Funding[k],4:F2}")));
+        }
+        var all = world.Infrastructure!.Countries.Values.ToList();
+        Console.WriteLine($"  Мир: с перегрузкой {all.Count(c => c.Coverage.Any(x => x < 0.99))} стран, потери выпуска больше 2% — {all.Count(c => c.Cut.Max() > 0.02)}; " +
+                          $"состояние в среднем {world.Countries.Average(c => c.Stat("infrastructure_condition_pct")):F0}%");
+    }
+    Console.WriteLine("Дольше всех с перегрузкой (лет): " + string.Join(", ", tight.OrderByDescending(kv => kv.Value).Take(15).Select(kv => $"{kv.Key} {kv.Value}")));
     return 0;
 }
 

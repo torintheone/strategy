@@ -28,6 +28,7 @@ public sealed class GameData
     public required InterestGroupsFile InterestGroups { get; init; }
     public required ProgramsFile Programs { get; init; }
     public required EnergyFile Energy { get; init; }
+    public required InfrastructureFile Infrastructure { get; init; }
     /// <summary>История показателей за 10 лет до старта (для графиков ведомств).</summary>
     public required HistoryFile History { get; init; }
     /// <summary>Культуры имён из папки data/names/, по одной на файл.</summary>
@@ -105,6 +106,11 @@ public sealed class GameData
 
     static readonly EnergyBalance DefaultEnergy = new();
 
+    /// <summary>Коэффициенты инфраструктуры и строек; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public InfrastructureBalance InfrastructureBalance => Balance.Infrastructure ?? DefaultInfrastructure;
+
+    static readonly InfrastructureBalance DefaultInfrastructure = new();
+
     /// <summary>Политика страны из data/politics.json.</summary>
     public PoliticsRecord PoliticsOf(string country) =>
         Politics.Countries.FirstOrDefault(c => c.Id == country) ?? throw new KeyNotFoundException($"Нет страны «{country}» в data/politics.json");
@@ -148,6 +154,7 @@ public sealed class GameData
             InterestGroups = Read(directory, "interest_groups.json", ctx.InterestGroupsFile),
             Programs = Read(directory, "programs.json", ctx.ProgramsFile),
             Energy = Read(directory, "energy.json", ctx.EnergyFile),
+            Infrastructure = Read(directory, "infrastructure.json", ctx.InfrastructureFile),
             History = Read(directory, "history.json", ctx.HistoryFile),
             Cultures = ReadCultures(directory),
             Benchmarks = File.Exists(Path.Combine(directory, "benchmarks", "population.json"))
