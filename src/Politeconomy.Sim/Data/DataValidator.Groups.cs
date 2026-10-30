@@ -55,4 +55,24 @@ public static partial class DataValidator
         if (b.Angry >= b.Calm || b.FundAngry >= b.FundHappy || b.ApprovalMonths < 1)
             add("balance.json", "interest_groups: angry < calm, fund_angry < fund_happy, approval_months ≥ 1");
     }
+
+    /// <summary>Программы ведомств (programs.json): посты, ключи эффектов, стартовые значения по группам дохода.</summary>
+    static void ValidatePrograms(GameData data, Action<string, string> add)
+    {
+        const string file = "programs.json";
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var p in data.Programs.Programs)
+        {
+            if (!ids.Add(p.Id))
+                add(file, $"программа {p.Id} встречается дважды");
+            if (data.Government.Posts.All(x => x.Id != p.Post))
+                add(file, $"{p.Id}: нет поста «{p.Post}» в government.json");
+            if (p.Cost < 0 || p.Cost > 3)
+                add(file, $"{p.Id}: цена — от 0 до 3% ВВП");
+            if (p.Start.Count != 4)
+                add(file, $"{p.Id}: start — четыре значения по группам дохода");
+            foreach (var key in p.Effects.Keys.Where(k => !Laws.LawModel.IsKnownEffect(data, k)))
+                add(file, $"{p.Id}: модель не знает эффекта «{key}»");
+        }
+    }
 }

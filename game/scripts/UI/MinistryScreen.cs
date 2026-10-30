@@ -33,6 +33,8 @@ public partial class MinistryScreen : GlassPanel
     VBoxContainer _budget = null!;
     Button _openBudget = null!;
     VBoxContainer _laws = null!;
+    VBoxContainer _programs = null!;
+    Label _programsCaption = null!;
     string? _countryId;
     string _postId = "";
     CountrySnapshot? _shown;
@@ -44,6 +46,8 @@ public partial class MinistryScreen : GlassPanel
     public event Action<string, string>? ReplaceRequested;
     public event Action<string, string>? LawRequested;
     public event Action? BudgetRequested;
+    /// <summary>Включить или выключить программу ведомства (страна, программа).</summary>
+    public event Action<string, string>? ProgramToggled;
 
     public string? CountryId => _countryId;
 
@@ -174,6 +178,12 @@ public partial class MinistryScreen : GlassPanel
         _budget.AddThemeConstantOverride("separation", 4);
         column.AddChild(_budget);
 
+        _programsCaption = UiTheme.Text("ПРОГРАММЫ ВЕДОМСТВА", 11, UiTheme.MapCountryFont, UiTheme.Accent);
+        column.AddChild(_programsCaption);
+        _programs = new VBoxContainer();
+        _programs.AddThemeConstantOverride("separation", 4);
+        column.AddChild(_programs);
+
         column.AddChild(UiTheme.Text("ЗАКОНЫ ВЕДОМСТВА", 11, UiTheme.MapCountryFont, UiTheme.Accent));
         _laws = new VBoxContainer();
         _laws.AddThemeConstantOverride("separation", 2);
@@ -273,7 +283,8 @@ public partial class MinistryScreen : GlassPanel
         var player = snapshot.PlayerCountry == _countryId;
         var month = (snapshot.Date.Year, snapshot.Date.Month);
         if (_shown != null && month == _shownMonth && player == _shownPlayer && ReferenceEquals(country.Government, _shown.Government)
-            && ReferenceEquals(country.Laws, _shown.Laws) && ReferenceEquals(country.History, _shown.History))
+            && ReferenceEquals(country.Laws, _shown.Laws) && ReferenceEquals(country.History, _shown.History)
+            && (country.Programs ?? []).SequenceEqual(_shown.Programs ?? []))
             return;
         _shown = country;
         _shownPlayer = player;
@@ -324,6 +335,7 @@ public partial class MinistryScreen : GlassPanel
 
         RenderCharts(post, country, snapshot.Date);
         RenderBudget(post, country, player);
+        RenderPrograms(post, country, player);
         RenderLaws(post, country);
     }
 
@@ -379,6 +391,46 @@ public partial class MinistryScreen : GlassPanel
             var ofTotal = total > 0 && double.IsFinite(share) ? $"{Fmt.Value("percent", share / total * 100)} всех расходов · " : "";
             row.AddChild(UiTheme.Text(ofTotal + Fmt.Value("percent_gdp", share * 100), 14, UiTheme.Numbers, UiTheme.TextPrimary));
             _budget.AddChild(row);
+        }
+    }
+
+    /// <summary>Программы ведомства: включаются сразу, без парламента; цена — из бюджета ведомства.</summary>
+    void RenderPrograms(PostRecord post, CountrySnapshot country, bool player)
+    {
+        foreach (var child in _programs.GetChildren())
+            child.QueueFree();
+        var programs = _data.Programs.Programs.Where(p => p.Post == post.Id).ToList();
+        _programsCaption.Visible = _programs.Visible = programs.Count > 0;
+        var active = country.Programs ?? [];
+        foreach (var p in programs)
+        {
+            var on = active.Contains(p.Id);
+            var row = new HBoxContainer();
+            row.AddThemeConstantOverride("separation", 10);
+            var text = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+            text.AddThemeConstantOverride("separation", 0);
+            text.AddChild(UiTheme.Text(p.Name, 14, UiTheme.SemiBold, on ? UiTheme.TextPrimary : UiTheme.TextSecondary));
+            var details = UiTheme.Text($"{p.Description} {Fmt.Number(p.Cost, 2)}% ВВП в год.", 12, null, UiTheme.TextMuted);
+            details.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            text.AddChild(details);
+            row.AddChild(text);
+            var state = UiTheme.Text(on ? "работает" : "не работает", 12, UiTheme.Medium, on ? Color.FromHtml("#7fc49a") : UiTheme.TextMuted);
+            state.VerticalAlignment = VerticalAlignment.Center;
+            row.AddChild(state);
+            if (player)
+            {
+                var button = new Button { Text = on ? "Закрыть" : "Запустить", FocusMode = FocusModeEnum.None, CustomMinimumSize = new Vector2(110, 30) };
+                button.AddThemeFontSizeOverride("font_size", 13);
+                button.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+                var id = p.Id;
+                button.Pressed += () =>
+                {
+                    if (_countryId != null)
+                        ProgramToggled?.Invoke(_countryId, id);
+                };
+                row.AddChild(button);
+            }
+            _programs.AddChild(row);
         }
     }
 

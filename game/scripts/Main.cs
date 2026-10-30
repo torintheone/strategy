@@ -221,6 +221,7 @@ public partial class Main : Node
             _laws.SelectLaw(law);
         };
         _ministries.BudgetRequested += OpenBudget;
+        _ministries.ProgramToggled += (country, program) => _host!.Post(w => Politeconomy.Sim.Health.ProgramModel.Toggle(w, country, program));
 
         _politicsScreen = new PoliticsScreen { Visible = false };
         _uiRoot.AddChild(_politicsScreen);
@@ -668,6 +669,8 @@ public partial class Main : Node
                     // Протест в России: митинги специалистов; ответ — разгон.
                     var protest = Politeconomy.Sim.Politics.ProtestModel.Start(w, w["RUS"], w.Politics!["RUS"], Politeconomy.Sim.Society.ClassIds.Professionals, "mood", 1);
                     Politeconomy.Sim.Politics.PoliticsActions.RespondToProtest(w, "RUS", protest.Id, "disperse");
+                    // Программа ведомства: скрининги в России.
+                    Politeconomy.Sim.Health.ProgramModel.Toggle(w, "RUS", "screening");
                     // Смена власти без выборов в чужих странах: переворот, дворцовый переворот, революция.
                     Politeconomy.Sim.Politics.PowerModel.MilitaryCoup(w, w["SEN"], w.Politics!["SEN"]);
                     Politeconomy.Sim.Politics.PowerModel.PalaceCoup(w, w["PRK"], w.Politics!["PRK"]);
@@ -697,6 +700,7 @@ public partial class Main : Node
                     && snapshot.Countries["DEU"].Stat("ruling_poll_pct") is { } ruling && double.IsFinite(ruling.Value)
                     && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "campaign")
                     && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "protest")
+                    && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "program")
                     && snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 };
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
@@ -910,6 +914,12 @@ public partial class Main : Node
             {
                 OpenMinistries("DEU");
                 _ministries.SelectPost("education");
+            }),
+            ("38_ministry_health", () =>
+            {
+                _host!.Post(w => Politeconomy.Sim.Health.ProgramModel.Toggle(w, "BRA", "rural_medicine"));
+                OpenMinistries("BRA");
+                _ministries.SelectPost("health");
             }),
         };
         if (_shotStep > 0)

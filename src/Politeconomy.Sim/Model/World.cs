@@ -108,6 +108,12 @@ public sealed class World
     /// <summary>Образование: охват, качество, квалификация рабочей силы; создаётся <see cref="Education.EducationModel.Setup"/>.</summary>
     public Education.WorldEducation? Education { get; set; }
 
+    /// <summary>Здравоохранение: врачи, койки, доступность, здоровье; создаётся <see cref="Health.HealthModel.Setup"/>.</summary>
+    public Health.WorldHealth? Health { get; set; }
+
+    /// <summary>Программы ведомств: какие работают сейчас и на старте.</summary>
+    public Health.WorldPrograms? Programs { get; set; }
+
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 

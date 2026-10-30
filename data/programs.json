@@ -1,0 +1,10 @@
+{
+ "_comment": "Программы ведомств (MODEL.md, «Здравоохранение», «Программы»). Поля описаны в data/README.md.",
+ "programs": [
+  {"id": "vaccination", "post": "health", "name": "Вакцинация", "description": "Прививки детям и взрослым по национальному календарю.", "cost": 0.05, "effects": {"life_expectancy": 0.4, "disease_burden": -0.08}, "start": [false, true, true, true]},
+  {"id": "screening", "post": "health", "name": "Скрининги", "description": "Регулярные обследования: рак, сердце, диабет находят на ранней стадии.", "cost": 0.15, "effects": {"life_expectancy": 0.5, "disease_burden": -0.05}, "start": [false, false, true, true]},
+  {"id": "rural_medicine", "post": "health", "name": "Медицина на селе", "description": "Фельдшерские пункты, выездные врачи и санавиация для деревень.", "cost": 0.2, "effects": {"health_access": 8, "life_expectancy": 0.2}, "start": [false, false, false, true]},
+  {"id": "high_tech_care", "post": "health", "name": "Высокотехнологичная помощь", "description": "Кардиохирургия, онкология, трансплантация — бесплатно по квотам.", "cost": 0.3, "effects": {"life_expectancy": 0.6, "health_capacity": 0.05}, "start": [false, false, false, true], "min_doctors": 1.5},
+  {"id": "drug_coverage", "post": "health", "name": "Лекарственное обеспечение", "description": "Бесплатные лекарства пенсионерам и хронически больным.", "cost": 0.25, "effects": {"life_expectancy": 0.3, "disease_burden": -0.04}, "start": [false, false, false, true]}
+ ]
+}

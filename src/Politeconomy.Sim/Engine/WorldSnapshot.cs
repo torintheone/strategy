@@ -61,8 +61,9 @@ public sealed class WorldSnapshot
                     spending[k] = e.Spending[k] / gdp;
             }
             var politics = world.Politics?.Countries.GetValueOrDefault(c.Id) is { } pc ? PoliticsSnapshot.Capture(world, c, pc) : null;
+            var programs = world.Programs?.Countries.GetValueOrDefault(c.Id)?.Current.Order(StringComparer.Ordinal).ToList();
             countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal),
-                ages, classes, government, c.Regime, laws, history, spending, politics);
+                ages, classes, government, c.Regime, laws, history, spending, politics, programs);
         }
         var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var r in world.Regions)
@@ -126,7 +127,8 @@ public sealed record CountrySnapshot(
     LawsSnapshot? Laws = null,
     HistorySnapshot? History = null,
     IReadOnlyList<double>? Spending = null,
-    PoliticsSnapshot? Politics = null)
+    PoliticsSnapshot? Politics = null,
+    IReadOnlyList<string>? Programs = null)
 {
     public StatValue? Stat(string id) => Stats.GetValueOrDefault(id);
 }

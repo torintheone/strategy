@@ -73,6 +73,11 @@ public static partial class DataValidator
         ["education_quality"] = (0, 100),
         ["literacy_pct"] = (0, 100),
         ["human_capital"] = (30, 300),
+        ["doctors_per_1000"] = (0, 15),
+        ["hospital_beds_per_1000"] = (0, 20),
+        ["health_access_pct"] = (0, 100),
+        ["disease_burden_pct"] = (0, 30),
+        ["infant_mortality"] = (0, 200),
         ["approval_pct"] = (0, 100),
         ["ruling_poll_pct"] = (0, 100),
     };
@@ -288,6 +293,7 @@ public static partial class DataValidator
         ValidateLaws(data, Add);
         ValidatePolitics(data, Add);
         ValidateGroups(data, Add);
+        ValidatePrograms(data, Add);
         return problems;
     }
 

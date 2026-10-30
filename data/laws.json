@@ -1550,8 +1550,7 @@
      "name": "Частная",
      "description": "Лечение за свой счёт: дешевле бюджету, хуже бедным.",
      "effects": {
-      "spending.health": -1.0,
-      "life_expectancy": -0.5
+      "spending.health": -1.0
      },
      "attitudes": {
       "capitalists": 1,
@@ -1573,8 +1572,7 @@
      "name": "Государственная",
      "description": "Лечение бесплатно для всех за счёт бюджета.",
      "effects": {
-      "spending.health": 1.0,
-      "life_expectancy": 0.5
+      "spending.health": 1.0
      },
      "attitudes": {
       "unskilled": 2,
