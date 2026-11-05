@@ -152,6 +152,10 @@ public partial class ScienceScreen : GlassPanel
                 text += $" · изучается «{target.Name}»: {Fmt.Value("percent", progress * 100)}, {Years(years)}";
             else if (done == techs.Count)
                 text += " · всё освоено";
+            else if (techs.FirstOrDefault(t => !science.Researched.Contains(t.Id)) is { } next
+                     && (next.Requires ?? []).Where(r => !science.Researched.Contains(r)).ToList() is { Count: > 0 } missing)
+                text += " · «" + next.Name + "» ждёт технологии " + string.Join(", ", missing.Select(r => "«" + _data.Science.Technologies.First(t => t.Id == r).Name + "»"))
+                        + " — очки ветви идут в другие";
             var info = UiTheme.Text(text, 13, null, UiTheme.TextSecondary);
             info.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             row.AddChild(info);
