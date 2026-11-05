@@ -23,6 +23,8 @@ public sealed class WorldSnapshot
     public Politics.ReignSummary? LastReign { get; init; }
     /// <summary>Последние записи журнала (отставки, назначения, голосования), новые — в конце.</summary>
     public IReadOnlyList<JournalEntry> Journal { get; init; } = [];
+    /// <summary>Доля мира (по ВВП по ППС), которая освоила каждую технологию.</summary>
+    public IReadOnlyDictionary<string, double> Adoption { get; init; } = new Dictionary<string, double>();
     /// <summary>Валюта каждой страны: код, режим курса, якорь и сколько стран ею пользуются.</summary>
     public required IReadOnlyDictionary<string, CurrencySnapshot> Currencies { get; init; }
     public required long Version { get; init; }
@@ -64,8 +66,9 @@ public sealed class WorldSnapshot
             var programs = world.Programs?.Countries.GetValueOrDefault(c.Id)?.Current.Order(StringComparer.Ordinal).ToList();
             var energy = world.Energy?.Countries.GetValueOrDefault(c.Id) is { } en ? EnergySnapshot.Capture(world, en) : null;
             var infrastructure = world.Infrastructure?.Countries.GetValueOrDefault(c.Id) is { } inf ? InfrastructureSnapshot.Capture(world, c, inf) : null;
+            var science = world.Science?.Countries.GetValueOrDefault(c.Id) is { } sc ? ScienceSnapshot.Capture(world, c, sc) : null;
             countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal),
-                ages, classes, government, c.Regime, laws, history, spending, politics, programs, energy, infrastructure);
+                ages, classes, government, c.Regime, laws, history, spending, politics, programs, energy, infrastructure, science);
         }
         var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var r in world.Regions)
@@ -95,9 +98,51 @@ public sealed class WorldSnapshot
             Reign = world.Reign is { } reign ? new ReignSnapshot(reign.Country, reign.Since, reign.ElectionsWon, reign.ElectionsLost, reign.LawsPassed) : null,
             Defeat = world.Defeat,
             LastReign = world.LastReign,
+            Adoption = world.Science?.Adoption.ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal) ?? new Dictionary<string, double>(),
             Journal = world.Journal.Count <= JournalShown ? world.Journal.ToList() : world.Journal.GetRange(world.Journal.Count - JournalShown, JournalShown),
             Version = version,
         };
+    }
+}
+
+/// <summary>
+/// Наука страны в снимке: очки в год (% ВВП) и из чего они, эффективность, утечка мозгов, освоенные технологии,
+/// распределение очков по ветвям (доли), приоритет. У страны игрока ещё — что изучается в каждой ветви и сколько
+/// готово (0–1), сколько лет осталось.
+/// </summary>
+public sealed record ScienceSnapshot(double Points, double Government, double Private, double Efficiency, double Drain,
+    IReadOnlySet<string> Researched, IReadOnlyList<double> Allocation, string? Priority, IReadOnlyDictionary<string, double>? Progress,
+    IReadOnlyDictionary<string, double>? YearsLeft)
+{
+    public static ScienceSnapshot Capture(World world, Country country, Science.CountryScience c)
+    {
+        Dictionary<string, double>? progress = null, years = null;
+        if (world.PlayerCountry == country.Id)
+        {
+            progress = new Dictionary<string, double>(StringComparer.Ordinal);
+            years = new Dictionary<string, double>(StringComparer.Ordinal);
+            var data = world.Data;
+            var b = data.ScienceBalance;
+            var perYear = c.Points / 100 * Society.SocietyModel.PppGdp(world.Economy![country.Id]) / 1e9;
+            var branches = data.Science.Branches;
+            var priority = c.Priority != null ? data.Science.Technologies.FirstOrDefault(t => t.Id == c.Priority) : null;
+            var share = priority != null ? 1 - b.PriorityShare : 1;
+            var targets = branches.Select(br => Science.ScienceModel.Target(data, c, br.Id)).ToArray();
+            var weight = Enumerable.Range(0, branches.Count).Where(k => targets[k] != null).Sum(k => c.Allocation[k]);
+            foreach (var t in data.Science.Technologies.Where(t => Science.ScienceModel.Available(data, c, t)))
+            {
+                var cost = Science.ScienceModel.Cost(world, country, t);
+                var done = c.Progress.GetValueOrDefault(t.Id);
+                progress[t.Id] = cost > 0 ? Math.Clamp(done / cost, 0, 1) : 0;
+                var k = branches.ToList().FindIndex(br => br.Id == t.Branch);
+                var rate = (t.Id == priority?.Id ? perYear * b.PriorityShare : 0)
+                           + (targets[k]?.Id == t.Id && weight > 0 ? perYear * share * c.Allocation[k] / weight : 0);
+                if (rate > 0)
+                    years[t.Id] = Math.Max(0, cost - done) / rate;
+            }
+        }
+        return new ScienceSnapshot(c.Points, Science.ScienceModel.Government(world, country, c), Science.ScienceModel.Private(world, country),
+            c.Efficiency, c.Drain, c.Researched.ToHashSet(StringComparer.Ordinal), c.Allocation.ToArray(), c.Priority, progress, years);
     }
 }
 
@@ -132,7 +177,8 @@ public sealed record CountrySnapshot(
     PoliticsSnapshot? Politics = null,
     IReadOnlyList<string>? Programs = null,
     EnergySnapshot? Energy = null,
-    InfrastructureSnapshot? Infrastructure = null)
+    InfrastructureSnapshot? Infrastructure = null,
+    ScienceSnapshot? Science = null)
 {
     public StatValue? Stat(string id) => Stats.GetValueOrDefault(id);
 }

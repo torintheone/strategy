@@ -26,7 +26,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -86,6 +86,8 @@ switch (command)
         return EnergyReport();
     case "infrastructure":
         return InfrastructureReport();
+    case "science":
+        return ScienceReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -175,8 +177,26 @@ int Run(string mode)
     failures += LivingCheck(world);
     failures += EnergyCheck(world);
     failures += InfrastructureCheck(world);
+    failures += ScienceCheck(world);
     Console.WriteLine(failures == 0 ? "Все проверки пройдены." : $"Нарушений: {failures}");
     return failures == 0 ? 0 : 1;
+}
+
+// Наука в конце прогона: открыто от 4 до 16 технологий, которых на старте не знал никто; у типичной страны
+// технологический уровень — от 30 до 100%.
+static int ScienceCheck(World world)
+{
+    var discoveries = world.Science!.Discoveries;
+    var levels = world.Countries.Select(c => c.Stat("technology_level_pct")).OrderBy(x => x).ToList();
+    var median = levels[levels.Count / 2];
+    Console.WriteLine($"Наука: открыто нового {discoveries.Count} (" + string.Join(", ", discoveries.OrderBy(kv => kv.Value.Date)
+        .Select(kv => $"{kv.Key} — {kv.Value.Country} {kv.Value.Date.Year}")) + $"); технологический уровень типичной страны {median:F0}%.");
+    if (discoveries.Count is < 4 or > 16 || median is < 30 or > 100)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: наука идёт слишком быстро или слишком медленно");
+        return 1;
+    }
+    return 0;
 }
 
 // Инфраструктура в конце прогона: перегрузка, которая режет выпуск больше чем на 5%, — не больше чем у двадцатой
@@ -631,6 +651,34 @@ int EducationReport()
                               $"проф. {e.VocationalStock,4:F2}; грамотность {e.Literacy,4:F0}%; качество {e.Quality,3:F0}; финансирование {e.Funding,4:F2}; " +
                               $"капитал {e.HumanCapital * 100,5:F1}; к росту {e.Effects.GetValueOrDefault("potential_growth"),5:F2} п. п.");
         }
+    }
+    return 0;
+}
+
+// Наука: очки, освоенные технологии, производительность в нескольких странах; кто и когда открыл новое.
+int ScienceReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 50;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "CHN", "DEU", "JPN", "KOR", "IND", "BRA", "RUS", "NGA", "ETH"];
+    for (var year = 0; year <= runYears; year += 10)
+    {
+        if (year > 0)
+            sim.RunUntil(world.Date.AddYears(10));
+        Console.WriteLine($"{world.Date.Year}:");
+        foreach (var id in ids)
+        {
+            var c = world.Science![id];
+            var country = world[id];
+            Console.WriteLine($"  {country.Name,-16} очки {c.Points,5:F2}% ВВП (эфф. {c.Efficiency,4:F2}, утечка {c.Drain * 100,4:F1}%), технологий {c.Researched.Count,2} " +
+                              $"({country.Stat("technology_level_pct"),3:F0}%), производительность " +
+                              string.Join("/", new[] { "agriculture", "industry", "services" }.Select(s => c.Productivity.GetValueOrDefault(s, 1).ToString("F3"))) +
+                              $", к росту {c.Effects.GetValueOrDefault("potential_growth"),5:F2} п. п., к жизни {c.Effects.GetValueOrDefault("life_expectancy"),5:F2}");
+        }
+        var known = world.Science!.Adoption.Count(kv => kv.Value > 0);
+        Console.WriteLine($"  Мир: известно технологий {known} из {data.Science.Technologies.Count}; открыто нового: " +
+                          string.Join(", ", world.Science.Discoveries.OrderBy(kv => kv.Value.Date).Select(kv => $"{kv.Key} ({kv.Value.Country} {kv.Value.Date.Year})")));
     }
     return 0;
 }

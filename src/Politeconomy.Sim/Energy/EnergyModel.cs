@@ -211,9 +211,11 @@ public static class EnergyModel
         for (var t = 0; t < plants.Count; t++)
         {
             var p = plants[t];
-            if (c.Share0[t] <= 0 && income < p.MinIncome)
+            // Атомные станции: строят те, у кого они уже есть, кто достаточно богат или освоил атомную энергетику (технология).
+            var nuclear = p.Id == "nuclear" ? LawModel.Effect(world, country.Id, "power_nuclear") : 0;
+            if (c.Share0[t] <= 0 && income < p.MinIncome && nuclear <= 0)
                 continue;
-            var w = p.Weight * (c.Share0[t] + b.Inertia) * (strategy?.GetValueOrDefault(p.Id, 1) ?? 1);
+            var w = p.Weight * (c.Share0[t] + b.Inertia) * (strategy?.GetValueOrDefault(p.Id, 1) ?? 1) * (1 + Math.Max(0, nuclear));
             if (p.Resource != null && Stat(country, p.Resource, 0) > b.ResourceRent)
                 w *= 1 + b.ResourceBonus;
             var cost = Cost(world, country, p);
@@ -225,7 +227,7 @@ public static class EnergyModel
             {
                 var share = total > 0 ? c.Generation[t] / total : 0;
                 w *= Math.Max(0, 1 + LawModel.Effect(world, country.Id, "power_renewables"))
-                     * Math.Clamp(1 - (share - b.IntermittentFrom) / b.IntermittentRange, 0.05, 1);
+                     * Math.Clamp(1 - (share - b.IntermittentFrom - LawModel.Effect(world, country.Id, "power_intermittency")) / b.IntermittentRange, 0.05, 1);
             }
             weights[t] = Math.Max(0, w);
         }

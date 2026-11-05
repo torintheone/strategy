@@ -121,6 +121,7 @@ public class DataTests
         Programs = d.Programs,
         Energy = d.Energy,
         Infrastructure = d.Infrastructure,
+        Science = d.Science,
         Benchmarks = d.Benchmarks,
     };
 }

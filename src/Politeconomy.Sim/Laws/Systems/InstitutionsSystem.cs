@@ -59,14 +59,16 @@ public sealed class InstitutionsSystem : ISimSystem
             var regime = b.CorruptionRegime[Math.Clamp(r, 0, b.CorruptionRegime.Count - 1)];
             var ministers = b.CorruptionMinisters * (MinisterCorruption(world, country.Id) - c.StartCorruption);
             var laws_ = c.Effect("index.corruption");
-            // Зарплаты чиновников (расходы на госуправление к старту): мало платят — больше берут.
-            var wages = LawModel.Effect(world, country.Id, "index.corruption") - laws_;
-            Set("corruption_index", income + regime + ministers + laws_ + wages,
+            // Цифровое государство (технологии) и зарплаты чиновников (расходы на госуправление к старту): мало платят — больше берут.
+            var digital = world.Science?.Countries.GetValueOrDefault(country.Id)?.Effects.GetValueOrDefault("index.corruption") ?? 0;
+            var wages = LawModel.Effect(world, country.Id, "index.corruption") - laws_ - digital;
+            Set("corruption_index", income + regime + ministers + laws_ + wages + digital,
                 new StatFactor("Уровень дохода страны", income, "number0"),
                 new StatFactor("Режим", regime, "number1_signed"),
                 new StatFactor("Министры", ministers, "number1_signed"),
                 new StatFactor("Законы", laws_, "number1_signed"),
-                new StatFactor("Зарплаты чиновников", wages, "number1_signed"));
+                new StatFactor("Зарплаты чиновников", wages, "number1_signed"),
+                new StatFactor("Цифровое государство", digital, "number1_signed"));
 
             if (world.Government?.Countries.GetValueOrDefault(country.Id) is { } g)
                 Set("government_effectiveness", g.Ministers.Values.Average(m => m.Competence));

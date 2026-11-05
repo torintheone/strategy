@@ -8,8 +8,8 @@ namespace Politeconomy.Sim.Economy.Systems;
 /// <summary>
 /// Потенциальный выпуск отраслей: Y = A · K^α · L^(1−α). Капитал растёт на инвестиции и выбывает,
 /// производительность растёт так, чтобы потенциал шёл по прогнозу МВФ, а дальше — по догоняющему росту.
-/// Нехватка электричества (веерные отключения) и перегруженная инфраструктура режут выпуск. MODEL.md, «Производство»,
-/// «Энергетика», «Инфраструктура и стройки».
+/// Нехватка электричества (веерные отключения) и перегруженная инфраструктура режут выпуск, технологии (в сравнении с
+/// миром) поднимают его. MODEL.md, «Производство», «Энергетика», «Инфраструктура и стройки», «Наука».
 /// MODEL.md, «Производство».
 /// </summary>
 public sealed class ProductionSystem : EconomySystem
@@ -61,7 +61,7 @@ public sealed class ProductionSystem : EconomySystem
                 e.Capital[i] = Math.Max(0, e.Capital[i] + (e.InvestmentShare[i] * investment - ind.Depreciation * e.Capital[i]) / 12);
                 e.Tfp[i] *= Math.Pow(1 + (1 - ind.Alpha) * (e.PotentialGrowth - populationGrowth), 1.0 / 12);
                 e.Potential[i] = e.Tfp[i] * Math.Pow(e.Capital[i], ind.Alpha) * Math.Pow(potentialLabor * e.EmploymentShare[i], 1 - ind.Alpha)
-                                 * Economy.Supply.Factor(world, country.Id, i);
+                                 * Economy.Supply.Factor(world, country.Id, i) * Science.ScienceModel.Productivity(world, country.Id, i);
             }
         }
     }

@@ -150,7 +150,9 @@ public static class InfrastructureModel
         var business = c.Business0[t] > 0 ? Business(world, country, e, type) / c.Business0[t] : 1;
         var income = c.Income0 > 0 ? SocietyModel.IncomeGrowth(e) / c.Income0 : 1;
         var households = world.Demography![country.Id].Total / c.Population0 * Math.Pow(Math.Max(0.1, income), world.Data.InfrastructureBalance.HouseholdIncome);
-        return 100 * ((1 - type.Households) * business + type.Households * households);
+        // Логистика (технологии) позволяет обходиться той же инфраструктурой при большей нагрузке.
+        return 100 * ((1 - type.Households) * business + type.Households * households)
+               / Math.Max(0.5, 1 + LawModel.Effect(world, country.Id, "infra_efficiency"));
     }
 
     /// <summary>Нагрузка от экономики: выпуск отраслей по весам (без потерь от отключений и перегрузки), торговля или спрос на электричество.</summary>
@@ -196,10 +198,13 @@ public static class InfrastructureModel
             else if (p.Concession is { } until && world.Date < until)
                 fees += b.PppMood * p.Cost * (1 + b.PppMargin) * 100;
         }
-        foreach (var key in c.Effects.Keys.Where(k => k.StartsWith("spending.", StringComparison.Ordinal)).ToList())
-            c.Effects.Remove(key);
-        foreach (var (item, value) in spending)
+        // Поправки пересобираются целиком: так порядок записей в сохранении не зависит от истории строек.
+        var water = c.Effects.TryGetValue("disease_burden", out var w) ? w : (double?)null;
+        c.Effects.Clear();
+        foreach (var (item, value) in spending.OrderBy(kv => kv.Key, StringComparer.Ordinal))
             c.Effects["spending." + item] = value;
+        if (water is { } value0)
+            c.Effects["disease_burden"] = value0;
         e.ProjectFlow = flow;
         if (c.Mood.Length != ClassIds.Count)
             c.Mood = new double[ClassIds.Count];
@@ -268,7 +273,8 @@ public static class InfrastructureModel
             cost = amount * plant.CostPerGw * 1e9 / gdp * costFactor;
             months = plant.BuildYears * 12 * delay;
             effect = $"+{Fmt.Number(amount, amount < 10 ? 1 : 0)} ГВт ({Fmt.Number(record.Gain * 100, 0)}% нужной выработки)";
-            if (energy.Share0[t] <= 0 && income < Math.Max(record.MinIncome, plant.MinIncome))
+            if (energy.Share0[t] <= 0 && income < Math.Max(record.MinIncome, plant.MinIncome)
+                && !(plant.Id == "nuclear" && LawModel.Effect(world, country.Id, "power_nuclear") > 0))
                 unavailable = "Стране пока не хватает технологий и специалистов.";
             if (plant.Id == "hydro" && energy.Capacity0[t] <= 0)
                 unavailable = "Нет подходящих рек.";

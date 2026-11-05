@@ -123,6 +123,9 @@ public sealed class World
     /// <summary>Инфраструктура и стройки игрока; создаётся <see cref="Infrastructure.InfrastructureModel.Setup"/>.</summary>
     public Infrastructure.WorldInfrastructure? Infrastructure { get; set; }
 
+    /// <summary>Наука и технологии; создаётся <see cref="Science.ScienceModel.Setup"/>.</summary>
+    public Science.WorldScience? Science { get; set; }
+
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 

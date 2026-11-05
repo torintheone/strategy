@@ -60,6 +60,15 @@ public partial class RailButton : Button
                 DrawLine(c + new Vector2(-1, 1), c + new Vector2(8, 5), color, w, true);
                 DrawColoredPolygon(Sector(c + new Vector2(2, -2), 9, -Mathf.Pi / 2, 0.36f), color);
                 break;
+            case "science":
+                // Колба: горлышко, расширяющееся дно, уровень жидкости и пузырьки.
+                DrawPolyline([c + new Vector2(-4, -11), c + new Vector2(-4, -3), c + new Vector2(-11, 10), c + new Vector2(11, 10),
+                    c + new Vector2(4, -3), c + new Vector2(4, -11)], color, w, true);
+                DrawLine(c + new Vector2(-6, -11), c + new Vector2(6, -11), color, w, true);
+                DrawLine(c + new Vector2(-8, 4), c + new Vector2(8, 4), color, w, true);
+                DrawArc(c + new Vector2(-2, 7), 1.4f, 0, Mathf.Tau, 12, color, w, true);
+                DrawArc(c + new Vector2(3, 6.5f), 1.1f, 0, Mathf.Tau, 12, color, w, true);
+                break;
             case "society":
                 // Три фигуры: люди.
                 foreach (var (dx, r) in new[] { (-8f, 3.2f), (8f, 3.2f), (0f, 4f) })

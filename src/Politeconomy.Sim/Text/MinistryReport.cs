@@ -15,7 +15,7 @@ public static class MinistryReport
     [
         "inflation_pct", "unemployment_pct", "gov_debt_pct_gdp", "corruption_index", "radicalism", "death_rate", "interest_pct_gdp",
         "bond_yield_pct", "infant_mortality", "disease_burden_pct", "crime_index", "pollution_index", "housing_price_index",
-        "housing_shortage_pct", "power_shortage_pct", "electricity_price_index", "energy_import_dependence_pct",
+        "housing_shortage_pct", "power_shortage_pct", "electricity_price_index", "energy_import_dependence_pct", "brain_drain_pct",
     ];
 
     /// <summary>Показатели, у которых нет «лучше» или «хуже» — только значение.</summary>
@@ -102,6 +102,8 @@ public static class MinistryReport
             yield return "Инфраструктура перегружена: заводы и порты упираются в потолок. Нужны новые стройки и деньги на обслуживание.";
         if (Has("infrastructure_condition_pct") && S("infrastructure_condition_pct") < 55)
             yield return "Дороги и сети обветшали: без ремонта они выдерживают всё меньше.";
+        if (Has("brain_drain_pct") && S("brain_drain_pct") > 3)
+            yield return "Учёные и инженеры уезжают: им не хватает свободы или они недовольны жизнью. Наука работает хуже.";
         if (Has("crime_index") && S("crime_index") > 60)
             yield return "Преступность высокая: людям страшно выходить на улицу.";
         if (Has("pollution_index") && S("pollution_index") > 70)

@@ -92,6 +92,10 @@ public static partial class DataValidator
         ["energy_import_dependence_pct"] = (0, 100),
         ["infrastructure_index"] = (0, 200),
         ["infrastructure_condition_pct"] = (0, 100),
+        ["research_effort_pct_gdp"] = (0, 20),
+        ["technologies_count"] = (0, 200),
+        ["technology_level_pct"] = (0, 100),
+        ["brain_drain_pct"] = (0, 100),
         ["approval_pct"] = (0, 100),
         ["ruling_poll_pct"] = (0, 100),
     };
@@ -311,6 +315,7 @@ public static partial class DataValidator
         ValidatePrograms(data, Add);
         ValidateEnergy(data, Add);
         ValidateInfrastructure(data, Add);
+        ValidateScience(data, Add);
         return problems;
     }
 

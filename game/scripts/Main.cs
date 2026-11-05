@@ -44,6 +44,7 @@ public partial class Main : Node
     ConfirmDialog _confirmDialog = null!;
     DebateDialog _debateDialog = null!;
     ProtestDialog _protestDialog = null!;
+    ScienceScreen _science = null!;
     ProjectDialog _projectDialog = null!;
     readonly HashSet<string> _seenProtests = new();
     string? _seenCampaign;
@@ -195,7 +196,7 @@ public partial class Main : Node
         _uiRoot.AddChild(_rail);
         _rail.Setup([("government", "government", "Правительство и парламент (G)"), ("ministries", "ministries", "Ведомства и доклады министров (M)"),
             ("politics", "politics", "Партии и опросы (P)"), ("society", "society", "Общество и группы интересов (O)"), ("laws", "laws", "Законы (L)"),
-            ("budget", "budget", "Бюджет и налоги (B)")]);
+            ("budget", "budget", "Бюджет и налоги (B)"), ("science", "science", "Наука и технологии (N)")]);
         _rail.ScreenChosen += ToggleScreen;
 
         _government = new GovernmentScreen { Visible = false };
@@ -206,6 +207,14 @@ public partial class Main : Node
             _host!.Post(w => Politeconomy.Sim.Government.GovernmentActions.RequestCandidates(w, country, post));
         _government.Appointed += (country, post, index) =>
             _host!.Post(w => Politeconomy.Sim.Government.GovernmentActions.Appoint(w, country, post, index));
+
+        _science = new ScienceScreen { Visible = false };
+        _uiRoot.AddChild(_science);
+        _science.Setup(_data);
+        _science.Closed += CloseScreens;
+        _science.AllocationChanged += (country, branch, delta) =>
+            _host!.Post(w => Politeconomy.Sim.Science.ScienceModel.Allocate(w, country, branch, delta));
+        _science.PriorityChosen += (country, tech) => _host!.Post(w => Politeconomy.Sim.Science.ScienceModel.Prioritize(w, country, tech));
 
         _ministries = new MinistryScreen { Visible = false };
         _uiRoot.AddChild(_ministries);
@@ -378,6 +387,8 @@ public partial class Main : Node
             _laws.Refresh(snapshot);
         if (_budget.Visible)
             _budget.Refresh(snapshot);
+        if (_science.Visible)
+            _science.Refresh(snapshot);
         Recolor(snapshot);
         CheckDialogs(snapshot);
         _dialogWasOpen = DialogOpen;
@@ -483,9 +494,12 @@ public partial class Main : Node
                 CloseDialogs();
             return;
         }
-        if (physical is Key.G or Key.M or Key.P or Key.O or Key.L or Key.B)
+        if (physical is Key.G or Key.M or Key.P or Key.O or Key.L or Key.B or Key.N)
         {
-            ToggleScreen(physical switch { Key.G => "government", Key.M => "ministries", Key.P => "politics", Key.O => "society", Key.L => "laws", _ => "budget" });
+            ToggleScreen(physical switch
+            {
+                Key.G => "government", Key.M => "ministries", Key.P => "politics", Key.O => "society", Key.L => "laws", Key.N => "science", _ => "budget",
+            });
             return;
         }
         switch (key)
@@ -681,6 +695,10 @@ public partial class Main : Node
                     Politeconomy.Sim.Health.ProgramModel.Toggle(w, "RUS", "mortgage_subsidy");
                     // Стройка: автомагистрали из бюджета.
                     Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, "RUS", "highways", "budget");
+                    // Наука: больше очков энергетике, приоритет — ближайшая технология ИТ.
+                    Politeconomy.Sim.Science.ScienceModel.Allocate(w, "RUS", "energy", 0.2);
+                    if (Politeconomy.Sim.Science.ScienceModel.Target(w.Data, w.Science!["RUS"], "it") is { } it)
+                        Politeconomy.Sim.Science.ScienceModel.Prioritize(w, "RUS", it.Id);
                     // Смена власти без выборов в чужих странах: переворот, дворцовый переворот, революция.
                     Politeconomy.Sim.Politics.PowerModel.MilitaryCoup(w, w["SEN"], w.Politics!["SEN"]);
                     Politeconomy.Sim.Politics.PowerModel.PalaceCoup(w, w["PRK"], w.Politics!["PRK"]);
@@ -715,6 +733,7 @@ public partial class Main : Node
                     && double.IsFinite(pollution.Value) && snapshot.Countries["RUS"].Programs?.Contains("mortgage_subsidy") == true
                     && snapshot.Countries["RUS"].Energy is { Plants.Count: 6, Demand: > 0 } && snapshot.Countries["RUS"].Stat("power_shortage_pct") is { Factors.Count: 3 }
                     && snapshot.Countries["RUS"].Infrastructure is { Projects.Count: 1, Offers.Count: > 0 } && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "project")
+                    && snapshot.Countries["RUS"].Science is { Researched.Count: > 20, Priority: not null, Progress.Count: > 0 } && snapshot.Adoption.Count > 0
                     && snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 };
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
@@ -980,6 +999,20 @@ public partial class Main : Node
                 });
                 _ministries.ScrollToInfrastructure();
             }),
+            ("48_science", () => OpenScience("BRA")),
+            // Наука: больше очков медицине и приоритет — ближайшая технология ИТ.
+            ("49_science_priority", () => _host!.Post(w =>
+            {
+                Politeconomy.Sim.Science.ScienceModel.Allocate(w, "BRA", "medicine", 0.3);
+                if (Politeconomy.Sim.Science.ScienceModel.Target(w.Data, w.Science!["BRA"], "it") is { } it)
+                    Politeconomy.Sim.Science.ScienceModel.Prioritize(w, "BRA", it.Id);
+            })),
+            ("50_map_technology", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "technology"));
+                _camera.FitWorld(instant: true);
+            }),
         };
         if (_shotStep > 0)
         {
@@ -1000,7 +1033,8 @@ public partial class Main : Node
     }
 
     /// <summary>Открыть или закрыть экран: страны игрока, а если игрок ещё не выбрал страну — выбранной на карте.</summary>
-    bool ScreenOpen => _government.Visible || _ministries.Visible || _politicsScreen.Visible || _society.Visible || _laws.Visible || _budget.Visible;
+    bool ScreenOpen => _government.Visible || _ministries.Visible || _politicsScreen.Visible || _society.Visible || _laws.Visible || _budget.Visible
+                       || _science.Visible;
 
     void ToggleScreen(string screen)
     {
@@ -1011,6 +1045,7 @@ public partial class Main : Node
             "politics" => _politicsScreen.Visible,
             "society" => _society.Visible,
             "laws" => _laws.Visible,
+            "science" => _science.Visible,
             _ => _budget.Visible,
         };
         if (open)
@@ -1027,7 +1062,11 @@ public partial class Main : Node
         if (id == null)
         {
             _toasts.Push("Выберите страну на карте или начните игру за неё — тогда откроется её " +
-                         (screen switch { "government" => "правительство.", "ministries" => "ведомства.", "politics" => "партии.", "society" => "общество.", _ => "законодательство." }));
+                         (screen switch
+                         {
+                             "government" => "правительство.", "ministries" => "ведомства.", "politics" => "партии.", "society" => "общество.",
+                             "science" => "наука.", _ => "законодательство.",
+                         }));
             _rail.SetActive(null);
             return;
         }
@@ -1039,6 +1078,8 @@ public partial class Main : Node
             OpenPolitics(id);
         else if (screen == "society")
             OpenSociety(id);
+        else if (screen == "science")
+            OpenScience(id);
         else
             OpenLaws(id);
     }
@@ -1056,6 +1097,7 @@ public partial class Main : Node
         _society.Visible = false;
         _laws.Visible = false;
         _budget.Visible = false;
+        _science.Visible = false;
     }
 
     void OpenBudget()
@@ -1105,6 +1147,16 @@ public partial class Main : Node
         HideUnderScreens();
         _society.ShowCountry(countryId, _host.Snapshot);
         _rail.SetActive("society");
+        SetHovered(null, null);
+    }
+
+    void OpenScience(string countryId)
+    {
+        if (_host == null)
+            return;
+        HideUnderScreens();
+        _science.ShowCountry(countryId, _host.Snapshot);
+        _rail.SetActive("science");
         SetHovered(null, null);
     }
 
@@ -1269,6 +1321,7 @@ public partial class Main : Node
         _society.Visible = false;
         _laws.Visible = false;
         _budget.Visible = false;
+        _science.Visible = false;
         _rail.SetActive(null);
     }
 
