@@ -116,9 +116,17 @@ public partial class DiplomacyScreen : GlassPanel
     {
         if (snapshot.Diplomacy is not { } diplomacy)
             return;
-        // Перерисовываем, когда что-то изменилось: месяц, отношения с выбранным, договоры.
+        // Перерисовываем, когда что-то изменилось: месяц, выбранная страна, отношения и договоры с любым партнёром
+        // (визит к одной стране или переворот в другой меняют список, даже если выбрана третья).
         var selected = diplomacy.Partners.FirstOrDefault(p => p.Id == _partner);
-        var signature = $"{snapshot.Date:yyyy-MM}|{_partner}|{_byTrade}|{selected?.Relations:F2}|{string.Join(",", selected?.Treaties ?? [])}|{selected?.CanVisit}";
+        var partners = new HashCode();
+        foreach (var p in diplomacy.Partners)
+        {
+            partners.Add(Math.Round(p.Relations, 1));
+            partners.Add(p.Treaties.Count);
+            partners.Add(p.CanVisit);
+        }
+        var signature = $"{snapshot.Date:yyyy-MM}|{_partner}|{_byTrade}|{selected?.Relations:F2}|{string.Join(",", selected?.Treaties ?? [])}|{partners.ToHashCode()}";
         if (signature == _shown)
             return;
         _shown = signature;
