@@ -99,31 +99,77 @@ public static class DiplomacyModel
         Publish(world);
     }
 
+    /// <summary>
+    /// День: если где-то сменились строй или партия главы (выборы, переворот, отставка), отношения пересчитываются
+    /// сразу, а не 1-го числа, — иначе число и его разбор расходятся до конца месяца.
+    /// </summary>
+    public static void Sync(World world)
+    {
+        if (world.Diplomacy is not { } d || d.Ids.Length == 0)
+            return;
+        var basis = Basis(world, d);
+        if (basis.Length != d.Basis.Length)
+        {
+            Refresh(world);
+            return;
+        }
+        var changed = Enumerable.Range(0, basis.Length).Where(i => basis[i] != d.Basis[i]).ToList();
+        if (changed.Count == 0)
+            return;
+        // Договоры и торговля от власти не зависят — пересчитываются только отношения с этими странами.
+        Recompute(world, changed);
+        Publish(world);
+    }
+
+    static (Regime, string?)[] Basis(World world, WorldDiplomacy d)
+    {
+        var basis = new (Regime, string?)[d.Ids.Length];
+        for (var i = 0; i < basis.Length; i++)
+        {
+            var country = i < world.Countries.Count && world.Countries[i].Id == d.Ids[i] ? world.Countries[i] : world[d.Ids[i]];
+            basis[i] = (country.Regime, world.Government?.Countries.GetValueOrDefault(country.Id)?.Leader.Party);
+        }
+        return basis;
+    }
+
     /// <summary>Отношения всех пар — то же, что сумма <see cref="Breakdown"/>, но без списков причин (19,5 тыс. пар в месяц).</summary>
-    static void Recompute(World world)
+    /// <param name="only">Если задано — только пары с этими странами (сменилась власть), остальные не изменились.</param>
+    static void Recompute(World world, IReadOnlyList<int>? only = null)
     {
         var d = world.Diplomacy!;
         var bal = world.Data.DiplomacyBalance;
         var n = d.Ids.Length;
         var regimes = d.Ids.Select(id => world[id].Regime).ToArray();
         var positions = d.Ids.Select(id => Politics.PoliticsModel.HeadParty(world, id)?.Position).ToArray();
+        d.Basis = Basis(world, d);
         var treaties = new Dictionary<string, double>(StringComparer.Ordinal);
         foreach (var t in d.Treaties)
         {
             var key = WorldDiplomacy.Key(t.A, t.B);
             treaties[key] = treaties.GetValueOrDefault(key) + (world.Data.Diplomacy.Treaties.FirstOrDefault(r => r.Id == t.Type)?.Relations ?? 0);
         }
-        for (var i = 0; i < n; i++)
-            for (var j = i + 1; j < n; j++)
-            {
-                var key = WorldDiplomacy.Key(d.Ids[i], d.Ids[j]);
-                var value = bal.TradeRelations * Math.Sqrt(Math.Max(d.Trade[i][j], d.Trade[j][i]))
-                            + Regime(bal, regimes[i], regimes[j])
-                            + (positions[i] is { } pa && positions[j] is { } pb ? Ideology(bal, pa, pb) : 0)
-                            + (d.Neighbors.Contains(key) ? bal.Neighbors : 0)
-                            + d.History.GetValueOrDefault(key) + treaties.GetValueOrDefault(key) + d.Memory.GetValueOrDefault(key);
-                d.Relations[i][j] = d.Relations[j][i] = Math.Clamp(value, -100, 100);
-            }
+        void Pair(int i, int j)
+        {
+            var key = WorldDiplomacy.Key(d.Ids[i], d.Ids[j]);
+            var value = bal.TradeRelations * Math.Sqrt(Math.Max(d.Trade[i][j], d.Trade[j][i]))
+                        + Regime(bal, regimes[i], regimes[j])
+                        + (positions[i] is { } pa && positions[j] is { } pb ? Ideology(bal, pa, pb) : 0)
+                        + (d.Neighbors.Contains(key) ? bal.Neighbors : 0)
+                        + d.History.GetValueOrDefault(key) + treaties.GetValueOrDefault(key) + d.Memory.GetValueOrDefault(key);
+            d.Relations[i][j] = d.Relations[j][i] = Math.Clamp(value, -100, 100);
+        }
+        if (only == null)
+        {
+            for (var i = 0; i < n; i++)
+                for (var j = i + 1; j < n; j++)
+                    Pair(i, j);
+            return;
+        }
+        // Пара всегда считается в одном порядке (меньший индекс первым) — число совпадает с полным пересчётом до бита.
+        foreach (var k in only)
+            for (var j = 0; j < n; j++)
+                if (j != k)
+                    Pair(Math.Min(k, j), Math.Max(k, j));
     }
 
     static double Regime(DiplomacyBalance bal, Regime a, Regime b) =>

@@ -1,3 +1,4 @@
+using Politeconomy.Sim.Model;
 using System.Text.Json.Serialization;
 
 namespace Politeconomy.Sim.Diplomacy;
@@ -19,6 +20,8 @@ public sealed class WorldDiplomacy
     [JsonIgnore] public string[] Ids { get; set; } = [];
     [JsonIgnore] public double[][] Trade { get; set; } = [];
     [JsonIgnore] public double[][] Relations { get; set; } = [];
+    /// <summary>Строй и партия главы каждой страны, по которым посчитаны отношения: сменились — пора пересчитать.</summary>
+    [JsonIgnore] public (Regime Regime, string? Party)[] Basis { get; set; } = [];
     /// <summary>Пары соседей по суше и история пар («AAA|BBB») — из данных.</summary>
     [JsonIgnore] public HashSet<string> Neighbors { get; set; } = new(StringComparer.Ordinal);
     [JsonIgnore] public Dictionary<string, double> History { get; set; } = new(StringComparer.Ordinal);

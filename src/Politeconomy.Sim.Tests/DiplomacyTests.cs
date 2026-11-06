@@ -38,6 +38,33 @@ public class DiplomacyTests
     }
 
     [Fact]
+    public void RelationsFollowAChangeOfPowerTheSameDay()
+    {
+        var sim = NewGame();
+        var world = sim.World;
+        sim.RunUntil(world.Date.AddDays(3));
+        double Sum(string a, string b) => DiplomacyModel.Breakdown(world, a, b).Sum(f => f.Value);
+        var before = DiplomacyModel.Relations(world, "BRA", "USA");
+        PowerModel.MilitaryCoup(world, world["BRA"], world.Politics!["BRA"]);
+        Assert.NotEqual(before, Sum("BRA", "USA"), 3);
+        sim.Settle();
+        Assert.Equal(Sum("BRA", "USA"), DiplomacyModel.Relations(world, "BRA", "USA"), 6);
+
+        // Без игрока (переворот посреди месяца) — со следующего дня, не дожидаясь 1-го числа.
+        PowerModel.MilitaryCoup(world, world["ARG"], world.Politics!["ARG"]);
+        sim.StepDay();
+        Assert.True(world.Date.Day != 1);
+        Assert.Equal(Sum("ARG", "USA"), DiplomacyModel.Relations(world, "ARG", "USA"), 6);
+
+        // Пересчёт только пар со сменившими власть странами даёт то же, что полный пересчёт после загрузки.
+        using var stream = new MemoryStream();
+        SaveGame.Write(world, stream);
+        stream.Position = 0;
+        var loaded = GameSetup.Resume(SaveGame.Read(TestData.Game, stream)).World;
+        Assert.Equal(world.Diplomacy!.Relations, loaded.Diplomacy!.Relations);
+    }
+
+    [Fact]
     public void VisitsHelpButFadeAndCanBeCriticised()
     {
         var sim = NewGame();

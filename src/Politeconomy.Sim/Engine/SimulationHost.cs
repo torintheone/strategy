@@ -115,6 +115,8 @@ public sealed class SimulationHost : IDisposable
             command(_simulation.World);
             any = true;
         }
+        if (any)
+            _simulation.Settle();
         return any;
     }
 

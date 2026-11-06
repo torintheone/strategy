@@ -34,6 +34,15 @@ public interface ISimSystem
     void Run(World world);
 }
 
+/// <summary>
+/// Система, которой после действий игрока нужно досчитать производные данные: на паузе дни не идут, а экран должен
+/// сразу показать согласованную картину.
+/// </summary>
+public interface ISettlingSystem
+{
+    void Settle(World world);
+}
+
 /// <summary>Продвигает мир на один день и запускает системы по их календарю.</summary>
 public sealed class Simulation
 {
@@ -77,6 +86,14 @@ public sealed class Simulation
             if (due)
                 system.Run(World);
         }
+    }
+
+    /// <summary>Досчитать производные данные после действий игрока (см. <see cref="ISettlingSystem"/>).</summary>
+    public void Settle()
+    {
+        foreach (var system in _systems)
+            if (system is ISettlingSystem settling)
+                settling.Settle(World);
     }
 
     public void StepDays(int days)
