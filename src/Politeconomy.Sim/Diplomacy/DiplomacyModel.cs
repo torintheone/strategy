@@ -12,13 +12,24 @@ namespace Politeconomy.Sim.Diplomacy;
 /// (data/diplomacy.json) + договоры + память о событиях. Договоры меняют торговлю, инвестиции, туризм и миграцию,
 /// энергию и науку. MODEL.md, «Дипломатия».
 /// </summary>
-public static class DiplomacyModel
+public static partial class DiplomacyModel
 {
     public static IReadOnlyList<ISimSystem> Systems() => [new Systems.DiplomacySystem()];
 
     public static void Setup(World world)
     {
-        world.Diplomacy = new WorldDiplomacy();
+        var d = world.Diplomacy = new WorldDiplomacy();
+        var data = world.Data.Diplomacy;
+        bool Exists(string id) => world.ById(id) is not null;
+        foreach (var bloc in data.Blocs)
+            d.Blocs[bloc.Id] = bloc.Members.Where(Exists).Distinct().OrderBy(m => m, StringComparer.Ordinal).ToList();
+        foreach (var s in data.Sanctions)
+            foreach (var by in s.By.Where(by => Exists(by) && Exists(s.Target) && by != s.Target))
+                d.Sanctions.Add(new Sanction(by, s.Target, s.Level, world.Date));
+        d.CouncilSanctions.AddRange(data.Council.Sanctions.Where(Exists));
+        d.Seats.AddRange(data.Council.Elected.Where(e => Exists(e.Country)).Select(e => new CouncilSeat(e.Country, e.Until)));
+        foreach (var a in data.Alliances.Where(a => Exists(a.A) && Exists(a.B)))
+            d.Treaties.Add(new Treaty(a.A, a.B, "alliance", world.Date));
         Ensure(world);
         Update(world);
     }
@@ -27,26 +38,36 @@ public static class DiplomacyModel
     public static void Ensure(World world)
     {
         var d = world.Diplomacy ??= new WorldDiplomacy();
-        if (d.Ids.Length == world.Countries.Count && d.Trade.Length == d.Ids.Length && d.Relations.Length == d.Ids.Length)
+        if (d.Ids.Length == world.Countries.Count && d.Trade.Length == d.Ids.Length && d.Relations.Length == d.Ids.Length
+            && d.Gravity.Length == d.Ids.Length)
             return;
         d.Ids = world.Countries.Select(c => c.Id).ToArray();
         d.Index = d.Ids.Select((id, i) => (id, i)).ToDictionary(x => x.id, x => x.i, StringComparer.Ordinal);
         foreach (var c in world.Countries)
             if (!d.Countries.ContainsKey(c.Id))
                 d.Countries[c.Id] = new CountryDiplomacy { Mood = new double[ClassIds.Count] };
-        d.Trade = TradeShares(world, d);
+        d.Gravity = Gravity(world, d);
+        (_, d.StartAccess, d.StartPressure) = Trade(world, d, StartSetting(world));
+        RecomputeTrade(world);
         d.Neighbors = world.Data.Map.Countries.SelectMany(c => c.Neighbors.Select(n => WorldDiplomacy.Key(c.Id, n))).ToHashSet(StringComparer.Ordinal);
         d.History = world.Data.Diplomacy.History.GroupBy(h => WorldDiplomacy.Key(h.A, h.B))
             .ToDictionary(g => g.Key, g => g.Sum(h => h.Value), StringComparer.Ordinal);
         d.Relations = d.Ids.Select(_ => new double[d.Ids.Length]).ToArray();
+        foreach (var id in d.Ids.Where(id => !d.Stances.ContainsKey(id)))
+            d.Stances[id] = LiveStance(world, id);
         Recompute(world);
     }
 
+    /// <summary>Строй, партия главы и её взгляды сейчас.</summary>
+    static Stance LiveStance(World world, string id) =>
+        new(world[id].Regime, world.Government?.Countries.GetValueOrDefault(id)?.Leader.Party,
+            Politics.PoliticsModel.HeadParty(world, id)?.Position.ToArray());
+
     /// <summary>
-    /// Доли торговли: Trade[i][j] — какая доля торговли страны i приходится на j. Вес пары = ВВП × ВВП /
-    /// расстояние^TradeDistance между столицами (по карте, с переходом через край), у соседей × TradeNeighbor.
+    /// Торговля пары по гравитационной модели: ВВП × ВВП / расстояние^TradeDistance между столицами (по карте, с
+    /// переходом через край), у соседей × TradeNeighbor. Без блоков, санкций и договоров — их учитывает <see cref="Trade"/>.
     /// </summary>
-    static double[][] TradeShares(World world, WorldDiplomacy d)
+    static double[][] Gravity(World world, WorldDiplomacy d)
     {
         var data = world.Data;
         var b = data.DiplomacyBalance;
@@ -72,12 +93,155 @@ public static class DiplomacyModel
                 var distance = Math.Sqrt(dx * dx + dy * dy) + 5;
                 row[j] = gdp[i] * gdp[j] / Math.Pow(distance, b.TradeDistance) * (neighbors[i].Contains(d.Ids[j]) ? b.TradeNeighbor : 1);
             }
-            var sum = row.Sum();
-            for (var j = 0; j < n; j++)
-                row[j] = sum > 0 ? row[j] / sum : 0;
             shares[i] = row;
         }
         return shares;
+    }
+
+    /// <summary>Что меняет торговлю и давление на страны: санкции (кто, против кого, уровень), санкции Совета, блоки, договоры о свободной торговле.</summary>
+    sealed record Setting(
+        IReadOnlyList<(string By, string Target, string Level)> Sanctions,
+        IReadOnlyList<string> Council,
+        IReadOnlyList<(BlocRecord Bloc, IReadOnlyList<string> Members)> Blocs,
+        IReadOnlyList<(string A, string B)> FreeTrade);
+
+    static Setting CurrentSetting(World world)
+    {
+        var d = world.Diplomacy!;
+        return new Setting(
+            d.Sanctions.Select(x => (x.By, x.Target, x.Level)).ToList(),
+            d.CouncilSanctions,
+            world.Data.Diplomacy.Blocs.Select(b => (b, (IReadOnlyList<string>)(d.Blocs.GetValueOrDefault(b.Id) ?? []))).ToList(),
+            d.Treaties.Where(t => t.Type == "free_trade").Select(t => (t.A, t.B)).ToList());
+    }
+
+    /// <summary>Как было 1 января 2026 года — по данным, а не по сохранению: от этого считаются поправки к экономике.</summary>
+    static Setting StartSetting(World world)
+    {
+        var data = world.Data.Diplomacy;
+        return new Setting(
+            data.Sanctions.SelectMany(x => x.By.Select(by => (by, x.Target, x.Level))).ToList(),
+            data.Council.Sanctions,
+            data.Blocs.Select(b => (b, b.Members)).ToList(),
+            []);
+    }
+
+    /// <summary>
+    /// Торговля с учётом блоков, санкций и договоров. Пара: × (1 − самые жёсткие санкции между ними) × (1 + глубина
+    /// общего торгового блока) × (1 + FreeTrade при договоре). Доли — от всей торговли страны; доступ к рынкам —
+    /// торговля с поправками / без них; давление — доля мирового ВВП у санкционеров (частичные — SanctionPartial / SanctionFull).
+    /// </summary>
+    static (double[][] Shares, double[] Access, double[] Pressure) Trade(World world, WorldDiplomacy d, Setting setting)
+    {
+        var b = world.Data.DiplomacyBalance;
+        var n = d.Ids.Length;
+        int Pair(int i, int j) => i < j ? i * n + j : j * n + i;
+        var cut = new Dictionary<int, double>();
+        var directed = new Dictionary<int, double>();
+        void Cut(int by, int target, double value)
+        {
+            var k = Pair(by, target);
+            cut[k] = Math.Max(cut.GetValueOrDefault(k), value);
+            var dk = by * n + target;
+            directed[dk] = Math.Max(directed.GetValueOrDefault(dk), value / b.SanctionFull);
+        }
+        foreach (var (by, target, level) in setting.Sanctions)
+            if (d.Index.TryGetValue(by, out var i) && d.Index.TryGetValue(target, out var j) && i != j)
+                Cut(i, j, level == "full" ? b.SanctionFull : b.SanctionPartial);
+        foreach (var target in setting.Council)
+            if (d.Index.TryGetValue(target, out var j))
+                for (var i = 0; i < n; i++)
+                    if (i != j && world[d.Ids[i]].Info.UnMember)
+                        Cut(i, j, b.SanctionPartial);
+        var boost = new Dictionary<int, double>();
+        foreach (var (bloc, members) in setting.Blocs)
+        {
+            if (bloc.Trade <= 0)
+                continue;
+            var idx = members.Where(d.Index.ContainsKey).Select(m => d.Index[m]).ToArray();
+            for (var x = 0; x < idx.Length; x++)
+                for (var y = x + 1; y < idx.Length; y++)
+                {
+                    var k = Pair(idx[x], idx[y]);
+                    boost[k] = Math.Max(boost.GetValueOrDefault(k), bloc.Trade);
+                }
+        }
+        var free = new HashSet<int>();
+        foreach (var (a, c) in setting.FreeTrade)
+            if (d.Index.TryGetValue(a, out var i) && d.Index.TryGetValue(c, out var j))
+                free.Add(Pair(i, j));
+
+        var gdp = StartGdp(world, d);
+        var world0 = gdp.Sum();
+        var pressure = new double[n];
+        foreach (var (k, value) in directed)
+            pressure[k % n] += value * gdp[k / n] / world0;
+
+        var shares = new double[n][];
+        var access = new double[n];
+        for (var i = 0; i < n; i++)
+        {
+            var row = new double[n];
+            double sum = 0, raw = 0;
+            for (var j = 0; j < n; j++)
+            {
+                if (i == j)
+                    continue;
+                var k = Pair(i, j);
+                var m = (1 - cut.GetValueOrDefault(k)) * (1 + boost.GetValueOrDefault(k)) * (free.Contains(k) ? 1 + b.FreeTrade : 1);
+                row[j] = d.Gravity[i][j] * m;
+                sum += row[j];
+                raw += d.Gravity[i][j];
+            }
+            for (var j = 0; j < n; j++)
+                row[j] = sum > 0 ? row[j] / sum : 0;
+            shares[i] = row;
+            access[i] = raw > 0 ? sum / raw : 1;
+        }
+        return (shares, access, Array.ConvertAll(pressure, p => Math.Min(1, p)));
+    }
+
+    /// <summary>ВВП стран на старте (долл.) в порядке Ids.</summary>
+    static double[] StartGdp(World world, WorldDiplomacy d) =>
+        d.Ids.Select(id => Math.Max(1e6, world[id].Info.Stats.GetValueOrDefault("gdp_usd")?.Value ?? 1e9)).ToArray();
+
+    /// <summary>Торговля, доступ к рынкам, санкционное давление и отношения от блоков и санкций — по нынешнему состоянию.</summary>
+    static void RecomputeTrade(World world)
+    {
+        var d = world.Diplomacy!;
+        (d.Trade, d.Access, d.Pressure) = Trade(world, d, CurrentSetting(world));
+        d.Ties = Ties(world);
+    }
+
+    /// <summary>Отношения от блоков (общий блок +, соперничающие военные блоки −) и санкций (по каждой стороне) по парам.</summary>
+    static Dictionary<string, (double Blocs, double Sanctions)> Ties(World world)
+    {
+        var d = world.Diplomacy!;
+        var b = world.Data.DiplomacyBalance;
+        var ties = new Dictionary<string, (double Blocs, double Sanctions)>(StringComparer.Ordinal);
+        void Add(string x, string y, double blocs, double sanctions)
+        {
+            if (x == y)
+                return;
+            var key = WorldDiplomacy.Key(x, y);
+            var t = ties.GetValueOrDefault(key);
+            ties[key] = (t.Blocs + blocs, t.Sanctions + sanctions);
+        }
+        foreach (var bloc in world.Data.Diplomacy.Blocs)
+        {
+            var members = d.Blocs.GetValueOrDefault(bloc.Id) ?? [];
+            var value = bloc.Military ? b.BlocMilitaryRelations : b.BlocTradeRelations;
+            for (var x = 0; x < members.Count; x++)
+                for (var y = x + 1; y < members.Count; y++)
+                    Add(members[x], members[y], value, 0);
+            if (bloc.Military && bloc.Rival is { } rival && string.CompareOrdinal(bloc.Id, rival) < 0)
+                foreach (var m in members)
+                    foreach (var r in d.Blocs.GetValueOrDefault(rival) ?? [])
+                        Add(m, r, -b.RivalRelations, 0);
+        }
+        foreach (var s in d.Sanctions)
+            Add(s.By, s.Target, 0, -b.SanctionRelations * (s.Level == "full" ? 1 : 0.5));
+        return ties;
     }
 
     /// <summary>Месяц: память о событиях тает, отношения пересчитываются, договоры действуют, показатели для игрока.</summary>
@@ -93,9 +257,16 @@ public static class DiplomacyModel
             if (Math.Abs(d.Memory[key]) < 0.05)
                 d.Memory.Remove(key);
         }
+        if (world.Date.Month == 1)
+            ElectCouncil(world);
+        ReviewPrograms(world);
+        foreach (var id in d.Ids)
+            d.Stances[id] = LiveStance(world, id);
+        RecomputeTrade(world);
         Recompute(world);
         foreach (var country in world.Countries)
             Apply(world, country);
+        UpdatePower(world);
         Publish(world);
     }
 
@@ -107,29 +278,22 @@ public static class DiplomacyModel
     {
         if (world.Diplomacy is not { } d || d.Ids.Length == 0)
             return;
-        var basis = Basis(world, d);
-        if (basis.Length != d.Basis.Length)
+        var changed = new List<int>();
+        for (var i = 0; i < d.Ids.Length; i++)
         {
-            Refresh(world);
-            return;
+            var id = d.Ids[i];
+            var regime = world[id].Regime;
+            var party = world.Government?.Countries.GetValueOrDefault(id)?.Leader.Party;
+            if (d.Stances.TryGetValue(id, out var stance) && stance.Regime == regime && stance.Party == party)
+                continue;
+            d.Stances[id] = LiveStance(world, id);
+            changed.Add(i);
         }
-        var changed = Enumerable.Range(0, basis.Length).Where(i => basis[i] != d.Basis[i]).ToList();
         if (changed.Count == 0)
             return;
         // Договоры и торговля от власти не зависят — пересчитываются только отношения с этими странами.
         Recompute(world, changed);
         Publish(world);
-    }
-
-    static (Regime, string?)[] Basis(World world, WorldDiplomacy d)
-    {
-        var basis = new (Regime, string?)[d.Ids.Length];
-        for (var i = 0; i < basis.Length; i++)
-        {
-            var country = i < world.Countries.Count && world.Countries[i].Id == d.Ids[i] ? world.Countries[i] : world[d.Ids[i]];
-            basis[i] = (country.Regime, world.Government?.Countries.GetValueOrDefault(country.Id)?.Leader.Party);
-        }
-        return basis;
     }
 
     /// <summary>Отношения всех пар — то же, что сумма <see cref="Breakdown"/>, но без списков причин (19,5 тыс. пар в месяц).</summary>
@@ -139,9 +303,9 @@ public static class DiplomacyModel
         var d = world.Diplomacy!;
         var bal = world.Data.DiplomacyBalance;
         var n = d.Ids.Length;
-        var regimes = d.Ids.Select(id => world[id].Regime).ToArray();
-        var positions = d.Ids.Select(id => Politics.PoliticsModel.HeadParty(world, id)?.Position).ToArray();
-        d.Basis = Basis(world, d);
+        var regimes = d.Ids.Select(id => d.Stances[id].Regime).ToArray();
+        var positions = d.Ids.Select(id => d.Stances[id].Position).ToArray();
+        d.Version++;
         var treaties = new Dictionary<string, double>(StringComparer.Ordinal);
         foreach (var t in d.Treaties)
         {
@@ -151,11 +315,13 @@ public static class DiplomacyModel
         void Pair(int i, int j)
         {
             var key = WorldDiplomacy.Key(d.Ids[i], d.Ids[j]);
+            var ties = d.Ties.GetValueOrDefault(key);
             var value = bal.TradeRelations * Math.Sqrt(Math.Max(d.Trade[i][j], d.Trade[j][i]))
                         + Regime(bal, regimes[i], regimes[j])
                         + (positions[i] is { } pa && positions[j] is { } pb ? Ideology(bal, pa, pb) : 0)
                         + (d.Neighbors.Contains(key) ? bal.Neighbors : 0)
-                        + d.History.GetValueOrDefault(key) + treaties.GetValueOrDefault(key) + d.Memory.GetValueOrDefault(key);
+                        + d.History.GetValueOrDefault(key) + treaties.GetValueOrDefault(key) + d.Memory.GetValueOrDefault(key)
+                        + ties.Blocs + ties.Sanctions;
             d.Relations[i][j] = d.Relations[j][i] = Math.Clamp(value, -100, 100);
         }
         if (only == null)
@@ -190,12 +356,12 @@ public static class DiplomacyModel
         var bal = data.DiplomacyBalance;
         var d = world.Diplomacy!;
         var (i, j) = (d.Index[a], d.Index[b]);
-        var (ca, cb) = (world[a], world[b]);
+        var (sa, sb) = (d.Stances[a], d.Stances[b]);
         var list = new List<StatFactor>();
         list.Add(new StatFactor("Торговля", bal.TradeRelations * Math.Sqrt(Math.Max(d.Trade[i][j], d.Trade[j][i])), "number0"));
-        list.Add(new StatFactor("Строй", Regime(bal, ca.Regime, cb.Regime), "number0"));
-        if (Politics.PoliticsModel.HeadParty(world, a) is { } pa && Politics.PoliticsModel.HeadParty(world, b) is { } pb)
-            list.Add(new StatFactor("Взгляды правящих партий", Ideology(bal, pa.Position, pb.Position), "number0"));
+        list.Add(new StatFactor("Строй", Regime(bal, sa.Regime, sb.Regime), "number0"));
+        if (sa.Position is { } pa && sb.Position is { } pb)
+            list.Add(new StatFactor("Взгляды правящих партий", Ideology(bal, pa, pb), "number0"));
         var key = WorldDiplomacy.Key(a, b);
         if (d.Neighbors.Contains(key))
             list.Add(new StatFactor("Соседи", bal.Neighbors, "number0"));
@@ -205,6 +371,13 @@ public static class DiplomacyModel
             .Sum(t => data.Diplomacy.Treaties.FirstOrDefault(r => r.Id == t.Type)?.Relations ?? 0);
         if (treaties != 0)
             list.Add(new StatFactor("Договоры", treaties, "number0"));
+        if (d.Ties.TryGetValue(key, out var ties))
+        {
+            if (ties.Blocs != 0)
+                list.Add(new StatFactor("Блоки", ties.Blocs, "number0"));
+            if (ties.Sanctions != 0)
+                list.Add(new StatFactor("Санкции", ties.Sanctions, "number0"));
+        }
         if (d.Memory.TryGetValue(key, out var memory))
             list.Add(new StatFactor("События", memory, "number0"));
         return list;
@@ -252,7 +425,6 @@ public static class DiplomacyModel
             c.Mood = new double[ClassIds.Count];
         Array.Clear(c.Mood);
         c.Effects.Clear();
-        var trade = 1.0;
         foreach (var t in d.Treaties.Where(t => t.Involves(country.Id)))
         {
             var partner = t.Other(country.Id);
@@ -261,7 +433,6 @@ public static class DiplomacyModel
             switch (t.Type)
             {
                 case "free_trade":
-                    trade += share * b.FreeTrade;
                     c.Mood[ClassIds.Skilled] -= b.ImportMood * share;
                     c.Mood[ClassIds.Farmers] -= b.ImportMood * share;
                     break;
@@ -281,8 +452,25 @@ public static class DiplomacyModel
                     break;
             }
         }
+        // Блоки, санкции и договоры о свободной торговле — через доступ к рынкам, в сравнении со стартом.
+        var i = d.Index[country.Id];
+        var trade = d.StartAccess[i] > 0 ? d.Access[i] / d.StartAccess[i] : 1;
         c.TradeFactor = trade;
         c.Productivity = 1 + b.TradeGain * e.Openness * (trade - 1);
+        // Санкции отрезают от денег: медленнее рост, дороже долг (тоже в сравнении со стартом).
+        var pressure = d.Pressure[i] - d.StartPressure[i];
+        if (Math.Abs(pressure) > 1e-9)
+        {
+            Add(c, "potential_growth", -b.SanctionGrowth * pressure);
+            Add(c, "spread", b.SanctionSpread * pressure);
+        }
+        if (d.Programs.TryGetValue(country.Id, out var program))
+        {
+            if (program.Status == "active")
+                Add(c, "spread", -b.FundSpread);
+            else if (program.PenaltyUntil is { } until && world.Date < until)
+                Add(c, "spread", b.FundPenalty);
+        }
     }
 
     static void Add(CountryDiplomacy c, string key, double value) => c.Effects[key] = c.Effects.GetValueOrDefault(key) + value;
@@ -292,8 +480,25 @@ public static class DiplomacyModel
     {
         var year = world.Date.Year;
         var player = world.PlayerCountry;
+        var d = world.Diplomacy!;
+        var assembly = world.Countries.Count(c => c.Info.UnMember);
+        var against = d.Sanctions.GroupBy(s => s.Target).ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
         foreach (var country in world.Countries)
         {
+            // Сколько стран ограничивают торговлю со страной: санкции Совета Наций соблюдают все его члены.
+            var list = against.GetValueOrDefault(country.Id) ?? [];
+            var council = d.CouncilSanctions.Contains(country.Id);
+            var count = council ? assembly - (country.Info.UnMember ? 1 : 0) : list.Select(s => s.By).Distinct().Count();
+            var factors = new List<StatFactor>();
+            if (council)
+                factors.Add(new StatFactor($"Санкции «{world.Data.Diplomacy.Council.Name}»", count, "number0"));
+            var full = list.Where(s => s.Level == "full").Select(s => s.By).Distinct().Count();
+            if (full > 0)
+                factors.Add(new StatFactor("Жёсткие", full, "number0"));
+            if (list.Count(s => s.Level == "partial") is var partial and > 0)
+                factors.Add(new StatFactor("Частичные", partial, "number0"));
+            country.Stats["sanctions_against"] = new StatValue(count, year, StatSources.Model, null, null, factors);
+
             if (player == null || player == country.Id || world.ById(player) is null)
             {
                 country.Stats.Remove("relations_player");
@@ -324,6 +529,10 @@ public static class DiplomacyModel
             return (false, "Договор уже действует.");
         if (type == "energy" && EnergyExporter(world, a) == EnergyExporter(world, b))
             return (false, EnergyExporter(world, a) ? "Обе страны сами продают нефть и газ." : "Ни одна из стран не продаёт нефть и газ.");
+        if (type == "free_trade" && BlocsOf(world, a).FirstOrDefault(x => x.Trade > 0 && InBloc(world, x.Id, b)) is { } common)
+            return (false, $"Вы уже вместе в «{common.Name}»: торговля между вами и так свободная.");
+        if (type == "alliance" && BlocsOf(world, a).FirstOrDefault(x => x.Military && InBloc(world, x.Id, b)) is { } pact)
+            return (false, $"Вы уже союзники по «{pact.Name}».");
         var need = record.MinRelations;
         var notes = new List<string>();
         if (type == "free_trade" && Politics.PoliticsModel.HeadParty(world, b) is { } party && party.Position[0] < bal.Protectionist)
@@ -356,7 +565,7 @@ public static class DiplomacyModel
             return false;
         }
         world.Diplomacy!.Treaties.Add(new Treaty(a, b, type, world.Date));
-        world.Log(a, "diplomacy", $"Подписан договор с {Genitive(world, b)}: «{name}».");
+        world.Log(a, "diplomacy", $"Подписан договор со {Instrumental(world, b)}: «{name}».");
         Refresh(world);
         return true;
     }
@@ -372,7 +581,7 @@ public static class DiplomacyModel
             return false;
         d.Treaties.Remove(treaty);
         Remember(world, a, b, -world.Data.DiplomacyBalance.CancelRelations);
-        world.Log(a, "diplomacy", $"Расторгнут договор с {Genitive(world, b)}: «{world.Data.Diplomacy.Treaties.FirstOrDefault(t => t.Id == type)?.Name ?? type}».");
+        world.Log(a, "diplomacy", $"Расторгнут договор со {Instrumental(world, b)}: «{world.Data.Diplomacy.Treaties.FirstOrDefault(t => t.Id == type)?.Name ?? type}».");
         Refresh(world);
         return true;
     }
@@ -432,11 +641,13 @@ public static class DiplomacyModel
     {
         if (law != "state_ownership" || variant != "nationalization" || world.Diplomacy is not { } d)
             return;
+        if (d.Programs.TryGetValue(country, out var program) && program.Status == "active")
+            Fail(world, country, program, "национализация нарушила условия");
         foreach (var t in d.Treaties.Where(t => t.Type == "investment" && t.Involves(country)).ToList())
         {
             d.Treaties.Remove(t);
             Remember(world, country, t.Other(country), -world.Data.DiplomacyBalance.CancelRelations);
-            world.Log(country, "diplomacy", $"Национализация разорвала договор о защите инвестиций с {Genitive(world, t.Other(country))}: отношения ухудшились.");
+            world.Log(country, "diplomacy", $"Национализация разорвала договор о защите инвестиций со {Instrumental(world, t.Other(country))}: отношения ухудшились.");
         }
         Refresh(world);
     }
@@ -448,16 +659,17 @@ public static class DiplomacyModel
         d.Memory[key] = d.Memory.GetValueOrDefault(key) + value;
     }
 
-    /// <summary>После действия игрока — сразу пересчитать отношения и поправки (не ждать конца месяца).</summary>
+    /// <summary>После действия игрока — сразу пересчитать торговлю, отношения и поправки (не ждать конца месяца).</summary>
     static void Refresh(World world)
     {
+        RecomputeTrade(world);
         Recompute(world);
         foreach (var country in world.Countries)
             Apply(world, country);
         Publish(world);
     }
 
-    static string Genitive(World world, string id) => $"страной «{world[id].Name}»";
+    static string Instrumental(World world, string id) => $"страной «{world[id].Name}»";
 
     static string Dative(World world, string id) => $"стране «{world[id].Name}»";
 }

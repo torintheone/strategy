@@ -679,6 +679,16 @@ int DiplomacyReport()
     var all = world.Countries.SelectMany(a => world.Countries.Where(b => string.CompareOrdinal(a.Id, b.Id) < 0)
         .Select(b => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, a.Id, b.Id))).ToList();
     Console.WriteLine($"Все пары: в среднем {all.Average():F1}, враждебных (< −30) {all.Count(x => x < -30)}, дружеских (> 30) {all.Count(x => x > 30)} из {all.Count}");
+    var d = world.Diplomacy!;
+    Console.WriteLine("Мощь: " + string.Join(", ", d.Power.OrderBy(kv => kv.Value.Rank).Take(20)
+        .Select(kv => $"{kv.Value.Rank}. {kv.Key} {kv.Value.Index:F0} (э{kv.Value.Economy:F0} а{kv.Value.Military:F0} т{kv.Value.Technology:F0} в{kv.Value.Influence:F0})")));
+    Console.WriteLine("Под санкциями: " + string.Join(", ", world.Countries.Where(c => c.Stat("sanctions_against") > 0)
+        .OrderByDescending(c => c.Stat("sanctions_against")).Select(c => $"{c.Id} {c.Stat("sanctions_against"):F0} (давление {d.Pressure[d.Index[c.Id]]:F2})")));
+    Console.WriteLine("Совет безопасности: " + string.Join(", ", Politeconomy.Sim.Diplomacy.DiplomacyModel.Security(world)));
+    if (args.Contains("--pairs"))
+        foreach (var h in data.Diplomacy.History)
+            Console.WriteLine($"  {h.A}–{h.B} {Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, h.A, h.B),4:F0}: " +
+                              string.Join(", ", Politeconomy.Sim.Diplomacy.DiplomacyModel.Breakdown(world, h.A, h.B).Select(f => $"{f.Label} {f.Value:F0}")));
     return 0;
 }
 

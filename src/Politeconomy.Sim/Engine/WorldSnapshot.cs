@@ -70,7 +70,8 @@ public sealed class WorldSnapshot
             var infrastructure = world.Infrastructure?.Countries.GetValueOrDefault(c.Id) is { } inf ? InfrastructureSnapshot.Capture(world, c, inf) : null;
             var science = world.Science?.Countries.GetValueOrDefault(c.Id) is { } sc ? ScienceSnapshot.Capture(world, c, sc) : null;
             countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal),
-                ages, classes, government, c.Regime, laws, history, spending, politics, programs, energy, infrastructure, science);
+                ages, classes, government, c.Regime, laws, history, spending, politics, programs, energy, infrastructure, science,
+                world.Diplomacy is null ? null : Sim.Diplomacy.DiplomacyModel.BlocsOf(world, c.Id).Select(b => b.Id).ToList());
         }
         var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var r in world.Regions)
@@ -149,12 +150,16 @@ public sealed record ScienceSnapshot(double Points, double Government, double Pr
     }
 }
 
-/// <summary>Дипломатия страны игрока: партнёры по порядку стран.</summary>
-public sealed record DiplomacySnapshot(string Country, IReadOnlyList<PartnerSnapshot> Partners)
+/// <summary>
+/// Дипломатия страны игрока: партнёры по порядку стран, блоки (можно ли вступить), Совет Наций, Валютный совет.
+/// </summary>
+public sealed record DiplomacySnapshot(string Country, IReadOnlyList<PartnerSnapshot> Partners, IReadOnlyList<BlocSnapshot> Blocs,
+    CouncilSnapshot Council, FundSnapshot Fund)
 {
     public static DiplomacySnapshot Capture(World world, string me)
     {
         var types = world.Data.Diplomacy.Treaties;
+        var resolutions = world.Data.Diplomacy.Council.Resolutions;
         var partners = new List<PartnerSnapshot>(world.Countries.Count);
         foreach (var c in world.Countries)
         {
@@ -163,19 +168,64 @@ public sealed record DiplomacySnapshot(string Country, IReadOnlyList<PartnerSnap
             var treaties = types.Where(t => Diplomacy.DiplomacyModel.HasTreaty(world, me, c.Id, t.Id)).Select(t => t.Id).ToList();
             var offers = types.Where(t => !treaties.Contains(t.Id))
                 .ToDictionary(t => t.Id, t => Diplomacy.DiplomacyModel.Acceptance(world, me, c.Id, t.Id), StringComparer.Ordinal);
+            var council = resolutions.ToDictionary(r => r.Id, r => Diplomacy.DiplomacyModel.CanPropose(world, me, r.Id, c.Id), StringComparer.Ordinal);
             partners.Add(new PartnerSnapshot(c.Id, Diplomacy.DiplomacyModel.Relations(world, me, c.Id), Diplomacy.DiplomacyModel.TradeShare(world, me, c.Id),
-                Diplomacy.DiplomacyModel.Breakdown(world, me, c.Id), treaties, offers, Diplomacy.DiplomacyModel.CanVisit(world, me, c.Id)));
+                Diplomacy.DiplomacyModel.Breakdown(world, me, c.Id), treaties, offers, Diplomacy.DiplomacyModel.CanVisit(world, me, c.Id),
+                Diplomacy.DiplomacyModel.SanctionLevel(world, me, c.Id), Diplomacy.DiplomacyModel.SanctionLevel(world, c.Id, me), council));
         }
-        return new DiplomacySnapshot(me, partners);
+        var blocs = world.Data.Diplomacy.Blocs.Select(b =>
+        {
+            var (accepts, reason) = Diplomacy.DiplomacyModel.JoinAcceptance(world, me, b.Id);
+            return new BlocSnapshot(b.Id, Diplomacy.DiplomacyModel.Members(world, b.Id).ToList(), Diplomacy.DiplomacyModel.InBloc(world, b.Id, me), accepts, reason);
+        }).ToList();
+        return new DiplomacySnapshot(me, partners, blocs, CouncilSnapshot.Capture(world, me), FundSnapshot.Capture(world, me));
     }
 }
 
 /// <summary>
 /// Партнёр: отношения (−100…100) и из чего они, доля в нашей торговле (0–1), действующие договоры, какие договоры
-/// партнёр подпишет и почему, можно ли ехать с визитом.
+/// партнёр подпишет и почему, можно ли ехать с визитом, наши санкции против него и его против нас (full, partial или
+/// null), какие резолюции Совета Наций о нём можно вынести и почему нет.
 /// </summary>
 public sealed record PartnerSnapshot(string Id, double Relations, double TradeShare, IReadOnlyList<StatFactor> Factors,
-    IReadOnlyList<string> Treaties, IReadOnlyDictionary<string, (bool Accepts, string Reason)> Offers, bool CanVisit);
+    IReadOnlyList<string> Treaties, IReadOnlyDictionary<string, (bool Accepts, string Reason)> Offers, bool CanVisit,
+    string? OurSanction = null, string? TheirSanction = null,
+    IReadOnlyDictionary<string, (bool Allowed, string Reason)>? Resolutions = null);
+
+/// <summary>Блок: члены, состоим ли мы в нём, примут ли нас и почему.</summary>
+public sealed record BlocSnapshot(string Id, IReadOnlyList<string> Members, bool Member, bool Accepts, string Reason);
+
+/// <summary>
+/// Совет Наций: постоянные и выборные члены Совета безопасности, страны под санкциями Совета, последние резолюции,
+/// когда игрок может вынести следующую, и таблица для прогноза голосования на экране.
+/// </summary>
+public sealed record CouncilSnapshot(IReadOnlyList<string> Permanent, IReadOnlyList<Diplomacy.CouncilSeat> Seats, IReadOnlyList<string> Sanctioned,
+    IReadOnlyList<Diplomacy.Resolution> Resolutions, DateOnly? NextProposal, Diplomacy.VoteTable Votes)
+{
+    public static CouncilSnapshot Capture(World world, string me)
+    {
+        var d = world.Diplomacy!;
+        var months = world.Data.DiplomacyBalance.CouncilMonths;
+        DateOnly? next = d.Proposed.TryGetValue(me, out var last) && last.AddMonths(months) > world.Date ? last.AddMonths(months) : null;
+        return new CouncilSnapshot(Diplomacy.DiplomacyModel.Permanent(world), d.Seats.ToList(), d.CouncilSanctions.ToList(),
+            d.Resolutions.AsEnumerable().Reverse().Take(12).ToList(), next, Diplomacy.DiplomacyModel.Votes(world));
+    }
+}
+
+/// <summary>Валютный совет: что он предлагает стране игрока, её программа (если была), рейтинг и дефицит (% ВВП).</summary>
+public sealed record FundSnapshot(Diplomacy.DiplomacyModel.LoanOffer Offer, FundProgramSnapshot? Program, double Rating, double Deficit)
+{
+    public static FundSnapshot Capture(World world, string me)
+    {
+        var e = world.Economy![me];
+        var program = world.Diplomacy!.Programs.TryGetValue(me, out var p)
+            ? new FundProgramSnapshot(p.Since, p.Amount, p.Rate, p.Deadline, p.Until, p.Status, p.PenaltyUntil)
+            : null;
+        return new FundSnapshot(Diplomacy.DiplomacyModel.FundOffer(world, me), program, e.Rating, -e.BalanceRatio * 100);
+    }
+}
+
+public sealed record FundProgramSnapshot(DateOnly Since, double Amount, double Rate, DateOnly Deadline, DateOnly Until, string Status, DateOnly? PenaltyUntil);
 
 /// <summary>Правление игрока: страна, с какой даты, выборы выиграны и проиграны, законов принято.</summary>
 public sealed record ReignSnapshot(string Country, DateOnly Since, int ElectionsWon, int ElectionsLost, int LawsPassed);
@@ -209,7 +259,8 @@ public sealed record CountrySnapshot(
     IReadOnlyList<string>? Programs = null,
     EnergySnapshot? Energy = null,
     InfrastructureSnapshot? Infrastructure = null,
-    ScienceSnapshot? Science = null)
+    ScienceSnapshot? Science = null,
+    IReadOnlyList<string>? Blocs = null)
 {
     public StatValue? Stat(string id) => Stats.GetValueOrDefault(id);
 }

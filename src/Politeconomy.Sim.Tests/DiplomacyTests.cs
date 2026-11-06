@@ -46,8 +46,8 @@ public class DiplomacyTests
         double Sum(string a, string b) => DiplomacyModel.Breakdown(world, a, b).Sum(f => f.Value);
         var before = DiplomacyModel.Relations(world, "BRA", "USA");
         PowerModel.MilitaryCoup(world, world["BRA"], world.Politics!["BRA"]);
-        Assert.NotEqual(before, Sum("BRA", "USA"), 3);
         sim.Settle();
+        Assert.NotEqual(before, DiplomacyModel.Relations(world, "BRA", "USA"), 3);
         Assert.Equal(Sum("BRA", "USA"), DiplomacyModel.Relations(world, "BRA", "USA"), 6);
 
         // Без игрока (переворот посреди месяца) — со следующего дня, не дожидаясь 1-го числа.
@@ -89,24 +89,28 @@ public class DiplomacyTests
         var sim = NewGame();
         var same = NewGame();
         var world = sim.World;
-        PoliticsActions.PlayAs(world, "CAN");
-        Assert.False(DiplomacyModel.Propose(world, "CAN", "RUS", "free_trade"));
-        Assert.Contains(world.Journal, e => e.Country == "CAN" && e.Kind == "diplomacy" && e.Text.Contains("отказывается"));
-        Assert.True(DiplomacyModel.Propose(world, "CAN", "USA", "free_trade"));
-        var c = world.Diplomacy!["CAN"];
-        Assert.True(c.TradeFactor > 1.15, $"торговля ×{c.TradeFactor:F2}");
+        PoliticsActions.PlayAs(world, "MNG");
+        Assert.False(DiplomacyModel.Propose(world, "MNG", "RUS", "free_trade"));
+        Assert.Contains(world.Journal, e => e.Country == "MNG" && e.Kind == "diplomacy" && e.Text.Contains("отказывается"));
+        Assert.True(DiplomacyModel.Propose(world, "MNG", "CHN", "free_trade"));
+        var c = world.Diplomacy!["MNG"];
+        Assert.True(c.TradeFactor > 1.12, $"торговля ×{c.TradeFactor:F2}");
         Assert.True(c.Productivity > 1);
         Assert.True(c.Mood[ClassIds.Skilled] < -1, "рабочим труднее конкурировать с импортом");
         sim.RunUntil(world.Date.AddYears(1));
         same.RunUntil(same.World.Date.AddYears(1));
-        Assert.True(world.Economy!["CAN"].Exports > same.World.Economy!["CAN"].Exports * 1.1);
+        Assert.True(world.Economy!["MNG"].Exports > same.World.Economy!["MNG"].Exports * 1.08);
+
+        // В одном торговом блоке договор не нужен.
+        PoliticsActions.PlayAs(world, "CAN");
+        Assert.False(DiplomacyModel.Acceptance(world, "CAN", "USA", "free_trade").Accepts);
 
         // Договоры переживают сохранение: торговля пар и отношения пересчитываются после загрузки.
         using var stream = new MemoryStream();
         SaveGame.Write(world, stream);
         stream.Position = 0;
         var loaded = GameSetup.Resume(SaveGame.Read(TestData.Game, stream)).World;
-        Assert.Equal(DiplomacyModel.Relations(world, "CAN", "USA"), DiplomacyModel.Relations(loaded, "CAN", "USA"), 9);
+        Assert.Equal(DiplomacyModel.Relations(world, "MNG", "CHN"), DiplomacyModel.Relations(loaded, "MNG", "CHN"), 9);
         Assert.Equal(SaveGame.Hash(world), SaveGame.Hash(loaded));
     }
 

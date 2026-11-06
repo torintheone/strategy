@@ -228,6 +228,12 @@ public partial class Main : Node
                 "expel" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Expel(w, me, partner),
                 "propose" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Propose(w, me, partner, parts[1]),
                 "cancel" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Cancel(w, me, partner, parts[1]),
+                "sanction" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Impose(w, me, partner, parts[1]),
+                "lift" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Lift(w, me, partner),
+                "resolution" => Politeconomy.Sim.Diplomacy.DiplomacyModel.ProposeResolution(w, me, parts[1], partner),
+                "join" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Join(w, me, partner),
+                "leave" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Leave(w, me, partner),
+                "loan" => Politeconomy.Sim.Diplomacy.DiplomacyModel.RequestLoan(w, me),
                 _ => false,
             };
         });
@@ -726,7 +732,9 @@ public partial class Main : Node
                     Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, "RUS", "highways", "budget");
                     // Дипломатия: визит в Китай и свободная торговля с Белоруссией.
                     Politeconomy.Sim.Diplomacy.DiplomacyModel.Visit(w, "RUS", "CHN");
-                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Propose(w, "RUS", "BLR", "free_trade");
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Propose(w, "RUS", "BLR", "science");
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Impose(w, "RUS", "GEO", "partial");
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.ProposeResolution(w, "RUS", "aid", "AFG");
                     // Наука: больше очков энергетике, приоритет — ближайшая технология ИТ.
                     Politeconomy.Sim.Science.ScienceModel.Allocate(w, "RUS", "energy", 0.2);
                     if (Politeconomy.Sim.Science.ScienceModel.Target(w.Data, w.Science!["RUS"], "it") is { } it)
@@ -768,8 +776,13 @@ public partial class Main : Node
                     ("энергетика", rus.Energy is { Plants.Count: 6, Demand: > 0 } && rus.Stat("power_shortage_pct") is { Factors.Count: 3 }),
                     ("инфраструктура", rus.Infrastructure is { Projects.Count: 1, Offers.Count: > 0 } && _smokeJournal.Contains(("RUS", "project"))),
                     ("наука", rus.Science is { Researched.Count: > 20, Priority: not null, Progress.Count: > 0 } && snapshot.Adoption.Count > 0),
-                    ("дипломатия", snapshot.Diplomacy is { Partners.Count: > 190 } dip && dip.Partners.Any(p => p.Id == "BLR" && p.Treaties.Contains("free_trade"))
+                    ("дипломатия", snapshot.Diplomacy is { Partners.Count: > 190 } dip && dip.Partners.Any(p => p.Id == "BLR" && p.Treaties.Contains("science"))
                                    && snapshot.Countries["CHN"].Stat("relations_player") is { Factors.Count: > 2 }),
+                    ("организации", snapshot.Diplomacy is { Blocs.Count: 14, Council.Resolutions.Count: 1 } org
+                                    && org.Partners.Any(p => p.Id == "GEO" && p.OurSanction == "partial" && p.TheirSanction == "partial")
+                                    && snapshot.Countries["DEU"].Blocs?.Contains("european") == true
+                                    && snapshot.Countries["USA"].Stat("power_index") is { Value: > 99, Factors.Count: 4 }
+                                    && snapshot.Countries["PRK"].Stat("sanctions_against") is { Value: > 150 }),
                     ("перевороты", snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 }),
                 };
                 var failed = checks.Where(c => !c.Ok).Select(c => c.Name).ToList();
@@ -1069,6 +1082,22 @@ public partial class Main : Node
                 SetMode(_data.MapModes.Modes.First(m => m.Id == "relations"));
                 _camera.FitWorld(instant: true);
             }),
+            ("54_diplomacy_blocs", () => OpenDiplomacy(null, "blocs")),
+            // Совет Наций: Бразилия выносит резолюцию о гуманитарной помощи Гаити — смотрим состав Совета и итог голосования.
+            ("55_diplomacy_council", () =>
+            {
+                _host!.Post(w => Politeconomy.Sim.Diplomacy.DiplomacyModel.ProposeResolution(w, "BRA", "aid", "HTI"));
+                OpenDiplomacy(null, "council");
+            }),
+            ("56_diplomacy_fund", () => OpenDiplomacy(null, "fund")),
+            ("57_map_blocs", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "blocs"));
+                _camera.FitWorld(instant: true);
+            }),
+            ("58_map_alliances", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "alliances"))),
+            ("59_map_might", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "might"))),
         };
         if (_shotStep > 0)
         {
@@ -1214,7 +1243,7 @@ public partial class Main : Node
     }
 
     /// <summary>Дипломатия страны игрока; partner — кого показать сразу.</summary>
-    void OpenDiplomacy(string? partner)
+    void OpenDiplomacy(string? partner, string? tab = null)
     {
         if (_host?.Snapshot is not { Diplomacy: not null } snapshot)
         {
@@ -1223,7 +1252,7 @@ public partial class Main : Node
             return;
         }
         HideUnderScreens();
-        _diplomacy.Open(snapshot, partner);
+        _diplomacy.Open(snapshot, partner, tab);
         _rail.SetActive("diplomacy");
         SetHovered(null, null);
     }

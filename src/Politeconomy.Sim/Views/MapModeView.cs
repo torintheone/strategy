@@ -49,11 +49,16 @@ public sealed class MapModeView
             "politics" => _data.MapModes.PoliticsColors.GetValueOrDefault(WorldFactory.SystemId(country.System), _palettes.NoData),
             "income" => _data.MapModes.IncomeGroups.FirstOrDefault(g => g.Id == WorldFactory.IncomeId(country.Income))?.Color ?? _palettes.NoData,
             "parties" => country.Politics?.Head?.Color ?? _palettes.NoData,
+            "blocs" or "alliances" => Blocs(country).FirstOrDefault()?.Color ?? _palettes.NoData,
             "bins" or "diverging" => ValueColor(country.Stat(Mode.Indicator!)?.Value ?? double.NaN),
             "region_density" => ValueColor(Density(region.Id)),
             _ => _palettes.NoData,
         };
     }
+
+    /// <summary>Блоки страны того вида, что показывает режим (торговые или военные), в порядке данных.</summary>
+    IEnumerable<BlocRecord> Blocs(CountrySnapshot country) =>
+        _data.Diplomacy.Blocs.Where(b => b.Military == (Mode.Kind == "alliances") && country.Blocs?.Contains(b.Id) == true);
 
     /// <summary>Партия, победившая в регионе на последних выборах его страны (по принадлежности, а не по контролю).</summary>
     public static PartySnapshot? ElectionWinner(MapRegion region, WorldSnapshot snapshot) =>
@@ -118,6 +123,11 @@ public sealed class MapModeView
                     .ToList();
             case "income":
                 return _data.MapModes.IncomeGroups.Select(g => new LegendEntry(g.Color, g.Name)).ToList();
+            case "blocs" or "alliances":
+                return _data.Diplomacy.Blocs.Where(b => b.Military == (Mode.Kind == "alliances"))
+                    .Select(b => new LegendEntry(b.Color, b.Name))
+                    .Append(new LegendEntry(_palettes.NoData, "вне блоков"))
+                    .ToList();
             case "parties" or "elections":
                 return _data.Parties.Families.Append(_data.Parties.Power)
                     .Select(f => new LegendEntry(f.Color, f.Name))
@@ -164,6 +174,9 @@ public sealed class MapModeView
                 : "Партий нет",
             "bins" or "diverging" when Indicator is not null => ValueLine(country.Stat(Indicator.Id)),
             "region_density" => $"Плотность: {Fmt.Number(Density(region.Id), 0)}{Fmt.Nbsp}{Mode.Unit}",
+            "blocs" or "alliances" => Blocs(country).Select(b => b.Name).ToList() is { Count: > 0 } names
+                ? string.Join(", ", names)
+                : Mode.Kind == "alliances" ? "Вне военных блоков" : "Вне торговых блоков",
             _ => "",
         };
     }
