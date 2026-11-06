@@ -294,7 +294,9 @@ public static class EnergyModel
         var carbon = world.Data.Energy.CarbonPrices.GetValueOrDefault(Variant(world, country, "carbon_tax", "none"));
         var b = world.Data.EnergyBalance;
         var decline = b.CostFloor + (1 - b.CostFloor) * Math.Exp(-p.CostDecline * years);
-        return p.Capex * decline + p.FuelCost * fuel + b.CarbonCost * carbon * p.Co2;
+        // Энергетическая сделка с продавцом нефти и газа делает топливо дешевле.
+        var deal = Math.Max(0.1, 1 + (world.Diplomacy?.Countries.GetValueOrDefault(country.Id)?.Effects.GetValueOrDefault("fuel_cost") ?? 0));
+        return p.Capex * decline + p.FuelCost * fuel * deal + b.CarbonCost * carbon * p.Co2;
     }
 
     static double AverageCost(World world, Country country, CountryEnergy c)

@@ -96,6 +96,8 @@ public static partial class DataValidator
         ["technologies_count"] = (0, 200),
         ["technology_level_pct"] = (0, 100),
         ["brain_drain_pct"] = (0, 100),
+        ["relations_player"] = (-100, 100),
+        ["trade_share_player"] = (0, 100),
         ["approval_pct"] = (0, 100),
         ["ruling_poll_pct"] = (0, 100),
     };
@@ -316,6 +318,7 @@ public static partial class DataValidator
         ValidateEnergy(data, Add);
         ValidateInfrastructure(data, Add);
         ValidateScience(data, Add);
+        ValidateDiplomacy(data, Add);
         return problems;
     }
 

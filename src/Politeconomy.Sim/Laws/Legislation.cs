@@ -99,6 +99,7 @@ public static class Legislation
         LawModel.Recompute(data, laws, world.Date);
         // Кому закон сильно не нравится, выходят на улицы и требуют вернуть прежний.
         Politics.ProtestModel.LawPassed(world, countryId, law, previous, bill.Variant);
+        Diplomacy.DiplomacyModel.LawPassed(world, countryId, law.Id, bill.Variant);
     }
 
     public static void Remember(World world, CountryLaws laws, Bill bill)

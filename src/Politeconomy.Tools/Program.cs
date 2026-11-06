@@ -26,7 +26,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] | diplomacy [--country ISO] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -88,6 +88,8 @@ switch (command)
         return InfrastructureReport();
     case "science":
         return ScienceReport();
+    case "diplomacy":
+        return DiplomacyReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -652,6 +654,31 @@ int EducationReport()
                               $"капитал {e.HumanCapital * 100,5:F1}; к росту {e.Effects.GetValueOrDefault("potential_growth"),5:F2} п. п.");
         }
     }
+    return 0;
+}
+
+// Дипломатия: главные торговые партнёры, лучшие и худшие отношения нескольких стран.
+int DiplomacyReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "RUS", "CHN", "DEU", "IND", "BRA", "UKR", "IRN", "CAN", "NGA"];
+    foreach (var id in ids)
+    {
+        var others = world.Countries.Where(c => c.Id != id).ToList();
+        string Show(IEnumerable<Country> list, Func<Country, double> value, string format) =>
+            string.Join(", ", list.Select(c => $"{c.Id} {value(c).ToString(format)}"));
+        Console.WriteLine($"{world[id].Name}:");
+        Console.WriteLine("  торговля: " + Show(others.OrderByDescending(c => Politeconomy.Sim.Diplomacy.DiplomacyModel.TradeShare(world, id, c.Id)).Take(6),
+            c => Politeconomy.Sim.Diplomacy.DiplomacyModel.TradeShare(world, id, c.Id) * 100, "F1") + " %");
+        Console.WriteLine("  друзья: " + Show(others.OrderByDescending(c => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, id, c.Id)).Take(6),
+            c => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, id, c.Id), "F0"));
+        Console.WriteLine("  недруги: " + Show(others.OrderBy(c => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, id, c.Id)).Take(6),
+            c => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, id, c.Id), "F0"));
+    }
+    var all = world.Countries.SelectMany(a => world.Countries.Where(b => string.CompareOrdinal(a.Id, b.Id) < 0)
+        .Select(b => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, a.Id, b.Id))).ToList();
+    Console.WriteLine($"Все пары: в среднем {all.Average():F1}, враждебных (< −30) {all.Count(x => x < -30)}, дружеских (> 30) {all.Count(x => x > 30)} из {all.Count}");
     return 0;
 }
 

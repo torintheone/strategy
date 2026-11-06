@@ -356,7 +356,9 @@ def build_countries(records: list[dict], wb: dict, imf: dict, bis: dict, owid: d
                 elif src[0] == "owid":
                     found = latest(series(owid, src[1], rec["id"]), min_year)
                     label = f"owid:{src[1]}"
-                elif src[0] == "ne" and key in rec["_ne_stats"] and rec["_ne"].get(src[1]):
+                # Natural Earth — для непризнанных государств, а ВВП — для всех, у кого его нет ни у ВБ, ни у МВФ (КНДР):
+                # иначе ВВП на душу заполнялся медианой богатых соседей.
+                elif src[0] == "ne" and (key in rec["_ne_stats"] or key == "gdp_usd") and rec["_ne"].get(src[1]):
                     year = rec["_ne"].get("POP_YEAR" if key == "population" else "GDP_YEAR")
                     found = (float(rec["_ne"][src[1]]) * src[2], int(year) if year else None)
                     label = "natural_earth"

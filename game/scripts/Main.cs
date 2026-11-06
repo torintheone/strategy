@@ -44,6 +44,7 @@ public partial class Main : Node
     ConfirmDialog _confirmDialog = null!;
     DebateDialog _debateDialog = null!;
     ProtestDialog _protestDialog = null!;
+    DiplomacyScreen _diplomacy = null!;
     ScienceScreen _science = null!;
     ProjectDialog _projectDialog = null!;
     readonly HashSet<string> _seenProtests = new();
@@ -196,7 +197,8 @@ public partial class Main : Node
         _uiRoot.AddChild(_rail);
         _rail.Setup([("government", "government", "Правительство и парламент (G)"), ("ministries", "ministries", "Ведомства и доклады министров (M)"),
             ("politics", "politics", "Партии и опросы (P)"), ("society", "society", "Общество и группы интересов (O)"), ("laws", "laws", "Законы (L)"),
-            ("budget", "budget", "Бюджет и налоги (B)"), ("science", "science", "Наука и технологии (N)")]);
+            ("budget", "budget", "Бюджет и налоги (B)"), ("science", "science", "Наука и технологии (N)"),
+            ("diplomacy", "diplomacy", "Дипломатия (I)")]);
         _rail.ScreenChosen += ToggleScreen;
 
         _government = new GovernmentScreen { Visible = false };
@@ -207,6 +209,26 @@ public partial class Main : Node
             _host!.Post(w => Politeconomy.Sim.Government.GovernmentActions.RequestCandidates(w, country, post));
         _government.Appointed += (country, post, index) =>
             _host!.Post(w => Politeconomy.Sim.Government.GovernmentActions.Appoint(w, country, post, index));
+
+        _diplomacy = new DiplomacyScreen { Visible = false };
+        _uiRoot.AddChild(_diplomacy);
+        _diplomacy.Setup(_data);
+        _diplomacy.Closed += CloseScreens;
+        _diplomacy.ActionChosen += (partner, action) => _host!.Post(w =>
+        {
+            if (w.PlayerCountry is not { } me)
+                return;
+            var parts = action.Split(':');
+            _ = parts[0] switch
+            {
+                "visit" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Visit(w, me, partner),
+                "aid" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Aid(w, me, partner),
+                "expel" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Expel(w, me, partner),
+                "propose" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Propose(w, me, partner, parts[1]),
+                "cancel" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Cancel(w, me, partner, parts[1]),
+                _ => false,
+            };
+        });
 
         _science = new ScienceScreen { Visible = false };
         _uiRoot.AddChild(_science);
@@ -389,6 +411,8 @@ public partial class Main : Node
             _budget.Refresh(snapshot);
         if (_science.Visible)
             _science.Refresh(snapshot);
+        if (_diplomacy.Visible)
+            _diplomacy.Refresh(snapshot);
         Recolor(snapshot);
         CheckDialogs(snapshot);
         _dialogWasOpen = DialogOpen;
@@ -494,11 +518,11 @@ public partial class Main : Node
                 CloseDialogs();
             return;
         }
-        if (physical is Key.G or Key.M or Key.P or Key.O or Key.L or Key.B or Key.N)
+        if (physical is Key.G or Key.M or Key.P or Key.O or Key.L or Key.B or Key.N or Key.I)
         {
             ToggleScreen(physical switch
             {
-                Key.G => "government", Key.M => "ministries", Key.P => "politics", Key.O => "society", Key.L => "laws", Key.N => "science", _ => "budget",
+                Key.G => "government", Key.M => "ministries", Key.P => "politics", Key.O => "society", Key.L => "laws", Key.N => "science", Key.I => "diplomacy", _ => "budget",
             });
             return;
         }
@@ -695,6 +719,9 @@ public partial class Main : Node
                     Politeconomy.Sim.Health.ProgramModel.Toggle(w, "RUS", "mortgage_subsidy");
                     // Стройка: автомагистрали из бюджета.
                     Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, "RUS", "highways", "budget");
+                    // Дипломатия: визит в Китай и свободная торговля с Белоруссией.
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Visit(w, "RUS", "CHN");
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Propose(w, "RUS", "BLR", "free_trade");
                     // Наука: больше очков энергетике, приоритет — ближайшая технология ИТ.
                     Politeconomy.Sim.Science.ScienceModel.Allocate(w, "RUS", "energy", 0.2);
                     if (Politeconomy.Sim.Science.ScienceModel.Target(w.Data, w.Science!["RUS"], "it") is { } it)
@@ -734,6 +761,8 @@ public partial class Main : Node
                     && snapshot.Countries["RUS"].Energy is { Plants.Count: 6, Demand: > 0 } && snapshot.Countries["RUS"].Stat("power_shortage_pct") is { Factors.Count: 3 }
                     && snapshot.Countries["RUS"].Infrastructure is { Projects.Count: 1, Offers.Count: > 0 } && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "project")
                     && snapshot.Countries["RUS"].Science is { Researched.Count: > 20, Priority: not null, Progress.Count: > 0 } && snapshot.Adoption.Count > 0
+                    && snapshot.Diplomacy is { Partners.Count: > 190 } dip && dip.Partners.Any(p => p.Id == "BLR" && p.Treaties.Contains("free_trade"))
+                    && snapshot.Countries["CHN"].Stat("relations_player") is { Factors.Count: > 2 }
                     && snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 };
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
@@ -1013,6 +1042,23 @@ public partial class Main : Node
                 SetMode(_data.MapModes.Modes.First(m => m.Id == "technology"));
                 _camera.FitWorld(instant: true);
             }),
+            ("51_diplomacy", () => OpenDiplomacy("USA")),
+            // Дипломатия: визит в США и соглашение о свободной торговле с Аргентиной.
+            ("52_diplomacy_treaty", () =>
+            {
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Visit(w, "BRA", "USA");
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Propose(w, "BRA", "ARG", "free_trade");
+                });
+                OpenDiplomacy("ARG");
+            }),
+            ("53_map_relations", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "relations"));
+                _camera.FitWorld(instant: true);
+            }),
         };
         if (_shotStep > 0)
         {
@@ -1034,7 +1080,7 @@ public partial class Main : Node
 
     /// <summary>Открыть или закрыть экран: страны игрока, а если игрок ещё не выбрал страну — выбранной на карте.</summary>
     bool ScreenOpen => _government.Visible || _ministries.Visible || _politicsScreen.Visible || _society.Visible || _laws.Visible || _budget.Visible
-                       || _science.Visible;
+                       || _science.Visible || _diplomacy.Visible;
 
     void ToggleScreen(string screen)
     {
@@ -1046,6 +1092,7 @@ public partial class Main : Node
             "society" => _society.Visible,
             "laws" => _laws.Visible,
             "science" => _science.Visible,
+            "diplomacy" => _diplomacy.Visible,
             _ => _budget.Visible,
         };
         if (open)
@@ -1056,6 +1103,11 @@ public partial class Main : Node
         if (screen == "budget")
         {
             OpenBudget();
+            return;
+        }
+        if (screen == "diplomacy")
+        {
+            OpenDiplomacy(_selectedCountry?.Id);
             return;
         }
         var id = _host?.Snapshot.PlayerCountry ?? _selectedCountry?.Id;
@@ -1098,6 +1150,7 @@ public partial class Main : Node
         _laws.Visible = false;
         _budget.Visible = false;
         _science.Visible = false;
+        _diplomacy.Visible = false;
     }
 
     void OpenBudget()
@@ -1147,6 +1200,21 @@ public partial class Main : Node
         HideUnderScreens();
         _society.ShowCountry(countryId, _host.Snapshot);
         _rail.SetActive("society");
+        SetHovered(null, null);
+    }
+
+    /// <summary>Дипломатия страны игрока; partner — кого показать сразу.</summary>
+    void OpenDiplomacy(string? partner)
+    {
+        if (_host?.Snapshot is not { Diplomacy: not null } snapshot)
+        {
+            _toasts.Push("Начните игру за страну — тогда откроется её дипломатия.");
+            _rail.SetActive(null);
+            return;
+        }
+        HideUnderScreens();
+        _diplomacy.Open(snapshot, partner);
+        _rail.SetActive("diplomacy");
         SetHovered(null, null);
     }
 
@@ -1322,6 +1390,7 @@ public partial class Main : Node
         _laws.Visible = false;
         _budget.Visible = false;
         _science.Visible = false;
+        _diplomacy.Visible = false;
         _rail.SetActive(null);
     }
 

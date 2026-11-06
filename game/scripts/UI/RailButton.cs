@@ -60,6 +60,14 @@ public partial class RailButton : Button
                 DrawLine(c + new Vector2(-1, 1), c + new Vector2(8, 5), color, w, true);
                 DrawColoredPolygon(Sector(c + new Vector2(2, -2), 9, -Mathf.Pi / 2, 0.36f), color);
                 break;
+            case "diplomacy":
+                // Глобус: круг, меридиан-эллипс и две параллели.
+                DrawArc(c, 11, 0, Mathf.Tau, 40, color, w, true);
+                DrawPolyline(Ellipse(c, 5, 11), color, w, true);
+                DrawLine(c + new Vector2(-11, 0), c + new Vector2(11, 0), color, w, true);
+                DrawLine(c + new Vector2(-9, -6), c + new Vector2(9, -6), color, w, true);
+                DrawLine(c + new Vector2(-9, 6), c + new Vector2(9, 6), color, w, true);
+                break;
             case "science":
                 // Колба: горлышко, расширяющееся дно, уровень жидкости и пузырьки.
                 DrawPolyline([c + new Vector2(-4, -11), c + new Vector2(-4, -3), c + new Vector2(-11, 10), c + new Vector2(11, 10),
@@ -79,6 +87,17 @@ public partial class RailButton : Button
                 }
                 break;
         }
+    }
+
+    static Vector2[] Ellipse(Vector2 center, float rx, float ry)
+    {
+        var points = new Vector2[33];
+        for (var i = 0; i <= 32; i++)
+        {
+            var a = Mathf.Tau * i / 32;
+            points[i] = center + new Vector2(Mathf.Cos(a) * rx, Mathf.Sin(a) * ry);
+        }
+        return points;
     }
 
     static Vector2[] Sector(Vector2 center, float radius, float from, float to)

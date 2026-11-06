@@ -126,6 +126,9 @@ public sealed class World
     /// <summary>Наука и технологии; создаётся <see cref="Science.ScienceModel.Setup"/>.</summary>
     public Science.WorldScience? Science { get; set; }
 
+    /// <summary>Дипломатия: договоры, память о событиях, отношения и торговля пар; создаётся <see cref="Diplomacy.DiplomacyModel.Setup"/>.</summary>
+    public Diplomacy.WorldDiplomacy? Diplomacy { get; set; }
+
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 

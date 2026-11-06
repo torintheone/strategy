@@ -157,7 +157,11 @@ public static class ScienceModel
         var tier = b.TierCost[Math.Clamp(t.Tier - 1, 0, b.TierCost.Count - 1)];
         var adoption = world.Science?.Adoption.GetValueOrDefault(t.Id) ?? 0;
         var frontier = b.FrontierCost * tier;
-        return adoption <= 0 ? frontier : Math.Min(frontier, b.BaseCost / 100 * tier * Gdp(world, country) * (1 - b.Diffusion * adoption));
+        // Научное сотрудничество: технология, которая уже есть у партнёра, дешевле.
+        var bal = world.Data.DiplomacyBalance;
+        var partners = Diplomacy.DiplomacyModel.SciencePartners(world, country.Id).Count(p => world.Science?.Countries.GetValueOrDefault(p)?.Researched.Contains(t.Id) == true);
+        var discount = 1 - Math.Min(bal.ScienceMax, bal.ScienceDiscount * partners);
+        return adoption <= 0 ? frontier : Math.Min(frontier, b.BaseCost / 100 * tier * Gdp(world, country) * (1 - b.Diffusion * adoption)) * discount;
     }
 
     /// <summary>ВВП страны по ППС, млрд долларов.</summary>

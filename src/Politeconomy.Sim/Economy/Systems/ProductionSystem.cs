@@ -61,7 +61,8 @@ public sealed class ProductionSystem : EconomySystem
                 e.Capital[i] = Math.Max(0, e.Capital[i] + (e.InvestmentShare[i] * investment - ind.Depreciation * e.Capital[i]) / 12);
                 e.Tfp[i] *= Math.Pow(1 + (1 - ind.Alpha) * (e.PotentialGrowth - populationGrowth), 1.0 / 12);
                 e.Potential[i] = e.Tfp[i] * Math.Pow(e.Capital[i], ind.Alpha) * Math.Pow(potentialLabor * e.EmploymentShare[i], 1 - ind.Alpha)
-                                 * Economy.Supply.Factor(world, country.Id, i) * Science.ScienceModel.Productivity(world, country.Id, i);
+                                 * Economy.Supply.Factor(world, country.Id, i) * Science.ScienceModel.Productivity(world, country.Id, i)
+                                 * (world.Diplomacy?.Countries.GetValueOrDefault(country.Id)?.Productivity ?? 1);
             }
         }
     }

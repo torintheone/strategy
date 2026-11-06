@@ -59,10 +59,12 @@ public sealed class DemandSystem : EconomySystem
             // Торговля: дешёвая валюта помогает экспорту и сдерживает импорт; сырьевой экспорт идёт по мировой цене.
             var commodityPrice = CommodityExportPrice(e, economy);
             var q = e.RealExchangeRate;
+            // Торговые договоры (и, позже, санкции) меняют торговлю с партнёрами.
+            var trade = world.Diplomacy?.Countries.GetValueOrDefault(country.Id)?.TradeFactor ?? 1;
             e.Exports = e.Exports0 * ((1 - e.CommodityExports) * Math.Pow(q, b.ExportElasticity) * (1 + 0.5 * otherWorld)
-                                      + e.CommodityExports * commodityPrice);
+                                      + e.CommodityExports * commodityPrice) * trade;
             e.Imports = e.Imports0 * Math.Pow(q, -b.ImportElasticity) * Math.Max(0.2, 1 + b.ImportCycle * e.Gap)
-                        * (1 + e.OilImports * (economy.OilPrice - 1));
+                        * (1 + e.OilImports * (economy.OilPrice - 1)) * trade;
             e.CurrentAccount = Math.Clamp(e.CurrentAccount0 + (e.Exports - e.Imports) - (e.Exports0 - e.Imports0),
                 -b.CurrentAccountLimit, b.CurrentAccountLimit);
         }

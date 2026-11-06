@@ -1,5 +1,5 @@
 {
- "built": "2026-10-30",
+ "built": "2026-11-06",
  "sources": {
   "wb": "Всемирный банк, World Development Indicators (CC BY 4.0)",
   "imf": "МВФ, World Economic Outlook",
@@ -45863,6 +45863,11 @@
      "year": 2025,
      "source": "wb:SP.POP.TOTL"
     },
+    "gdp_usd": {
+     "value": 40000000000.0,
+     "year": 2016,
+     "source": "natural_earth"
+    },
     "unemployment_pct": {
      "value": 3.545,
      "year": 2025,
@@ -45974,11 +45979,10 @@
      "source": "owid:net_elec_imports_share_demand"
     },
     "gdp_per_capita_usd": {
-     "value": 35951.045,
-     "year": null,
-     "source": "fill",
-     "method": "медиана: субрегион",
-     "n": 5
+     "value": 1505.4,
+     "year": 2016,
+     "source": "derived",
+     "method": "ВВП ÷ население"
     },
     "gdp_ppp_per_capita": {
      "value": 55421.8798,
@@ -46153,12 +46157,6 @@
      "source": "fill",
      "method": "медиана: субрегион",
      "n": 4
-    },
-    "gdp_usd": {
-     "value": 955256510933.0,
-     "year": null,
-     "source": "derived",
-     "method": "ВВП на душу × население"
     },
     "interest_pct_gdp": {
      "value": 1.9633,
@@ -63866,12 +63864,16 @@
      "year": 2014,
      "source": "natural_earth"
     },
+    "gdp_usd": {
+     "value": 17836000000.0,
+     "year": 2013,
+     "source": "natural_earth"
+    },
     "gdp_per_capita_usd": {
-     "value": 2209.3101,
-     "year": null,
-     "source": "fill",
-     "method": "медиана: субрегион и группа дохода",
-     "n": 6
+     "value": 3499.89,
+     "year": 2013,
+     "source": "derived",
+     "method": "ВВП ÷ население"
     },
     "gdp_ppp_per_capita": {
      "value": 5470.6851,
@@ -64193,12 +64195,6 @@
      "source": "fill",
      "method": "медиана: субрегион и группа дохода",
      "n": 6
-    },
-    "gdp_usd": {
-     "value": 11258995550.0,
-     "year": null,
-     "source": "derived",
-     "method": "ВВП на душу × население"
     },
     "labor_force": {
      "value": 2362929.0,

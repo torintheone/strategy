@@ -23,6 +23,8 @@ public sealed class WorldSnapshot
     public Politics.ReignSummary? LastReign { get; init; }
     /// <summary>Последние записи журнала (отставки, назначения, голосования), новые — в конце.</summary>
     public IReadOnlyList<JournalEntry> Journal { get; init; } = [];
+    /// <summary>Дипломатия страны игрока: отношения, торговля и договоры с каждой страной; null, если игрок не выбрал страну.</summary>
+    public DiplomacySnapshot? Diplomacy { get; init; }
     /// <summary>Доля мира (по ВВП по ППС), которая освоила каждую технологию.</summary>
     public IReadOnlyDictionary<string, double> Adoption { get; init; } = new Dictionary<string, double>();
     /// <summary>Валюта каждой страны: код, режим курса, якорь и сколько стран ею пользуются.</summary>
@@ -99,6 +101,7 @@ public sealed class WorldSnapshot
             Defeat = world.Defeat,
             LastReign = world.LastReign,
             Adoption = world.Science?.Adoption.ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal) ?? new Dictionary<string, double>(),
+            Diplomacy = world.PlayerCountry is { } me && world.Diplomacy != null && world.ById(me) != null ? DiplomacySnapshot.Capture(world, me) : null,
             Journal = world.Journal.Count <= JournalShown ? world.Journal.ToList() : world.Journal.GetRange(world.Journal.Count - JournalShown, JournalShown),
             Version = version,
         };
@@ -145,6 +148,34 @@ public sealed record ScienceSnapshot(double Points, double Government, double Pr
             c.Efficiency, c.Drain, c.Researched.ToHashSet(StringComparer.Ordinal), c.Allocation.ToArray(), c.Priority, progress, years);
     }
 }
+
+/// <summary>Дипломатия страны игрока: партнёры по порядку стран.</summary>
+public sealed record DiplomacySnapshot(string Country, IReadOnlyList<PartnerSnapshot> Partners)
+{
+    public static DiplomacySnapshot Capture(World world, string me)
+    {
+        var types = world.Data.Diplomacy.Treaties;
+        var partners = new List<PartnerSnapshot>(world.Countries.Count);
+        foreach (var c in world.Countries)
+        {
+            if (c.Id == me)
+                continue;
+            var treaties = types.Where(t => Diplomacy.DiplomacyModel.HasTreaty(world, me, c.Id, t.Id)).Select(t => t.Id).ToList();
+            var offers = types.Where(t => !treaties.Contains(t.Id))
+                .ToDictionary(t => t.Id, t => Diplomacy.DiplomacyModel.Acceptance(world, me, c.Id, t.Id), StringComparer.Ordinal);
+            partners.Add(new PartnerSnapshot(c.Id, Diplomacy.DiplomacyModel.Relations(world, me, c.Id), Diplomacy.DiplomacyModel.TradeShare(world, me, c.Id),
+                Diplomacy.DiplomacyModel.Breakdown(world, me, c.Id), treaties, offers, Diplomacy.DiplomacyModel.CanVisit(world, me, c.Id)));
+        }
+        return new DiplomacySnapshot(me, partners);
+    }
+}
+
+/// <summary>
+/// Партнёр: отношения (−100…100) и из чего они, доля в нашей торговле (0–1), действующие договоры, какие договоры
+/// партнёр подпишет и почему, можно ли ехать с визитом.
+/// </summary>
+public sealed record PartnerSnapshot(string Id, double Relations, double TradeShare, IReadOnlyList<StatFactor> Factors,
+    IReadOnlyList<string> Treaties, IReadOnlyDictionary<string, (bool Accepts, string Reason)> Offers, bool CanVisit);
 
 /// <summary>Правление игрока: страна, с какой даты, выборы выиграны и проиграны, законов принято.</summary>
 public sealed record ReignSnapshot(string Country, DateOnly Since, int ElectionsWon, int ElectionsLost, int LawsPassed);

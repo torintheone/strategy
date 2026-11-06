@@ -35,6 +35,7 @@
   {"id": "power", "name": "Нехватка электричества", "short_name": "Свет", "kind": "bins", "indicator": "power_shortage_pct", "thresholds": [0.1, 1, 3, 6, 10, 20]},
   {"id": "low_carbon", "name": "Чистое электричество: атом, ГЭС, ветер и солнце", "short_name": "Энергия", "kind": "bins", "indicator": "low_carbon_power_pct", "thresholds": [10, 25, 40, 55, 70, 85]},
   {"id": "pollution", "name": "Загрязнение воздуха и воды", "short_name": "Загрязнение", "kind": "bins", "indicator": "pollution_index", "thresholds": [20, 30, 40, 50, 60, 70]},
+  {"id": "relations", "name": "Отношения с вашей страной", "short_name": "Отношения", "kind": "diverging", "indicator": "relations_player", "thresholds": [-40, -20, -5, 5, 20, 40]},
   {"id": "parties", "name": "Правящие партии", "short_name": "Партии", "kind": "parties"},
   {"id": "elections", "name": "Итоги последних выборов по регионам", "short_name": "Выборы", "kind": "elections"}
  ],

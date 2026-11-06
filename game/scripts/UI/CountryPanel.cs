@@ -23,6 +23,7 @@ public partial class CountryPanel : GlassPanel
             "death_rate", "net_migration_rate", "age_0_14_pct", "age_65_plus_pct", "urban_pct", "labor_force", "gini"]),
         ("Классы", ["standard_of_living", "satisfaction", "radicalism"]),
         ("Условия жизни", ["housing_m2_per_person", "housing_price_index", "housing_shortage_pct", "crime_index", "pollution_index"]),
+        ("Дипломатия", ["relations_player", "trade_share_player"]),
         ("Энергетика", ["electricity_kwh_per_capita", "electricity_access_pct", "power_shortage_pct", "electricity_price_index",
             "low_carbon_power_pct", "power_imports_pct", "energy_import_dependence_pct"]),
         ("Власть", ["approval_pct", "ruling_poll_pct", "legitimacy", "democracy_index", "rule_of_law_index", "judicial_independence_index",
