@@ -87,6 +87,8 @@ public partial class Main : Node
     double _smokeTime;
     int _smokeStep;
     string? _smokeOccupied;
+    // В снимке только последние записи журнала, поэтому смоук-тест копит всё, что успел увидеть.
+    readonly HashSet<(string Country, string Kind)> _smokeJournal = [];
 
     public override void _Ready()
     {
@@ -395,6 +397,9 @@ public partial class Main : Node
         if (snapshot.Version == _shownVersion)
             return;
         _toasts.Feed(snapshot.Journal, snapshot.PlayerCountry, silent: _shownVersion < 0);
+        if (_smoke)
+            foreach (var entry in snapshot.Journal)
+                _smokeJournal.Add((entry.Country, entry.Kind));
         _shownVersion = snapshot.Version;
         _topBar.Show(snapshot);
         if (_government.Visible)
@@ -745,25 +750,30 @@ public partial class Main : Node
                 var snapshot = _host!.Snapshot;
                 var inflation = snapshot.Countries["RUS"].Stat("inflation_pct");
                 var classes = snapshot.Countries["RUS"].Classes;
-                var appointed = snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "appointment")
-                    && snapshot.Countries["RUS"].Government is { Ministers.Count: 18 }
-                    && snapshot.Countries["RUS"].Laws is { } rusLaws && (rusLaws.BillFor("vat_reduced") != null || rusLaws.Current["vat_reduced"] == "no")
-                    && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "budget")
-                    && snapshot.Countries["RUS"].History?.Series("gdp_growth_pct").Count >= 5
-                    && snapshot.Countries["DEU"].Politics is { Parties.Count: >= 3, Polls.Count: >= 2 }
-                    && snapshot.Countries["RUS"].Politics?.Elections?.Count >= 2 && snapshot.Countries["BRA"].Politics?.LastElection?.Kind == "president"
-                    && snapshot.Countries["DEU"].Stat("ruling_poll_pct") is { } ruling && double.IsFinite(ruling.Value)
-                    && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "campaign")
-                    && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "protest")
-                    && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "program")
-                    && snapshot.Countries["RUS"].Stat("crime_index") is { Factors.Count: > 0 } && snapshot.Countries["RUS"].Stat("pollution_index") is { } pollution
-                    && double.IsFinite(pollution.Value) && snapshot.Countries["RUS"].Programs?.Contains("mortgage_subsidy") == true
-                    && snapshot.Countries["RUS"].Energy is { Plants.Count: 6, Demand: > 0 } && snapshot.Countries["RUS"].Stat("power_shortage_pct") is { Factors.Count: 3 }
-                    && snapshot.Countries["RUS"].Infrastructure is { Projects.Count: 1, Offers.Count: > 0 } && snapshot.Journal.Any(e => e.Country == "RUS" && e.Kind == "project")
-                    && snapshot.Countries["RUS"].Science is { Researched.Count: > 20, Priority: not null, Progress.Count: > 0 } && snapshot.Adoption.Count > 0
-                    && snapshot.Diplomacy is { Partners.Count: > 190 } dip && dip.Partners.Any(p => p.Id == "BLR" && p.Treaties.Contains("free_trade"))
-                    && snapshot.Countries["CHN"].Stat("relations_player") is { Factors.Count: > 2 }
-                    && snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 };
+                var rus = snapshot.Countries["RUS"];
+                // Каждая проверка с именем: при провале в журнале CI видно, какая именно не прошла.
+                var checks = new (string Name, bool Ok)[]
+                {
+                    ("назначение", _smokeJournal.Contains(("RUS", "appointment")) && rus.Government is { Ministers.Count: 18 }),
+                    ("законопроект", rus.Laws is { } rusLaws && (rusLaws.BillFor("vat_reduced") != null || rusLaws.Current["vat_reduced"] == "no")),
+                    ("бюджет", _smokeJournal.Contains(("RUS", "budget"))),
+                    ("история", rus.History?.Series("gdp_growth_pct").Count >= 5),
+                    ("партии", snapshot.Countries["DEU"].Politics is { Parties.Count: >= 3, Polls.Count: >= 2 }
+                               && snapshot.Countries["DEU"].Stat("ruling_poll_pct") is { } ruling && double.IsFinite(ruling.Value)),
+                    ("выборы", rus.Politics?.Elections?.Count >= 2 && snapshot.Countries["BRA"].Politics?.LastElection?.Kind == "president"),
+                    ("кампания", _smokeJournal.Contains(("RUS", "campaign"))),
+                    ("протест", _smokeJournal.Contains(("RUS", "protest"))),
+                    ("программы", _smokeJournal.Contains(("RUS", "program")) && rus.Programs?.Contains("mortgage_subsidy") == true),
+                    ("жизнь", rus.Stat("crime_index") is { Factors.Count: > 0 } && rus.Stat("pollution_index") is { } pollution && double.IsFinite(pollution.Value)),
+                    ("энергетика", rus.Energy is { Plants.Count: 6, Demand: > 0 } && rus.Stat("power_shortage_pct") is { Factors.Count: 3 }),
+                    ("инфраструктура", rus.Infrastructure is { Projects.Count: 1, Offers.Count: > 0 } && _smokeJournal.Contains(("RUS", "project"))),
+                    ("наука", rus.Science is { Researched.Count: > 20, Priority: not null, Progress.Count: > 0 } && snapshot.Adoption.Count > 0),
+                    ("дипломатия", snapshot.Diplomacy is { Partners.Count: > 190 } dip && dip.Partners.Any(p => p.Id == "BLR" && p.Treaties.Contains("free_trade"))
+                                   && snapshot.Countries["CHN"].Stat("relations_player") is { Factors.Count: > 2 }),
+                    ("перевороты", snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 }),
+                };
+                var failed = checks.Where(c => !c.Ok).Select(c => c.Name).ToList();
+                var appointed = failed.Count == 0;
                 var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
                     && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
                     && inflation is { Source: StatSources.Model, Factors.Count: > 0 } && double.IsFinite(inflation.Value)
@@ -772,7 +782,7 @@ public partial class Main : Node
                     GD.PrintErr(_host.Error.ToString());
                 GD.Print($"SMOKE {(ok ? "OK" : "FAIL")}: дата {snapshot.Date:yyyy-MM-dd}, стран {snapshot.Countries.Count}, " +
                          $"регионов {_map.Regions.Count}, занято {snapshot.Occupied.Count}, инфляция в России {inflation?.Value:F2}%, " +
-                         $"удовлетворённость {snapshot.Countries["RUS"].Stat("satisfaction")?.Value:F0}, назначение {(appointed ? "есть" : "нет")}, " +
+                         $"удовлетворённость {snapshot.Countries["RUS"].Stat("satisfaction")?.Value:F0}, проверки {(appointed ? "все прошли" : "не прошли: " + string.Join(", ", failed))}, " +
                          $"шаг {_host.LastStepMs:F2} мс");
                 GetTree().Quit(ok ? 0 : 1);
                 _smokeStep++;

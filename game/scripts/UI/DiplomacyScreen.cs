@@ -130,7 +130,7 @@ public partial class DiplomacyScreen : GlassPanel
     {
         if (_snapshot is not { } diplomacy)
             return;
-        var name = Name(diplomacy.Country);
+        var name = CountryName(diplomacy.Country);
         _title.Text = "Дипломатия: " + name;
         var friends = diplomacy.Partners.Count(p => p.Relations > 30);
         var enemies = diplomacy.Partners.Count(p => p.Relations < -30);
@@ -155,7 +155,7 @@ public partial class DiplomacyScreen : GlassPanel
             line.OffsetRight = -8;
             line.AddThemeConstantOverride("separation", 8);
             row.AddChild(line);
-            var label = UiTheme.Text(Name(p.Id), 14, null, UiTheme.TextPrimary);
+            var label = UiTheme.Text(CountryName(p.Id), 14, null, UiTheme.TextPrimary);
             label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
             label.VerticalAlignment = VerticalAlignment.Center;
             label.MouseFilter = MouseFilterEnum.Ignore;
@@ -188,7 +188,7 @@ public partial class DiplomacyScreen : GlassPanel
             return;
         var head = new HBoxContainer();
         head.AddThemeConstantOverride("separation", 16);
-        var name = UiTheme.Text(Name(p.Id), 24, UiTheme.SerifBold);
+        var name = UiTheme.Text(CountryName(p.Id), 24, UiTheme.SerifBold);
         name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         head.AddChild(name);
         head.AddChild(UiTheme.Text("отношения " + Fmt.Signed(p.Relations, 0), 22, UiTheme.SemiBold, Tone(p.Relations)));
@@ -263,7 +263,7 @@ public partial class DiplomacyScreen : GlassPanel
         _detail.AddChild(row);
     }
 
-    string Name(string id) => _data.Countries.Countries.FirstOrDefault(c => c.Id == id)?.Name ?? id;
+    string CountryName(string id) => _data.Countries.Countries.FirstOrDefault(c => c.Id == id)?.Name ?? id;
 
     static Color Tone(double value) => value >= 15 ? Good : value <= -15 ? UiTheme.Critical : UiTheme.TextPrimary;
 
