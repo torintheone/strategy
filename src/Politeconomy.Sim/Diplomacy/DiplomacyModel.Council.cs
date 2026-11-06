@@ -61,7 +61,7 @@ public static partial class DiplomacyModel
         if (proposer == target || world.ById(target) is null)
             return (false, "Нужна другая страна.");
         if (!world[proposer].Info.UnMember)
-            return (false, $"Страна не член «{data.Diplomacy.Council.Name}».");
+            return (false, $"Страна не входит в «{data.Diplomacy.Council.Name}».");
         if (d.Proposed.TryGetValue(proposer, out var last) && last.AddMonths(data.DiplomacyBalance.CouncilMonths) > world.Date)
             return (false, $"Следующую резолюцию можно вынести с {Fmt.Date(last.AddMonths(data.DiplomacyBalance.CouncilMonths))}.");
         return type switch

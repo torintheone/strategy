@@ -399,7 +399,7 @@ public partial class DiplomacyScreen : GlassPanel
         var status = council.Permanent.Contains(me) ? "Мы — постоянный член Совета безопасности с правом вето."
             : council.Seats.FirstOrDefault(s => s.Country == me) is { } seat ? $"Мы — выборный член Совета безопасности до конца {seat.Until} года."
             : "Мы не в Совете безопасности: голосуем в Общем собрании.";
-        _pageContent.AddChild(Wrapped($"Все признанные страны — члены «{_data.Diplomacy.Council.Name}». Общее собрание осуждает и помогает простым большинством; " +
+        _pageContent.AddChild(Wrapped($"Все признанные страны входят в «{_data.Diplomacy.Council.Name}». Общее собрание осуждает и помогает простым большинством; " +
                                       $"Совет безопасности вводит и снимает санкции: нужно {_data.DiplomacyBalance.SecurityVotes} голосов из 15 и ни одного «против» у постоянных членов. " +
                                       "Каждый голосует по своим отношениям с автором и со страной; союзники своих не сдают. " + status, 13, UiTheme.TextSecondary));
         _pageContent.AddChild(Wrapped(council.NextProposal is { } next
