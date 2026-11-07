@@ -92,6 +92,8 @@ WB_INDICATORS += [
     "SL.EMP.SELF.ZS", "SL.EMP.VULN.ZS", "SL.EMP.WORK.ZS", "SL.TLF.CACT.ZS", "SL.TLF.ADVN.ZS", "SL.TLF.INTM.ZS",
     "SL.TLF.BASC.ZS", "SE.TER.ENRR", "SI.DST.10TH.10", "SI.DST.FRST.20", "SI.POV.DDAY",
 ]
+# Армии (этап 6.4): численность вооружённых сил.
+WB_INDICATORS += ["MS.MIL.TOTL.P1"]
 WB_CORE = set(WB_INDICATORS[:25])  # без них не собрать мир; остальные — для калибровки, их можно оценить
 
 BIS_URL = "https://stats.bis.org/api/v1/data/WS_CBPOL/M./all?startPeriod={start}&detail=dataonly"
