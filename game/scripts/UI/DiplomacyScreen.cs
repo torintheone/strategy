@@ -499,8 +499,9 @@ public partial class DiplomacyScreen : GlassPanel
             var front = war.Front.OrderByDescending(kv => kv.Value).Take(6)
                 .Select(kv => $"{_regionNames.GetValueOrDefault(kv.Key, kv.Key)} — {Fmt.Number(kv.Value, 0)}%").ToList();
             _pageContent.AddChild(Wrapped($"С {Fmt.Date(war.Start)}. Силы {Fmt.Number(war.AttackerStrength / Math.Max(1e-9, war.DefenderStrength), 1)} : 1. " +
-                                          $"Погибли солдаты: {Fmt.People(war.AttackerLosses)} и {Fmt.People(war.DefenderLosses)}. " +
-                                          $"Усталость: {Fmt.Number(war.AttackerExhaustion, 0)} и {Fmt.Number(war.DefenderExhaustion, 0)}." +
+                                          $"Усталость: {Fmt.Number(war.AttackerExhaustion, 0)} и {Fmt.Number(war.DefenderExhaustion, 0)}; " +
+                                          $"погибли солдаты: {Fmt.People(war.AttackerLosses)} и {Fmt.People(war.DefenderLosses)}" +
+                                          (Fmt.People(war.DefenderLosses).EndsWith('.') ? "" : ".") +
                                           (war.Goal.Count > 0 ? $" Цель нападения: {string.Join(", ", war.Goal.Select(r => _regionNames.GetValueOrDefault(r, r)))}." : "") +
                                           (front.Count > 0 ? $" Наступление: {string.Join("; ", front)}." : " Фронт стоит."), 12, UiTheme.TextSecondary));
             foreach (var n in war.News.Take(4))

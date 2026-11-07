@@ -74,6 +74,8 @@ public sealed class MapModeView
             var name = $"{string.Join(", ", war.Attackers.Take(2).Select(Name))} против {string.Join(", ", war.Defenders.Take(2).Select(Name))}";
             if (war.Front.TryGetValue(region.Id, out var progress) && progress > 0)
                 return (WarColors[2].Color, $"Война: {name}. Наступление на регион — {Fmt.Number(progress, 0)}%");
+            if (region.Country is { } taken && taken != controller)
+                return (WarColors[3].Color, $"Война: {name}. Занято: принадлежит стране «{Name(taken)}», контролирует «{Name(controller)}»");
             return (WarColors[side - 1].Color, $"Война: {name}");
         }
         if (region.Country is { } owner && owner != controller)

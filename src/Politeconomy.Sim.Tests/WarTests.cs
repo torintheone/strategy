@@ -93,6 +93,7 @@ public class WarTests
         var political = new MapModeView(data, Map, data.MapModes.Modes.First(m => m.Kind == "political"));
         Assert.Equal(political.PoliticalColor("RUS"), political.ColorOf(Map.Region(region.Id)!, snapshot));
         var wars = new MapModeView(data, Map, data.MapModes.Modes.First(m => m.Kind == "war"));
+        Assert.Equal("#8e6bb8", wars.ColorOf(Map.Region(region.Id)!, snapshot)); // «занято другой страной»
         Assert.NotEqual(wars.ColorOf(Map.Region(region.Id)!, snapshot), wars.ColorOf(Map.Region(world.Regions.First(r => r.Owner == "BRA").Id)!, snapshot));
         // Занятый регион кормит экономику занявшего, а не владельца.
         Assert.True(WarModel.Output(world, "UKR") < 1);
