@@ -8,7 +8,7 @@ namespace Politeconomy.Sim.Tests;
 
 public class DiplomacyTests
 {
-    static Simulation NewGame() => GameSetup.NewGame(TestData.Game, 3).Simulation;
+    static Simulation NewGame() => TestData.WithoutAi(3);
 
     [Fact]
     public void TradeFollowsSizeAndGeography()

@@ -62,6 +62,10 @@ public sealed class WorldDiplomacy
     /// <summary>Растёт при каждом пересчёте отношений: снимок для экрана копирует матрицу, только когда она изменилась.</summary>
     [JsonIgnore] public int Version { get; set; }
     [JsonIgnore] public (int Version, VoteTable Table)? VoteCache { get; set; }
+    /// <summary>Страна, чей ИИ сейчас делает ход, куда писать его сообщения и пора ли пересчитать мир после ходов.</summary>
+    [JsonIgnore] public string? Actor { get; set; }
+    [JsonIgnore] public Action<string>? OnNote { get; set; }
+    [JsonIgnore] public bool Dirty { get; set; }
 
     public CountryDiplomacy this[string country] => Countries[country];
 

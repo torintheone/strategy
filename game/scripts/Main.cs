@@ -784,6 +784,8 @@ public partial class Main : Node
                                     && snapshot.Countries["USA"].Stat("power_index") is { Value: > 99, Factors.Count: 4 }
                                     && snapshot.Countries["PRK"].Stat("sanctions_against") is { Value: > 150 }),
                     ("перевороты", snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 }),
+                    ("ИИ", snapshot.Countries.Values.Count(c => c.Ai is { Decisions.Count: > 0 }) > 50 && rus.Ai == null
+                           && snapshot.Countries["DEU"].Ai is { Priorities.Count: 4 }),
                 };
                 var failed = checks.Where(c => !c.Ok).Select(c => c.Name).ToList();
                 var appointed = failed.Count == 0;
@@ -1098,6 +1100,19 @@ public partial class Main : Node
             }),
             ("58_map_alliances", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "alliances"))),
             ("59_map_might", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "might"))),
+            // ИИ стран: один ход «все решают сразу» (сроки сброшены), досье Франции — приоритеты и решения с причинами.
+            ("60_ai_decisions", () =>
+            {
+                _host!.Post(w =>
+                {
+                    foreach (var ai in w.Ai!.Countries.Values)
+                        ai.Last.Clear();
+                    Politeconomy.Sim.Ai.AiModel.Month(w);
+                });
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "political"));
+                SelectCountry(_map.Country("FRA"));
+                _countryPanel.ScrollToSection("Решения правительства");
+            }),
         };
         if (_shotStep > 0)
         {

@@ -90,6 +90,8 @@ switch (command)
         return ScienceReport();
     case "diplomacy":
         return DiplomacyReport();
+    case "ai":
+        return AiReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -180,8 +182,43 @@ int Run(string mode)
     failures += EnergyCheck(world);
     failures += InfrastructureCheck(world);
     failures += ScienceCheck(world);
+    failures += CollapseCheck(world);
+    failures += AiCheck(world, years);
     Console.WriteLine(failures == 0 ? "Все проверки пройдены." : $"Нарушений: {failures}");
     return failures == 0 ? 0 : 1;
+}
+
+// ТЗ, этап 6: без игрока за 50 лет не меньше 90% стран не впадают в коллапс (Politeconomy.Sim.Ai.Collapse).
+static int CollapseCheck(World world)
+{
+    var collapsed = world.Countries.Select(c => (c.Id, Reasons: Politeconomy.Sim.Ai.Collapse.Reasons(world, c))).Where(x => x.Reasons.Count > 0).ToList();
+    var share = 1 - collapsed.Count / (double)world.Countries.Count;
+    Console.WriteLine($"Без коллапса {share:P0} стран (нужно не меньше 90%); в коллапсе {collapsed.Count}: " +
+                      string.Join("; ", collapsed.Select(x => $"{x.Id} ({string.Join(", ", x.Reasons)})")));
+    if (share >= 0.9)
+        return 0;
+    Console.Error.WriteLine("ОШИБКА в коллапсе больше 10% стран");
+    return 1;
+}
+
+// ИИ стран: решения есть у каждой страны и у каждого — причина; законы меняются в меру (в среднем не больше одного
+// в 4 года на страну), санкций не стало вдвое больше или меньше, чем на старте.
+static int AiCheck(World world, int years)
+{
+    var ai = world.Ai!;
+    var silent = ai.Countries.Where(kv => kv.Key != world.PlayerCountry && kv.Value.Decisions.Count == 0).Select(kv => kv.Key).ToList();
+    var unexplained = ai.Countries.Values.SelectMany(c => c.Decisions).Count(d => string.IsNullOrWhiteSpace(d.Why));
+    var laws = ai.Counts.GetValueOrDefault("law");
+    var perCountry = laws / (double)Math.Max(1, ai.Countries.Count) / Math.Max(1, years) * 4;
+    var sanctions = world.Diplomacy!.Sanctions.Count;
+    var start = world.Data.Diplomacy.Sanctions.Sum(s => s.By.Count);
+    Console.WriteLine("ИИ: решений " + string.Join(", ", ai.Counts.Select(kv => $"{kv.Key} {kv.Value}")) +
+                      $"; законов на страну за 4 года {perCountry:F2}; санкций {sanctions} (на старте {start}); договоров {world.Diplomacy.Treaties.Count}; " +
+                      $"резолюций {world.Diplomacy.Resolutions.Count}; без решений {silent.Count}, без причины {unexplained}.");
+    if (silent.Count == 0 && unexplained == 0 && perCountry <= 1 && sanctions >= start / 2 && sanctions <= start * 2)
+        return 0;
+    Console.Error.WriteLine("ОШИБКА ИИ ведёт себя странно: молчит, не объясняет решений или слишком часто меняет законы и санкции");
+    return 1;
 }
 
 // Наука в конце прогона: открыто от 4 до 16 технологий, которых на старте не знал никто; у типичной страны
@@ -689,6 +726,60 @@ int DiplomacyReport()
         foreach (var h in data.Diplomacy.History)
             Console.WriteLine($"  {h.A}–{h.B} {Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, h.A, h.B),4:F0}: " +
                               string.Join(", ", Politeconomy.Sim.Diplomacy.DiplomacyModel.Breakdown(world, h.A, h.B).Select(f => $"{f.Label} {f.Value:F0}")));
+    return 0;
+}
+
+// ИИ стран: сколько решений каждого вида, что изменилось в мире (законы, договоры, санкции, блоки), журналы решений
+// нескольких стран и страны в коллапсе.
+int AiReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    if (args.Contains("--no-ai"))
+        sim = new Simulation(world, GameSetup.Systems().Where(s => s is not Politeconomy.Sim.Ai.Systems.AiSystem));
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 10;
+    var startLaws = world.Countries.ToDictionary(c => c.Id, c => new Dictionary<string, string>(world.Laws![c.Id].Current), StringComparer.Ordinal);
+    var startSanctions = world.Diplomacy!.Sanctions.Count;
+    var startBlocs = world.Diplomacy.Blocs.ToDictionary(kv => kv.Key, kv => kv.Value.ToList());
+    var startGdp = WorldRealGdp(world);
+    var timer = Stopwatch.StartNew();
+    var worst = 0.0;
+    var end = world.Date.AddYears(runYears);
+    while (world.Date < end)
+    {
+        var t = timer.Elapsed.TotalMilliseconds;
+        sim.StepDay();
+        worst = Math.Max(worst, timer.Elapsed.TotalMilliseconds - t);
+    }
+    Console.WriteLine($"Прогон {runYears} лет за {timer.Elapsed.TotalSeconds:F1} с (самый долгий день {worst:F0} мс), мировой рост {(Math.Pow(WorldRealGdp(world) / startGdp, 1.0 / runYears) - 1) * 100:F2}% в год.");
+    Console.WriteLine("Решений ИИ: " + string.Join(", ", world.Ai!.Counts.Select(kv => $"{kv.Key} {kv.Value}")));
+    var changed = world.Countries.SelectMany(c => world.Laws![c.Id].Current.Where(kv => startLaws[c.Id][kv.Key] != kv.Value).Select(kv => (c.Id, Law: kv.Key, Variant: kv.Value))).ToList();
+    Console.WriteLine($"Законов изменено: {changed.Count} у {changed.Select(x => x.Id).Distinct().Count()} стран; чаще всего: " +
+                      string.Join(", ", changed.GroupBy(x => $"{x.Law}→{x.Variant}").OrderByDescending(g => g.Count()).Take(10).Select(g => $"{g.Key} {g.Count()}")));
+    var d = world.Diplomacy;
+    Console.WriteLine($"Договоров: {d.Treaties.Count} (" + string.Join(", ", d.Treaties.GroupBy(t => t.Type).Select(g => $"{g.Key} {g.Count()}")) + $"); санкций: было {startSanctions}, стало {d.Sanctions.Count}; " +
+                      $"санкции Совета: {string.Join(", ", d.CouncilSanctions)}; резолюций {d.Resolutions.Count}; программ Валютного совета {d.Programs.Count} (" +
+                      string.Join(", ", d.Programs.Select(kv => $"{kv.Key} {kv.Value.Status}")) + ")");
+    foreach (var (bloc, members) in d.Blocs)
+    {
+        var joined = members.Except(startBlocs.GetValueOrDefault(bloc) ?? []).ToList();
+        var left = (startBlocs.GetValueOrDefault(bloc) ?? []).Except(members).ToList();
+        if (joined.Count + left.Count > 0)
+            Console.WriteLine($"  {bloc}: вступили {string.Join(", ", joined)}; вышли {string.Join(", ", left)}");
+    }
+    var all = world.Countries.SelectMany(a => world.Countries.Where(b => string.CompareOrdinal(a.Id, b.Id) < 0)
+        .Select(b => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, a.Id, b.Id))).ToList();
+    Console.WriteLine($"Отношения: в среднем {all.Average():F1}, враждебных (< −30) {all.Count(x => x < -30)}, дружеских (> 30) {all.Count(x => x > 30)}");
+    var collapsed = world.Countries.Select(c => (c.Id, Reasons: Politeconomy.Sim.Ai.Collapse.Reasons(world, c))).Where(x => x.Reasons.Count > 0).ToList();
+    Console.WriteLine($"В коллапсе {collapsed.Count} из {world.Countries.Count}: " + string.Join("; ", collapsed.Select(x => $"{x.Id} ({string.Join(", ", x.Reasons)})")));
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "RUS", "CHN", "DEU", "VEN", "IRN"];
+    foreach (var id in ids)
+    {
+        var ai = world.Ai[id];
+        Console.WriteLine($"{world[id].Name}: приоритеты {Politeconomy.Sim.Ai.AiModel.Describe(ai)} ({string.Join("; ", ai.Why)})");
+        foreach (var decision in ai.Decisions.TakeLast(int.TryParse(Option("--last"), out var last) ? last : 8))
+            Console.WriteLine($"  {decision.Date:yyyy-MM} [{decision.Kind}] {decision.Text} — {decision.Why}");
+    }
     return 0;
 }
 

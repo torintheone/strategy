@@ -5,7 +5,7 @@ namespace Politeconomy.Sim.Tests;
 
 public class EnergyTests
 {
-    static Simulation NewGame() => GameSetup.NewGame(TestData.Game, 3).Simulation;
+    static Simulation NewGame() => TestData.WithoutAi(3);
 
     static int Plant(string id) => TestData.Game.Energy.Plants.ToList().FindIndex(p => p.Id == id);
 

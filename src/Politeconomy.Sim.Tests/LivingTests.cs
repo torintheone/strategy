@@ -5,7 +5,7 @@ namespace Politeconomy.Sim.Tests;
 
 public class LivingTests
 {
-    static Simulation NewGame() => GameSetup.NewGame(TestData.Game, 3).Simulation;
+    static Simulation NewGame() => TestData.WithoutAi(3);
 
     static int Item(string id) => TestData.Game.Budget.Spending.ToList().FindIndex(s => s.Id == id);
 

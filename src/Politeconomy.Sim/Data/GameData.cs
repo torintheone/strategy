@@ -123,6 +123,11 @@ public sealed class GameData
 
     static readonly DiplomacyBalance DefaultDiplomacy = new();
 
+    /// <summary>Коэффициенты ИИ стран; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public AiBalance AiBalance => Balance.Ai ?? DefaultAi;
+
+    static readonly AiBalance DefaultAi = new();
+
     /// <summary>Политика страны из data/politics.json.</summary>
     public PoliticsRecord PoliticsOf(string country) =>
         Politics.Countries.FirstOrDefault(c => c.Id == country) ?? throw new KeyNotFoundException($"Нет страны «{country}» в data/politics.json");

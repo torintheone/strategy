@@ -64,13 +64,13 @@ public static partial class DiplomacyModel
     /// </summary>
     public static bool RequestLoan(World world, string country)
     {
-        if (world.PlayerCountry != country)
+        if (!Acts(world, country))
             return false;
         var offer = FundOffer(world, country);
         var name = world.Data.Diplomacy.Fund.Name;
         if (!offer.Accepts)
         {
-            world.Log(country, "fund", $"{name} отказал в кредите. {offer.Reason}");
+            Note(world, country, "fund", $"{name} отказал в кредите. {offer.Reason}");
             return false;
         }
         var b = world.Data.DiplomacyBalance;
@@ -87,12 +87,12 @@ public static partial class DiplomacyModel
         var loan = Math.Min(program.Amount * e.NominalGdp, e.Debt);
         if (e.Debt > 0 && e.EffectiveRate > program.Rate)
             e.EffectiveRate = (e.EffectiveRate * e.Debt - (e.EffectiveRate - program.Rate) * loan) / e.Debt;
-        world.Log(country, "fund", $"{name} дал кредит: {offer.Reason}");
+        Note(world, country, "fund", $"{name} дал кредит: {offer.Reason}");
         Refresh(world);
         return true;
     }
 
-    /// <summary>Каждый месяц: после срока дефицит выше цели — программа прекращена; программа дошла до конца — выполнена.</summary>
+    /// <summary>Каждый месяц: программа дошла до конца — выполнена; в январе после срока дефицит выше цели — прекращена.</summary>
     static void ReviewPrograms(World world)
     {
         var b = world.Data.DiplomacyBalance;
@@ -101,7 +101,8 @@ public static partial class DiplomacyModel
             if (program.Status != "active" || world.ById(country) is null)
                 continue;
             var deficit = -world.Economy![country].BalanceRatio * 100;
-            if (world.Date >= program.Deadline && deficit > b.FundDeficit + 1e-9)
+            // Условие проверяется по итогам года — в январе, после срока.
+            if (world.Date >= program.Deadline && world.Date.Month == 1 && deficit > b.FundDeficit + 1e-9)
                 Fail(world, country, program, $"дефицит {Fmt.Number(deficit, 1)}% ВВП вместо {Fmt.Number(b.FundDeficit, 0)}%");
             else if (world.Date >= program.Until)
             {

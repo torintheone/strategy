@@ -400,7 +400,7 @@ public static partial class DiplomacyModel
     }
 
     /// <summary>Вес партнёра для страны: его ВВП / сумма двух ВВП (на старте).</summary>
-    static double Weight(World world, string country, string partner)
+    public static double Weight(World world, string country, string partner)
     {
         double Gdp(string id) => Math.Max(1e6, world[id].Info.Stats.GetValueOrDefault("gdp_usd")?.Value ?? 1e9);
         return Gdp(partner) / (Gdp(country) + Gdp(partner));
@@ -425,6 +425,9 @@ public static partial class DiplomacyModel
             c.Mood = new double[ClassIds.Count];
         Array.Clear(c.Mood);
         c.Effects.Clear();
+        // Защита инвестиций и безвизовый режим со многими партнёрами — не больше, чем с одним, у кого весь мир:
+        // сумма весов партнёров не больше 1.
+        double investment = 0, visa = 0;
         foreach (var t in d.Treaties.Where(t => t.Involves(country.Id)))
         {
             var partner = t.Other(country.Id);
@@ -437,12 +440,10 @@ public static partial class DiplomacyModel
                     c.Mood[ClassIds.Farmers] -= b.ImportMood * share;
                     break;
                 case "investment":
-                    Add(c, "potential_growth", b.InvestmentGrowth * weight);
+                    investment += weight;
                     break;
                 case "visa_free":
-                    Add(c, "potential_growth", b.VisaGrowth * weight);
-                    Add(c, "migration", b.VisaMigration * weight);
-                    c.Mood[ClassIds.Unskilled] -= b.VisaMood * weight;
+                    visa += weight;
                     break;
                 case "energy":
                     if (EnergyExporter(world, country.Id))
@@ -451,6 +452,15 @@ public static partial class DiplomacyModel
                         c.Effects["fuel_cost"] = -b.EnergyFuel;
                     break;
             }
+        }
+        if (investment > 0)
+            Add(c, "potential_growth", b.InvestmentGrowth * Math.Min(1, investment));
+        if (visa > 0)
+        {
+            visa = Math.Min(1, visa);
+            Add(c, "potential_growth", b.VisaGrowth * visa);
+            Add(c, "migration", b.VisaMigration * visa);
+            c.Mood[ClassIds.Unskilled] -= b.VisaMood * visa;
         }
         // Блоки, санкции и договоры о свободной торговле — через доступ к рынкам, в сравнении со стартом.
         var i = d.Index[country.Id];
@@ -555,17 +565,17 @@ public static partial class DiplomacyModel
     /// <summary>Предложить договор (игрок): партнёр соглашается, если отношения достаточно хорошие.</summary>
     public static bool Propose(World world, string a, string b, string type)
     {
-        if (world.PlayerCountry != a || a == b || world.ById(b) is null)
+        if (!Acts(world, a) || a == b || world.ById(b) is null)
             return false;
         var (accepts, reason) = Acceptance(world, a, b, type);
         var name = world.Data.Diplomacy.Treaties.FirstOrDefault(t => t.Id == type)?.Name ?? type;
         if (!accepts)
         {
-            world.Log(a, "diplomacy", $"{world[b].Name} отказывается: «{name}». {reason}");
+            Note(world, a, "diplomacy", $"{world[b].Name} отказывается: «{name}». {reason}");
             return false;
         }
         world.Diplomacy!.Treaties.Add(new Treaty(a, b, type, world.Date));
-        world.Log(a, "diplomacy", $"Подписан договор со {Instrumental(world, b)}: «{name}».");
+        Note(world, a, "diplomacy", $"Подписан договор со {Instrumental(world, b)}: «{name}».");
         Refresh(world);
         return true;
     }
@@ -573,7 +583,7 @@ public static partial class DiplomacyModel
     /// <summary>Расторгнуть договор (игрок): отношения портятся.</summary>
     public static bool Cancel(World world, string a, string b, string type)
     {
-        if (world.PlayerCountry != a)
+        if (!Acts(world, a))
             return false;
         var d = world.Diplomacy!;
         var treaty = d.Treaties.FirstOrDefault(t => t.Type == type && WorldDiplomacy.Key(t.A, t.B) == WorldDiplomacy.Key(a, b));
@@ -581,7 +591,7 @@ public static partial class DiplomacyModel
             return false;
         d.Treaties.Remove(treaty);
         Remember(world, a, b, -world.Data.DiplomacyBalance.CancelRelations);
-        world.Log(a, "diplomacy", $"Расторгнут договор со {Instrumental(world, b)}: «{world.Data.Diplomacy.Treaties.FirstOrDefault(t => t.Id == type)?.Name ?? type}».");
+        Note(world, a, "diplomacy", $"Расторгнут договор со {Instrumental(world, b)}: «{world.Data.Diplomacy.Treaties.FirstOrDefault(t => t.Id == type)?.Name ?? type}».");
         Refresh(world);
         return true;
     }
@@ -590,7 +600,7 @@ public static partial class DiplomacyModel
     public static bool Visit(World world, string a, string b)
     {
         var bal = world.Data.DiplomacyBalance;
-        if (world.PlayerCountry != a || a == b || world.ById(b) is null || !CanVisit(world, a, b))
+        if (!Acts(world, a) || a == b || world.ById(b) is null || !CanVisit(world, a, b))
             return false;
         var relations = Relations(world, a, b);
         world.Diplomacy!.Visits[WorldDiplomacy.Key(a, b)] = world.Date;
@@ -598,7 +608,7 @@ public static partial class DiplomacyModel
         var criticism = relations < bal.VisitCriticismBelow && world.Government?.Countries.GetValueOrDefault(a) is { } g;
         if (criticism)
             world.Government![a].Leader.Popularity = Math.Clamp(world.Government[a].Leader.Popularity - bal.VisitCriticism, 1, 99);
-        world.Log(a, "diplomacy", $"Визит главы в {world[b].Name}: отношения улучшились." + (criticism ? " Дома визит к недругу критикуют: популярность главы упала." : ""));
+        Note(world, a, "diplomacy", $"Визит главы в страну «{world[b].Name}»: отношения улучшились." + (criticism ? " Дома визит к недругу критикуют: популярность главы упала." : ""));
         Refresh(world);
         return true;
     }
@@ -611,7 +621,7 @@ public static partial class DiplomacyModel
     public static bool Aid(World world, string a, string b)
     {
         var bal = world.Data.DiplomacyBalance;
-        if (world.PlayerCountry != a || a == b || world.ById(b) is null)
+        if (!Acts(world, a) || a == b || world.ById(b) is null)
             return false;
         var (ea, eb) = (world.Economy![a], world.Economy![b]);
         var usd = bal.AidShare / 100 * ea.GdpUsd;
@@ -620,7 +630,7 @@ public static partial class DiplomacyModel
         eb.Debt = Math.Max(0, eb.Debt - share * eb.NominalGdp);
         var gain = Math.Min(bal.AidMax, bal.AidRelations * Math.Log(1 + share * 100));
         Remember(world, a, b, gain);
-        world.Log(a, "diplomacy", $"Помощь {Dative(world, b)}: {Fmt.Number(bal.AidShare, 2)}% нашего ВВП ({Fmt.Number(share * 100, 2)}% их ВВП). Отношения {Fmt.Signed(gain, 0)}.");
+        Note(world, a, "diplomacy", $"Помощь {Dative(world, b)}: {Fmt.Number(bal.AidShare, 2)}% нашего ВВП ({Fmt.Number(share * 100, 2)}% их ВВП). Отношения {Fmt.Signed(gain, 0)}.");
         Refresh(world);
         return true;
     }
@@ -628,10 +638,10 @@ public static partial class DiplomacyModel
     /// <summary>Выслать дипломатов (игрок): сигнал недовольства, отношения резко хуже.</summary>
     public static bool Expel(World world, string a, string b)
     {
-        if (world.PlayerCountry != a || a == b || world.ById(b) is null)
+        if (!Acts(world, a) || a == b || world.ById(b) is null)
             return false;
         Remember(world, a, b, -world.Data.DiplomacyBalance.ExpelRelations);
-        world.Log(a, "diplomacy", $"Высланы дипломаты: {world[b].Name}. Отношения резко ухудшились.");
+        Note(world, a, "diplomacy", $"Высланы дипломаты: {world[b].Name}. Отношения резко ухудшились.");
         Refresh(world);
         return true;
     }
@@ -659,9 +669,55 @@ public static partial class DiplomacyModel
         d.Memory[key] = d.Memory.GetValueOrDefault(key) + value;
     }
 
+    /// <summary>
+    /// Действует ли страна: игрок за свою страну или ИИ этой страны в свой ход (<see cref="WorldDiplomacy.Actor"/>).
+    /// </summary>
+    static bool Acts(World world, string country) => world.PlayerCountry == country || world.Diplomacy?.Actor == country;
+
+    /// <summary>Сообщение о действии: у игрока — в журнал, у ИИ — в его журнал решений.</summary>
+    static void Note(World world, string country, string kind, string text)
+    {
+        if (world.Diplomacy is { Actor: { } actor, OnNote: { } note } && actor == country && world.PlayerCountry != country)
+            note(text);
+        else
+            world.Log(country, kind, text);
+    }
+
+    /// <summary>
+    /// Ход ИИ страны: действия разрешены, сообщения идут в note, пересчёт откладывается до конца хода всех стран
+    /// (<see cref="Flush"/>) — иначе сотни действий в месяц пересчитывали бы мир сотни раз.
+    /// </summary>
+    public static void BeginTurn(World world, string country, Action<string> note)
+    {
+        var d = world.Diplomacy!;
+        d.Actor = country;
+        d.OnNote = note;
+    }
+
+    public static void EndTurn(World world)
+    {
+        var d = world.Diplomacy!;
+        d.Actor = null;
+        d.OnNote = null;
+    }
+
+    /// <summary>Пересчитать мир, если за ходы ИИ что-то изменилось.</summary>
+    public static void Flush(World world)
+    {
+        if (world.Diplomacy is not { Dirty: true } d)
+            return;
+        d.Dirty = false;
+        Refresh(world);
+    }
+
     /// <summary>После действия игрока — сразу пересчитать торговлю, отношения и поправки (не ждать конца месяца).</summary>
     static void Refresh(World world)
     {
+        if (world.Diplomacy!.Actor != null)
+        {
+            world.Diplomacy.Dirty = true;
+            return;
+        }
         RecomputeTrade(world);
         Recompute(world);
         foreach (var country in world.Countries)

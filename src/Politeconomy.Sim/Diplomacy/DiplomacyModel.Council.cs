@@ -66,6 +66,8 @@ public static partial class DiplomacyModel
             return (false, $"Следующую резолюцию можно вынести с {Fmt.Date(last.AddMonths(data.DiplomacyBalance.CouncilMonths))}.");
         return type switch
         {
+            "condemn" when d.Resolutions.Any(r => r is { Type: "condemn", Passed: true } && r.Target == target && r.Date.AddMonths(24) > world.Date)
+                => (false, "Совет уже осудил эту страну меньше двух лет назад."),
             "sanctions" when UnderCouncilSanctions(world, target) => (false, "Страна уже под санкциями Совета."),
             "lift" when !UnderCouncilSanctions(world, target) => (false, "Санкций Совета против страны нет."),
             "aid" when world[target].Income is not (IncomeGroup.Low or IncomeGroup.LowerMiddle) => (false, "Помощь — только бедным странам."),
@@ -76,7 +78,7 @@ public static partial class DiplomacyModel
     /// <summary>Вынести резолюцию (игрок): члены голосуют; если принята — она действует.</summary>
     public static bool ProposeResolution(World world, string proposer, string type, string target)
     {
-        if (world.PlayerCountry != proposer || !CanPropose(world, proposer, type, target).Allowed)
+        if (!Acts(world, proposer) || !CanPropose(world, proposer, type, target).Allowed)
             return false;
         var data = world.Data;
         var b = data.DiplomacyBalance;
@@ -92,7 +94,7 @@ public static partial class DiplomacyModel
         if (!vote.Passed)
         {
             var why = vote.Vetoes.Count > 0 ? $"вето — {string.Join(", ", vote.Vetoes.Select(v => world[v].Name))}" : "не хватило голосов";
-            world.Log(proposer, "council", $"{data.Diplomacy.Council.Name}: резолюция {title} не принята ({why}): {tally}.");
+            Note(world, proposer, "council", $"{data.Diplomacy.Council.Name}: резолюция {title} не принята ({why}): {tally}.");
             Refresh(world);
             return false;
         }
@@ -112,7 +114,7 @@ public static partial class DiplomacyModel
                 CouncilAid(world, target, vote.YesVoters);
                 break;
         }
-        world.Log(proposer, "council", $"{data.Diplomacy.Council.Name}: резолюция {title} принята: {tally}.");
+        Note(world, proposer, "council", $"{data.Diplomacy.Council.Name}: резолюция {title} принята: {tally}.");
         Refresh(world);
         return true;
     }

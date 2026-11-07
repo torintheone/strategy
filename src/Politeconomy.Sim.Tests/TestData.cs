@@ -15,6 +15,10 @@ public static class TestData
     });
 
     public static GameData Game => Data.Value;
+
+    /// <summary>Новая партия без ИИ стран — для опытов над одной механикой, где решения правительств мешали бы сравнению.</summary>
+    public static Simulation WithoutAi(ulong seed) =>
+        new(GameSetup.NewGame(Game, seed).Simulation.World, GameSetup.Systems().Where(s => s is not Ai.Systems.AiSystem));
 }
 
 /// <summary>Тестовая система: случайно меняет население — проверяет, что случайность воспроизводима.</summary>

@@ -8,7 +8,7 @@ public class EducationTests
 {
     const string Id = "DEU";
 
-    static Simulation NewGame() => GameSetup.NewGame(TestData.Game, 3).Simulation;
+    static Simulation NewGame() => TestData.WithoutAi(3);
 
     static int Education => TestData.Game.Budget.Spending.ToList().FindIndex(s => s.Id == "education");
 

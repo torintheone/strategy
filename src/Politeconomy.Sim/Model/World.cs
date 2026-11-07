@@ -129,6 +129,9 @@ public sealed class World
     /// <summary>Дипломатия: договоры, память о событиях, отношения и торговля пар; создаётся <see cref="Diplomacy.DiplomacyModel.Setup"/>.</summary>
     public Diplomacy.WorldDiplomacy? Diplomacy { get; set; }
 
+    /// <summary>ИИ правительств стран без игрока: приоритеты, сроки решений, журнал; создаётся <see cref="Ai.AiModel.Setup"/>.</summary>
+    public Ai.WorldAi? Ai { get; set; }
+
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 

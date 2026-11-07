@@ -48,6 +48,8 @@ public partial class CountryPanel : GlassPanel
     AgePyramid _pyramid = null!;
     ClassTable _classes = null!;
     ScrollContainer _scroll = null!;
+    VBoxContainer _decisions = null!;
+    string? _decisionsShown;
     readonly Dictionary<string, Control> _sectionHeaders = new();
     string? _countryId;
     string? _regionId;
@@ -182,6 +184,14 @@ public partial class CountryPanel : GlassPanel
                 body.AddChild(_classes);
             }
         }
+        // Решения правительства (ИИ): приоритеты и последние решения с причинами — для стран без игрока.
+        body.AddChild(new HSeparator());
+        var decisionsHeader = UiTheme.Text("РЕШЕНИЯ ПРАВИТЕЛЬСТВА", 12, UiTheme.MapCountryFont, UiTheme.Accent);
+        body.AddChild(decisionsHeader);
+        _sectionHeaders["Решения правительства"] = decisionsHeader;
+        _decisions = new VBoxContainer();
+        _decisions.AddThemeConstantOverride("separation", 4);
+        body.AddChild(_decisions);
         body.AddChild(new HSeparator());
         _regionsHeader = UiTheme.Text("", 12, UiTheme.SemiBold, UiTheme.TextMuted);
         body.AddChild(_regionsHeader);
@@ -358,6 +368,7 @@ public partial class CountryPanel : GlassPanel
 
         _pyramid.Show(country.Ages);
         _classes.Show(country.Classes);
+        ShowDecisions(country, isPlayer);
         foreach (var (id, (row, value)) in _rows)
         {
             var def = _data.Indicator(id);
@@ -365,5 +376,47 @@ public partial class CountryPanel : GlassPanel
             value.Text = stat == null ? "—" : Fmt.Value(def.Format, stat.Value, def.Unit);
             row.TooltipText = Explain.Stat(def, stat);
         }
+    }
+
+    static readonly string[] PriorityNames = ["рост", "стабильность", "сила", "переизбрание"];
+
+    /// <summary>Приоритеты правительства (почему — в подсказке) и его последние решения с причинами; перерисовка — только когда решения новые.</summary>
+    void ShowDecisions(CountrySnapshot country, bool isPlayer)
+    {
+        var ai = country.Ai;
+        var key = $"{country.Id}|{isPlayer}|{ai?.Decisions.Count}|{ai?.Decisions.FirstOrDefault()?.Date}|{ai?.Decisions.FirstOrDefault()?.Text}|" +
+                  string.Join(",", ai?.Priorities.Select(p => Math.Round(p, 2)) ?? []);
+        if (key == _decisionsShown)
+            return;
+        _decisionsShown = key;
+        foreach (var child in _decisions.GetChildren())
+            child.QueueFree();
+        if (isPlayer || ai == null)
+        {
+            _decisions.AddChild(Wrapped("Страной управляете вы.", 13, UiTheme.TextSecondary));
+            return;
+        }
+        var priorities = Wrapped("Приоритеты: " + string.Join(", ", ai.Priorities.Select((w, k) => (w, k)).OrderByDescending(x => x.w)
+            .Select(x => $"{PriorityNames[x.k]} {Fmt.Number(x.w * 100, 0)}%")) + ".", 13, UiTheme.TextPrimary);
+        priorities.TooltipText = ai.Why.Count > 0 ? "Почему: " + string.Join("; ", ai.Why) + "." : "Обычное правительство без особых пристрастий.";
+        priorities.MouseFilter = MouseFilterEnum.Stop;
+        _decisions.AddChild(priorities);
+        if (ai.Decisions.Count == 0)
+            _decisions.AddChild(Wrapped("Решений пока не было.", 12, UiTheme.TextMuted));
+        foreach (var d in ai.Decisions)
+        {
+            var line = Wrapped($"{Fmt.MonthYear(d.Date)} · {d.Text}", 12, UiTheme.TextSecondary);
+            line.TooltipText = "Почему: " + d.Why;
+            line.MouseFilter = MouseFilterEnum.Stop;
+            _decisions.AddChild(line);
+            _decisions.AddChild(Wrapped(d.Why, 11, UiTheme.TextMuted));
+        }
+    }
+
+    static Label Wrapped(string text, int size, Color color)
+    {
+        var label = UiTheme.Text(text, size, null, color);
+        label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        return label;
     }
 }

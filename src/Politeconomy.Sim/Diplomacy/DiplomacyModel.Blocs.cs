@@ -67,19 +67,19 @@ public static partial class DiplomacyModel
     /// <summary>Вступить в блок (игрок): члены голосуют по отношениям.</summary>
     public static bool Join(World world, string country, string blocId)
     {
-        if (world.PlayerCountry != country || world.Data.Diplomacy.Bloc(blocId) is not { } bloc)
+        if (!Acts(world, country) || world.Data.Diplomacy.Bloc(blocId) is not { } bloc)
             return false;
         var (accepts, reason) = JoinAcceptance(world, country, blocId);
         if (!accepts)
         {
-            world.Log(country, "diplomacy", $"Заявка на вступление в «{bloc.Name}» отклонена. {reason}");
+            Note(world, country, "diplomacy", $"Заявка на вступление в «{bloc.Name}» отклонена. {reason}");
             return false;
         }
         var d = world.Diplomacy!;
         var members = d.Blocs.TryGetValue(blocId, out var list) ? list : d.Blocs[blocId] = [];
         members.Add(country);
         members.Sort(StringComparer.Ordinal);
-        world.Log(country, "diplomacy", $"Страна вступила в «{bloc.Name}»." + (bloc.Military
+        Note(world, country, "diplomacy", $"Страна вступила в «{bloc.Name}»." + (bloc.Military
             ? " Теперь мы защищаем союзников, а они — нас."
             : " Торговля с членами блока станет свободнее."));
         Refresh(world);
@@ -89,13 +89,13 @@ public static partial class DiplomacyModel
     /// <summary>Выйти из блока (игрок): торговля с членами падает, отношения с ними портятся.</summary>
     public static bool Leave(World world, string country, string blocId)
     {
-        if (world.PlayerCountry != country || world.Data.Diplomacy.Bloc(blocId) is not { } bloc || !InBloc(world, blocId, country))
+        if (!Acts(world, country) || world.Data.Diplomacy.Bloc(blocId) is not { } bloc || !InBloc(world, blocId, country))
             return false;
         var members = world.Diplomacy!.Blocs[blocId];
         members.Remove(country);
         foreach (var m in members)
             Remember(world, country, m, -world.Data.DiplomacyBalance.LeaveRelations);
-        world.Log(country, "diplomacy", $"Страна вышла из «{bloc.Name}»: отношения с его членами ухудшились.");
+        Note(world, country, "diplomacy", $"Страна вышла из «{bloc.Name}»: отношения с его членами ухудшились.");
         Refresh(world);
         return true;
     }

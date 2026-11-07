@@ -21,6 +21,10 @@ public static partial class DiplomacyModel
     public static IEnumerable<Sanction> SanctionsAgainst(World world, string target) =>
         world.Diplomacy?.Sanctions.Where(s => s.Target == target) ?? [];
 
+    /// <summary>Санкции, которые ввела страна.</summary>
+    public static IEnumerable<Sanction> SanctionsBy(World world, string by) =>
+        world.Diplomacy?.Sanctions.Where(s => s.By == by) ?? [];
+
     public static bool UnderCouncilSanctions(World world, string country) =>
         world.Diplomacy?.CouncilSanctions.Contains(country) == true;
 
@@ -32,19 +36,20 @@ public static partial class DiplomacyModel
     /// </summary>
     public static bool Impose(World world, string by, string target, string level)
     {
-        if (world.PlayerCountry != by || by == target || world.ById(target) is null || !SanctionLevels.Contains(level)
+        if (!Acts(world, by) || by == target || world.ById(target) is null || !SanctionLevels.Contains(level)
             || SanctionLevel(world, by, target) == level)
             return false;
         var d = world.Diplomacy!;
         d.Sanctions.RemoveAll(s => s.By == by && s.Target == target);
         d.Sanctions.Add(new Sanction(by, target, level, world.Date));
         var text = $"Введены {SanctionName(level)} санкции против страны «{world[target].Name}»: торговля с ней сократится, ей труднее занимать.";
-        if (SanctionLevel(world, target, by) == null)
+        // Цель отвечает сама, если это не страна игрока (игрок решает за себя).
+        if (SanctionLevel(world, target, by) == null && target != world.PlayerCountry)
         {
             d.Sanctions.Add(new Sanction(target, by, "partial", world.Date) { Response = true });
             text += " В ответ она ввела частичные санкции против нас.";
         }
-        world.Log(by, "diplomacy", text);
+        Note(world, by, "diplomacy", text);
         Refresh(world);
         return true;
     }
@@ -52,12 +57,12 @@ public static partial class DiplomacyModel
     /// <summary>Снять санкции (игрок); цель снимает и свои ответные.</summary>
     public static bool Lift(World world, string by, string target)
     {
-        if (world.PlayerCountry != by || SanctionLevel(world, by, target) == null)
+        if (!Acts(world, by) || SanctionLevel(world, by, target) == null)
             return false;
         var d = world.Diplomacy!;
         d.Sanctions.RemoveAll(s => s.By == by && s.Target == target);
         var answered = d.Sanctions.RemoveAll(s => s.By == target && s.Target == by && s.Response) > 0;
-        world.Log(by, "diplomacy", $"Сняты санкции против страны «{world[target].Name}»." + (answered ? " Она отменила ответные." : ""));
+        Note(world, by, "diplomacy", $"Сняты санкции против страны «{world[target].Name}»." + (answered ? " Она отменила ответные." : ""));
         Refresh(world);
         return true;
     }

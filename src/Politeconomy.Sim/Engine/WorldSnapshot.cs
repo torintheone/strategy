@@ -71,7 +71,10 @@ public sealed class WorldSnapshot
             var science = world.Science?.Countries.GetValueOrDefault(c.Id) is { } sc ? ScienceSnapshot.Capture(world, c, sc) : null;
             countries[c.Id] = new CountrySnapshot(c.Id, c.System, c.Income, new Dictionary<string, StatValue>(c.Stats, StringComparer.Ordinal),
                 ages, classes, government, c.Regime, laws, history, spending, politics, programs, energy, infrastructure, science,
-                world.Diplomacy is null ? null : Sim.Diplomacy.DiplomacyModel.BlocsOf(world, c.Id).Select(b => b.Id).ToList());
+                world.Diplomacy is null ? null : Sim.Diplomacy.DiplomacyModel.BlocsOf(world, c.Id).Select(b => b.Id).ToList(),
+                c.Id != world.PlayerCountry && world.Ai?.Countries.GetValueOrDefault(c.Id) is { } ai
+                    ? new AiSnapshot(ai.Priorities.ToArray(), ai.Why.ToList(), ai.Decisions.AsEnumerable().Reverse().Take(8).ToList())
+                    : null);
         }
         var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var r in world.Regions)
@@ -260,10 +263,14 @@ public sealed record CountrySnapshot(
     EnergySnapshot? Energy = null,
     InfrastructureSnapshot? Infrastructure = null,
     ScienceSnapshot? Science = null,
-    IReadOnlyList<string>? Blocs = null)
+    IReadOnlyList<string>? Blocs = null,
+    AiSnapshot? Ai = null)
 {
     public StatValue? Stat(string id) => Stats.GetValueOrDefault(id);
 }
+
+/// <summary>ИИ правительства: приоритеты (рост, стабильность, сила, переизбрание), почему они такие, последние решения (новые первыми).</summary>
+public sealed record AiSnapshot(IReadOnlyList<double> Priorities, IReadOnlyList<string> Why, IReadOnlyList<Ai.AiDecision> Decisions);
 
 /// <summary>
 /// Энергосистема в снимке: спрос и возможная выработка (ТВт·ч в год), нехватка (доля спроса), импорт (ТВт·ч, минус —
