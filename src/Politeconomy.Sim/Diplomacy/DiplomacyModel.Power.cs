@@ -18,7 +18,6 @@ public static partial class DiplomacyModel
         var data = world.Data;
         var b = data.DiplomacyBalance;
         var n = d.Ids.Length;
-        var defense = data.Budget.Spending.Select((s, k) => (s, k)).FirstOrDefault(x => x.s.Id == "defense").k;
         var nuclear = data.Diplomacy.Nuclear.ToHashSet(StringComparer.Ordinal);
         var permanent = Permanent(world).ToHashSet(StringComparer.Ordinal);
         var economy = new double[n];
@@ -30,8 +29,7 @@ public static partial class DiplomacyModel
             var id = d.Ids[i];
             var e = world.Economy![id];
             economy[i] = Math.Max(0, e.GdpUsd);
-            var spending = defense < e.Spending.Length ? Math.Max(0, e.Spending[defense]) / Math.Max(1e-9, e.ExchangeRate) : 0;
-            military[i] = spending * Math.Max(0.1, 1 + LawModel.Effect(world, id, "military_power")) * (nuclear.Contains(id) ? b.Nuclear : 1);
+            military[i] = Military.WarModel.Strength(world, id) * (nuclear.Contains(id) ? b.Nuclear : 1);
             technology[i] = (world.Science?.Countries.GetValueOrDefault(id)?.Points ?? 0) / 100 * economy[i];
         }
         // Влияние: хорошие отношения, взвешенные по √(наш ВВП × их ВВП) — дружба крупной страны весит больше.

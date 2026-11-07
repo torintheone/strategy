@@ -102,7 +102,7 @@ public static class HealthModel
         // Старение: пенсий платят больше, когда растёт доля людей 65+.
         var elderly = d.Total > 0 ? d.Elderly / d.Total : h.Elderly0;
         var social = SpendingPlan(world, country, "social");
-        h.Effects["spending.social"] = social * (Math.Pow(elderly / h.Elderly0, b.PensionAging) - 1) * 100;
+        h.Effects["spending.social"] = social * (Math.Pow(Math.Max(elderly, b.PensionFloor) / Math.Max(h.Elderly0, b.PensionFloor), b.PensionAging) - 1) * 100;
         Publish(world, country, h);
     }
 

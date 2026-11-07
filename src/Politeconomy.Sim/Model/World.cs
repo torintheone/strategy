@@ -132,6 +132,9 @@ public sealed class World
     /// <summary>ИИ правительств стран без игрока: приоритеты, сроки решений, журнал; создаётся <see cref="Ai.AiModel.Setup"/>.</summary>
     public Ai.WorldAi? Ai { get; set; }
 
+    /// <summary>Армии, войны и перемирия; создаётся <see cref="Military.WarModel.Setup"/>.</summary>
+    public Military.WorldWar? War { get; set; }
+
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 

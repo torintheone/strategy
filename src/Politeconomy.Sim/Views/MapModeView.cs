@@ -43,6 +43,8 @@ public sealed class MapModeView
             return _palettes.Territory;
         if (Mode.Kind == "elections")
             return ElectionWinner(region, snapshot)?.Color ?? _palettes.NoData;
+        if (Mode.Kind == "war")
+            return WarState(region, snapshot, controller).Color;
         return Mode.Kind switch
         {
             "political" => PoliticalColor(controller),
@@ -55,6 +57,31 @@ public sealed class MapModeView
             _ => _palettes.NoData,
         };
     }
+
+    static readonly (string Color, string Text)[] WarColors =
+    [
+        ("#c8553d", "нападающие"), ("#4f7fd6", "обороняющиеся"), ("#f2b84b", "идёт наступление"), ("#8e6bb8", "занято другой страной"),
+    ];
+
+    /// <summary>Регион в режиме «Войны»: наступление на него, сторона войны, занят ли, — цвет и подпись.</summary>
+    (string Color, string Text) WarState(MapRegion region, WorldSnapshot snapshot, string controller)
+    {
+        foreach (var war in snapshot.Wars.Active)
+        {
+            var side = war.Side(controller);
+            if (side == 0)
+                continue;
+            var name = $"{string.Join(", ", war.Attackers.Take(2).Select(Name))} против {string.Join(", ", war.Defenders.Take(2).Select(Name))}";
+            if (war.Front.TryGetValue(region.Id, out var progress) && progress > 0)
+                return (WarColors[2].Color, $"Война: {name}. Наступление на регион — {Fmt.Number(progress, 0)}%");
+            return (WarColors[side - 1].Color, $"Война: {name}");
+        }
+        if (region.Country is { } owner && owner != controller)
+            return (WarColors[3].Color, $"Занято: принадлежит стране «{Name(owner)}», контролирует «{Name(controller)}»");
+        return (_palettes.NoData, "Мир");
+    }
+
+    string Name(string id) => _data.Countries.Countries.FirstOrDefault(c => c.Id == id)?.Name ?? id;
 
     /// <summary>Блоки страны того вида, что показывает режим (торговые или военные), в порядке данных.</summary>
     IEnumerable<BlocRecord> Blocs(CountrySnapshot country) =>
@@ -123,6 +150,8 @@ public sealed class MapModeView
                     .ToList();
             case "income":
                 return _data.MapModes.IncomeGroups.Select(g => new LegendEntry(g.Color, g.Name)).ToList();
+            case "war":
+                return WarColors.Select(c => new LegendEntry(c.Color, c.Text)).Append(new LegendEntry(_palettes.NoData, "мир")).ToList();
             case "blocs" or "alliances":
                 return _data.Diplomacy.Blocs.Where(b => b.Military == (Mode.Kind == "alliances"))
                     .Select(b => new LegendEntry(b.Color, b.Name))
@@ -161,6 +190,8 @@ public sealed class MapModeView
         var controller = ControllerOf(region, snapshot);
         if (controller is null || !snapshot.Countries.TryGetValue(controller, out var country))
             return "";
+        if (Mode.Kind == "war")
+            return WarState(region, snapshot, controller).Text;
         if (Mode.Kind == "elections")
             return ElectionWinner(region, snapshot) is { } winner && region.Country is { } owner
                 ? $"Выборы {snapshot.Countries[owner].Politics!.LastElection!.Date.Year}: в регионе победила {Fmt.Quote(winner.Name)}"

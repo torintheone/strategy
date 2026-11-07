@@ -13,6 +13,7 @@ public static class Supply
         var energy = world.Energy?.Countries.GetValueOrDefault(country)?.Cut;
         var infrastructure = world.Infrastructure?.Countries.GetValueOrDefault(country)?.Cut;
         return (energy != null && industry < energy.Length ? 1 - energy[industry] : 1)
-               * (infrastructure != null && industry < infrastructure.Length ? 1 - infrastructure[industry] : 1);
+               * (infrastructure != null && industry < infrastructure.Length ? 1 - infrastructure[industry] : 1)
+               * Military.WarModel.Output(world, country);
     }
 }

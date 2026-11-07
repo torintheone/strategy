@@ -25,6 +25,8 @@ public sealed class WorldSnapshot
     public IReadOnlyList<JournalEntry> Journal { get; init; } = [];
     /// <summary>Дипломатия страны игрока: отношения, торговля и договоры с каждой страной; null, если игрок не выбрал страну.</summary>
     public DiplomacySnapshot? Diplomacy { get; init; }
+    /// <summary>Войны, перемирия и законченные войны (последние) — для карты и экрана дипломатии.</summary>
+    public WarsSnapshot Wars { get; init; } = WarsSnapshot.Empty;
     /// <summary>Доля мира (по ВВП по ППС), которая освоила каждую технологию.</summary>
     public IReadOnlyDictionary<string, double> Adoption { get; init; } = new Dictionary<string, double>();
     /// <summary>Валюта каждой страны: код, режим курса, якорь и сколько стран ею пользуются.</summary>
@@ -106,6 +108,7 @@ public sealed class WorldSnapshot
             LastReign = world.LastReign,
             Adoption = world.Science?.Adoption.ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal) ?? new Dictionary<string, double>(),
             Diplomacy = world.PlayerCountry is { } me && world.Diplomacy != null && world.ById(me) != null ? DiplomacySnapshot.Capture(world, me) : null,
+            Wars = WarsSnapshot.Capture(world),
             Journal = world.Journal.Count <= JournalShown ? world.Journal.ToList() : world.Journal.GetRange(world.Journal.Count - JournalShown, JournalShown),
             Version = version,
         };
@@ -172,9 +175,10 @@ public sealed record DiplomacySnapshot(string Country, IReadOnlyList<PartnerSnap
             var offers = types.Where(t => !treaties.Contains(t.Id))
                 .ToDictionary(t => t.Id, t => Diplomacy.DiplomacyModel.Acceptance(world, me, c.Id, t.Id), StringComparer.Ordinal);
             var council = resolutions.ToDictionary(r => r.Id, r => Diplomacy.DiplomacyModel.CanPropose(world, me, r.Id, c.Id), StringComparer.Ordinal);
+            var war = world.War != null ? WarOption.Capture(world, me, c.Id) : null;
             partners.Add(new PartnerSnapshot(c.Id, Diplomacy.DiplomacyModel.Relations(world, me, c.Id), Diplomacy.DiplomacyModel.TradeShare(world, me, c.Id),
                 Diplomacy.DiplomacyModel.Breakdown(world, me, c.Id), treaties, offers, Diplomacy.DiplomacyModel.CanVisit(world, me, c.Id),
-                Diplomacy.DiplomacyModel.SanctionLevel(world, me, c.Id), Diplomacy.DiplomacyModel.SanctionLevel(world, c.Id, me), council));
+                Diplomacy.DiplomacyModel.SanctionLevel(world, me, c.Id), Diplomacy.DiplomacyModel.SanctionLevel(world, c.Id, me), council, war));
         }
         var blocs = world.Data.Diplomacy.Blocs.Select(b =>
         {
@@ -193,7 +197,57 @@ public sealed record DiplomacySnapshot(string Country, IReadOnlyList<PartnerSnap
 public sealed record PartnerSnapshot(string Id, double Relations, double TradeShare, IReadOnlyList<StatFactor> Factors,
     IReadOnlyList<string> Treaties, IReadOnlyDictionary<string, (bool Accepts, string Reason)> Offers, bool CanVisit,
     string? OurSanction = null, string? TheirSanction = null,
-    IReadOnlyDictionary<string, (bool Allowed, string Reason)>? Resolutions = null);
+    IReadOnlyDictionary<string, (bool Allowed, string Reason)>? Resolutions = null, WarOption? War = null);
+
+/// <summary>
+/// Война с партнёром: можно ли объявить и почему нет; наша сила и сила тех, кто вступится (относительные числа),
+/// кто вступится, спорные регионы (их названия), ядерная ли держава; идущая война (её номер) и перемирие (с какой даты).
+/// </summary>
+public sealed record WarOption(bool CanDeclare, string Reason, double Ours, double Theirs, IReadOnlyList<string> Defenders,
+    IReadOnlyList<string> Claims, bool Nuclear, int? WarId, DateOnly? Ceasefire)
+{
+    public static WarOption Capture(World world, string me, string other)
+    {
+        var b = world.Data.WarBalance;
+        var (can, reason) = Military.WarModel.CanDeclare(world, me, other);
+        var war = Military.WarModel.WarBetween(world, me, other);
+        var defenders = can ? Military.WarModel.Defenders(world, me, other) : (IReadOnlyList<string>)[other];
+        var theirs = defenders.Sum(d => Military.WarModel.Strength(world, d) * (d == other ? b.CommitMain : b.CommitAlly));
+        return new WarOption(can, reason, Military.WarModel.Strength(world, me) * b.CommitMain, theirs, defenders,
+            Military.WarModel.Claims(world, me, other).Select(r => Military.WarModel.RegionName(world, r)).ToList(),
+            world.Data.Diplomacy.Nuclear.Contains(other), war?.Id, Military.WarModel.CeasefireBetween(world, me, other)?.Since);
+    }
+}
+
+/// <summary>Войны мира: идущие, перемирия, последние законченные.</summary>
+public sealed record WarsSnapshot(IReadOnlyList<WarSnapshot> Active, IReadOnlyList<Military.Ceasefire> Ceasefires, IReadOnlyList<Military.WarRecord> History)
+{
+    public static readonly WarsSnapshot Empty = new([], [], []);
+
+    public static WarsSnapshot Capture(World world)
+    {
+        if (world.War is not { } w)
+            return Empty;
+        var active = w.Wars.Select(x => new WarSnapshot(x.Id, x.Attackers.ToList(), x.Defenders.ToList(), x.Goal.ToList(), x.Start,
+            new Dictionary<string, double>(x.Front, StringComparer.Ordinal), x.AttackerLosses, x.DefenderLosses,
+            x.News.AsEnumerable().Reverse().Take(8).ToList(), x.Offer,
+            w.Armies[x.Attacker].Exhaustion, w.Armies[x.Defender].Exhaustion,
+            Military.WarModel.SideStrength(world, x, 1), Military.WarModel.SideStrength(world, x, 2))).ToList();
+        return new WarsSnapshot(active, w.Ceasefires.ToList(), w.History.AsEnumerable().Reverse().Take(10).ToList());
+    }
+}
+
+/// <summary>
+/// Идущая война: стороны (первые — главные), цель, начало, фронт (регион → продвижение противника, 0–100), потери,
+/// новости (новые первыми), кто предложил перемирие, усталость главных сторон, сила сторон.
+/// </summary>
+public sealed record WarSnapshot(int Id, IReadOnlyList<string> Attackers, IReadOnlyList<string> Defenders, IReadOnlyList<string> Goal,
+    DateOnly Start, IReadOnlyDictionary<string, double> Front, double AttackerLosses, double DefenderLosses,
+    IReadOnlyList<Military.WarNews> News, string? Offer, double AttackerExhaustion, double DefenderExhaustion,
+    double AttackerStrength, double DefenderStrength)
+{
+    public int Side(string? country) => country == null ? 0 : Attackers.Contains(country) ? 1 : Defenders.Contains(country) ? 2 : 0;
+}
 
 /// <summary>Блок: члены, состоим ли мы в нём, примут ли нас и почему.</summary>
 public sealed record BlocSnapshot(string Id, IReadOnlyList<string> Members, bool Member, bool Accepts, string Reason);

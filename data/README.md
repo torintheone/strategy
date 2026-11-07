@@ -6,7 +6,7 @@
 dotnet run --project src/Politeconomy.Tools -- validate
 ```
 
-Файлы `countries.json`, `regions.json`, `map/world.json` и `map/cities.json` собирает скрипт `tools/build_world.py` из снимков источников в `tools/sources/` (МВФ, Всемирный банк, BIS, GeoNames; данные об электроэнергетике — Our World in Data, снимок скачивает `tools/fetch_energy.py`). Остальные файлы ведутся вручную.
+Файлы `countries.json`, `regions.json`, `map/world.json` и `map/cities.json` собирает скрипт `tools/build_world.py` из снимков источников в `tools/sources/` (МВФ, Всемирный банк, BIS, GeoNames; данные об электроэнергетике — Our World in Data, снимок скачивает `tools/fetch_energy.py`). Соседство регионов `terrain.json` собирает `tools/build_terrain.py`. Остальные файлы ведутся вручную.
 
 ## countries.json
 
@@ -86,6 +86,14 @@ dotnet run --project src/Politeconomy.Tools -- validate
 ## diplomacy.json
 
 Дипломатия (MODEL.md, «Дипломатия»). `treaties[]` — виды договоров (модель знает ровно эти: `free_trade`, `investment`, `visa_free`, `alliance`, `energy`, `science`): `id`, `name`, `description`, `min_relations` (с каких отношений партнёр согласен), `relations` (насколько договор улучшает отношения). `history[]` — отношения пар стран на старте сверх того, что даёт модель: `a`, `b`, `value` (−100…100: союзники, соперники, споры), `note` (почему). `blocs[]` — блоки на 1 января 2026 года (вымышленные названия, реальный состав): `id`, `name`, `kind` (`trade` — торговый, `military` — военный), `color` (на карте), `description`, `trade` (у торгового блока — насколько растёт торговля между членами: 0,5 — единый рынок), `members`, `rival` (соперничающий военный блок), `regions` (из каких частей света принимают новых членов), `democracy` (только демократии), `unanimous` (нужно согласие каждого члена, иначе — большинства). `alliances[]` — военные союзы двух стран на старте (`a`, `b`, `note`). `sanctions[]` — санкции на старте: `target`, `level` (`full` — жёсткие, `partial` — частичные), `by` (кто), `note`. `council` — «Совет Наций»: `name`, `permanent` (постоянные члены Совета безопасности с правом вето), `elected` (выборные члены: `country`, `until` — до конца какого года), `sanctions` (страны под санкциями Совета), `resolutions[]` (виды резолюций, модель знает ровно `condemn`, `sanctions`, `lift`, `aid`: `id`, `name`, `chamber` — `assembly` или `security`, `against` — против страны, `description`). `fund` — «Международный валютный совет» (`name`). `nuclear` — ядерные державы (для индекса мощи).
+
+## military.json
+
+Армии и войны (MODEL.md, «Армии и войны»), ведётся вручную. `armies[]` — численность армии там, где данные Всемирного банка устарели (мобилизация): `country`, `soldiers`, `note`. `claims[]` — территориальные претензии: `claimant` — кто претендует, `regions` — id регионов из `regions.json`, `note`; ИИ воюет за них, а при объявлении войны они становятся её целью. `ceasefires[]` — перемирия на старте: `a`, `b`, `since` (дата), `note`. Остальная численность армий — показатель `armed_forces` в `countries.json`.
+
+## terrain.json
+
+Собирается `tools/build_terrain.py` из `map/world.json` и хребтов Natural Earth (`ne_10m_geography_regions_polys`). `regions[]`: `id`, `land` — соседи по суше (общая граница), `sea` — соседи через пролив (до 30 км по морю; до четырёх в своей стране и до четырёх в чужих), `mountains` — доля площади в горах (0–1). Соседство симметрично; проверяется в `validate`.
 
 ## parties.json
 

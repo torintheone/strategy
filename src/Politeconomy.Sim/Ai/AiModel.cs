@@ -37,7 +37,7 @@ public static class AiModel
             var c = new CountryAi();
             // Сроки решений разнесены по странам: иначе в первый месяц и потом каждый срок все 198 стран думали бы разом.
             foreach (var (kind, months) in new[] { ("law", b.LawMonths), ("visit", b.VisitMonths), ("treaty", b.TreatyMonths),
-                         ("sanction", b.SanctionMonths), ("bloc", b.BlocMonths), ("council", b.CouncilMonths) })
+                         ("sanction", b.SanctionMonths), ("bloc", b.BlocMonths), ("council", b.CouncilMonths), ("war", world.Data.WarBalance.WarMonths) })
                 c.Last[kind] = world.Date.AddMonths(-months + 1 + (i * 7 + kind.Length) % months);
             ai.Countries[country.Id] = c;
             UpdatePriorities(world, country, c);
@@ -62,6 +62,7 @@ public static class AiModel
                     AiBudget.Plan(turn);
                 AiLaws.Consider(turn);
                 AiDiplomacy.Consider(turn);
+                AiWar.Consider(turn);
             }
             finally
             {

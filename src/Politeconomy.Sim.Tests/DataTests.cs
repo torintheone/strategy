@@ -123,6 +123,8 @@ public class DataTests
         Infrastructure = d.Infrastructure,
         Science = d.Science,
         Diplomacy = d.Diplomacy,
+        Military = d.Military,
+        Terrain = d.Terrain,
         Benchmarks = d.Benchmarks,
     };
 }

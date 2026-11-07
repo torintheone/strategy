@@ -104,7 +104,12 @@
   {"a": "SAU", "b": "EGY", "value": 20, "note": "Финансовая поддержка"},
   {"a": "TUR", "b": "AZE", "value": 50, "note": "«Одна нация — два государства»"},
   {"a": "AZE", "b": "ISR", "value": 20, "note": "Оружие и нефть"},
-  {"a": "PAK", "b": "TUR", "value": 25, "note": "Братские страны"}
+  {"a": "PAK", "b": "TUR", "value": 25, "note": "Братские страны"},
+  {"a": "TUR", "b": "CYN", "value": 60, "note": "Покровитель: турецкие войска на Северном Кипре с 1974 года"},
+  {"a": "USA", "b": "XKX", "value": 40, "note": "Поддержка независимости, миротворцы НАТО в Косово"},
+  {"a": "ALB", "b": "XKX", "value": 55, "note": "Братские народы"},
+  {"a": "GBR", "b": "BLZ", "value": 40, "note": "Британский гарнизон в Белизе, Содружество"},
+  {"a": "USA", "b": "GUY", "value": 25, "note": "Поддержка Гайаны в споре об Эссекибо"}
  ],
  "blocs": [
   {"id": "atlantic", "name": "Атлантический пакт", "kind": "military", "color": "#4F7FD6", "description": "Военный союз Северной Америки и Европы: нападение на одного — нападение на всех.", "members": ["ALB", "BEL", "BGR", "CAN", "CZE", "DEU", "DNK", "ESP", "EST", "FIN", "FRA", "GBR", "GRC", "HRV", "HUN", "ISL", "ITA", "LTU", "LUX", "LVA", "MKD", "MNE", "NLD", "NOR", "POL", "PRT", "ROU", "SVK", "SVN", "SWE", "TUR", "USA"], "rival": "eurasian_defense", "regions": ["Европа", "Америка"], "democracy": true, "unanimous": true, "trade": 0},

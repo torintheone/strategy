@@ -646,6 +646,22 @@ public static partial class DiplomacyModel
         return true;
     }
 
+    /// <summary>
+    /// Нападение: отношения агрессора со всеми, кроме союзников, −Aggression (если есть спор за регионы или нарушено
+    /// перемирие — вполовину), с жертвой и её союзниками — ещё −Aggression (с союзниками — вполовину).
+    /// </summary>
+    public static void Aggression(World world, string attacker, IReadOnlyList<string> victims, bool justified)
+    {
+        var b = world.Data.WarBalance;
+        var k = justified ? 0.5 : 1;
+        foreach (var c in world.Countries)
+            if (c.Id != attacker && !Allies(world, attacker, c.Id))
+                Remember(world, attacker, c.Id, -b.Aggression * k);
+        for (var i = 0; i < victims.Count; i++)
+            Remember(world, attacker, victims[i], -b.Aggression * (i == 0 ? 1 : 0.5));
+        Refresh(world);
+    }
+
     /// <summary>Закон принят: национализация разрывает договоры о защите инвестиций.</summary>
     public static void LawPassed(World world, string country, string law, string variant)
     {

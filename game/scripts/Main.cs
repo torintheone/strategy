@@ -216,7 +216,19 @@ public partial class Main : Node
         _uiRoot.AddChild(_diplomacy);
         _diplomacy.Setup(_data);
         _diplomacy.Closed += CloseScreens;
-        _diplomacy.ActionChosen += (partner, action) => _host!.Post(w =>
+        _diplomacy.ActionChosen += (partner, action) =>
+        {
+            if (action == "declare")
+            {
+                _confirmDialog.Show($"Объявить войну стране «{CountryName(partner)}»?",
+                    "Война начнётся сразу. За неё вступятся союзники; отношения со всеми ухудшатся. Армия мобилизуется, расходы на оборону вырастут, " +
+                    "экономика замедлится; сначала народ сплотится, потом устанет. Закончить войну можно только перемирием по линии фронта — если противник согласится.",
+                    "Объявить войну", () => PostDiplomacy(partner, action));
+                return;
+            }
+            PostDiplomacy(partner, action);
+        };
+        void PostDiplomacy(string partner, string action) => _host!.Post(w =>
         {
             if (w.PlayerCountry is not { } me)
                 return;
@@ -234,6 +246,8 @@ public partial class Main : Node
                 "join" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Join(w, me, partner),
                 "leave" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Leave(w, me, partner),
                 "loan" => Politeconomy.Sim.Diplomacy.DiplomacyModel.RequestLoan(w, me),
+                "declare" => Politeconomy.Sim.Military.WarModel.DeclareByPlayer(w, me, partner),
+                "ceasefire" => Politeconomy.Sim.Military.WarModel.ProposeCeasefire(w, me, int.Parse(parts[1])),
                 _ => false,
             };
         });
@@ -743,6 +757,8 @@ public partial class Main : Node
                     Politeconomy.Sim.Politics.PowerModel.MilitaryCoup(w, w["SEN"], w.Politics!["SEN"]);
                     Politeconomy.Sim.Politics.PowerModel.PalaceCoup(w, w["PRK"], w.Politics!["PRK"]);
                     Politeconomy.Sim.Politics.PowerModel.Revolution(w, w["SAU"], w.Politics!["SAU"], Politeconomy.Sim.Society.ClassIds.Professionals);
+                    // Война: Россия нарушает перемирие с Украиной.
+                    Politeconomy.Sim.Military.WarModel.DeclareByPlayer(w, "RUS", "UKR");
                 });
                 _defeatDialog.Show(new Politeconomy.Sim.Politics.Defeat(_data.Scenario.StartDate, "RUS", "А", "Б", "В"), "Россия");
                 _summaryDialog.Show(new Politeconomy.Sim.Politics.ReignSummary("RUS", _data.Scenario.StartDate, _data.Scenario.StartDate.AddYears(3),
@@ -756,6 +772,9 @@ public partial class Main : Node
             case 2 when _smokeTime > 3 && (_host!.Snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) || _smokeTime > 20):
                 // Экономика должна прожить хотя бы два месяца: показатели пересчитаны моделью и с разбором «почему».
                 var snapshot = _host!.Snapshot;
+                OpenDiplomacy("UKR");
+                OpenDiplomacy(null, "wars");
+                CloseScreens();
                 var inflation = snapshot.Countries["RUS"].Stat("inflation_pct");
                 var classes = snapshot.Countries["RUS"].Classes;
                 var rus = snapshot.Countries["RUS"];
@@ -786,6 +805,8 @@ public partial class Main : Node
                     ("перевороты", snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 }),
                     ("ИИ", snapshot.Countries.Values.Count(c => c.Ai is { Decisions.Count: > 0 }) > 50 && rus.Ai == null
                            && snapshot.Countries["DEU"].Ai is { Priorities.Count: 4 }),
+                    ("война", snapshot.Wars.Active.Any(x => x.Side("RUS") == 1 && x.Side("UKR") == 2) && _smokeJournal.Contains(("RUS", "war"))
+                              && rus.Stat("military_strength") is { Value: > 0 } && snapshot.Diplomacy?.Partners.FirstOrDefault(p => p.Id == "UKR")?.War?.WarId != null),
                 };
                 var failed = checks.Where(c => !c.Ok).Select(c => c.Name).ToList();
                 var appointed = failed.Count == 0;
@@ -1112,6 +1133,31 @@ public partial class Main : Node
                 SetMode(_data.MapModes.Modes.First(m => m.Id == "political"));
                 SelectCountry(_map.Country("FRA"));
                 _countryPanel.ScrollToSection("Решения правительства");
+            }),
+            // Войны: Россия нарушает перемирие с Украиной, Венесуэла нападает на Гайану; восемь месяцев боёв сразу.
+            ("61_map_war", () =>
+            {
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Military.WarModel.Declare(w, "RUS", "UKR");
+                    Politeconomy.Sim.Military.WarModel.Declare(w, "VEN", "GUY");
+                    var system = new Politeconomy.Sim.Military.Systems.WarSystem();
+                    for (var i = 0; i < 8; i++)
+                        system.Run(w);
+                });
+                SelectRegion(null);
+                SetMode(_data.MapModes.Modes.First(m => m.Kind == "war"));
+                ShowAt("UKR", 4f);
+            }),
+            ("62_diplomacy_wars", () => OpenDiplomacy(null, "wars")),
+            ("63_diplomacy_declare", () => OpenDiplomacy("VEN")),
+            ("64_army", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "army"));
+                _camera.FitWorld(instant: true);
+                SelectCountry(_map.Country("UKR"));
+                _countryPanel.ScrollToSection("Армия");
             }),
         };
         if (_shotStep > 0)

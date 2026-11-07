@@ -16,7 +16,7 @@ namespace Politeconomy.Game.UI;
 public partial class DiplomacyScreen : GlassPanel
 {
     static readonly Color Good = Color.FromHtml("#7fc49a");
-    static readonly string[] Tabs = ["countries", "blocs", "council", "fund"];
+    static readonly string[] Tabs = ["countries", "blocs", "council", "fund", "wars"];
 
     GameData _data = null!;
     Label _title = null!;
@@ -34,6 +34,8 @@ public partial class DiplomacyScreen : GlassPanel
     string? _shown;
     DiplomacySnapshot? _snapshot;
     IReadOnlyDictionary<string, CountrySnapshot> _world = new Dictionary<string, CountrySnapshot>();
+    WarsSnapshot _wars = WarsSnapshot.Empty;
+    Dictionary<string, string>? _regionNames;
 
     public event Action? Closed;
     /// <summary>
@@ -74,7 +76,7 @@ public partial class DiplomacyScreen : GlassPanel
         _tabs = new HBoxContainer();
         _tabs.AddThemeConstantOverride("separation", 6);
         column.AddChild(_tabs);
-        foreach (var (id, text) in new[] { ("countries", "Страны"), ("blocs", "Блоки"), ("council", _data.Diplomacy.Council.Name), ("fund", _data.Diplomacy.Fund.Name) })
+        foreach (var (id, text) in new[] { ("countries", "Страны"), ("blocs", "Блоки"), ("council", _data.Diplomacy.Council.Name), ("fund", _data.Diplomacy.Fund.Name), ("wars", "Войны") })
         {
             var tab = new Button { Text = text, FocusMode = FocusModeEnum.None, CustomMinimumSize = new Vector2(0, 30) };
             tab.AddThemeFontSizeOverride("font_size", 14);
@@ -189,12 +191,25 @@ public partial class DiplomacyScreen : GlassPanel
         state.Add(diplomacy.Council.Sanctioned.Count);
         state.Add(diplomacy.Fund.Program?.Status);
         state.Add(diplomacy.Fund.Offer.Accepts);
+        foreach (var war in snapshot.Wars.Active)
+        {
+            state.Add(war.Id);
+            state.Add(war.Offer);
+            state.Add(war.News.Count > 0 ? war.News[0].Text : null);
+            foreach (var (region, progress) in war.Front)
+            {
+                state.Add(region);
+                state.Add(Math.Round(progress / 5));
+            }
+        }
+        state.Add(snapshot.Wars.Ceasefires.Count);
         var signature = $"{snapshot.Date:yyyy-MM}|{_tab}|{_partner}|{_byTrade}|{selected?.Relations:F2}|{string.Join(",", selected?.Treaties ?? [])}|{state.ToHashCode()}";
         if (signature == _shown)
             return;
         _shown = signature;
         _snapshot = diplomacy;
         _world = snapshot.Countries;
+        _wars = snapshot.Wars;
         Render();
     }
 
@@ -232,6 +247,9 @@ public partial class DiplomacyScreen : GlassPanel
                 break;
             case "fund":
                 RenderFund(diplomacy);
+                break;
+            case "wars":
+                RenderWars(diplomacy);
                 break;
         }
     }
@@ -344,6 +362,8 @@ public partial class DiplomacyScreen : GlassPanel
         if (p.OurSanction != null)
             Action("Снять санкции", "Торговля восстановится; ответные санкции они снимут.", "Снять", null, "lift", active: true);
 
+        RenderWarOption(diplomacy, p);
+
         Section(_data.Diplomacy.Council.Name.ToUpperInvariant());
         foreach (var r in _data.Diplomacy.Council.Resolutions)
         {
@@ -424,6 +444,84 @@ public partial class DiplomacyScreen : GlassPanel
                 13, null, r.Passed ? Good : UiTheme.TextSecondary);
             line.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             _pageContent.AddChild(line);
+        }
+    }
+
+    /// <summary>Раздел «Война» у партнёра: идущая война (перемирие) или объявление войны с прогнозом сил и последствиями.</summary>
+    void RenderWarOption(DiplomacySnapshot diplomacy, PartnerSnapshot p)
+    {
+        if (p.War is not { } w)
+            return;
+        Section("ВОЙНА");
+        var wb = _data.WarBalance;
+        if (w.WarId is { } id && _wars.Active.FirstOrDefault(x => x.Id == id) is { } war)
+        {
+            var offered = war.Offer == p.Id;
+            var ours = war.Side(diplomacy.Country) == 1 ? war.AttackerExhaustion : war.DefenderExhaustion;
+            var theirs = war.Side(diplomacy.Country) == 1 ? war.DefenderExhaustion : war.AttackerExhaustion;
+            _detail.AddChild(Wrapped($"Мы воюем со страной {Fmt.Quote(CountryName(p.Id))} с {Fmt.Date(war.Start)}. Усталость: наша {Fmt.Number(ours, 0)}, их {Fmt.Number(theirs, 0)}. " +
+                                     "Подробности — на вкладке «Войны».", 13, UiTheme.Critical));
+            Action(offered ? "Принять перемирие" : "Предложить перемирие",
+                offered ? "Они предлагают прекратить огонь по линии фронта: занятые регионы останутся у тех, кто их держит."
+                        : $"Прекратить огонь по линии фронта. Они согласятся, если устали (усталость выше {wb.AcceptExhaustion:0}) или заметно слабее нас, или если уже взяли то, за что воевали.",
+                offered ? "Принять" : "Предложить", null, "ceasefire:" + id, active: offered);
+            return;
+        }
+        var ratio = w.Theirs > 0 ? w.Ours / w.Theirs : 99;
+        var defenders = w.Defenders.Count > 1 ? $" За них вступятся: {string.Join(", ", w.Defenders.Skip(1).Select(CountryName))}." : "";
+        var claims = w.Claims.Count > 0 ? $" Спорные регионы: {string.Join(", ", w.Claims)}." : "";
+        var truce = w.Ceasefire is { } since ? $" С {Fmt.Date(since)} действует перемирие — нападение его нарушит." : "";
+        var nuclear = w.Nuclear ? " У них ядерное оружие." : "";
+        var text = $"Соотношение сил {Fmt.Number(ratio, 1)} : 1 (без перевеса примерно 2 : 1 фронт стоит).{defenders}{claims}{truce}{nuclear} " +
+                   $"Цена: отношения со всеми −{wb.Aggression:0} (при споре за регионы — вдвое меньше), расходы на оборону +{Fmt.Number(wb.WarSpending, 0)}% ВВП, " +
+                   "потери, разрушения, усталость; сначала народ сплотится, потом устанет.";
+        Action("Объявить войну", w.CanDeclare ? text : w.Reason, w.CanDeclare ? "Объявить" : null, w.CanDeclare ? null : "Нельзя.", "declare", critical: true);
+    }
+
+    /// <summary>Вкладка «Войны»: идущие войны (наши — первыми) с фронтом, потерями и новостями; перемирия; законченные войны.</summary>
+    void RenderWars(DiplomacySnapshot diplomacy)
+    {
+        Clear(_pageContent);
+        _target = _pageContent;
+        _regionNames ??= _data.Regions.Regions.ToDictionary(r => r.Id, r => r.Name, StringComparer.Ordinal);
+        var me = diplomacy.Country;
+        _pageContent.AddChild(Wrapped("Войны идут помесячно по регионам на линии соприкосновения: каждая сторона делит силы по фронту, наступление на регион " +
+                                      "продвигается, если сил там заметно больше, чем у обороны (горы, города, столица и своя земля помогают обороне). " +
+                                      "Взятый регион переходит под контроль наступающих, но принадлежит прежнему владельцу, пока это не решит мирный договор. " +
+                                      "Война кончается перемирием по линии фронта: стороны устали, цель взята или одна из сторон капитулировала.", 13, UiTheme.TextSecondary));
+        Section("ИДУТ");
+        if (_wars.Active.Count == 0)
+            _pageContent.AddChild(Wrapped("Войн нет.", 13, UiTheme.TextMuted));
+        foreach (var war in _wars.Active.OrderBy(x => x.Side(me) == 0 ? 1 : 0).ThenBy(x => x.Start))
+        {
+            var title = $"{string.Join(", ", war.Attackers.Select(CountryName))} против {string.Join(", ", war.Defenders.Select(CountryName))}";
+            _pageContent.AddChild(UiTheme.Text(title, 15, UiTheme.SemiBold, war.Side(me) != 0 ? UiTheme.Critical : UiTheme.TextPrimary));
+            var front = war.Front.OrderByDescending(kv => kv.Value).Take(6)
+                .Select(kv => $"{_regionNames.GetValueOrDefault(kv.Key, kv.Key)} — {Fmt.Number(kv.Value, 0)}%").ToList();
+            _pageContent.AddChild(Wrapped($"С {Fmt.Date(war.Start)}. Силы {Fmt.Number(war.AttackerStrength / Math.Max(1e-9, war.DefenderStrength), 1)} : 1. " +
+                                          $"Погибли солдаты: {Fmt.People(war.AttackerLosses)} и {Fmt.People(war.DefenderLosses)}. " +
+                                          $"Усталость: {Fmt.Number(war.AttackerExhaustion, 0)} и {Fmt.Number(war.DefenderExhaustion, 0)}." +
+                                          (war.Goal.Count > 0 ? $" Цель нападения: {string.Join(", ", war.Goal.Select(r => _regionNames.GetValueOrDefault(r, r)))}." : "") +
+                                          (front.Count > 0 ? $" Наступление: {string.Join("; ", front)}." : " Фронт стоит."), 12, UiTheme.TextSecondary));
+            foreach (var n in war.News.Take(4))
+                _pageContent.AddChild(Wrapped($"{Fmt.Date(n.Date)} · {n.Text}", 12, UiTheme.TextMuted));
+            if (war.Side(me) != 0)
+            {
+                var offered = war.Offer != null && war.Offer != me;
+                Action(offered ? "Принять перемирие" : "Предложить перемирие",
+                    offered ? $"{CountryName(war.Offer!)} предлагает прекратить огонь по линии фронта." : "Прекратить огонь по линии фронта, если противник согласится.",
+                    offered ? "Принять" : "Предложить", null, "ceasefire:" + war.Id, active: offered, target: me);
+            }
+        }
+        Section("ПЕРЕМИРИЯ");
+        _pageContent.AddChild(Wrapped(_wars.Ceasefires.Count == 0 ? "Перемирий нет."
+            : string.Join("; ", _wars.Ceasefires.Select(c => $"{CountryName(c.A)} и {CountryName(c.B)} — с {Fmt.Date(c.Since)}")) +
+              ". Линия соприкосновения заморожена; война может возобновиться. Мирные договоры — в следующей версии.", 13, UiTheme.TextPrimary));
+        if (_wars.History.Count > 0)
+        {
+            Section("ЗАКОНЧЕННЫЕ");
+            foreach (var h in _wars.History)
+                _pageContent.AddChild(Wrapped($"{Fmt.MonthYear(h.Start)} — {Fmt.MonthYear(h.End)} · {CountryName(h.Attacker)} против {CountryName(h.Defender)}: {h.Result}", 12, UiTheme.TextSecondary));
         }
     }
 

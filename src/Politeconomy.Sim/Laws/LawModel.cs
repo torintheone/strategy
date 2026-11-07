@@ -104,7 +104,8 @@ public static class LawModel
         + (world.Energy?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0)
         + (world.Infrastructure?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0)
         + (world.Science?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0)
-        + (world.Diplomacy?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0);
+        + (world.Diplomacy?.Countries.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0)
+        + (world.War?.Armies.GetValueOrDefault(country)?.Effects.GetValueOrDefault(key) ?? 0);
 
     /// <summary>
     /// Пересчитать поправки страны: для каждого закона — эффект нынешнего варианта (в переходный период — между

@@ -42,6 +42,10 @@ public sealed class ClassMoodSystem : ISimSystem
             if (lawMood != null && world.Diplomacy?.Countries.GetValueOrDefault(country.Id)?.Mood is { Length: > 0 } treaties)
                 for (var k = 0; k < lawMood.Length && k < treaties.Length; k++)
                     lawMood[k] += treaties[k];
+            // Усталость от войны.
+            if (lawMood != null && world.War?.Armies.GetValueOrDefault(country.Id)?.Mood is { Length: > 0 } war)
+                for (var k = 0; k < lawMood.Length && k < war.Length; k++)
+                    lawMood[k] += war[k];
             // Плата за пользование дорогами и портами, построенными в концессию.
             if (lawMood != null && world.Infrastructure?.Countries.GetValueOrDefault(country.Id)?.Mood is { Length: > 0 } fees)
                 for (var k = 0; k < lawMood.Length && k < fees.Length; k++)

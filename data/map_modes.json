@@ -40,6 +40,8 @@
   {"id": "alliances", "name": "Военные блоки", "short_name": "Союзы", "kind": "alliances"},
   {"id": "sanctions", "name": "Санкции против страны", "short_name": "Санкции", "kind": "bins", "indicator": "sanctions_against", "thresholds": [1, 2, 5, 15, 30, 100]},
   {"id": "might", "name": "Индекс мощи", "short_name": "Мощь", "kind": "bins", "indicator": "power_index", "thresholds": [5, 10, 15, 20, 30, 50]},
+  {"id": "war", "name": "Войны и занятые земли", "short_name": "Войны", "kind": "war"},
+  {"id": "army", "name": "Сила армии", "short_name": "Армии", "kind": "bins", "indicator": "military_strength", "thresholds": [10, 20, 30, 40, 55, 75]},
   {"id": "parties", "name": "Правящие партии", "short_name": "Партии", "kind": "parties"},
   {"id": "elections", "name": "Итоги последних выборов по регионам", "short_name": "Выборы", "kind": "elections"}
  ],

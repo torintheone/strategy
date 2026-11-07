@@ -50,6 +50,11 @@ public sealed class HealthBalance
     /// <summary>Потери рабочего времени из-за болезней на старте (%) по группам дохода; = стартовые / индекс^BurdenElasticity × (1 + программы).</summary>
     public IReadOnlyList<double> Burden { get; init; } = [9, 6, 4, 3];
     public double BurdenElasticity { get; init; } = 0.7;
-    /// <summary>Пенсии: расходы на социальную защиту растут вместе с долей людей 65+ (эластичность PensionAging).</summary>
+    /// <summary>
+    /// Пенсии: расходы на социальную защиту растут вместе с долей людей 65+ (эластичность PensionAging), считая эту
+    /// долю не меньше PensionFloor: у молодых стран (Залив — 1–2% пожилых, много приезжих работников) пенсионных систем
+    /// почти нет, и рост от крошечной доли раздувал бы пенсии в десятки раз.
+    /// </summary>
     public double PensionAging { get; init; } = 1;
+    public double PensionFloor { get; init; } = 0.08;
 }

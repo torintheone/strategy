@@ -10,7 +10,7 @@ namespace Politeconomy.Sim.Save;
 /// <summary>Сохранение партии: состояние мира в JSON, сжатое gzip. Постоянные данные берутся из data/.</summary>
 public static class SaveGame
 {
-    public const int FormatVersion = 23;
+    public const int FormatVersion = 24;
 
     public static SaveState Capture(World world) => new(
         FormatVersion,
@@ -57,7 +57,8 @@ public static class SaveGame
         world.Infrastructure,
         world.Science,
         world.Diplomacy,
-        world.Ai);
+        world.Ai,
+        world.War);
 
     public static void Write(World world, Stream output)
     {
@@ -147,6 +148,7 @@ public static class SaveGame
             Science = state.Science,
             Diplomacy = state.Diplomacy,
             Ai = state.Ai,
+            War = state.War,
         };
     }
 
@@ -187,7 +189,8 @@ public sealed record SaveState(
     Infrastructure.WorldInfrastructure? Infrastructure = null,
     Science.WorldScience? Science = null,
     Diplomacy.WorldDiplomacy? Diplomacy = null,
-    Ai.WorldAi? Ai = null);
+    Ai.WorldAi? Ai = null,
+    Military.WorldWar? War = null);
 
 /// <summary>Регион, который контролирует не владелец.</summary>
 public sealed record RegionState(string Id, string Controller);

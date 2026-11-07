@@ -79,6 +79,7 @@ INDICATORS = [
     ("age_65_plus_pct", [("wb", "SP.POP.65UP.TO.ZS")], 2015, "median"),
     ("labor_force", [("wb", "SL.TLF.TOTL.IN")], 2015, "derived"),
     ("military_pct_gdp", [("wb", "MS.MIL.XPND.GD.ZS")], 2015, "median"),
+    ("armed_forces", [("wb", "MS.MIL.TOTL.P1")], 2015, "derived"),
     ("electricity_access_pct", [("wb", "EG.ELC.ACCS.ZS")], 2015, "median"),
     ("gini", [("wb", "SI.POV.GINI")], 2005, "median"),
     # структура экономики — для калибровки отраслей (этап 1)
@@ -565,6 +566,32 @@ def fill_gaps(countries: list[dict]) -> None:
         if "labor_force" not in s:
             s["labor_force"] = {"value": round(pop * lf_share, 0), "year": s["population"]["year"], "source": "derived",
                                 "method": f"население × медианная доля рабочей силы ({lf_share:.2f})"}
+    per_capita_fill(countries, "armed_forces")
+
+
+def per_capita_fill(countries: list[dict], key: str) -> None:
+    """
+    Пропуск — население × медианная доля в населении: по субрегиону, иначе по миру (численность армии). Ноль у
+    страны с военными расходами — тоже пропуск: Всемирный банк пишет 0, когда данных нет (Ливия, Палестина).
+    """
+    def known(o: dict) -> bool:
+        v = o["stats"].get(key)
+        return v is not None and not (v["value"] == 0 and o["stats"].get("military_pct_gdp", {}).get("value", 0) > 0)
+
+    for c in countries:
+        s = c["stats"]
+        if known(c):
+            continue
+        pop = s["population"]["value"]
+        for label, pred in (("субрегион", lambda o: o["subregion"] == c["subregion"]), ("весь мир", lambda o: True)):
+            ratios = [o["stats"][key]["value"] / o["stats"]["population"]["value"] for o in countries
+                      if known(o) and o["stats"][key]["value"] > 0 and is_measured(o["stats"][key])
+                      and "population" in o["stats"] and pred(o)]
+            if len(ratios) >= 3:
+                r = statistics.median(ratios)
+                s[key] = {"value": round(pop * r, 0), "year": None, "source": "derived",
+                          "method": f"население × медианная доля ({label}: {r * 1000:.1f} на 1000)"}
+                break
 
 
 def check_currencies(countries: list[dict]) -> None:

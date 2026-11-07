@@ -92,6 +92,8 @@ switch (command)
         return DiplomacyReport();
     case "ai":
         return AiReport();
+    case "war":
+        return WarReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -103,6 +105,8 @@ int Run(string mode)
     var start = GameSetup.NewGame(data);
     var sim = start.Simulation;
     var world = sim.World;
+    if (args.Contains("--no-war"))
+        sim = new Simulation(world, GameSetup.Systems().Where(s => s is not Politeconomy.Sim.Military.Systems.WarSystem));
     Console.WriteLine($"Новая партия с разогревом {data.Scenario.WarmupMonths} мес. за {timer.Elapsed.TotalSeconds:F1} с.");
     if (args.Contains("--random-laws"))
     {
@@ -729,6 +733,38 @@ int DiplomacyReport()
     return 0;
 }
 
+// Война: одна страна нападает на другую, помесячно — фронт, взятые регионы, потери, усталость; в конце — итог.
+int WarReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var attacker = Option("--attacker") ?? "RUS";
+    var defender = Option("--defender") ?? "UKR";
+    var months = int.TryParse(Option("--months"), out var m) ? m : 24;
+    Console.WriteLine($"Сила: {attacker} {Politeconomy.Sim.Military.WarModel.Strength(world, attacker):F0}, {defender} {Politeconomy.Sim.Military.WarModel.Strength(world, defender):F0}");
+    Console.WriteLine("Мощь (армия): " + string.Join(", ", world.Countries.OrderByDescending(c => c.Stat("military_strength")).Take(15).Select(c => $"{c.Id} {c.Stat("military_strength"):F0}")));
+    var war = Politeconomy.Sim.Military.WarModel.Declare(world, attacker, defender);
+    if (war == null)
+    {
+        Console.WriteLine("Войну объявить нельзя: " + Politeconomy.Sim.Military.WarModel.CanDeclare(world, attacker, defender).Reason);
+        return 1;
+    }
+    Console.WriteLine($"Стороны: {string.Join(", ", war.Attackers)} против {string.Join(", ", war.Defenders)}; цель: {string.Join(", ", war.Goal)}");
+    for (var i = 0; i < months && world.War!.Wars.Contains(war); i++)
+    {
+        sim.RunUntil(world.Date.AddMonths(1));
+        var a = world.War!.Armies;
+        Console.WriteLine($"{world.Date:yyyy-MM}: фронт {war.Front.Count} (" + string.Join(", ", war.Front.OrderByDescending(kv => kv.Value).Take(4).Select(kv => $"{kv.Key} {kv.Value:F0}")) +
+                          $"); потери {war.AttackerLosses:F0}/{war.DefenderLosses:F0}; усталость {a[attacker].Exhaustion:F0}/{a[defender].Exhaustion:F0}; " +
+                          $"выпуск {a[attacker].Output:F3}/{a[defender].Output:F3}; рост {world[attacker].Stat("gdp_growth_pct"):F1}/{world[defender].Stat("gdp_growth_pct"):F1}");
+    }
+    foreach (var n in war.News)
+        Console.WriteLine($"  {n.Date:yyyy-MM} {n.Text}");
+    Console.WriteLine($"Занято у {defender}: {Politeconomy.Sim.Military.WarFront.OccupiedShare(world, defender):P0}, у {attacker}: {Politeconomy.Sim.Military.WarFront.OccupiedShare(world, attacker):P0}; " +
+                      $"перемирия: {string.Join(", ", world.War!.Ceasefires.Select(c => $"{c.A}–{c.B} с {c.Since}"))}");
+    return 0;
+}
+
 // ИИ стран: сколько решений каждого вида, что изменилось в мире (законы, договоры, санкции, блоки), журналы решений
 // нескольких стран и страны в коллапсе.
 int AiReport()
@@ -770,6 +806,13 @@ int AiReport()
     var all = world.Countries.SelectMany(a => world.Countries.Where(b => string.CompareOrdinal(a.Id, b.Id) < 0)
         .Select(b => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, a.Id, b.Id))).ToList();
     Console.WriteLine($"Отношения: в среднем {all.Average():F1}, враждебных (< −30) {all.Count(x => x < -30)}, дружеских (> 30) {all.Count(x => x > 30)}");
+    var wars = world.Ai.Countries.SelectMany(kv => kv.Value.Decisions.Where(x => x.Kind == "war").Select(x => $"{x.Date:yyyy-MM} {kv.Key}: {x.Text}")).OrderBy(x => x).ToList();
+    Console.WriteLine($"Войн начато ИИ: {world.Ai.Counts.GetValueOrDefault("war")}; идут: " + string.Join("; ", world.War!.Wars.Select(x => $"{string.Join("+", x.Attackers)} против {string.Join("+", x.Defenders)} с {x.Start:yyyy-MM}")) +
+                      "; перемирия: " + string.Join(", ", world.War.Ceasefires.Select(c => $"{c.A}–{c.B} {c.Since:yyyy-MM}")));
+    foreach (var h in world.War.History)
+        Console.WriteLine($"  {h.Start:yyyy-MM}–{h.End:yyyy-MM} {h.Attacker}→{h.Defender}: регионов {h.Regions}, потери {h.AttackerLosses:F0}/{h.DefenderLosses:F0}; {h.Result}");
+    var occupied = world.Regions.Where(r => r.Owner != r.Controller).ToList();
+    Console.WriteLine($"Занято регионов: {occupied.Count}: " + string.Join(", ", occupied.GroupBy(r => (r.Owner, r.Controller)).Select(g => $"{g.Key.Owner}→{g.Key.Controller} {g.Count()}")));
     var collapsed = world.Countries.Select(c => (c.Id, Reasons: Politeconomy.Sim.Ai.Collapse.Reasons(world, c))).Where(x => x.Reasons.Count > 0).ToList();
     Console.WriteLine($"В коллапсе {collapsed.Count} из {world.Countries.Count}: " + string.Join("; ", collapsed.Select(x => $"{x.Id} ({string.Join(", ", x.Reasons)})")));
     string[] ids = Option("--country") is { } one ? [one] : ["USA", "RUS", "CHN", "DEU", "VEN", "IRN"];
