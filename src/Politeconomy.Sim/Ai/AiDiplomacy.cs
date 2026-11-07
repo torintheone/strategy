@@ -154,7 +154,10 @@ public static class AiDiplomacy
         };
     }
 
-    /// <summary>Договор: с одним из главных партнёров по торговле (не с игроком), выгодный обеим сторонам и одобренный партнёром.</summary>
+    /// <summary>
+    /// Договор: с одним из главных партнёров по торговле (не с игроком), выгодный нам (больше TreatyThreshold) и
+    /// заметно выгодный партнёру (больше трети порога), одобренный им и не сверх его лимита договоров.
+    /// </summary>
     static void Treaty(AiTurn turn)
     {
         var world = turn.World;
@@ -187,11 +190,12 @@ public static class AiDiplomacy
                 if (ours <= b.TreatyThreshold || ours <= best.Utility)
                     continue;
                 var theirs = TreatyUtility(world, p.Id, turn.Id, type);
-                if (theirs <= 0 || !DiplomacyModel.Acceptance(world, turn.Id, p.Id, type).Accepts)
+                if (theirs <= b.TreatyThreshold / 3 || !DiplomacyModel.Acceptance(world, turn.Id, p.Id, type).Accepts)
                     continue;
                 best = (p.Id, type, ours, theirs);
             }
-        if (best.Partner is not { } partner)
+        // Партнёру за этот месяц могли уже предложить другие — его лимит проверяется по нынешнему списку.
+        if (best.Partner is not { } partner || d.Treaties.Count(t => t.Involves(partner)) >= b.MaxTreaties)
             return;
         var name = world.Data.Diplomacy.Treaties.First(t => t.Id == best.Type).Name;
         turn.Why = $"выгодно обеим: нам {Fmt.Number(best.Utility, 2)}, им {Fmt.Number(best.Theirs, 2)}; доля в торговле {Fmt.Value("percent", DiplomacyModel.TradeShare(world, turn.Id, partner) * 100)}";

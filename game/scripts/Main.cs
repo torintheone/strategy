@@ -778,7 +778,7 @@ public partial class Main : Node
                     ("наука", rus.Science is { Researched.Count: > 20, Priority: not null, Progress.Count: > 0 } && snapshot.Adoption.Count > 0),
                     ("дипломатия", snapshot.Diplomacy is { Partners.Count: > 190 } dip && dip.Partners.Any(p => p.Id == "BLR" && p.Treaties.Contains("science"))
                                    && snapshot.Countries["CHN"].Stat("relations_player") is { Factors.Count: > 2 }),
-                    ("организации", snapshot.Diplomacy is { Blocs.Count: 14, Council.Resolutions.Count: 1 } org
+                    ("организации", snapshot.Diplomacy is { Blocs.Count: 14 } org && org.Council.Resolutions.Any(r => r.Proposer == "RUS")
                                     && org.Partners.Any(p => p.Id == "GEO" && p.OurSanction == "partial" && p.TheirSanction == "partial")
                                     && snapshot.Countries["DEU"].Blocs?.Contains("european") == true
                                     && snapshot.Countries["USA"].Stat("power_index") is { Value: > 99, Factors.Count: 4 }
