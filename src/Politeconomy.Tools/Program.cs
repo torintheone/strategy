@@ -762,6 +762,27 @@ int WarReport()
         Console.WriteLine($"  {n.Date:yyyy-MM} {n.Text}");
     Console.WriteLine($"Занято у {defender}: {Politeconomy.Sim.Military.WarFront.OccupiedShare(world, defender):P0}, у {attacker}: {Politeconomy.Sim.Military.WarFront.OccupiedShare(world, attacker):P0}; " +
                       $"перемирия: {string.Join(", ", world.War!.Ceasefires.Select(c => $"{c.A}–{c.B} с {c.Since}"))}");
+    // После войны — переговоры о мире (идут сами раз в полгода), ещё год.
+    double Pop(string id) => world.Demography!.Countries[id].Total;
+    double Gdp(string id) => world.Economy![id].GdpUsd;
+    var (pa, pd, ga, gd) = (Pop(attacker), Pop(defender), Gdp(attacker), Gdp(defender));
+    var peaceMonths = int.TryParse(Option("--peace"), out var pm) ? pm : 12;
+    for (var i = 0; i < peaceMonths; i++)
+    {
+        sim.RunUntil(world.Date.AddMonths(1));
+        if (i == 0 || world.War!.Treaties.Any(t => t.Date == world.Date.AddMonths(-1)))
+            Console.WriteLine($"{world.Date:yyyy-MM}: население {Pop(attacker) / 1e6:F2}/{Pop(defender) / 1e6:F2} млн, ВВП {Gdp(attacker) / 1e9:F1}/{Gdp(defender) / 1e9:F1} млрд, " +
+                              $"инфляция {world[attacker].Stat("inflation_pct"):F1}/{world[defender].Stat("inflation_pct"):F1}, выпуск {world.War!.Armies[attacker].Output:F3}/{world.War.Armies[defender].Output:F3}");
+    }
+    Console.WriteLine($"Население: {attacker} {pa / 1e6:F2}→{Pop(attacker) / 1e6:F2} млн, {defender} {pd / 1e6:F2}→{Pop(defender) / 1e6:F2}; " +
+                      $"ВВП: {ga / 1e9:F1}→{Gdp(attacker) / 1e9:F1}, {gd / 1e9:F1}→{Gdp(defender) / 1e9:F1} млрд");
+    foreach (var t in world.War!.Treaties)
+        Console.WriteLine($"  Мир {t.Date:yyyy-MM}: {t.Text}; выплачено {t.Paid / 1e9:F2} млрд");
+    foreach (var (id, ai) in world.Ai!.Countries.Where(kv => kv.Key == attacker || kv.Key == defender))
+        foreach (var d in ai.Decisions.Where(x => x.Kind == "peace"))
+            Console.WriteLine($"  {id} {d.Date:yyyy-MM}: {d.Text} — {d.Why}");
+    Console.WriteLine("Сменили владельца: " + string.Join(", ", world.Regions.Where(r => r.Owner != r.Info.Country).Select(r => $"{r.Name} ({r.Info.Country}→{r.Owner})")));
+    Console.WriteLine("Перемирия: " + string.Join(", ", world.War.Ceasefires.Select(c => $"{c.A}–{c.B} с {c.Since} {c.Capitulated}")));
     return 0;
 }
 
@@ -811,8 +832,12 @@ int AiReport()
                       "; перемирия: " + string.Join(", ", world.War.Ceasefires.Select(c => $"{c.A}–{c.B} {c.Since:yyyy-MM}")));
     foreach (var h in world.War.History)
         Console.WriteLine($"  {h.Start:yyyy-MM}–{h.End:yyyy-MM} {h.Attacker}→{h.Defender}: регионов {h.Regions}, потери {h.AttackerLosses:F0}/{h.DefenderLosses:F0}; {h.Result}");
+    foreach (var t in world.War.Treaties)
+        Console.WriteLine($"  Мир {t.Date:yyyy-MM}: {t.Text}; выплачено {t.Paid / 1e9:F2} млрд долл.");
     var occupied = world.Regions.Where(r => r.Owner != r.Controller).ToList();
     Console.WriteLine($"Занято регионов: {occupied.Count}: " + string.Join(", ", occupied.GroupBy(r => (r.Owner, r.Controller)).Select(g => $"{g.Key.Owner}→{g.Key.Controller} {g.Count()}")));
+    var annexed = world.Regions.Where(r => r.Owner != r.Info.Country).ToList();
+    Console.WriteLine($"Передано по договорам: {annexed.Count}: " + string.Join(", ", annexed.GroupBy(r => (r.Info.Country, r.Owner)).Select(g => $"{g.Key.Country}→{g.Key.Owner} {g.Count()}")));
     var collapsed = world.Countries.Select(c => (c.Id, Reasons: Politeconomy.Sim.Ai.Collapse.Reasons(world, c))).Where(x => x.Reasons.Count > 0).ToList();
     Console.WriteLine($"В коллапсе {collapsed.Count} из {world.Countries.Count}: " + string.Join("; ", collapsed.Select(x => $"{x.Id} ({string.Join(", ", x.Reasons)})")));
     string[] ids = Option("--country") is { } one ? [one] : ["USA", "RUS", "CHN", "DEU", "VEN", "IRN"];

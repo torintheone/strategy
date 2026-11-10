@@ -27,14 +27,17 @@ public static class WarModel
         Publish(world);
     }
 
-    /// <summary>Армии для стран, у которых их нет, и то, что не сохраняется: карта, земли на старте, сила.</summary>
+    /// <summary>Армии для стран, у которых их нет, и то, что не сохраняется: карта (с населением стран по нынешним владениям), сила.</summary>
     public static void Ensure(World world)
     {
         var w = world.War ??= new WorldWar();
         var data = world.Data;
         var b = data.WarBalance;
         if (ReferenceEquals(w.Map, WarMap.Empty))
+        {
             w.Map = WarMap.Build(data);
+            w.Map.Recount(world);
+        }
         var overrides = data.Military.Armies.ToDictionary(a => a.Country, a => a.Soldiers, StringComparer.Ordinal);
         foreach (var country in world.Countries)
         {
@@ -50,12 +53,6 @@ public static class WarModel
                 Morale = b.Morale,
                 Mood = new double[ClassIds.Count],
             };
-        }
-        if (w.StartTerritory.Count == 0)
-        {
-            var start = data.Control.Control.ToDictionary(c => c.Region, c => c.Controller, StringComparer.Ordinal);
-            foreach (var country in world.Countries)
-                w.StartTerritory[country.Id] = Territory(w.Map, b, country.Id, r => start.GetValueOrDefault(r.Id, r.Country));
         }
         if (w.Strength.Count == 0)
             foreach (var country in world.Countries)
@@ -86,23 +83,40 @@ public static class WarModel
                * tech * Math.Max(0.1, a.Morale) / 70;
     }
 
-    /// <summary>Доля выпуска от земель: свои под чужим контролем теряются (OccupiedLoss), чужие под нашим — прибавляют (OccupationGain).</summary>
-    static double Territory(WarMap map, Data.WarBalance b, string country, Func<Data.RegionRecord, string> controller)
+    /// <summary>
+    /// Доля выпуска от земель у каждой страны: свои (по нынешнему владению) под чужим контролем теряются (OccupiedLoss),
+    /// чужие под нашим — прибавляют (OccupationGain); доли — от населения по регионам.
+    /// </summary>
+    static Dictionary<string, double> Territories(World world, Func<Region, string> controller)
     {
-        var total = map.CountryPopulation.GetValueOrDefault(country);
-        if (total <= 0)
-            return 1;
-        double lost = 0, gained = 0;
-        foreach (var r in map.Regions.Values)
+        var map = world.War!.Map;
+        var b = world.Data.WarBalance;
+        var lost = new Dictionary<string, double>(StringComparer.Ordinal);
+        var gained = new Dictionary<string, double>(StringComparer.Ordinal);
+        foreach (var r in world.Regions)
         {
             var c = controller(r);
-            if (r.Country == country && c != country)
-                lost += r.Population;
-            else if (r.Country != country && c == country)
-                gained += r.Population;
+            if (c == r.Owner)
+                continue;
+            lost[r.Owner] = lost.GetValueOrDefault(r.Owner) + r.Info.Population;
+            gained[c] = gained.GetValueOrDefault(c) + r.Info.Population;
         }
-        return Math.Max(0.05, 1 - b.OccupiedLoss * lost / total + b.OccupationGain * gained / total);
+        var result = new Dictionary<string, double>(StringComparer.Ordinal);
+        foreach (var country in world.Countries)
+        {
+            var total = map.CountryPopulation.GetValueOrDefault(country.Id);
+            result[country.Id] = total <= 0 ? 1
+                : Math.Max(0.05, 1 - b.OccupiedLoss * lost.GetValueOrDefault(country.Id) / total + b.OccupationGain * gained.GetValueOrDefault(country.Id) / total);
+        }
+        return result;
     }
+
+    /// <summary>
+    /// Кто держал регион «на старте» для расчёта выпуска: занятые на 1 января 2026 года уже учтены в данных экономики
+    /// занявшего, переданные по договору — у нового владельца (их экономика перенесена при передаче).
+    /// </summary>
+    public static string Baseline(World world, Region r) =>
+        world.War!.Baseline.TryGetValue(r.Id, out var c) ? c : world.War.Map.StartControl.GetValueOrDefault(r.Id, r.Info.Country);
 
     public static bool AtWar(World world, string country) => world.War?.Wars.Any(w => w.Involves(country)) == true;
 
@@ -163,7 +177,8 @@ public static class WarModel
 
     /// <summary>
     /// Объявить войну: за жертву вступаются её союзники; агрессор портит отношения со всеми (со спором за регионы —
-    /// вполовину), с жертвой — вдвое; перемирие между ними, если было, разорвано. Цель — спорные регионы, если они есть.
+    /// вполовину, но не если нарушен мирный договор), с жертвой — вдвое; перемирие между ними, если было, разорвано,
+    /// мирный договор — тоже. Цель — спорные регионы, если они есть.
     /// </summary>
     public static War? Declare(World world, string attacker, string defender)
     {
@@ -183,11 +198,14 @@ public static class WarModel
         var truce = CeasefireBetween(world, attacker, defender);
         if (truce != null)
             w.Ceasefires.Remove(truce);
-        DiplomacyModel.Aggression(world, attacker, war.Defenders, goal.Count > 0 || truce != null);
+        var treaty = PeaceModel.TreatyBetween(world, attacker, defender);
+        if (treaty != null)
+            treaty.Until = world.Date;
+        DiplomacyModel.Aggression(world, attacker, war.Defenders, treaty == null && (goal.Count > 0 || truce != null));
         var allies = war.Defenders.Skip(1).ToList();
         var text = $"Война: {Name(world, attacker)} нападает на страну «{world[defender].Name}»" +
                    (goal.Count > 0 ? $" из-за спорных регионов ({string.Join(", ", goal.Select(r => RegionName(world, r)))})" : "") +
-                   (truce != null ? ", нарушив перемирие" : "") + "." +
+                   (treaty != null ? ", нарушив мирный договор" : truce != null ? ", нарушив перемирие" : "") + "." +
                    (allies.Count > 0 ? $" За неё вступились союзники: {string.Join(", ", allies.Select(a => world[a].Name))}." : "");
         News(world, war, text);
         return war;
@@ -233,15 +251,16 @@ public static class WarModel
         return false;
     }
 
-    /// <summary>Закончить войну перемирием по линии фронта: занятые регионы остаются у тех, кто их держит.</summary>
-    public static void End(World world, War war, string text)
+    /// <summary>Закончить войну перемирием по линии фронта (занятые регионы остаются у тех, кто их держит) или мирным договором (peace).</summary>
+    public static void End(World world, War war, string text, string? capitulated = null, bool peace = false)
     {
         var w = world.War!;
         w.Wars.Remove(war);
         var old = CeasefireBetween(world, war.Attacker, war.Defender);
         if (old != null)
             w.Ceasefires.Remove(old);
-        w.Ceasefires.Add(new Ceasefire(war.Attacker, war.Defender, world.Date));
+        if (!peace)
+            w.Ceasefires.Add(new Ceasefire(war.Attacker, war.Defender, world.Date, capitulated));
         var regions = war.News.Count(n => n.Text.StartsWith("Взят", StringComparison.Ordinal) || n.Text.StartsWith("Освобождён", StringComparison.Ordinal));
         w.History.Add(new WarRecord(war.Id, war.Attacker, war.Defender, war.Start, world.Date, text, war.AttackerLosses, war.DefenderLosses, regions));
         News(world, war, text);
@@ -286,8 +305,31 @@ public static class WarModel
             }
             a.Morale = Math.Max(10, b.Morale - b.MoraleExhaustion * a.Exhaustion);
         }
+        if (monthly)
+            Resistance(world);
         foreach (var country in world.Countries)
             w.Strength[country.Id] = ComputeStrength(world, country.Id);
+    }
+
+    /// <summary>
+    /// Сопротивление на занятых землях (кроме занятых ещё до старта): занявший теряет ResistanceLoss солдат на жителя в
+    /// месяц, усталость растёт на ResistanceExhaustion × (занятые жители / свои).
+    /// </summary>
+    static void Resistance(World world)
+    {
+        var w = world.War!;
+        var p = world.Data.PeaceBalance;
+        foreach (var r in world.Regions)
+        {
+            if (!r.IsOccupied || Baseline(world, r) == r.Controller || !w.Armies.TryGetValue(r.Controller, out var a))
+                continue;
+            var dead = Math.Min(a.Soldiers, p.ResistanceLoss * r.Info.Population);
+            a.Soldiers -= dead;
+            a.Losses += dead;
+            var own = w.Map.CountryPopulation.GetValueOrDefault(r.Controller);
+            if (own > 0)
+                a.Exhaustion = Math.Min(100, a.Exhaustion + p.ResistanceExhaustion * r.Info.Population / own);
+        }
     }
 
     /// <summary>
@@ -298,7 +340,8 @@ public static class WarModel
     {
         var w = world.War!;
         var b = world.Data.WarBalance;
-        var controllers = world.Regions.ToDictionary(r => r.Id, r => r.Controller, StringComparer.Ordinal);
+        var now = Territories(world, r => r.Controller);
+        var start = Territories(world, r => Baseline(world, r));
         foreach (var country in world.Countries)
         {
             var a = w.Armies[country.Id];
@@ -318,8 +361,7 @@ public static class WarModel
             if (a.Mood.Length != ClassIds.Count)
                 a.Mood = new double[ClassIds.Count];
             Array.Fill(a.Mood, -b.ExhaustionMood * a.Exhaustion);
-            var territory = Territory(w.Map, b, country.Id, r => controllers.GetValueOrDefault(r.Id, r.Country));
-            a.Output = territory / Math.Max(0.05, w.StartTerritory.GetValueOrDefault(country.Id, 1)) * (1 - a.Damage);
+            a.Output = now[country.Id] / Math.Max(0.05, start[country.Id]) * (1 - a.Damage);
         }
     }
 

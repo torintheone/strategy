@@ -68,14 +68,15 @@ public sealed class Country
 }
 
 /// <summary>
-/// Регион страны. Owner — страна, которой регион принадлежит по международному праву;
-/// Controller — страна, которая его фактически контролирует. Они расходятся при оккупации и войне.
+/// Регион страны. Owner — страна, которой регион принадлежит по международному праву (на старте — по данным,
+/// меняется только мирным договором); Controller — страна, которая его фактически контролирует. Они расходятся при
+/// оккупации и войне.
 /// </summary>
 public sealed class Region
 {
     public required string Id { get; init; }
     public required RegionRecord Info { get; init; }
-    public required string Owner { get; init; }
+    public required string Owner { get; set; }
     public required string Controller { get; set; }
 
     public string Name => Info.Name;
@@ -203,5 +204,15 @@ public sealed class World
         if (ById(controller) is null)
             throw new KeyNotFoundException($"Нет страны {controller}");
         region.Controller = controller;
+    }
+
+    /// <summary>Передать регион другой стране насовсем (мирный договор): она и владеет, и контролирует.</summary>
+    public void TransferOwnership(string regionId, string owner)
+    {
+        var region = RegionById(regionId) ?? throw new KeyNotFoundException($"Нет региона {regionId}");
+        if (ById(owner) is null)
+            throw new KeyNotFoundException($"Нет страны {owner}");
+        region.Owner = owner;
+        region.Controller = owner;
     }
 }

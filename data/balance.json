@@ -560,6 +560,27 @@
   "war_chance": 0.15,
   "ceasefire_months": 36
  },
+ "peace": {
+  "_comment": "Мирные договоры (MODEL.md, «Мирные договоры»). Счёт войны в пунктах = 100 × доля населения противника на землях, которые держит наша сторона, − наоборот, + score_exhaustion × (их усталость − наша), ± score_capitulation за капитуляцию. Цена условий для уступающего: регион — 100 × доля его населения (спорный — × claim_discount), репарации — процент ВВП × reparation_years × reparation_cost (размеры — reparation_levels), торговые уступки — trade_cost, нейтралитет — neutrality_cost. Уступающий принимает цену не больше счёта + slack, если устал (усталость не ниже peace_exhaustion) или капитулировал; белый мир — всегда. Получающий принимает цену не меньше счёта − patience × его усталость. При счёте до white_score ИИ предлагает белый мир. ИИ договаривается раз в peace_months, предложение игроку ждёт offer_months; мир (и нейтралитет) — peace_years лет; отношения сторон + peace_relations. Сопротивление на занятых землях: занявший теряет resistance_loss солдат на жителя в месяц, усталость + resistance_exhaustion × занятые жители / свои.",
+  "score_exhaustion": 0.5,
+  "score_capitulation": 25,
+  "claim_discount": 0.75,
+  "reparation_years": 10,
+  "reparation_cost": 1.5,
+  "reparation_levels": [0.5, 1, 2],
+  "trade_cost": 5,
+  "neutrality_cost": 10,
+  "slack": 2,
+  "peace_exhaustion": 30,
+  "patience": 0.3,
+  "white_score": 3,
+  "peace_months": 6,
+  "offer_months": 3,
+  "peace_years": 10,
+  "peace_relations": 10,
+  "resistance_loss": 0.00002,
+  "resistance_exhaustion": 5
+ },
  "government": {
   "_comment": "Правительство и парламент (MODEL.md, «Правительство»). Качества персонажей 0–100: среднее (по группам дохода, где список) и разброс. Возраст при назначении — «от, до». Отставки: старше retirement_age — retirement_rate в месяц за каждый год сверх, плюс resignation_rate в месяц у всех. Парламент: доля мест правящего блока «от, до» и дисциплина по режимам; оппозиция поддерживает проект, если одобрение в обществе выше opposition_threshold.",
   "female_share": [0.15, 0.2, 0.25, 0.33],

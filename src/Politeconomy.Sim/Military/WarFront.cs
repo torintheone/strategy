@@ -155,7 +155,7 @@ public static class WarFront
             var r = world.RegionById(region)!;
             WarModel.Kill(world, r.Owner, 0, r.Info.Population * b.CivilianLoss);
             if (w.Armies.TryGetValue(r.Owner, out var owner))
-                owner.Damage = Math.Min(0.5, owner.Damage + b.Damage * w.Map.Share(region));
+                owner.Damage = Math.Min(0.5, owner.Damage + b.Damage * w.Map.Share(region, r.Owner));
         }
     }
 
@@ -185,7 +185,7 @@ public static class WarFront
             if (lostCapital || OccupiedShare(world, main) > b.CapitulateShare)
             {
                 WarModel.End(world, war, $"Капитуляция: {world[main].Name} больше не может воевать" + (lostCapital ? ": столица взята" : ": занята большая часть страны") +
-                                         ". Огонь прекращён по линии фронта.");
+                                         ". Огонь прекращён по линии фронта.", capitulated: main);
                 return;
             }
         }

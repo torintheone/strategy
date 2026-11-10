@@ -37,6 +37,17 @@ public partial class DiplomacyScreen : GlassPanel
     WarsSnapshot _wars = WarsSnapshot.Empty;
     Dictionary<string, string>? _regionNames;
 
+    /// <summary>Условия мира, которые игрок собирает для каждого противника (до отправки).</summary>
+    sealed class PeaceDraft
+    {
+        public readonly HashSet<string> Regions = new(StringComparer.Ordinal);
+        public double Reparations;
+        public bool Trade;
+        public bool Neutrality;
+    }
+
+    readonly Dictionary<string, PeaceDraft> _drafts = new(StringComparer.Ordinal);
+
     public event Action? Closed;
     /// <summary>
     /// Действие: цель (партнёр или блок) и что сделать: visit, aid, expel, propose:тип, cancel:тип, sanction:уровень,
@@ -203,6 +214,15 @@ public partial class DiplomacyScreen : GlassPanel
             }
         }
         state.Add(snapshot.Wars.Ceasefires.Count);
+        state.Add(snapshot.Wars.Treaties.Count);
+        foreach (var p in snapshot.Wars.Peace)
+        {
+            state.Add(p.Partner);
+            state.Add(Math.Round(p.Score));
+            state.Add(p.Regions.Count);
+            state.Add(p.Offer);
+            state.Add(p.Willing);
+        }
         var signature = $"{snapshot.Date:yyyy-MM}|{_tab}|{_partner}|{_byTrade}|{selected?.Relations:F2}|{string.Join(",", selected?.Treaties ?? [])}|{state.ToHashCode()}";
         if (signature == _shown)
             return;
@@ -488,7 +508,8 @@ public partial class DiplomacyScreen : GlassPanel
         _pageContent.AddChild(Wrapped("Войны идут помесячно по регионам на линии соприкосновения: каждая сторона делит силы по фронту, наступление на регион " +
                                       "продвигается, если сил там заметно больше, чем у обороны (горы, города, столица и своя земля помогают обороне). " +
                                       "Взятый регион переходит под контроль наступающих, но принадлежит прежнему владельцу, пока это не решит мирный договор. " +
-                                      "Война кончается перемирием по линии фронта: стороны устали, цель взята или одна из сторон капитулировала.", 13, UiTheme.TextSecondary));
+                                      "Война кончается перемирием по линии фронта (стороны устали, цель взята или одна из сторон капитулировала) или миром: " +
+                                      "кто ведёт по счёту войны, тот ставит условия, а уставший противник их принимает.", 13, UiTheme.TextSecondary));
         Section("ИДУТ");
         if (_wars.Active.Count == 0)
             _pageContent.AddChild(Wrapped("Войн нет.", 13, UiTheme.TextMuted));
@@ -514,16 +535,109 @@ public partial class DiplomacyScreen : GlassPanel
                     offered ? "Принять" : "Предложить", null, "ceasefire:" + war.Id, active: offered, target: me);
             }
         }
+        foreach (var peace in _wars.Peace)
+            RenderPeace(peace);
         Section("ПЕРЕМИРИЯ");
         _pageContent.AddChild(Wrapped(_wars.Ceasefires.Count == 0 ? "Перемирий нет."
-            : string.Join("; ", _wars.Ceasefires.Select(c => $"{CountryName(c.A)} и {CountryName(c.B)} — с {Fmt.Date(c.Since)}")) +
-              ". Линия соприкосновения заморожена; война может возобновиться. Мирные договоры — в следующей версии.", 13, UiTheme.TextPrimary));
+            : string.Join("; ", _wars.Ceasefires.Select(c => $"{CountryName(c.A)} и {CountryName(c.B)} — с {Fmt.Date(c.Since)}" +
+                                                         (c.Capitulated is { } k ? $" (капитулировала {CountryName(k)})" : ""))) +
+              ". Линия соприкосновения заморожена; война может возобновиться, пока не подписан мир.", 13, UiTheme.TextPrimary));
+        if (_wars.Treaties.Count > 0)
+        {
+            Section("МИРНЫЕ ДОГОВОРЫ");
+            foreach (var t in _wars.Treaties)
+                _pageContent.AddChild(Wrapped($"{Fmt.Date(t.Date)} · {t.Text}. Мир до {Fmt.Date(t.Until)}" +
+                                              (t.ReparationsUntil is { } until ? $"; репарации до {Fmt.Date(until)}, выплачено {Fmt.MoneyBig(t.Paid)}" : "") + ".",
+                    12, UiTheme.TextSecondary));
+        }
         if (_wars.History.Count > 0)
         {
             Section("ЗАКОНЧЕННЫЕ");
             foreach (var h in _wars.History)
                 _pageContent.AddChild(Wrapped($"{Fmt.MonthYear(h.Start)} — {Fmt.MonthYear(h.End)} · {CountryName(h.Attacker)} против {CountryName(h.Defender)}: {h.Result}", 12, UiTheme.TextSecondary));
         }
+    }
+
+    /// <summary>
+    /// Мир с противником: счёт войны, предложение противника (подписать или отклонить), условия, которые мы требуем
+    /// (если ведём по счёту) или уступаем, их цена и прогноз согласия, кнопка «Предложить мир».
+    /// </summary>
+    void RenderPeace(PeaceOption peace)
+    {
+        var name = CountryName(peace.Partner);
+        Section($"МИР СО СТРАНОЙ «{name.ToUpperInvariant()}»");
+        _pageContent.AddChild(Wrapped(char.ToUpperInvariant(peace.Why[0]) + peace.Why[1..] + ". " +
+                                      (peace.Winner
+                                          ? "Мы ведём по счёту и ставим условия; без условий — белый мир: каждый возвращает занятое."
+                                          : "Противник ведёт по счёту: мир возможен на его условиях или если мы уступим сами."), 13, UiTheme.TextSecondary));
+        if (peace.Offer is { } offer)
+        {
+            Action($"{name} предлагает мир", offer + ".", "Подписать", null, "peace_accept", active: true, target: peace.Partner);
+            Action("Отклонить предложение", "Война или перемирие продолжатся; предложение и так перестанет действовать через три месяца.", "Отклонить", null,
+                "peace_reject", target: peace.Partner);
+        }
+        if (!_drafts.TryGetValue(peace.Partner, out var draft))
+            _drafts[peace.Partner] = draft = new PeaceDraft();
+        draft.Regions.IntersectWith(peace.Regions.Select(r => r.Id));
+        _pageContent.AddChild(UiTheme.Text(peace.Winner ? "Мы требуем" : "Мы уступаем", 14, UiTheme.SemiBold, UiTheme.TextPrimary));
+        void Toggle(string text, bool on, Action<bool> set)
+        {
+            var box = new CheckBox { Text = text, ButtonPressed = on, FocusMode = FocusModeEnum.None };
+            box.AddThemeFontSizeOverride("font_size", 13);
+            box.Toggled += value =>
+            {
+                set(value);
+                Render();
+            };
+            _pageContent.AddChild(box);
+        }
+        if (peace.Regions.Count == 0)
+            _pageContent.AddChild(Wrapped(peace.Winner ? "Их регионов, которые мы держим, нет (столицу передать нельзя)." : "Наших регионов, которые держит противник, нет.",
+                12, UiTheme.TextMuted));
+        foreach (var r in peace.Regions)
+            Toggle($"{r.Name} — {Fmt.Number(r.Cost, 1)}" + (r.Claimed ? " (спорный)" : ""), draft.Regions.Contains(r.Id),
+                on => { if (on) draft.Regions.Add(r.Id); else draft.Regions.Remove(r.Id); });
+        var levels = new HBoxContainer();
+        levels.AddThemeConstantOverride("separation", 6);
+        levels.AddChild(UiTheme.Text("Репарации, % ВВП в год:", 13, null, UiTheme.TextSecondary));
+        foreach (var level in new[] { 0.0 }.Concat(peace.ReparationLevels))
+        {
+            var button = new Button { Text = level == 0 ? "нет" : Fmt.Number(level, 1), FocusMode = FocusModeEnum.None, ToggleMode = true, ButtonPressed = draft.Reparations == level };
+            button.AddThemeFontSizeOverride("font_size", 13);
+            button.Pressed += () =>
+            {
+                draft.Reparations = level;
+                Render();
+            };
+            levels.AddChild(button);
+        }
+        _pageContent.AddChild(levels);
+        Toggle($"Торговые уступки: снять санкции, свободная торговля — {Fmt.Number(peace.TradeCost, 0)}", draft.Trade, on => draft.Trade = on);
+        Toggle($"Нейтралитет: выйти из военных блоков и союзов на {_data.PeaceBalance.PeaceYears} лет — {Fmt.Number(peace.NeutralityCost, 0)}", draft.Neutrality, on => draft.Neutrality = on);
+        var cost = peace.Regions.Where(r => draft.Regions.Contains(r.Id)).Sum(r => r.Cost) + draft.Reparations * peace.ReparationUnit
+                   + (draft.Trade ? peace.TradeCost : 0) + (draft.Neutrality ? peace.NeutralityCost : 0);
+        var white = cost <= 0;
+        string forecast;
+        bool agree;
+        if (peace.Winner)
+        {
+            agree = white || (peace.Willing && cost <= peace.Limit);
+            forecast = white ? "белый мир они примут"
+                : !peace.Willing ? $"не согласятся: {name} ещё не устала от войны"
+                : agree ? $"согласятся: они готовы уступить до {Fmt.Number(peace.Limit, 0)}"
+                : $"не согласятся: они готовы уступить не больше чем на {Fmt.Number(peace.Limit, 0)}";
+        }
+        else
+        {
+            agree = cost >= peace.Need - 1e-9;
+            forecast = agree ? $"согласятся: им нужно не меньше {Fmt.Number(Math.Max(0, peace.Need), 0)}" : $"не согласятся: им нужно не меньше {Fmt.Number(peace.Need, 0)}";
+        }
+        var payload = string.Join(",", draft.Regions.Order(StringComparer.Ordinal)) + ";" + draft.Reparations.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                      + ";" + (draft.Trade ? 1 : 0) + ";" + (draft.Neutrality ? 1 : 0);
+        Action(white ? "Предложить белый мир" : "Предложить мир",
+            $"Цена условий — {Fmt.Number(cost, 1)}; прогноз: {forecast}. Регионы из договора переходят насовсем вместе с жителями и хозяйством; " +
+            $"остальное занятое возвращается; войны между нами не будет {_data.PeaceBalance.PeaceYears} лет.",
+            "Предложить", null, "peace:" + payload, active: agree, target: peace.Partner);
     }
 
     void RenderFund(DiplomacySnapshot diplomacy)

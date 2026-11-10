@@ -35,6 +35,8 @@ public static class AiWar
                 continue;
             if (WarModel.CeasefireBetween(world, id, target) is { } truce && truce.Since.AddMonths(b.CeasefireMonths) > world.Date)
                 continue;
+            if (PeaceModel.TreatyBetween(world, id, target) != null)
+                continue;
             var claim = WarModel.Claims(world, id, target).Any();
             if (turn.Country.Regime == Regime.Democracy && !claim)
                 continue;

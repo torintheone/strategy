@@ -116,3 +116,43 @@ public sealed class WarBalance
     public double WarChance { get; init; } = 0.15;
     public int CeasefireMonths { get; init; } = 36;
 }
+
+// Коэффициенты мирных договоров из data/balance.json (раздел peace).
+
+public sealed class PeaceBalance
+{
+    /// <summary>
+    /// Счёт войны (сколько победитель может потребовать, в пунктах): 100 × доля населения противника на землях, которые
+    /// мы держим, − то же у противника, + ScoreExhaustion × (их усталость − наша), ± ScoreCapitulation за капитуляцию.
+    /// </summary>
+    public double ScoreExhaustion { get; init; } = 0.5;
+    public double ScoreCapitulation { get; init; } = 25;
+    /// <summary>
+    /// Цена условий для уступающего: регион — 100 × доля его населения (спорный — × ClaimDiscount); репарации — процент
+    /// ВВП × ReparationYears × ReparationCost; торговые уступки — TradeCost; нейтралитет — NeutralityCost.
+    /// </summary>
+    public double ClaimDiscount { get; init; } = 0.75;
+    public int ReparationYears { get; init; } = 10;
+    public double ReparationCost { get; init; } = 1.5;
+    public IReadOnlyList<double> ReparationLevels { get; init; } = [0.5, 1, 2];
+    public double TradeCost { get; init; } = 5;
+    public double NeutralityCost { get; init; } = 10;
+    /// <summary>
+    /// Согласие: уступающий принимает цену не больше счёта + Slack, если устал (усталость не ниже PeaceExhaustion) или
+    /// капитулировал; на белый мир (без условий) — всегда. Победитель принимает, если цена не меньше счёта − Patience ×
+    /// его усталость. Почти равный счёт (до WhiteScore) — ИИ предлагает белый мир.
+    /// </summary>
+    public double Slack { get; init; } = 2;
+    public double PeaceExhaustion { get; init; } = 30;
+    public double Patience { get; init; } = 0.3;
+    public double WhiteScore { get; init; } = 3;
+    /// <summary>ИИ пробует договориться раз в PeaceMonths; предложение игроку ждёт OfferMonths; мир — PeaceYears лет без войны (и нейтралитет на тот же срок).</summary>
+    public int PeaceMonths { get; init; } = 6;
+    public int OfferMonths { get; init; } = 3;
+    public int PeaceYears { get; init; } = 10;
+    /// <summary>Мир улучшает отношения сторон на PeaceRelations.</summary>
+    public double PeaceRelations { get; init; } = 10;
+    /// <summary>Сопротивление на занятых землях: в месяц занявший теряет ResistanceLoss солдат на жителя и + ResistanceExhaustion × (занятые жители / свои) усталости.</summary>
+    public double ResistanceLoss { get; init; } = 0.00002;
+    public double ResistanceExhaustion { get; init; } = 5;
+}

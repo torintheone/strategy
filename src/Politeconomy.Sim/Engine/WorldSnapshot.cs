@@ -15,6 +15,10 @@ public sealed class WorldSnapshot
     public required IReadOnlyDictionary<string, CountrySnapshot> Countries { get; init; }
     /// <summary>Регионы, которые контролирует не их владелец: регион → контролирующая страна.</summary>
     public required IReadOnlyDictionary<string, string> Occupied { get; init; }
+    /// <summary>Регионы, которые контролирует не страна из данных карты (занятые и переданные по договору): регион → контролирующая страна.</summary>
+    public IReadOnlyDictionary<string, string> Controllers { get; init; } = new Dictionary<string, string>();
+    /// <summary>Регионы, сменившие владельца по мирному договору: регион → новый владелец.</summary>
+    public IReadOnlyDictionary<string, string> Owners { get; init; } = new Dictionary<string, string>();
     /// <summary>Бюджет страны игрока (проект, поправки, прогноз); null, если игрок ещё не выбрал страну.</summary>
     public BudgetSnapshot? Budget { get; init; }
     /// <summary>Правление игрока, поражение на выборах (ждёт решения) и итоги закончившегося правления.</summary>
@@ -33,8 +37,11 @@ public sealed class WorldSnapshot
     public required IReadOnlyDictionary<string, CurrencySnapshot> Currencies { get; init; }
     public required long Version { get; init; }
 
-    /// <summary>Кто контролирует регион: оккупант или, если его нет, владелец.</summary>
-    public string ControllerOf(string regionId, string owner) => Occupied.GetValueOrDefault(regionId, owner);
+    /// <summary>Кто контролирует регион (mapCountry — страна региона в данных карты).</summary>
+    public string ControllerOf(string regionId, string mapCountry) => Controllers.GetValueOrDefault(regionId, mapCountry);
+
+    /// <summary>Кому регион принадлежит: новому владельцу по мирному договору или стране из данных карты.</summary>
+    public string OwnerOf(string regionId, string mapCountry) => Owners.GetValueOrDefault(regionId, mapCountry);
 
     const int JournalShown = 60;
 
@@ -79,9 +86,17 @@ public sealed class WorldSnapshot
                     : null);
         }
         var occupied = new Dictionary<string, string>(StringComparer.Ordinal);
+        var controllers = new Dictionary<string, string>(StringComparer.Ordinal);
+        var owners = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var r in world.Regions)
+        {
             if (r.IsOccupied)
                 occupied[r.Id] = r.Controller;
+            if (r.Controller != r.Info.Country)
+                controllers[r.Id] = r.Controller;
+            if (r.Owner != r.Info.Country)
+                owners[r.Id] = r.Owner;
+        }
         var currencies = new Dictionary<string, CurrencySnapshot>(StringComparer.Ordinal);
         if (world.Economy is { } economy)
         {
@@ -101,6 +116,8 @@ public sealed class WorldSnapshot
             PlayerCountry = world.PlayerCountry,
             Countries = countries,
             Occupied = occupied,
+            Controllers = controllers,
+            Owners = owners,
             Currencies = currencies,
             Budget = BudgetSnapshot.Capture(world),
             Reign = world.Reign is { } reign ? new ReignSnapshot(reign.Country, reign.Since, reign.ElectionsWon, reign.ElectionsLost, reign.LawsPassed) : null,
@@ -219,10 +236,16 @@ public sealed record WarOption(bool CanDeclare, string Reason, double Ours, doub
     }
 }
 
-/// <summary>Войны мира: идущие, перемирия, последние законченные.</summary>
+/// <summary>
+/// Войны мира: идущие, перемирия, последние законченные; мирные договоры (последние); переговоры игрока о мире с
+/// каждым противником (идёт война или перемирие).
+/// </summary>
 public sealed record WarsSnapshot(IReadOnlyList<WarSnapshot> Active, IReadOnlyList<Military.Ceasefire> Ceasefires, IReadOnlyList<Military.WarRecord> History)
 {
     public static readonly WarsSnapshot Empty = new([], [], []);
+
+    public IReadOnlyList<PeaceTreatySnapshot> Treaties { get; init; } = [];
+    public IReadOnlyList<PeaceOption> Peace { get; init; } = [];
 
     public static WarsSnapshot Capture(World world)
     {
@@ -233,7 +256,52 @@ public sealed record WarsSnapshot(IReadOnlyList<WarSnapshot> Active, IReadOnlyLi
             x.News.AsEnumerable().Reverse().Take(8).ToList(), x.Offer,
             w.Armies[x.Attacker].Exhaustion, w.Armies[x.Defender].Exhaustion,
             Military.WarModel.SideStrength(world, x, 1), Military.WarModel.SideStrength(world, x, 2))).ToList();
-        return new WarsSnapshot(active, w.Ceasefires.ToList(), w.History.AsEnumerable().Reverse().Take(10).ToList());
+        var treaties = w.Treaties.AsEnumerable().Reverse().Take(10)
+            .Select(t => new PeaceTreatySnapshot(t.Winner, t.Loser, t.Date, t.Text, t.Until, t.Terms.Reparations, t.ReparationsUntil, t.Paid)).ToList();
+        var peace = new List<PeaceOption>();
+        if (world.PlayerCountry is { } me)
+        {
+            var partners = w.Wars.Where(x => x.IsMain(me)).Select(x => x.Side(me) == 1 ? x.Defender : x.Attacker)
+                .Concat(w.Ceasefires.Where(c => c.A == me || c.B == me).Select(c => c.Other(me))).Distinct();
+            foreach (var partner in partners.Where(x => Military.PeaceModel.CanTalk(world, me, x)))
+                peace.Add(PeaceOption.Capture(world, me, partner));
+        }
+        return new WarsSnapshot(active, w.Ceasefires.ToList(), w.History.AsEnumerable().Reverse().Take(10).ToList()) { Treaties = treaties, Peace = peace };
+    }
+}
+
+/// <summary>Мирный договор: кто получил условия, кто уступил, когда, условия словами, мир до, репарации (% ВВП в год, до какой даты, выплачено долл.).</summary>
+public sealed record PeaceTreatySnapshot(string Winner, string Loser, DateOnly Date, string Text, DateOnly Until, double Reparations,
+    DateOnly? ReparationsUntil, double Paid);
+
+/// <summary>Регион в условиях мира: цена для уступающего (пункты счёта), спорный ли.</summary>
+public sealed record PeaceRegion(string Id, string Name, double Cost, bool Claimed);
+
+/// <summary>
+/// Переговоры игрока о мире с противником. Score — наш счёт войны (больше нуля — мы ставим условия, Winner); Regions —
+/// регионы, которые можно потребовать (если мы победитель) или уступить; цены репараций (за 1% ВВП в год), торговых
+/// уступок и нейтралитета. Need — сколько хочет победитель, Limit — на сколько согласен уступающий (если Willing — устал
+/// или капитулировал; белый мир он принимает всегда). Offer — предложение противника (словами), если ждёт решения.
+/// </summary>
+public sealed record PeaceOption(string Partner, double Score, bool Winner, string Why, IReadOnlyList<PeaceRegion> Regions,
+    IReadOnlyList<double> ReparationLevels, double ReparationUnit, double TradeCost, double NeutralityCost, double Need, double Limit,
+    bool Willing, string? Offer, bool AtWar)
+{
+    public static PeaceOption Capture(World world, string me, string partner)
+    {
+        var p = world.Data.PeaceBalance;
+        var score = Military.PeaceModel.Score(world, me, partner);
+        var (winner, loser) = score >= 0 ? (me, partner) : (partner, me);
+        var regions = Military.PeaceModel.Annexable(world, winner, loser)
+            .Select(r => new PeaceRegion(r.Id, Military.WarModel.RegionName(world, r.Id), Military.PeaceModel.RegionCost(world, r, winner),
+                Military.PeaceModel.Claimed(world, winner, r.Id)))
+            .OrderByDescending(r => r.Claimed).ThenByDescending(r => r.Cost).ThenBy(r => r.Id, StringComparer.Ordinal).ToList();
+        var (need, limit, willing) = Military.PeaceModel.Bounds(world, winner, loser);
+        var offer = world.War!.Offers.FirstOrDefault(o => o.From == partner && o.To == me);
+        return new PeaceOption(partner, score, winner == me, Military.PeaceModel.ScoreWhy(world, me, partner), regions, p.ReparationLevels,
+            Military.PeaceModel.ReparationCost(world, 1), p.TradeCost, p.NeutralityCost, need, limit, willing,
+            offer is null ? null : Military.PeaceModel.Describe(world, offer.Winner, offer.Loser, offer.Terms),
+            Military.PeaceModel.MainWar(world, me, partner) != null);
     }
 }
 

@@ -541,6 +541,8 @@ public static partial class DiplomacyModel
             return (false, EnergyExporter(world, a) ? "Обе страны сами продают нефть и газ." : "Ни одна из стран не продаёт нефть и газ.");
         if (type == "free_trade" && BlocsOf(world, a).FirstOrDefault(x => x.Trade > 0 && InBloc(world, x.Id, b)) is { } common)
             return (false, $"Вы уже вместе в «{common.Name}»: торговля между вами и так свободная.");
+        if (type == "alliance" && (NeutralReason(world, a) ?? NeutralReason(world, b)) is { } neutral)
+            return (false, neutral);
         if (type == "alliance" && BlocsOf(world, a).FirstOrDefault(x => x.Military && InBloc(world, x.Id, b)) is { } pact)
             return (false, $"Вы уже союзники по «{pact.Name}».");
         var need = record.MinRelations;

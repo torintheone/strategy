@@ -130,6 +130,11 @@ public sealed class GameData
 
     static readonly WarBalance DefaultWar = new();
 
+    /// <summary>Коэффициенты мирных договоров; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public PeaceBalance PeaceBalance => Balance.Peace ?? DefaultPeace;
+
+    static readonly PeaceBalance DefaultPeace = new();
+
     /// <summary>Коэффициенты ИИ стран; если раздела нет в balance.json — значения по умолчанию.</summary>
     public AiBalance AiBalance => Balance.Ai ?? DefaultAi;
 

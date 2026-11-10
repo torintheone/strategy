@@ -11,6 +11,11 @@ public static partial class DataValidator
         var countries = data.Countries.Countries.Select(c => c.Id).ToHashSet(StringComparer.Ordinal);
         var regions = data.Regions.Regions.ToDictionary(r => r.Id, StringComparer.Ordinal);
         const string military = "military.json";
+        var peace = data.PeaceBalance;
+        if (peace.ReparationLevels.Count == 0 || peace.ReparationLevels.Any(l => l <= 0) || !peace.ReparationLevels.SequenceEqual(peace.ReparationLevels.Order()))
+            add("balance.json", "peace.reparation_levels: нужны положительные размеры репараций по возрастанию");
+        if (peace.ReparationYears <= 0 || peace.PeaceYears <= 0 || peace.PeaceMonths <= 0 || peace.OfferMonths <= 0)
+            add("balance.json", "peace: сроки (reparation_years, peace_years, peace_months, offer_months) должны быть больше нуля");
         foreach (var a in data.Military.Armies)
         {
             if (!countries.Contains(a.Country))

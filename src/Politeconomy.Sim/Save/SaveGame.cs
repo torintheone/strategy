@@ -10,7 +10,7 @@ namespace Politeconomy.Sim.Save;
 /// <summary>Сохранение партии: состояние мира в JSON, сжатое gzip. Постоянные данные берутся из data/.</summary>
 public static class SaveGame
 {
-    public const int FormatVersion = 24;
+    public const int FormatVersion = 25;
 
     public static SaveState Capture(World world) => new(
         FormatVersion,
@@ -33,9 +33,9 @@ public static class SaveGame
                 WorldFactory.RegimeId(c.Regime)))
             .ToList(),
         world.Regions
-            .Where(r => r.IsOccupied)
+            .Where(r => r.IsOccupied || r.Owner != r.Info.Country)
             .OrderBy(r => r.Id, StringComparer.Ordinal)
-            .Select(r => new RegionState(r.Id, r.Controller))
+            .Select(r => new RegionState(r.Id, r.Controller, r.Owner != r.Info.Country ? r.Owner : null))
             .ToList(),
         world.Economy,
         world.Demography,
@@ -111,12 +111,17 @@ public static class SaveGame
                 country.Stats[s.Key] = new StatValue(s.Value, s.Year, s.Source, s.Method, s.N, s.Factors);
             countries.Add(country);
         }
-        var controllers = (state.Occupied ?? []).ToDictionary(r => r.Id, r => r.Controller, StringComparer.Ordinal);
+        var saved = (state.Occupied ?? []).ToDictionary(r => r.Id, StringComparer.Ordinal);
         var regions = data.Regions.Regions
             .OrderBy(r => r.Id, StringComparer.Ordinal)
-            .Select(r => new Region { Id = r.Id, Info = r, Owner = r.Country, Controller = controllers.GetValueOrDefault(r.Id, r.Country) })
+            .Select(r => new Region
+            {
+                Id = r.Id, Info = r,
+                Owner = saved.GetValueOrDefault(r.Id)?.Owner ?? r.Country,
+                Controller = saved.GetValueOrDefault(r.Id)?.Controller ?? r.Country,
+            })
             .ToList();
-        foreach (var id in controllers.Keys.Where(id => regions.All(r => r.Id != id)))
+        foreach (var id in saved.Keys.Where(id => regions.All(r => r.Id != id)))
             throw new DataException($"В сохранении регион {id}, которого нет в данных");
         return new World
         {
@@ -192,8 +197,8 @@ public sealed record SaveState(
     Ai.WorldAi? Ai = null,
     Military.WorldWar? War = null);
 
-/// <summary>Регион, который контролирует не владелец.</summary>
-public sealed record RegionState(string Id, string Controller);
+/// <summary>Регион, который контролирует не владелец или который сменил владельца по мирному договору (Owner).</summary>
+public sealed record RegionState(string Id, string Controller, string? Owner = null);
 
 public sealed record CountryState(string Id, string System, string Income, List<StatState> Stats, string Regime = "democracy");
 

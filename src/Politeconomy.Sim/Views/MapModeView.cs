@@ -74,11 +74,11 @@ public sealed class MapModeView
             var name = $"{string.Join(", ", war.Attackers.Take(2).Select(Name))} против {string.Join(", ", war.Defenders.Take(2).Select(Name))}";
             if (war.Front.TryGetValue(region.Id, out var progress) && progress > 0)
                 return (WarColors[2].Color, $"Война: {name}. Наступление на регион — {Fmt.Number(progress, 0)}%");
-            if (region.Country is { } taken && taken != controller)
+            if (region.Country is { } map && snapshot.OwnerOf(region.Id, map) is var taken && taken != controller)
                 return (WarColors[3].Color, $"Война: {name}. Занято: принадлежит стране «{Name(taken)}», контролирует «{Name(controller)}»");
             return (WarColors[side - 1].Color, $"Война: {name}");
         }
-        if (region.Country is { } owner && owner != controller)
+        if (region.Country is { } mapCountry && snapshot.OwnerOf(region.Id, mapCountry) is var owner && owner != controller)
             return (WarColors[3].Color, $"Занято: принадлежит стране «{Name(owner)}», контролирует «{Name(controller)}»");
         return (_palettes.NoData, "Мир");
     }
@@ -91,7 +91,7 @@ public sealed class MapModeView
 
     /// <summary>Партия, победившая в регионе на последних выборах его страны (по принадлежности, а не по контролю).</summary>
     public static PartySnapshot? ElectionWinner(MapRegion region, WorldSnapshot snapshot) =>
-        region.Country is { } owner && snapshot.Countries.TryGetValue(owner, out var country)
+        region.Country is { } mapCountry && snapshot.Countries.TryGetValue(snapshot.OwnerOf(region.Id, mapCountry), out var country)
         && country.Politics?.LastElection?.Regions.TryGetValue(region.Id, out var party) == true
             ? country.Politics.Party(party)
             : null;
@@ -195,8 +195,8 @@ public sealed class MapModeView
         if (Mode.Kind == "war")
             return WarState(region, snapshot, controller).Text;
         if (Mode.Kind == "elections")
-            return ElectionWinner(region, snapshot) is { } winner && region.Country is { } owner
-                ? $"Выборы {snapshot.Countries[owner].Politics!.LastElection!.Date.Year}: в регионе победила {Fmt.Quote(winner.Name)}"
+            return ElectionWinner(region, snapshot) is { } winner && region.Country is { } mapCountry
+                ? $"Выборы {snapshot.Countries[snapshot.OwnerOf(region.Id, mapCountry)].Politics!.LastElection!.Date.Year}: в регионе победила {Fmt.Quote(winner.Name)}"
                 : "Выборов нет";
         return Mode.Kind switch
         {

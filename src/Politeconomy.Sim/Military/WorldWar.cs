@@ -11,13 +11,20 @@ public sealed class WorldWar
     /// <summary>Законченные войны: кто, с кем, когда, чем кончилось.</summary>
     public List<WarRecord> History { get; set; } = [];
     public int NextId { get; set; } = 1;
+    /// <summary>Мирные договоры (действующие и прошлые).</summary>
+    public List<PeaceTreaty> Treaties { get; set; } = [];
+    /// <summary>Предложения мира игроку, которые ждут его решения.</summary>
+    public List<PeaceOffer> Offers { get; set; } = [];
+    /// <summary>
+    /// Переданные по договору регионы: регион → у кого он учтён в экономике (новый владелец; при передаче экономика
+    /// региона перенесена явно, и выпуск от занятых земель его больше не считает).
+    /// </summary>
+    public SortedDictionary<string, string> Baseline { get; set; } = new(StringComparer.Ordinal);
 
     /// <summary>Соседи регионов, их население и площадь, население стран по регионам, столицы — из данных (не сохраняются).</summary>
     [JsonIgnore] public WarMap Map { get; set; } = WarMap.Empty;
-    /// <summary>Доля выпуска от земель на старте (занятые на 1 января 2026 года — уже в данных экономики).</summary>
-    [JsonIgnore] public Dictionary<string, double> StartTerritory { get; set; } = new(StringComparer.Ordinal);
-    /// <summary>Сила армий за этот месяц (не сохраняется: пересчитывается из армий).</summary>
-    [JsonIgnore] public Dictionary<string, double> Strength { get; set; } = new(StringComparer.Ordinal);
+    /// <summary>Сила армий, посчитанная в начале месяца (сохраняется: потери и передачи регионов за месяц меняют армию, но не силу до следующего месяца).</summary>
+    public SortedDictionary<string, double> Strength { get; set; } = new(StringComparer.Ordinal);
 
     public Army this[string country] => Armies[country];
 }
@@ -74,8 +81,43 @@ public sealed record WarNews(DateOnly Date, string Text);
 public sealed record WarRecord(int Id, string Attacker, string Defender, DateOnly Start, DateOnly End, string Result,
     double AttackerLosses, double DefenderLosses, int Regions);
 
-/// <summary>Перемирие двух стран: боёв нет, линия соприкосновения заморожена, война может возобновиться.</summary>
-public sealed record Ceasefire(string A, string B, DateOnly Since)
+/// <summary>
+/// Перемирие двух стран: боёв нет, линия соприкосновения заморожена, война может возобновиться. Capitulated — кто
+/// капитулировал (если так кончилась война); Talks — когда в последний раз пробовали договориться о мире.
+/// </summary>
+public sealed record Ceasefire(string A, string B, DateOnly Since, string? Capitulated = null, DateOnly? Talks = null)
 {
     public bool Between(string x, string y) => (A == x && B == y) || (A == y && B == x);
+    public string Other(string country) => A == country ? B : A;
+}
+
+/// <summary>
+/// Условия мира, которые уступающий (Loser) даёт получающему (Winner): регионы (Annex — земли уступающего, которые
+/// держит получающий), репарации (% ВВП уступающего в год), торговые уступки (снять санкции, свободная торговля),
+/// нейтралитет. Остальное занятое обе стороны возвращают. Без условий — белый мир.
+/// </summary>
+public sealed record PeaceTerms(List<string> Annex, double Reparations, bool Trade, bool Neutrality)
+{
+    public static PeaceTerms White => new([], 0, false, false);
+    public bool IsWhite => Annex.Count == 0 && Reparations <= 0 && !Trade && !Neutrality;
+}
+
+/// <summary>Предложение мира игроку: от кого, кому, кто получает условия, кто уступает, условия, когда предложено.</summary>
+public sealed record PeaceOffer(string From, string To, string Winner, string Loser, PeaceTerms Terms, DateOnly Date);
+
+/// <summary>Мирный договор: стороны, условия, до какой даты действуют мир (и нейтралитет) и репарации, сколько выплачено (долл.).</summary>
+public sealed class PeaceTreaty
+{
+    public int Id { get; set; }
+    public string Winner { get; set; } = "";
+    public string Loser { get; set; } = "";
+    public DateOnly Date { get; set; }
+    public PeaceTerms Terms { get; set; } = PeaceTerms.White;
+    public DateOnly Until { get; set; }
+    public DateOnly? ReparationsUntil { get; set; }
+    public double Paid { get; set; }
+    /// <summary>Условия словами — для журнала и экрана.</summary>
+    public string Text { get; set; } = "";
+
+    public bool Between(string x, string y) => (Winner == x && Loser == y) || (Winner == y && Loser == x);
 }

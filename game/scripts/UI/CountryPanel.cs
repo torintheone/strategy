@@ -362,9 +362,12 @@ public partial class CountryPanel : GlassPanel
             _regionLine.TooltipText = RegionTooltip(region);
             _regionLine.MouseFilter = MouseFilterEnum.Stop;
             var controller = snapshot.ControllerOf(region.Id, region.Country);
-            _regionControl.Visible = controller != region.Country;
-            if (controller != region.Country)
+            var owner = snapshot.OwnerOf(region.Id, region.Country);
+            _regionControl.Visible = controller != owner || owner != region.Country;
+            if (controller != owner)
                 _regionControl.Text = "Под контролем: " + _data.Countries.Countries.First(c => c.Id == controller).Name;
+            else if (owner != region.Country)
+                _regionControl.Text = "Передан по мирному договору: прежде — " + _data.Countries.Countries.First(c => c.Id == region.Country).Name;
         }
 
         _pyramid.Show(country.Ages);

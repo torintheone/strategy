@@ -36,6 +36,8 @@ public static partial class DiplomacyModel
             return (false, $"Принимают только страны {string.Join(" и ", bloc.Regions.Select(RegionGenitive))}.");
         if (bloc.Democracy && c.Regime != Model.Regime.Democracy)
             return (false, "Принимают только демократии.");
+        if (bloc.Military && NeutralReason(world, country) is { } neutral)
+            return (false, neutral);
         if (bloc.Military && BlocsOf(world, country).FirstOrDefault(x => x.Military) is { } other)
             return (false, $"Страна уже в другом военном блоке — «{other.Name}».");
         var members = Members(world, blocId);

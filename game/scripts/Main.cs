@@ -49,6 +49,7 @@ public partial class Main : Node
     ProjectDialog _projectDialog = null!;
     readonly HashSet<string> _seenProtests = new();
     string? _seenCampaign;
+    readonly HashSet<string> _seenPeace = [];
     string? _seenDebate;
     bool _dialogWasOpen;
     // Какие выборы, переговоры, поражения и итоги игрок уже видел (окна показываются один раз).
@@ -87,6 +88,7 @@ public partial class Main : Node
     double _smokeTime;
     int _smokeStep;
     string? _smokeOccupied;
+    string? _smokeAnnexed;
     // В снимке только последние записи журнала, поэтому смоук-тест копит всё, что успел увидеть.
     readonly HashSet<(string Country, string Kind)> _smokeJournal = [];
 
@@ -222,35 +224,12 @@ public partial class Main : Node
             {
                 _confirmDialog.Show($"Объявить войну стране «{CountryName(partner)}»?",
                     "Война начнётся сразу. За неё вступятся союзники; отношения со всеми ухудшатся. Армия мобилизуется, расходы на оборону вырастут, " +
-                    "экономика замедлится; сначала народ сплотится, потом устанет. Закончить войну можно только перемирием по линии фронта — если противник согласится.",
+                    "экономика замедлится; сначала народ сплотится, потом устанет. Закончить войну можно перемирием по линии фронта или мирным договором — если противник согласится.",
                     "Объявить войну", () => PostDiplomacy(partner, action));
                 return;
             }
             PostDiplomacy(partner, action);
         };
-        void PostDiplomacy(string partner, string action) => _host!.Post(w =>
-        {
-            if (w.PlayerCountry is not { } me)
-                return;
-            var parts = action.Split(':');
-            _ = parts[0] switch
-            {
-                "visit" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Visit(w, me, partner),
-                "aid" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Aid(w, me, partner),
-                "expel" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Expel(w, me, partner),
-                "propose" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Propose(w, me, partner, parts[1]),
-                "cancel" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Cancel(w, me, partner, parts[1]),
-                "sanction" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Impose(w, me, partner, parts[1]),
-                "lift" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Lift(w, me, partner),
-                "resolution" => Politeconomy.Sim.Diplomacy.DiplomacyModel.ProposeResolution(w, me, parts[1], partner),
-                "join" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Join(w, me, partner),
-                "leave" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Leave(w, me, partner),
-                "loan" => Politeconomy.Sim.Diplomacy.DiplomacyModel.RequestLoan(w, me),
-                "declare" => Politeconomy.Sim.Military.WarModel.DeclareByPlayer(w, me, partner),
-                "ceasefire" => Politeconomy.Sim.Military.WarModel.ProposeCeasefire(w, me, int.Parse(parts[1])),
-                _ => false,
-            };
-        });
 
         _science = new ScienceScreen { Visible = false };
         _uiRoot.AddChild(_science);
@@ -589,8 +568,11 @@ public partial class Main : Node
         if (marker != null)
             return (null, marker);
         var region = _map.FindRegionAt(world.X, world.Y);
-        return (region, region?.Country is { } c ? _map.Country(c) : null);
+        return (region, region?.Country is { } c ? _map.Country(OwnerOf(region, c)) : null);
     }
+
+    /// <summary>Владелец региона сейчас: страна из данных карты или новый владелец по мирному договору.</summary>
+    string OwnerOf(MapRegion region, string mapCountry) => _host?.Snapshot.OwnerOf(region.Id, mapCountry) ?? mapCountry;
 
     void ClickAt(Vector2 screen)
     {
@@ -633,7 +615,8 @@ public partial class Main : Node
             return;
         }
         var region = _hoveredRegion ?? _hoveredCountry!.Regions.MaxBy(r => r.Area)!;
-        var countryName = _countryNames[region.Country!];
+        var owner = snapshot.OwnerOf(region.Id, region.Country!);
+        var countryName = _countryNames[owner];
         var lines = new List<string>();
         var title = countryName;
         if (_hoveredRegion != null && _regionInfo.TryGetValue(region.Id, out var info))
@@ -642,7 +625,7 @@ public partial class Main : Node
             lines.Add(countryName);
         }
         var controller = snapshot.ControllerOf(region.Id, region.Country!);
-        if (controller != region.Country)
+        if (controller != owner)
             lines.Add("Под контролем: " + _countryNames[controller]);
         var value = _mode.ValueText(region, snapshot);
         if (value.Length > 0)
@@ -653,7 +636,7 @@ public partial class Main : Node
     void SelectRegion(MapRegion? region, bool center = false)
     {
         _selectedRegion = region;
-        _selectedCountry = region?.Country is { } c ? _map.Country(c) : null;
+        _selectedCountry = region?.Country is { } c ? _map.Country(OwnerOf(region, c)) : null;
         ApplySelection(center ? region is null ? null : new Vector2(region.LabelX, region.LabelY) : null);
     }
 
@@ -759,6 +742,13 @@ public partial class Main : Node
                     Politeconomy.Sim.Politics.PowerModel.Revolution(w, w["SAU"], w.Politics!["SAU"], Politeconomy.Sim.Society.ClassIds.Professionals);
                     // Война: Россия нарушает перемирие с Украиной.
                     Politeconomy.Sim.Military.WarModel.DeclareByPlayer(w, "RUS", "UKR");
+                    // Мир: Россия занимает регион Грузии и подписывает мир с уставшей Грузией — регион переходит России.
+                    Politeconomy.Sim.Military.WarModel.DeclareByPlayer(w, "RUS", "GEO");
+                    var georgia = w.Regions.Where(r => r.Owner == "GEO" && r.Id != w.War!.Map.Capitals.GetValueOrDefault("GEO")).MaxBy(r => r.Info.Population)!.Id;
+                    w.TransferControl(georgia, "RUS");
+                    w.War!.Armies["GEO"].Exhaustion = 80;
+                    if (Politeconomy.Sim.Military.PeaceModel.ProposeByPlayer(w, "RUS", "GEO", new Politeconomy.Sim.Military.PeaceTerms([georgia], 0, false, false)))
+                        _smokeAnnexed = georgia;
                 });
                 _defeatDialog.Show(new Politeconomy.Sim.Politics.Defeat(_data.Scenario.StartDate, "RUS", "А", "Б", "В"), "Россия");
                 _summaryDialog.Show(new Politeconomy.Sim.Politics.ReignSummary("RUS", _data.Scenario.StartDate, _data.Scenario.StartDate.AddYears(3),
@@ -805,6 +795,8 @@ public partial class Main : Node
                     ("перевороты", snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 }),
                     ("ИИ", snapshot.Countries.Values.Count(c => c.Ai is { Decisions.Count: > 0 }) > 50 && rus.Ai == null
                            && snapshot.Countries["DEU"].Ai is { Priorities.Count: 4 }),
+                    ("мир", _smokeAnnexed != null && snapshot.Owners.GetValueOrDefault(_smokeAnnexed) == "RUS" && _smokeJournal.Contains(("RUS", "peace"))
+                           && snapshot.Wars.Treaties.Any(t => t.Loser == "GEO") && !snapshot.Wars.Active.Any(x => x.Side("GEO") != 0)),
                     ("война", snapshot.Wars.Active.Any(x => x.Side("RUS") == 1 && x.Side("UKR") == 2) && _smokeJournal.Contains(("RUS", "war"))
                               && rus.Stat("military_strength") is { Value: > 0 } && snapshot.Diplomacy?.Partners.FirstOrDefault(p => p.Id == "UKR")?.War?.WarId != null),
                 };
@@ -1159,6 +1151,25 @@ public partial class Main : Node
                 SelectCountry(_map.Country("UKR"));
                 _countryPanel.ScrollToSection("Армия");
             }),
+            // Мир: Гайана капитулировала и по договору отдала Венесуэле спорные регионы — политическая карта.
+            ("65_map_peace", () =>
+            {
+                SelectRegion(null);
+                SetMode(_data.MapModes.Modes.First(m => m.Kind == "political"));
+                ShowAt("GUY", 8f);
+            }),
+            // Условия мира: Бразилия воюет с Суринамом три месяца — что можно потребовать, цена и прогноз.
+            ("66_peace_terms", () =>
+            {
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Military.WarModel.Declare(w, "BRA", "SUR");
+                    var system = new Politeconomy.Sim.Military.Systems.WarSystem();
+                    for (var i = 0; i < 3; i++)
+                        system.Run(w);
+                });
+                OpenDiplomacy(null, "wars");
+            }),
         };
         if (_shotStep > 0)
         {
@@ -1341,7 +1352,44 @@ public partial class Main : Node
     bool DialogOpen => _resultsDialog.Visible || _coalitionDialog.Visible || _defeatDialog.Visible || _summaryDialog.Visible || _confirmDialog.Visible
                        || _debateDialog.Visible || _protestDialog.Visible || _projectDialog.Visible;
 
+    /// <summary>Дипломатическое действие игрока: выполняется в потоке модели.</summary>
+    void PostDiplomacy(string partner, string action) => _host!.Post(w =>
+    {
+        if (w.PlayerCountry is not { } me)
+            return;
+        var parts = action.Split(':');
+        _ = parts[0] switch
+        {
+            "visit" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Visit(w, me, partner),
+            "aid" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Aid(w, me, partner),
+            "expel" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Expel(w, me, partner),
+            "propose" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Propose(w, me, partner, parts[1]),
+            "cancel" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Cancel(w, me, partner, parts[1]),
+            "sanction" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Impose(w, me, partner, parts[1]),
+            "lift" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Lift(w, me, partner),
+            "resolution" => Politeconomy.Sim.Diplomacy.DiplomacyModel.ProposeResolution(w, me, parts[1], partner),
+            "join" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Join(w, me, partner),
+            "leave" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Leave(w, me, partner),
+            "loan" => Politeconomy.Sim.Diplomacy.DiplomacyModel.RequestLoan(w, me),
+            "declare" => Politeconomy.Sim.Military.WarModel.DeclareByPlayer(w, me, partner),
+            "ceasefire" => Politeconomy.Sim.Military.WarModel.ProposeCeasefire(w, me, int.Parse(parts[1])),
+            "peace" => Politeconomy.Sim.Military.PeaceModel.ProposeByPlayer(w, me, partner, ParseTerms(parts[1])),
+            "peace_accept" => Politeconomy.Sim.Military.PeaceModel.AcceptOffer(w, me, partner),
+            "peace_reject" => Politeconomy.Sim.Military.PeaceModel.RejectOffer(w, me, partner),
+            _ => false,
+        };
+    });
+
     string CountryName(string id) => _data.Countries.Countries.First(c => c.Id == id).Name;
+
+    /// <summary>Условия мира с экрана: «регионы через запятую;репарации;торговля 0/1;нейтралитет 0/1».</summary>
+    static Politeconomy.Sim.Military.PeaceTerms ParseTerms(string payload)
+    {
+        var p = payload.Split(';');
+        var regions = p[0].Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+        var reparations = p.Length > 1 ? double.Parse(p[1], System.Globalization.CultureInfo.InvariantCulture) : 0;
+        return new Politeconomy.Sim.Military.PeaceTerms(regions, reparations, p.Length > 2 && p[2] == "1", p.Length > 3 && p[3] == "1");
+    }
 
     static string ElectionKey(string country, ElectionSnapshot e) => $"{country}/{e.Date}/{e.Kind}";
 
@@ -1415,6 +1463,16 @@ public partial class Main : Node
         {
             _seenProtests.Add($"{player}/{protest.Id}/{protest.Stage}");
             ShowProtest(player!, protest.Id);
+            PauseForDialog();
+        }
+        else if (snapshot.Wars.Peace.FirstOrDefault(p => p.Offer != null && !_seenPeace.Contains($"{player}/{p.Partner}/{p.Offer}")) is { } peace)
+        {
+            _seenPeace.Add($"{player}/{peace.Partner}/{peace.Offer}");
+            var partner = peace.Partner;
+            _confirmDialog.Show($"{CountryName(partner)} предлагает мир",
+                $"{peace.Offer}. Если подписать, регионы из договора перейдут насовсем вместе с жителями и хозяйством, а войны между нами не будет " +
+                $"{_data.PeaceBalance.PeaceYears} лет. Предложение действует три месяца — решить можно и позже, в «Дипломатии» на вкладке «Войны».",
+                "Подписать", () => PostDiplomacy(partner, "peace_accept"), "Подумать");
             PauseForDialog();
         }
         else if (snapshot.LastReign is { } summary && !ReferenceEquals(summary, _seenSummary))
