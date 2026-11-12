@@ -112,7 +112,7 @@ public class WarTests
         Assert.Equal(world.War!.Wars.Count, loaded.War!.Wars.Count);
         Assert.All(war.Goal, r => Assert.Equal(world.RegionById(r)!.Controller, loaded.RegionById(r)!.Controller));
         // После загрузки война идёт так же, как без неё.
-        var resumed = new Simulation(loaded, GameSetup.Systems().Where(s => s is not Ai.Systems.AiSystem));
+        var resumed = new Simulation(loaded, TestData.QuietSystems());
         resumed.RunUntil(world.Date.AddMonths(2));
         sim.RunUntil(world.Date.AddMonths(2));
         Assert.Equal(SaveGame.Hash(world), SaveGame.Hash(loaded));

@@ -320,6 +320,7 @@ public static partial class DataValidator
         ValidateScience(data, Add);
         ValidateDiplomacy(data, Add);
         ValidateMilitary(data, Add);
+        ValidateEvents(data, Add);
         return problems;
     }
 

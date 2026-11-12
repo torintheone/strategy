@@ -372,7 +372,7 @@ public partial class CountryPanel : GlassPanel
 
         _pyramid.Show(country.Ages);
         _classes.Show(country.Classes);
-        ShowDecisions(country, isPlayer);
+        ShowDecisions(country, isPlayer, snapshot.Events);
         foreach (var (id, (row, value)) in _rows)
         {
             var def = _data.Indicator(id);
@@ -385,11 +385,11 @@ public partial class CountryPanel : GlassPanel
     static readonly string[] PriorityNames = ["рост", "стабильность", "сила", "переизбрание"];
 
     /// <summary>Приоритеты правительства (почему — в подсказке) и его последние решения с причинами; перерисовка — только когда решения новые.</summary>
-    void ShowDecisions(CountrySnapshot country, bool isPlayer)
+    void ShowDecisions(CountrySnapshot country, bool isPlayer, EventsSnapshot? events)
     {
         var ai = country.Ai;
         var key = $"{country.Id}|{isPlayer}|{ai?.Decisions.Count}|{ai?.Decisions.FirstOrDefault()?.Date}|{ai?.Decisions.FirstOrDefault()?.Text}|" +
-                  string.Join(",", ai?.Priorities.Select(p => Math.Round(p, 2)) ?? []);
+                  string.Join(",", ai?.Priorities.Select(p => Math.Round(p, 2)) ?? []) + (isPlayer ? $"|{events?.Version}" : "");
         if (key == _decisionsShown)
             return;
         _decisionsShown = key;
@@ -398,6 +398,8 @@ public partial class CountryPanel : GlassPanel
         if (isPlayer || ai == null)
         {
             _decisions.AddChild(Wrapped("Страной управляете вы.", 13, UiTheme.TextSecondary));
+            if (isPlayer && events != null)
+                ShowEvents(events);
             return;
         }
         var priorities = Wrapped("Приоритеты: " + string.Join(", ", ai.Priorities.Select((w, k) => (w, k)).OrderByDescending(x => x.w)
@@ -415,6 +417,21 @@ public partial class CountryPanel : GlassPanel
             _decisions.AddChild(line);
             _decisions.AddChild(Wrapped(d.Why, 11, UiTheme.TextMuted));
         }
+    }
+
+    /// <summary>Ваши решения по событиям: последствия, которые ещё действуют, и последние события.</summary>
+    void ShowEvents(EventsSnapshot events)
+    {
+        if (events.Active.Count > 0)
+        {
+            _decisions.AddChild(Wrapped("Действуют последствия ваших решений:", 12, UiTheme.TextPrimary));
+            foreach (var a in events.Active)
+                _decisions.AddChild(Wrapped($"{a.Title} — {a.Option.ToLowerInvariant()}, до {Fmt.MonthYear(a.Until)}. {string.Join(". ", a.Lines)}.", 11, UiTheme.TextMuted));
+        }
+        if (events.History.Count > 0)
+            _decisions.AddChild(Wrapped("Последние события:", 12, UiTheme.TextPrimary));
+        foreach (var e in events.History)
+            _decisions.AddChild(Wrapped($"{Fmt.MonthYear(e.Date)} · {e.Title}: {e.Decision.ToLowerInvariant()}", 12, UiTheme.TextSecondary));
     }
 
     static Label Wrapped(string text, int size, Color color)

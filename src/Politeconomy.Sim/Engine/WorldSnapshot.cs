@@ -29,6 +29,8 @@ public sealed class WorldSnapshot
     public IReadOnlyList<JournalEntry> Journal { get; init; } = [];
     /// <summary>Дипломатия страны игрока: отношения, торговля и договоры с каждой страной; null, если игрок не выбрал страну.</summary>
     public DiplomacySnapshot? Diplomacy { get; init; }
+    /// <summary>События страны игрока: что ждёт решения, что решено, какие последствия действуют; null, если игрок не выбрал страну.</summary>
+    public EventsSnapshot? Events { get; init; }
     /// <summary>Войны, перемирия и законченные войны (последние) — для карты и экрана дипломатии.</summary>
     public WarsSnapshot Wars { get; init; } = WarsSnapshot.Empty;
     /// <summary>Доля мира (по ВВП по ППС), которая освоила каждую технологию.</summary>
@@ -126,6 +128,7 @@ public sealed class WorldSnapshot
             Adoption = world.Science?.Adoption.ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.Ordinal) ?? new Dictionary<string, double>(),
             Diplomacy = world.PlayerCountry is { } me && world.Diplomacy != null && world.ById(me) != null ? DiplomacySnapshot.Capture(world, me) : null,
             Wars = WarsSnapshot.Capture(world),
+            Events = EventsSnapshot.Capture(world),
             Journal = world.Journal.Count <= JournalShown ? world.Journal.ToList() : world.Journal.GetRange(world.Journal.Count - JournalShown, JournalShown),
             Version = version,
         };

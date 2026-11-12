@@ -321,7 +321,28 @@
    "name": "Поддержка ветра и солнца",
    "unit": "доля",
    "description": "к желанию их строить"
-  }
+  },
+  "legitimacy": {"name": "Легитимность власти", "unit": "пункты", "description": "к легитимности"},
+  "research": {"name": "Отдача от науки", "unit": "доля", "description": "к очкам исследований"},
+  "military_power": {"name": "Сила армии", "unit": "доля", "description": "к силе армии"},
+  "disease_burden": {"name": "Потери от болезней", "unit": "доля", "description": "к потерям рабочего времени от болезней"},
+  "health_access": {"name": "Доступность медицины", "unit": "пункты", "description": "к доле людей, которые могут лечиться"},
+  "health_capacity": {"name": "Мощность медицины", "unit": "доля", "description": "к отдаче от врачей и коек"},
+  "power_intermittency": {"name": "Перебои ветра и солнца", "unit": "доля", "description": ""},
+  "power_nuclear": {"name": "Атомные станции", "unit": "доля", "description": "к стройке атомных станций"},
+  "infra_efficiency": {"name": "Отдача от денег на инфраструктуру", "unit": "доля", "description": ""},
+  "fuel_cost": {"name": "Цена топлива для станций", "unit": "доля", "description": ""},
+  "spending.science": {"name": "Расходы на науку", "unit": "% ВВП", "description": ""},
+  "spending.transport": {"name": "Расходы на транспорт и инфраструктуру", "unit": "% ВВП", "description": ""},
+  "spending.agriculture": {"name": "Расходы на сельское хозяйство", "unit": "% ВВП", "description": ""},
+  "spending.industry": {"name": "Расходы на промышленную политику", "unit": "% ВВП", "description": ""},
+  "spending.police": {"name": "Расходы на полицию и безопасность", "unit": "% ВВП", "description": ""},
+  "spending.administration": {"name": "Расходы на госаппарат", "unit": "% ВВП", "description": ""},
+  "spending.culture": {"name": "Расходы на культуру и спорт", "unit": "% ВВП", "description": ""},
+  "spending.foreign": {"name": "Расходы на внешнюю политику", "unit": "% ВВП", "description": ""},
+  "revenue.resource": {"name": "Сборы природной ренты", "unit": "доля", "description": ""},
+  "revenue.customs": {"name": "Сборы таможенных пошлин", "unit": "доля", "description": ""},
+  "revenue.other": {"name": "Прочие доходы бюджета", "unit": "доля", "description": ""}
  },
  "laws": [
   {

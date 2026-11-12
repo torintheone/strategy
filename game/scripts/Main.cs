@@ -44,12 +44,15 @@ public partial class Main : Node
     ConfirmDialog _confirmDialog = null!;
     DebateDialog _debateDialog = null!;
     ProtestDialog _protestDialog = null!;
+    EventDialog _eventDialog = null!;
+    EventsTray _eventsTray = null!;
     DiplomacyScreen _diplomacy = null!;
     ScienceScreen _science = null!;
     ProjectDialog _projectDialog = null!;
     readonly HashSet<string> _seenProtests = new();
     string? _seenCampaign;
     readonly HashSet<string> _seenPeace = [];
+    readonly HashSet<string> _seenEvents = [];
     string? _seenDebate;
     bool _dialogWasOpen;
     // Какие выборы, переговоры, поражения и итоги игрок уже видел (окна показываются один раз).
@@ -89,6 +92,8 @@ public partial class Main : Node
     int _smokeStep;
     string? _smokeOccupied;
     string? _smokeAnnexed;
+    int _smokeEvent;
+    bool _smokeEventShown;
     // В снимке только последние записи журнала, поэтому смоук-тест копит всё, что успел увидеть.
     readonly HashSet<(string Country, string Kind)> _smokeJournal = [];
 
@@ -358,6 +363,26 @@ public partial class Main : Node
         _projectDialog.Chosen += (id, project, financing, lender) =>
             _host!.Post(w => Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, id, project, financing, lender));
 
+        _eventDialog = new EventDialog();
+        _uiRoot.AddChild(_eventDialog);
+        _eventDialog.Setup();
+        _eventDialog.Decided += (id, option) => _host!.Post(w =>
+        {
+            if (w.PlayerCountry is { } me)
+                Politeconomy.Sim.Events.EventModel.Decide(w, me, id, option);
+        });
+        _eventsTray = new EventsTray();
+        _uiRoot.AddChild(_eventsTray);
+        _eventsTray.Setup();
+        _eventsTray.Chosen += id =>
+        {
+            if (!DialogOpen && _host?.Snapshot.Events?.Pending.FirstOrDefault(p => p.Id == id) is { } pending)
+            {
+                _eventDialog.Show(pending);
+                PauseForDialog();
+            }
+        };
+
         _toasts = new Toasts();
         _uiRoot.AddChild(_toasts);
         _toasts.Setup();
@@ -417,6 +442,7 @@ public partial class Main : Node
             _science.Refresh(snapshot);
         if (_diplomacy.Visible)
             _diplomacy.Refresh(snapshot);
+        _eventsTray.Show(snapshot.Events?.Pending);
         Recolor(snapshot);
         CheckDialogs(snapshot);
         _dialogWasOpen = DialogOpen;
@@ -665,6 +691,15 @@ public partial class Main : Node
     void SmokeStep(double delta)
     {
         _smokeTime += delta;
+        // Событие: окно открывается, решение уходит в модель.
+        if (!_smokeEventShown && _smokeEvent != 0 && _host!.Snapshot.Events?.Pending.FirstOrDefault(p => p.Id == _smokeEvent) is { } smokePending)
+        {
+            _eventDialog.Show(smokePending);
+            _smokeEventShown = _eventDialog.Visible;
+            _eventDialog.Visible = false;
+            var eventId = _smokeEvent;
+            _host.Post(w => Politeconomy.Sim.Events.EventModel.Decide(w, "RUS", eventId, "export"));
+        }
         switch (_smokeStep)
         {
             case 0 when _smokeTime > 0.3:
@@ -740,6 +775,10 @@ public partial class Main : Node
                     Politeconomy.Sim.Politics.PowerModel.MilitaryCoup(w, w["SEN"], w.Politics!["SEN"]);
                     Politeconomy.Sim.Politics.PowerModel.PalaceCoup(w, w["PRK"], w.Politics!["PRK"]);
                     Politeconomy.Sim.Politics.PowerModel.Revolution(w, w["SAU"], w.Politics!["SAU"], Politeconomy.Sim.Society.ClassIds.Professionals);
+                    // Событие: рекордный урожай в России (условия событий здесь не проверяются — только окно и решение).
+                    var smokeEvent = w.Data.Events.Event("record_harvest")!;
+                    if (Politeconomy.Sim.Events.EventModel.Fire(w, w["RUS"], smokeEvent with { When = [] }) is { } fired)
+                        _smokeEvent = fired.Id;
                     // Война: Россия нарушает перемирие с Украиной.
                     Politeconomy.Sim.Military.WarModel.DeclareByPlayer(w, "RUS", "UKR");
                     // Мир: Россия занимает регион Грузии и подписывает мир с уставшей Грузией — регион переходит России.
@@ -793,6 +832,9 @@ public partial class Main : Node
                                     && snapshot.Countries["USA"].Stat("power_index") is { Value: > 99, Factors.Count: 4 }
                                     && snapshot.Countries["PRK"].Stat("sanctions_against") is { Value: > 150 }),
                     ("перевороты", snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 }),
+                    ("события", _smokeEventShown && _smokeJournal.Contains(("RUS", "event")) && snapshot.Events is { } ev
+                               && ev.History.Any(h => h.Event == "record_harvest" && h.Option == "export") && ev.Active.Count > 0
+                               && snapshot.Countries.Values.Count(c => c.Ai is { } a && a.Decisions.Any(d => d.Kind == "event")) > 5),
                     ("ИИ", snapshot.Countries.Values.Count(c => c.Ai is { Decisions.Count: > 0 }) > 50 && rus.Ai == null
                            && snapshot.Countries["DEU"].Ai is { Priorities.Count: 4 }),
                     ("мир", _smokeAnnexed != null && snapshot.Owners.GetValueOrDefault(_smokeAnnexed) == "RUS" && _smokeJournal.Contains(("RUS", "peace"))
@@ -1170,6 +1212,37 @@ public partial class Main : Node
                 });
                 OpenDiplomacy(null, "wars");
             }),
+            // Событие: забастовка врачей в Бразилии — окно с докладчиком, причинами и вариантами.
+            ("67_event", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Kind == "political"));
+                _camera.FitWorld(instant: true);
+                _host!.Post(w =>
+                {
+                    w.Politics!["BRA"].StartSpending[w.Data.Budget.Spending.ToList().FindIndex(s => s.Id == "health")] *= 1.2;
+                    Politeconomy.Sim.Events.EventModel.Fire(w, w["BRA"], w.Data.Events.Event("doctors_strike")!);
+                    Politeconomy.Sim.Events.EventModel.Fire(w, w["BRA"], w.Data.Events.Event("new_infection")!);
+                });
+            }),
+            // Отложенные события ждут под верхней панелью слева.
+            ("68_event_tray", () =>
+            {
+                foreach (var pending in _host!.Snapshot.Events?.Pending ?? [])
+                    _seenEvents.Add($"BRA/{pending.Id}");
+                CloseDialogs();
+            }),
+            ("69_event_decided", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w =>
+                {
+                    foreach (var pending in w.Events!["BRA"].Pending.ToList())
+                        Politeconomy.Sim.Events.EventModel.Decide(w, "BRA", pending.Id, w.Data.Events.Event(pending.Event)!.Options[0].Id);
+                });
+                SelectCountry(_map.Country("BRA"));
+                _countryPanel.ScrollToSection("Решения правительства");
+            }),
         };
         if (_shotStep > 0)
         {
@@ -1350,7 +1423,7 @@ public partial class Main : Node
     }
 
     bool DialogOpen => _resultsDialog.Visible || _coalitionDialog.Visible || _defeatDialog.Visible || _summaryDialog.Visible || _confirmDialog.Visible
-                       || _debateDialog.Visible || _protestDialog.Visible || _projectDialog.Visible;
+                       || _debateDialog.Visible || _protestDialog.Visible || _projectDialog.Visible || _eventDialog.Visible;
 
     /// <summary>Дипломатическое действие игрока: выполняется в потоке модели.</summary>
     void PostDiplomacy(string partner, string action) => _host!.Post(w =>
@@ -1410,7 +1483,8 @@ public partial class Main : Node
 
     /// <summary>
     /// Окна о стране игрока по одному: новые итоги выборов, поражение, переговоры о коалиции, начало кампании, дебаты,
-    /// протест (новый или разгоревшийся, с митингов и выше), итоги правления. Пока окно открыто, время стоит.
+    /// протест (новый или разгоревшийся, с митингов и выше), событие, предложение мира, итоги правления. Пока окно
+    /// открыто, время стоит.
     /// </summary>
     void CheckDialogs(WorldSnapshot snapshot)
     {
@@ -1465,6 +1539,12 @@ public partial class Main : Node
             ShowProtest(player!, protest.Id);
             PauseForDialog();
         }
+        else if (snapshot.Events?.Pending.FirstOrDefault(p => !_seenEvents.Contains($"{player}/{p.Id}")) is { } pending)
+        {
+            _seenEvents.Add($"{player}/{pending.Id}");
+            _eventDialog.Show(pending);
+            PauseForDialog();
+        }
         else if (snapshot.Wars.Peace.FirstOrDefault(p => p.Offer != null && !_seenPeace.Contains($"{player}/{p.Partner}/{p.Offer}")) is { } peace)
         {
             _seenPeace.Add($"{player}/{peace.Partner}/{peace.Offer}");
@@ -1497,6 +1577,7 @@ public partial class Main : Node
         _confirmDialog.Visible = false;
         _debateDialog.Visible = false;
         _protestDialog.Visible = false;
+        _eventDialog.Visible = false;
         _projectDialog.Visible = false;
     }
 

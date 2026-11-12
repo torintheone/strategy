@@ -26,7 +26,8 @@ public static class LawText
         return lines;
     }
 
-    static string Value(string unit, double v) => unit switch
+    /// <summary>Величина поправки с единицей: «+0,3 п. п.», «−5%», «+0,2% ВВП».</summary>
+    public static string Value(string unit, double v) => unit switch
     {
         "п. п." => Fmt.Signed(v, 1) + Fmt.Nbsp + "п." + Fmt.Nbsp + "п.",
         "п. п. в год" => Fmt.Signed(v, 2) + Fmt.Nbsp + "п." + Fmt.Nbsp + "п. в год",

@@ -52,7 +52,7 @@ public class PeaceTests
         var loaded = SaveGame.Read(TestData.Game, stream);
         Assert.Equal(SaveGame.Hash(world), SaveGame.Hash(loaded));
         Assert.Equal("VEN", loaded.RegionById(region)!.Owner);
-        var resumed = new Simulation(loaded, GameSetup.Systems().Where(s => s is not Ai.Systems.AiSystem));
+        var resumed = new Simulation(loaded, TestData.QuietSystems());
         resumed.RunUntil(world.Date.AddMonths(1));
         sim.RunUntil(world.Date.AddMonths(1));
         Assert.Equal(SaveGame.Hash(world), SaveGame.Hash(loaded));

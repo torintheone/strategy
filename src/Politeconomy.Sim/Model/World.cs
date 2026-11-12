@@ -136,6 +136,9 @@ public sealed class World
     /// <summary>Армии, войны и перемирия; создаётся <see cref="Military.WarModel.Setup"/>.</summary>
     public Military.WorldWar? War { get; set; }
 
+    /// <summary>События стран: что ждёт решения, какие последствия действуют, что придёт позже. Создаёт <see cref="Events.EventModel.Setup"/>.</summary>
+    public Events.WorldEvents? Events { get; set; }
+
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 

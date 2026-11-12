@@ -26,7 +26,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] | diplomacy [--country ISO] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] | diplomacy [--country ISO] | ai [--years N] | war [--attacker ISO --defender ISO] | events [--years N] [--country ISO] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -94,6 +94,8 @@ switch (command)
         return AiReport();
     case "war":
         return WarReport();
+    case "events":
+        return EventsReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -783,6 +785,62 @@ int WarReport()
             Console.WriteLine($"  {id} {d.Date:yyyy-MM}: {d.Text} — {d.Why}");
     Console.WriteLine("Сменили владельца: " + string.Join(", ", world.Regions.Where(r => r.Owner != r.Info.Country).Select(r => $"{r.Name} ({r.Info.Country}→{r.Owner})")));
     Console.WriteLine("Перемирия: " + string.Join(", ", world.War.Ceasefires.Select(c => $"{c.A}–{c.B} с {c.Since} {c.Capitulated}")));
+    return 0;
+}
+
+// События: игрок за страну --country (решения — по умолчанию, сразу), --years лет. Сколько событий в год видит игрок и
+// другие страны, какие события случаются чаще всего, какие не случились ни разу, лента событий игрока с причинами.
+int EventsReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var player = Option("--country") ?? "BRA";
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 10;
+    Politeconomy.Sim.Politics.PoliticsActions.PlayAs(world, player);
+    var mine = new List<string>();
+    var perYear = new SortedDictionary<int, HashSet<string>>();
+    var byCountry = new Dictionary<string, int>(StringComparer.Ordinal);
+    var seen = 0;
+    var end = world.Date.AddYears(runYears);
+    var timer = Stopwatch.StartNew();
+    while (world.Date < end)
+    {
+        sim.RunUntil(world.Date.AddDays(1));
+        var events = world.Events!;
+        foreach (var pending in events[player].Pending.ToList())
+        {
+            var record = data.Events.Event(pending.Event)!;
+            var option = Politeconomy.Sim.Events.EventModel.DefaultOption(world, world[player], record);
+            var title = Politeconomy.Sim.Text.EventText.Fill(world, world[player], record, pending, record.Title);
+            mine.Add($"  {world.Date:yyyy-MM-dd} [{record.Category}] {title} → {option.Name}. Почему: {string.Join("; ", pending.Why)}");
+            if (!perYear.TryGetValue(world.Date.Year, out var set))
+                perYear[world.Date.Year] = set = [];
+            set.Add(record.Id);
+            Politeconomy.Sim.Events.EventModel.Decide(world, player, pending.Id, option.Id);
+        }
+        var total = events.Counts.Values.Sum();
+        if (total > seen)
+        {
+            foreach (var news in events.Recent.TakeLast(Math.Min(events.Recent.Count, total - seen)))
+                byCountry[news.Country] = byCountry.GetValueOrDefault(news.Country) + 1;
+            seen = total;
+        }
+    }
+    Console.WriteLine($"События за {runYears} лет, игрок — {world[player].Name}; прогон {timer.Elapsed.TotalSeconds:F0} с.");
+    Console.WriteLine("Игрок видит разных событий в год: " + string.Join(", ", perYear.Select(kv => $"{kv.Key}: {kv.Value.Count}")) +
+                      $"; в среднем {(double)mine.Count / runYears:F1}");
+    var rates = world.Countries.Select(c => byCountry.GetValueOrDefault(c.Id) / (double)runYears).OrderBy(x => x).ToList();
+    Console.WriteLine($"Все страны, событий в год: в среднем {rates.Average():F1}, у десятой части меньше {rates[rates.Count / 10]:F1}, у десятой части больше {rates[rates.Count * 9 / 10]:F1}, больше всего {rates[^1]:F1}");
+    Console.WriteLine("Чаще всего: " + string.Join(", ", world.Events!.Counts.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key} {kv.Value}")));
+    var never = data.Events.Events.Where(e => !world.Events.Counts.ContainsKey(e.Id)).Select(e => e.Id).ToList();
+    Console.WriteLine("Ни разу: " + (never.Count == 0 ? "нет таких" : string.Join(", ", never)));
+    var choices = world.Events.Recent.GroupBy(n => n.Event + "/" + n.Option).OrderBy(g => g.Key, StringComparer.Ordinal).Select(g => $"{g.Key} {g.Count()}");
+    Console.WriteLine($"Решения в последних {world.Events.Recent.Count} событиях мира: " + string.Join(", ", choices));
+    Console.WriteLine($"Лента игрока ({mine.Count}):");
+    foreach (var line in mine)
+        Console.WriteLine(line);
+    var active = world.Events[player];
+    Console.WriteLine("Действующие поправки: " + string.Join(", ", active.Effects.OrderBy(kv => kv.Key, StringComparer.Ordinal).Select(kv => $"{kv.Key} {kv.Value:+0.##;-0.##}")));
     return 0;
 }
 
