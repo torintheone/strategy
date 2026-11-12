@@ -125,6 +125,7 @@ public class DataTests
         Diplomacy = d.Diplomacy,
         Military = d.Military,
         Events = d.Events,
+        News = d.News,
         Terrain = d.Terrain,
         Benchmarks = d.Benchmarks,
     };

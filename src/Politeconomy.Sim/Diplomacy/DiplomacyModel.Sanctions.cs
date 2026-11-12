@@ -42,14 +42,16 @@ public static partial class DiplomacyModel
         var d = world.Diplomacy!;
         d.Sanctions.RemoveAll(s => s.By == by && s.Target == target);
         d.Sanctions.Add(new Sanction(by, target, level, world.Date));
+        var headline = $"Введены {SanctionName(level)} санкции против страны «{world[target].Name}».";
         var text = $"Введены {SanctionName(level)} санкции против страны «{world[target].Name}»: торговля с ней сократится, ей труднее занимать.";
         // Цель отвечает сама, если это не страна игрока (игрок решает за себя).
         if (SanctionLevel(world, target, by) == null && target != world.PlayerCountry)
         {
             d.Sanctions.Add(new Sanction(target, by, "partial", world.Date) { Response = true });
             text += " В ответ она ввела частичные санкции против нас.";
+            headline += " Она ответила частичными санкциями.";
         }
-        Note(world, by, "diplomacy", text);
+        Note(world, by, "diplomacy", text, "sanction", target, headline);
         Refresh(world);
         return true;
     }
@@ -62,7 +64,7 @@ public static partial class DiplomacyModel
         var d = world.Diplomacy!;
         d.Sanctions.RemoveAll(s => s.By == by && s.Target == target);
         var answered = d.Sanctions.RemoveAll(s => s.By == target && s.Target == by && s.Response) > 0;
-        Note(world, by, "diplomacy", $"Сняты санкции против страны «{world[target].Name}»." + (answered ? " Она отменила ответные." : ""));
+        Note(world, by, "diplomacy", $"Сняты санкции против страны «{world[target].Name}»." + (answered ? " Она отменила ответные." : ""), "sanction_lift", target);
         Refresh(world);
         return true;
     }

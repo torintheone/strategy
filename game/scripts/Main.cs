@@ -46,6 +46,8 @@ public partial class Main : Node
     ProtestDialog _protestDialog = null!;
     EventDialog _eventDialog = null!;
     EventsTray _eventsTray = null!;
+    NewsTicker _newsTicker = null!;
+    NewsPanel _newsPanel = null!;
     DiplomacyScreen _diplomacy = null!;
     ScienceScreen _science = null!;
     ProjectDialog _projectDialog = null!;
@@ -85,6 +87,9 @@ public partial class Main : Node
     string? _shotsDir;
     int _shotStep;
     int _shotFrames;
+    // Скриншоты ленты новостей: ждём, пока мир проживёт несколько месяцев, и закрываем окна, которые при этом открылись.
+    DateOnly? _shotUntil;
+    bool _shotDrain;
 
     // Дымовой тест для CI: запуск с аргументом «-- --smoke» проходит по всем режимам карты и выходит.
     bool _smoke;
@@ -191,6 +196,20 @@ public partial class Main : Node
         _uiRoot.AddChild(_modePanel);
         _modePanel.Setup(_data);
         _modePanel.ModeChosen += SetMode;
+
+        _newsTicker = new NewsTicker();
+        _uiRoot.AddChild(_newsTicker);
+        _newsTicker.Setup(_data);
+        _newsTicker.Toggled += ToggleNews;
+        _newsPanel = new NewsPanel { Visible = false };
+        _uiRoot.AddChild(_newsPanel);
+        _newsPanel.Setup(_data);
+        _newsPanel.Closed += ToggleNews;
+        _newsPanel.CountryChosen += id =>
+        {
+            if (_map.Country(id) is { } country)
+                SelectCountry(country, center: true);
+        };
 
         _countryPanel = new CountryPanel { Visible = false };
         _uiRoot.AddChild(_countryPanel);
@@ -392,7 +411,7 @@ public partial class Main : Node
         _hoverCard.Setup();
 
         // Когда курсор уходит на панель, карта не должна подсвечивать регион под ней.
-        foreach (var panel in new Control[] { _topBar, _modePanel, _countryPanel, _rail, _government, _ministries, _politicsScreen, _laws, _budget })
+        foreach (var panel in new Control[] { _topBar, _modePanel, _countryPanel, _rail, _government, _ministries, _politicsScreen, _laws, _budget, _newsTicker, _newsPanel })
             panel.MouseEntered += () => SetHovered(null, null);
     }
 
@@ -413,6 +432,7 @@ public partial class Main : Node
             return;
         }
         var snapshot = _host.Snapshot;
+        LayoutNews();
         // Окно закрыли — следующее (например, дебаты после начала кампании) показываем сразу: на паузе нового снимка не будет.
         if (_dialogWasOpen && !DialogOpen)
             CheckDialogs(snapshot);
@@ -443,6 +463,9 @@ public partial class Main : Node
         if (_diplomacy.Visible)
             _diplomacy.Refresh(snapshot);
         _eventsTray.Show(snapshot.Events?.Pending);
+        _newsTicker.Show(snapshot.News, snapshot.PlayerCountry);
+        if (_newsPanel.Visible)
+            _newsPanel.Refresh(snapshot.News, snapshot.PlayerCountry);
         Recolor(snapshot);
         CheckDialogs(snapshot);
         _dialogWasOpen = DialogOpen;
@@ -556,6 +579,11 @@ public partial class Main : Node
             });
             return;
         }
+        if (physical == Key.J)
+        {
+            ToggleNews();
+            return;
+        }
         switch (key)
         {
             case Key.Space:
@@ -567,6 +595,8 @@ public partial class Main : Node
             case Key.Escape:
                 if (ScreenOpen)
                     CloseScreens();
+                else if (_newsPanel.Visible)
+                    ToggleNews();
                 else
                     SelectRegion(null);
                 return;
@@ -835,6 +865,8 @@ public partial class Main : Node
                     ("события", _smokeEventShown && _smokeJournal.Contains(("RUS", "event")) && snapshot.Events is { } ev
                                && ev.History.Any(h => h.Event == "record_harvest" && h.Option == "export") && ev.Active.Count > 0
                                && snapshot.Countries.Values.Count(c => c.Ai is { } a && a.Decisions.Any(d => d.Kind == "event")) > 5),
+                    ("новости", snapshot.News.Items.Any(n => n.Home && n.Source.StartsWith("event:")) && snapshot.News.Items.Any(n => !n.Home)
+                                && snapshot.News.Items.All(n => _data.News.Topic(n.Topic) != null) && _newsTicker.Current != null),
                     ("ИИ", snapshot.Countries.Values.Count(c => c.Ai is { Decisions.Count: > 0 }) > 50 && rus.Ai == null
                            && snapshot.Countries["DEU"].Ai is { Priorities.Count: 4 }),
                     ("мир", _smokeAnnexed != null && snapshot.Owners.GetValueOrDefault(_smokeAnnexed) == "RUS" && _smokeJournal.Contains(("RUS", "peace"))
@@ -867,6 +899,20 @@ public partial class Main : Node
     void ScreenshotStep()
     {
         _shotFrames++;
+        if (_shotUntil is { } until)
+        {
+            // Мир ещё считает месяцы — ждём; досчитал — даём окнам открыться и закрываем их.
+            if (_host!.Snapshot.Date >= until)
+                _shotUntil = null;
+            _shotFrames = 0;
+            return;
+        }
+        if (_shotDrain && DialogOpen)
+        {
+            CloseDialogs();
+            _shotFrames = 0;
+            return;
+        }
         if (_shotFrames < 45)
             return;
         var views = new (string Name, Action Setup)[]
@@ -1243,6 +1289,38 @@ public partial class Main : Node
                 SelectCountry(_map.Country("BRA"));
                 _countryPanel.ScrollToSection("Решения правительства");
             }),
+            // Лента новостей: мир проживает восемь месяцев (события игрока решает «аппарат»), окна по дороге закрываются.
+            ("70_news_ticker", () =>
+            {
+                SelectRegion(null);
+                SetMode(_data.MapModes.Modes[0]);
+                ShowAt("BRA", 2.4f);
+                var until = _host!.Snapshot.Date.AddMonths(8);
+                _shotUntil = until;
+                _shotDrain = true;
+                _host.Post(w =>
+                {
+                    var sim = new Politeconomy.Sim.Engine.Simulation(w, GameSetup.Systems());
+                    while (w.Date < until)
+                    {
+                        sim.StepDay();
+                        if (w.PlayerCountry is { } me && w.Events?.Countries.GetValueOrDefault(me) is { } mine)
+                            foreach (var pending in mine.Pending.ToList())
+                                Politeconomy.Sim.Events.EventModel.Decide(w, me, pending.Id,
+                                    Politeconomy.Sim.Events.EventModel.DefaultOption(w, w[me], w.Data.Events.Event(pending.Event)!).Id);
+                    }
+                });
+            }),
+            ("71_news_panel", () =>
+            {
+                if (!_newsPanel.Visible)
+                    ToggleNews();
+            }),
+            ("72_news_home", () =>
+            {
+                _newsPanel.SetFilter("home");
+                SelectCountry(_map.Country("BRA"));
+            }),
         };
         if (_shotStep > 0)
         {
@@ -1318,6 +1396,37 @@ public partial class Main : Node
             OpenScience(id);
         else
             OpenLaws(id);
+    }
+
+    /// <summary>Раскрыть или свернуть список новостей над лентой (клавиша J, щелчок по ленте).</summary>
+    void ToggleNews()
+    {
+        if (ScreenOpen)
+            CloseScreens();
+        _newsPanel.Visible = !_newsPanel.Visible;
+        _newsTicker.SetOpen(_newsPanel.Visible);
+        if (_newsPanel.Visible && _host != null)
+            _newsPanel.Refresh(_host.Snapshot.News, _host.Snapshot.PlayerCountry);
+    }
+
+    /// <summary>
+    /// Лента занимает низ экрана между легендой карты и досье; под открытым экраном (правительство, бюджет…) её не видно.
+    /// </summary>
+    void LayoutNews()
+    {
+        var screen = ScreenOpen;
+        if (screen && _newsPanel.Visible)
+        {
+            _newsPanel.Visible = false;
+            _newsTicker.SetOpen(false);
+        }
+        _newsTicker.Visible = !screen;
+        var right = _countryPanel.Visible ? -444 : -12;
+        if (_newsTicker.OffsetRight != right)
+        {
+            _newsTicker.OffsetRight = right;
+            _newsPanel.OffsetRight = right;
+        }
     }
 
     /// <summary>Перед открытием экрана прячем досье и легенду карты: экран закрывает их, а сквозь стекло они бы просвечивали.</summary>

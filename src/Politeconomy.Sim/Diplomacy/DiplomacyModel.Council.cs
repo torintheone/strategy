@@ -94,7 +94,7 @@ public static partial class DiplomacyModel
         if (!vote.Passed)
         {
             var why = vote.Vetoes.Count > 0 ? $"вето — {string.Join(", ", vote.Vetoes.Select(v => world[v].Name))}" : "не хватило голосов";
-            Note(world, proposer, "council", $"{data.Diplomacy.Council.Name}: резолюция {title} не принята ({why}): {tally}.");
+            Note(world, proposer, "council", $"{data.Diplomacy.Council.Name}: резолюция {title} не принята ({why}): {tally}.", partner: target);
             Refresh(world);
             return false;
         }
@@ -114,7 +114,7 @@ public static partial class DiplomacyModel
                 CouncilAid(world, target, vote.YesVoters);
                 break;
         }
-        Note(world, proposer, "council", $"{data.Diplomacy.Council.Name}: резолюция {title} принята: {tally}.");
+        Note(world, proposer, "council", $"{data.Diplomacy.Council.Name}: резолюция {title} принята: {tally}.", partner: target);
         Refresh(world);
         return true;
     }

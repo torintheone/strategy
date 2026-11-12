@@ -207,7 +207,7 @@ public static class WarModel
                    (goal.Count > 0 ? $" из-за спорных регионов ({string.Join(", ", goal.Select(r => RegionName(world, r)))})" : "") +
                    (treaty != null ? ", нарушив мирный договор" : truce != null ? ", нарушив перемирие" : "") + "." +
                    (allies.Count > 0 ? $" За неё вступились союзники: {string.Join(", ", allies.Select(a => world[a].Name))}." : "");
-        News(world, war, text);
+        News(world, war, text, "war_start");
         return war;
     }
 
@@ -263,17 +263,22 @@ public static class WarModel
             w.Ceasefires.Add(new Ceasefire(war.Attacker, war.Defender, world.Date, capitulated));
         var regions = war.News.Count(n => n.Text.StartsWith("Взят", StringComparison.Ordinal) || n.Text.StartsWith("Освобождён", StringComparison.Ordinal));
         w.History.Add(new WarRecord(war.Id, war.Attacker, war.Defender, war.Start, world.Date, text, war.AttackerLosses, war.DefenderLosses, regions));
-        News(world, war, text);
+        News(world, war, text, "war_end");
     }
 
-    /// <summary>Новость войны: в её ленту и в журнал игрока, если он воюет.</summary>
-    public static void News(World world, War war, string text)
+    /// <summary>
+    /// Новость войны: в её ленту, в журнал игрока, если он воюет, и в ленту новостей мира (news — источник новости:
+    /// war_start, war_region, war_end, war — переговоры).
+    /// </summary>
+    public static void News(World world, War war, string text, string news = "war")
     {
         war.News.Add(new WarNews(world.Date, text));
         if (war.News.Count > 30)
             war.News.RemoveAt(0);
-        if (world.PlayerCountry is { } player && war.Involves(player))
-            world.Log(player, "war", text);
+        var involved = world.PlayerCountry is { } player && war.Involves(player);
+        if (involved)
+            world.Log(world.PlayerCountry!, "war", text, Sim.News.NewsModel.None);
+        Sim.News.NewsModel.Report(world, war.Attacker, news, text, war.Defender, home: involved ? true : null);
     }
 
     static string Name(World world, string id) => world[id].Name;

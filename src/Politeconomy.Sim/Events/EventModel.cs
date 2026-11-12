@@ -282,6 +282,7 @@ public static class EventModel
         if (ce.History.Count > HistoryLimit)
             ce.History.RemoveRange(0, ce.History.Count - HistoryLimit);
         events.Recent.Add(news);
+        News.NewsModel.Event(world, record, instance, news);
         var limit = world.Data.EventsBalance.Recent;
         if (events.Recent.Count > limit)
             events.Recent.RemoveRange(0, events.Recent.Count - limit);

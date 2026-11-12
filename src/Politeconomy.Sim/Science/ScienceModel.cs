@@ -127,10 +127,10 @@ public static class ScienceModel
             science.Discoveries[t.Id] = new Discovery(country.Id, world.Date);
         if (first)
         {
-            world.Log(country.Id, "science", $"Впервые в мире: учёные освоили технологию «{t.Name}».");
+            world.Log(country.Id, "science", $"Впервые в мире: учёные освоили технологию «{t.Name}».", "science_first");
             // О чужом открытии узнаёт и игрок: теперь эту технологию дешевле осваивать.
             if (world.PlayerCountry is { } player && player != country.Id)
-                world.Log(player, "science", $"{country.Name}: впервые в мире освоена технология «{t.Name}». Теперь её дешевле освоить и нам.");
+                world.Log(player, "science", $"{country.Name}: впервые в мире освоена технология «{t.Name}». Теперь её дешевле освоить и нам.", News.NewsModel.None);
         }
         else if (world.PlayerCountry == country.Id)
             world.Log(country.Id, "science", $"Учёные освоили технологию «{t.Name}».");

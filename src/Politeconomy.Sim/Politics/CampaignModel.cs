@@ -220,7 +220,7 @@ public static class CampaignModel
                 ProtestModel.FraudExposed(world, country, p);
             }
             else
-                world.Log(country.Id, "fraud", "Подсчёт голосов прошёл «как надо»: разоблачений не было.");
+                world.Log(country.Id, "fraud", "Подсчёт голосов прошёл «как надо»: разоблачений не было.", News.NewsModel.None);
         }
         var won = p.Party(c.Party) is { Ruling: true };
         foreach (var pledge in p.Pledges.Where(x => x.Party == c.Party && x.Deadline == null).ToList())

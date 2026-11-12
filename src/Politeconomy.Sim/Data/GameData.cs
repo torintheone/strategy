@@ -34,6 +34,7 @@ public sealed class GameData
     public required MilitaryFile Military { get; init; }
     public required TerrainFile Terrain { get; init; }
     public required EventsFile Events { get; init; }
+    public required NewsFile News { get; init; }
     /// <summary>История показателей за 10 лет до старта (для графиков ведомств).</summary>
     public required HistoryFile History { get; init; }
     /// <summary>Культуры имён из папки data/names/, по одной на файл.</summary>
@@ -141,6 +142,11 @@ public sealed class GameData
 
     static readonly EventsBalance DefaultEvents = new();
 
+    /// <summary>Коэффициенты новостей; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public NewsBalance NewsBalance => Balance.News ?? DefaultNews;
+
+    static readonly NewsBalance DefaultNews = new();
+
     /// <summary>Коэффициенты ИИ стран; если раздела нет в balance.json — значения по умолчанию.</summary>
     public AiBalance AiBalance => Balance.Ai ?? DefaultAi;
 
@@ -195,6 +201,7 @@ public sealed class GameData
             Military = Read(directory, "military.json", ctx.MilitaryFile),
             Terrain = Read(directory, "terrain.json", ctx.TerrainFile),
             Events = Read(directory, "events.json", ctx.EventsFile),
+            News = Read(directory, "news.json", ctx.NewsFile),
             History = Read(directory, "history.json", ctx.HistoryFile),
             Cultures = ReadCultures(directory),
             Benchmarks = File.Exists(Path.Combine(directory, "benchmarks", "population.json"))

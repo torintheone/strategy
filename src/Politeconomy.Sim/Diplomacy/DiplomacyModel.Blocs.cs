@@ -83,7 +83,7 @@ public static partial class DiplomacyModel
         members.Sort(StringComparer.Ordinal);
         Note(world, country, "diplomacy", $"Страна вступила в «{bloc.Name}»." + (bloc.Military
             ? " Теперь мы защищаем союзников, а они — нас."
-            : " Торговля с членами блока станет свободнее."));
+            : " Торговля с членами блока станет свободнее."), "bloc", headline: $"Страна вступила в «{bloc.Name}».");
         Refresh(world);
         return true;
     }
@@ -97,7 +97,7 @@ public static partial class DiplomacyModel
         members.Remove(country);
         foreach (var m in members)
             Remember(world, country, m, -world.Data.DiplomacyBalance.LeaveRelations);
-        Note(world, country, "diplomacy", $"Страна вышла из «{bloc.Name}»: отношения с его членами ухудшились.");
+        Note(world, country, "diplomacy", $"Страна вышла из «{bloc.Name}»: отношения с его членами ухудшились.", "bloc");
         Refresh(world);
         return true;
     }

@@ -186,8 +186,11 @@ public static class PeaceModel
         var p = world.Data.PeaceBalance;
         var (sw, sl) = Sides(world, winner, loser);
         var text = Describe(world, winner, loser, terms);
+        // Мир после идущей войны — новость о её конце; мир после перемирия — отдельная новость.
         if (MainWar(world, winner, loser) is { } war)
             WarModel.End(world, war, $"Мирный договор: {text}.", peace: true);
+        else
+            News.NewsModel.Report(world, winner, "peace_treaty", $"Мирный договор: {text}.", loser);
         foreach (var id in terms.Annex)
             Annex(world, id, winner);
         foreach (var r in world.Regions.Where(r => r.IsOccupied && ((sw.Contains(r.Owner) && sl.Contains(r.Controller)) || (sl.Contains(r.Owner) && sw.Contains(r.Controller)))).ToList())
@@ -205,7 +208,7 @@ public static class PeaceModel
         w.Treaties.Add(treaty);
         DiplomacyModel.Peace(world, winner, loser, terms.Trade, terms.Neutrality, p.PeaceRelations);
         foreach (var c in new[] { winner, loser }.Where(c => c == world.PlayerCountry))
-            world.Log(c, "peace", $"Подписан мирный договор: {text}.");
+            world.Log(c, "peace", $"Подписан мирный договор: {text}.", News.NewsModel.None);
         return treaty;
     }
 

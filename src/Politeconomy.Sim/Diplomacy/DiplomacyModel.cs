@@ -577,7 +577,7 @@ public static partial class DiplomacyModel
             return false;
         }
         world.Diplomacy!.Treaties.Add(new Treaty(a, b, type, world.Date));
-        Note(world, a, "diplomacy", $"Подписан договор со {Instrumental(world, b)}: «{name}».");
+        Note(world, a, "diplomacy", $"Подписан договор со {Instrumental(world, b)}: «{name}».", "treaty", b);
         Refresh(world);
         return true;
     }
@@ -593,7 +593,7 @@ public static partial class DiplomacyModel
             return false;
         d.Treaties.Remove(treaty);
         Remember(world, a, b, -world.Data.DiplomacyBalance.CancelRelations);
-        Note(world, a, "diplomacy", $"Расторгнут договор со {Instrumental(world, b)}: «{world.Data.Diplomacy.Treaties.FirstOrDefault(t => t.Id == type)?.Name ?? type}».");
+        Note(world, a, "diplomacy", $"Расторгнут договор со {Instrumental(world, b)}: «{world.Data.Diplomacy.Treaties.FirstOrDefault(t => t.Id == type)?.Name ?? type}».", "treaty_cancel", b);
         Refresh(world);
         return true;
     }
@@ -610,7 +610,8 @@ public static partial class DiplomacyModel
         var criticism = relations < bal.VisitCriticismBelow && world.Government?.Countries.GetValueOrDefault(a) is { } g;
         if (criticism)
             world.Government![a].Leader.Popularity = Math.Clamp(world.Government[a].Leader.Popularity - bal.VisitCriticism, 1, 99);
-        Note(world, a, "diplomacy", $"Визит главы в страну «{world[b].Name}»: отношения улучшились." + (criticism ? " Дома визит к недругу критикуют: популярность главы упала." : ""));
+        Note(world, a, "diplomacy", $"Визит главы в страну «{world[b].Name}»: отношения улучшились." + (criticism ? " Дома визит к недругу критикуют: популярность главы упала." : ""),
+            "visit", headline: $"Визит главы в страну «{world[b].Name}»." + (criticism ? " Дома визит к недругу критикуют." : ""));
         Refresh(world);
         return true;
     }
@@ -632,7 +633,8 @@ public static partial class DiplomacyModel
         eb.Debt = Math.Max(0, eb.Debt - share * eb.NominalGdp);
         var gain = Math.Min(bal.AidMax, bal.AidRelations * Math.Log(1 + share * 100));
         Remember(world, a, b, gain);
-        Note(world, a, "diplomacy", $"Помощь {Dative(world, b)}: {Fmt.Number(bal.AidShare, 2)}% нашего ВВП ({Fmt.Number(share * 100, 2)}% их ВВП). Отношения {Fmt.Signed(gain, 0)}.");
+        Note(world, a, "diplomacy", $"Помощь {Dative(world, b)}: {Fmt.Number(bal.AidShare, 2)}% нашего ВВП ({Fmt.Number(share * 100, 2)}% их ВВП). Отношения {Fmt.Signed(gain, 0)}.",
+            "aid", b, $"Помощь {Dative(world, b)}: {Fmt.Number(share * 100, 2)}% ВВП получателя.");
         Refresh(world);
         return true;
     }
@@ -643,7 +645,7 @@ public static partial class DiplomacyModel
         if (!Acts(world, a) || a == b || world.ById(b) is null)
             return false;
         Remember(world, a, b, -world.Data.DiplomacyBalance.ExpelRelations);
-        Note(world, a, "diplomacy", $"Высланы дипломаты: {world[b].Name}. Отношения резко ухудшились.");
+        Note(world, a, "diplomacy", $"Высланы дипломаты: {world[b].Name}. Отношения резко ухудшились.", "expel", b);
         Refresh(world);
         return true;
     }
@@ -675,7 +677,8 @@ public static partial class DiplomacyModel
         {
             d.Treaties.Remove(t);
             Remember(world, country, t.Other(country), -world.Data.DiplomacyBalance.CancelRelations);
-            world.Log(country, "diplomacy", $"Национализация разорвала договор о защите инвестиций со {Instrumental(world, t.Other(country))}: отношения ухудшились.");
+            world.Log(country, "diplomacy", $"Национализация разорвала договор о защите инвестиций со {Instrumental(world, t.Other(country))}: отношения ухудшились.", News.NewsModel.None);
+            News.NewsModel.Report(world, country, "treaty_cancel", $"Национализация разорвала договор о защите инвестиций со {Instrumental(world, t.Other(country))}.", t.Other(country));
         }
         Refresh(world);
     }
@@ -692,13 +695,17 @@ public static partial class DiplomacyModel
     /// </summary>
     static bool Acts(World world, string country) => world.PlayerCountry == country || world.Diplomacy?.Actor == country;
 
-    /// <summary>Сообщение о действии: у игрока — в журнал, у ИИ — в его журнал решений.</summary>
-    static void Note(World world, string country, string kind, string text)
+    /// <summary>
+    /// Сообщение о действии: у игрока — в журнал, у ИИ — в его журнал решений; и в ленту новостей, если задан
+    /// источник новости (news; заголовок без «мы» и «нас» — headline, вторая страна — partner).
+    /// </summary>
+    static void Note(World world, string country, string kind, string text, string? news = null, string? partner = null, string? headline = null)
     {
         if (world.Diplomacy is { Actor: { } actor, OnNote: { } note } && actor == country && world.PlayerCountry != country)
             note(text);
         else
-            world.Log(country, kind, text);
+            world.Log(country, kind, text, News.NewsModel.None);
+        News.NewsModel.Report(world, country, news ?? kind, headline ?? text, partner);
     }
 
     /// <summary>

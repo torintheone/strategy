@@ -139,6 +139,9 @@ public sealed class World
     /// <summary>События стран: что ждёт решения, какие последствия действуют, что придёт позже. Создаёт <see cref="Events.EventModel.Setup"/>.</summary>
     public Events.WorldEvents? Events { get; set; }
 
+    /// <summary>Лента новостей и память о показателях, о которых уже сообщали. Создаёт <see cref="News.NewsModel.Setup"/>.</summary>
+    public News.WorldNews? News { get; set; }
+
     /// <summary>Правительства и парламенты; создаются <see cref="Government.GovernmentModel.Setup"/>.</summary>
     public Government.WorldGovernment? Government { get; set; }
 
@@ -168,12 +171,16 @@ public sealed class World
 
     public const int JournalLimit = 300;
 
-    /// <summary>Записать событие в журнал (старые записи сверх лимита удаляются).</summary>
-    public void Log(string country, string kind, string text)
+    /// <summary>
+    /// Записать событие в журнал (старые записи сверх лимита удаляются). Запись может стать новостью: источник
+    /// новости — news, а если он не задан — вид записи (kind); какие источники идут в ленту — data/news.json → sources.
+    /// </summary>
+    public void Log(string country, string kind, string text, string? news = null)
     {
         Journal.Add(new JournalEntry(Date, country, kind, text));
         if (Journal.Count > JournalLimit)
             Journal.RemoveRange(0, Journal.Count - JournalLimit);
+        Sim.News.NewsModel.Report(this, country, news ?? kind, text);
     }
 
     readonly Dictionary<string, Country> _byId = new(StringComparer.Ordinal);

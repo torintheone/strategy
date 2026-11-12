@@ -26,7 +26,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] | diplomacy [--country ISO] | ai [--years N] | war [--attacker ISO --defender ISO] | events [--years N] [--country ISO] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] | diplomacy [--country ISO] | ai [--years N] | war [--attacker ISO --defender ISO] | events [--years N] [--country ISO] | news [--years N] [--country ISO|none] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -96,6 +96,8 @@ switch (command)
         return WarReport();
     case "events":
         return EventsReport();
+    case "news":
+        return NewsReport();
     default:
         Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
         return 2;
@@ -841,6 +843,57 @@ int EventsReport()
         Console.WriteLine(line);
     var active = world.Events[player];
     Console.WriteLine("Действующие поправки: " + string.Join(", ", active.Effects.OrderBy(kv => kv.Key, StringComparer.Ordinal).Select(kv => $"{kv.Key} {kv.Value:+0.##;-0.##}")));
+    return 0;
+}
+
+// Новости: сколько новостей в год видит игрок дома и в мире, сколько не прошло отбор, из каких источников, и сама лента.
+// --country none — без игрока (наблюдатель): в ленте только мировые новости.
+int NewsReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var player = Option("--country") ?? "BRA";
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 5;
+    if (player != "none")
+        Politeconomy.Sim.Politics.PoliticsActions.PlayAs(world, player);
+    var all = new List<Politeconomy.Sim.News.NewsItem>();
+    var lastId = 0;
+    var end = world.Date.AddYears(runYears);
+    var timer = Stopwatch.StartNew();
+    while (world.Date < end)
+    {
+        sim.RunUntil(world.Date.AddDays(1));
+        if (player != "none")
+            foreach (var pending in world.Events![player].Pending.ToList())
+                Politeconomy.Sim.Events.EventModel.Decide(world, player, pending.Id,
+                    Politeconomy.Sim.Events.EventModel.DefaultOption(world, world[player], data.Events.Event(pending.Event)!).Id);
+        foreach (var item in world.News!.Items.Where(i => i.Id > lastId))
+            all.Add(item);
+        lastId = world.News.NextId - 1;
+    }
+    var counts = world.News!.Counts;
+    Console.WriteLine($"Новости за {runYears} лет, игрок — {(player == "none" ? "нет (наблюдатель)" : world[player].Name)}; прогон {timer.Elapsed.TotalSeconds:F0} с.");
+    Console.WriteLine($"В год: дома {counts.GetValueOrDefault("home") / (double)runYears:F0}, в мире {counts.GetValueOrDefault("world") / (double)runYears:F0}, " +
+                      $"не прошло отбор {counts.GetValueOrDefault("skipped") / (double)runYears:F0}. В ленте хранится {world.News.Items.Count}.");
+    Console.WriteLine("По годам (дома / в мире): " + string.Join(", ", all.GroupBy(i => i.Date.Year).OrderBy(g => g.Key)
+        .Select(g => $"{g.Key}: {g.Count(i => i.Home)} / {g.Count(i => !i.Home)}")));
+    foreach (var home in new[] { true, false })
+    {
+        Console.WriteLine(home ? "Источники дома:" : "Источники в мире:");
+        Console.WriteLine("  " + string.Join(", ", all.Where(i => i.Home == home).GroupBy(i => i.Source.StartsWith("event:") ? "event" : i.Source)
+            .OrderByDescending(g => g.Count()).Select(g => $"{g.Key} {g.Count()}")));
+    }
+    Console.WriteLine("Страны в мировой ленте: " + string.Join(", ", all.Where(i => !i.Home).GroupBy(i => i.Country ?? "мир")
+        .OrderByDescending(g => g.Count()).Take(25).Select(g => $"{g.Key} {g.Count()}")));
+    string Line(Politeconomy.Sim.News.NewsItem i) =>
+        $"  {i.Date:yyyy-MM-dd} {i.Weight,3} [{i.Topic}] {(i.Country == null ? "Мир" : world[i.Country].Name)}: {i.Text}";
+    var firstYears = all.Where(i => i.Date < world.Data.Scenario.StartDate.AddYears(2)).ToList();
+    Console.WriteLine($"Дома, первые два года ({firstYears.Count(i => i.Home)}):");
+    foreach (var i in firstYears.Where(i => i.Home))
+        Console.WriteLine(Line(i));
+    Console.WriteLine($"В мире, первые два года ({firstYears.Count(i => !i.Home)}):");
+    foreach (var i in firstYears.Where(i => !i.Home))
+        Console.WriteLine(Line(i));
     return 0;
 }
 

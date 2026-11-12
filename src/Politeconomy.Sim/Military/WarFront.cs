@@ -117,7 +117,7 @@ public static class WarFront
         var name = WarModel.RegionName(world, region);
         WarModel.News(world, war, controller == r.Owner
             ? $"Освобождён регион «{name}»: он снова под контролем страны «{world[controller].Name}»."
-            : $"Взят регион «{name}» ({world[r.Owner].Name}): теперь его контролирует страна «{world[controller].Name}».");
+            : $"Взят регион «{name}» ({world[r.Owner].Name}): теперь его контролирует страна «{world[controller].Name}».", "war_region");
     }
 
     /// <summary>Потери: солдаты и оснащение воюющих, мирные жители и разрушения в регионах фронта, усталость.</summary>

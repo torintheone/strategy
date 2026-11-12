@@ -70,7 +70,7 @@ public static partial class DiplomacyModel
         var name = world.Data.Diplomacy.Fund.Name;
         if (!offer.Accepts)
         {
-            Note(world, country, "fund", $"{name} отказал в кредите. {offer.Reason}");
+            Note(world, country, "fund", $"{name} отказал в кредите. {offer.Reason}", News.NewsModel.None);
             return false;
         }
         var b = world.Data.DiplomacyBalance;

@@ -43,6 +43,7 @@ public static class GameSetup
         Diplomacy.DiplomacyModel.Setup(world);
         Ai.AiModel.Setup(world);
         Events.EventModel.Setup(world);
+        News.NewsModel.Setup(world);
         Politics.InterestGroupsModel.Setup(world);
         Politics.ProtestModel.Setup(world);
         world.Budgets = new Budget.WorldBudgets();
@@ -55,7 +56,7 @@ public static class GameSetup
         [.. LawModel.Systems(), .. EconomyModel.Systems(), .. Energy.EnergyModel.Systems(), .. Infrastructure.InfrastructureModel.Systems(), .. Science.ScienceModel.Systems(), .. Diplomacy.DiplomacyModel.Systems(), .. Military.WarModel.Systems(), new Budget.Systems.BudgetCycleSystem(), .. DemographyModel.Systems(),
             .. Education.EducationModel.Systems(), .. Health.HealthModel.Systems(), .. Living.LivingModel.Systems(),
             .. SocietyModel.Systems(), .. GovernmentModel.Systems(), .. Politics.PoliticsModel.Systems(),
-            .. Ai.AiModel.Systems(), .. History.HistoryModel.Systems(), .. Events.EventModel.Systems()];
+            .. Ai.AiModel.Systems(), .. History.HistoryModel.Systems(), .. News.NewsModel.Systems(), .. Events.EventModel.Systems()];
 
     /// <summary>Подключить системы модели к миру из сохранения.</summary>
     public static Simulation Resume(World world)
@@ -65,6 +66,7 @@ public static class GameSetup
         Military.WarModel.Ensure(world);
         Ai.AiModel.Ensure(world);
         Events.EventModel.Ensure(world);
+        News.NewsModel.Ensure(world);
         return new(world, Systems());
     }
 
