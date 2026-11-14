@@ -48,7 +48,7 @@
 | `data/` | Весь контент в открытых JSON-файлах — его можно менять (моды) |
 | `tools/` | Скрипт сборки данных мира из открытых источников |
 
-Документы проекта: [CLAUDE.md](CLAUDE.md) — памятка для Claude Code, [ROADMAP.md](ROADMAP.md) — план оставшихся частей, [MODEL.md](MODEL.md) — как устроена модель, [DECISIONS.md](DECISIONS.md) — принятые решения, [CHANGELOG.md](CHANGELOG.md) — что изменилось в каждой версии, [LICENSES-ASSETS.md](LICENSES-ASSETS.md) — источники данных, шрифты и их лицензии.
+Документы проекта: [CLAUDE.md](CLAUDE.md) — памятка для Claude Code, [ROADMAP.md](ROADMAP.md) — план оставшихся частей, [PLAYBOOK.md](PLAYBOOK.md) — какой модели что писать по шагам, [MODEL.md](MODEL.md) — как устроена модель, [DECISIONS.md](DECISIONS.md) — принятые решения, [CHANGELOG.md](CHANGELOG.md) — что изменилось в каждой версии, [LICENSES-ASSETS.md](LICENSES-ASSETS.md) — источники данных, шрифты и их лицензии.
 
 ## Для разработки
 
