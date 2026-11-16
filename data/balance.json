@@ -872,7 +872,7 @@
   "inflation_weight": 0.02,
   "leader_weight": 0.6,
   "organization_weight": 0.8,
-  "fatigue_per_year": 0.08,
+  "fatigue_per_year": 0.10,
   "fatigue_max": 0.6,
   "start_tenure": 8,
   "momentum_spread": 0.04,
