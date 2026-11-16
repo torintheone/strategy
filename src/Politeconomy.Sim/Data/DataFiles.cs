@@ -99,7 +99,8 @@ public sealed record BalanceFile(TimeBalance Time, EconomyBalance? Economy = nul
     UnrestBalance? Unrest = null, PowerBalance? Power = null, EducationBalance? Education = null,
     HealthBalance? Health = null, LivingBalance? Living = null, EnergyBalance? Energy = null,
     InfrastructureBalance? Infrastructure = null, ScienceBalance? Science = null, DiplomacyBalance? Diplomacy = null,
-    AiBalance? Ai = null, WarBalance? War = null, PeaceBalance? Peace = null, EventsBalance? Events = null, NewsBalance? News = null);
+    AiBalance? Ai = null, WarBalance? War = null, PeaceBalance? Peace = null, EventsBalance? Events = null, NewsBalance? News = null,
+    BroadcastBalance? Broadcast = null);
 
 public sealed record TimeBalance(IReadOnlyList<double> DaysPerSecond);
 

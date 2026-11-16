@@ -9,6 +9,8 @@ namespace Politeconomy.Game.UI;
 /// <summary>
 /// Лента новостей внизу экрана: одна строка — метка «Дома» или страна, рубрика цветом, текст и дата. Новые новости
 /// сменяют друг друга (важные — первыми), в затишье лента листает последние. Щелчок раскрывает список всех новостей.
+/// О новом телевыпуске (если он не открылся окном) лента сообщает строкой «Телевыпуск»: щелчок по ней открывает
+/// выпуск; кнопка «Выпуск» справа открывает последний.
 /// </summary>
 public partial class NewsTicker : GlassPanel
 {
@@ -16,6 +18,8 @@ public partial class NewsTicker : GlassPanel
     const double MinShow = 3.5;
     const double IdleShow = 7;
     const int Replay = 6;
+    /// <summary>Сколько секунд держится строка о новом телевыпуске.</summary>
+    const double AnnounceShow = 12;
 
     GameData _data = null!;
     Dictionary<string, string> _names = null!;
@@ -25,6 +29,9 @@ public partial class NewsTicker : GlassPanel
     Label _text = null!;
     Label _date = null!;
     Button _all = null!;
+    Button _tv = null!;
+    Politeconomy.Sim.News.Broadcast? _announced;
+    Politeconomy.Sim.News.Broadcast? _latest;
     Tween? _fade;
 
     IReadOnlyList<NewsItem> _items = [];
@@ -39,6 +46,11 @@ public partial class NewsTicker : GlassPanel
 
     /// <summary>Щелчок по ленте: раскрыть или свернуть список новостей.</summary>
     public event Action? Toggled;
+    /// <summary>Открыть телевыпуск: щелчок по строке о нём или по кнопке «Выпуск».</summary>
+    public event Action<int>? BroadcastRequested;
+
+    /// <summary>Выпуск, о котором сейчас сообщает лента (null — лента показывает новость).</summary>
+    public Politeconomy.Sim.News.Broadcast? Announced => _announced;
 
     /// <summary>Новость, которая сейчас на ленте.</summary>
     public NewsItem? Current => _shown;
@@ -83,6 +95,14 @@ public partial class NewsTicker : GlassPanel
         _date.MouseFilter = MouseFilterEnum.Ignore;
         _row.AddChild(_date);
 
+        _tv = new Button { Text = "Выпуск", FocusMode = FocusModeEnum.None, Visible = false, TooltipText = "Последний телевыпуск «Неделя»" };
+        _tv.AddThemeFontSizeOverride("font_size", 13);
+        _tv.Pressed += () =>
+        {
+            if (_latest != null)
+                BroadcastRequested?.Invoke(_latest.Id);
+        };
+        line.AddChild(_tv);
         _all = new Button { Text = "Все новости", FocusMode = FocusModeEnum.None, ToggleMode = true, TooltipText = "Список новостей (J)" };
         _all.AddThemeFontSizeOverride("font_size", 13);
         _all.Pressed += () => Toggled?.Invoke();
@@ -92,7 +112,10 @@ public partial class NewsTicker : GlassPanel
         {
             if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true })
             {
-                Toggled?.Invoke();
+                if (_announced is { } show)
+                    BroadcastRequested?.Invoke(show.Id);
+                else
+                    Toggled?.Invoke();
                 AcceptEvent();
             }
         };
@@ -124,13 +147,48 @@ public partial class NewsTicker : GlassPanel
                 _queue.Add(item);
         if (_items.Count > 0)
             _lastId = Math.Max(_lastId, _items[^1].Id);
-        if (_shown == null && _queue.Count > 0)
+        if (_shown == null && _queue.Count > 0 && _announced == null)
             Next();
+    }
+
+    /// <summary>Последний выпуск страны игрока: по нему работает кнопка «Выпуск».</summary>
+    public void SetLatest(Politeconomy.Sim.News.Broadcast? show)
+    {
+        _latest = show;
+        _tv.Visible = show != null;
+    }
+
+    /// <summary>Сообщить о новом выпуске строкой в ленте: «Телевыпуск · «Неделя»: главный сюжет и ещё два».</summary>
+    public void Announce(Politeconomy.Sim.News.Broadcast show)
+    {
+        _announced = show;
+        _since = 0;
+        _dot.Visible = true;
+        _dot.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.Critical, null, 4, 0, 0));
+        _tag.Text = "Телевыпуск";
+        _tag.AddThemeColorOverride("font_color", UiTheme.Accent);
+        var more = show.Stories.Count - 1;
+        _text.Text = $"{Fmt.Quote(show.Show)}: {show.Stories[0].Headline}" +
+                     (more > 0 ? $" — и ещё {Fmt.Plural(more, "сюжет", "сюжета", "сюжетов")}" : "") + ". Щёлкните, чтобы посмотреть";
+        _text.AddThemeColorOverride("font_color", UiTheme.TextPrimary);
+        _date.Text = Fmt.Date(show.Date);
+        _fade?.Kill();
+        _row.Modulate = new Color(1, 1, 1, 0);
+        _fade = CreateTween();
+        _fade.TweenProperty(_row, "modulate:a", 1f, 0.35f);
     }
 
     public override void _Process(double delta)
     {
         _since += delta;
+        if (_announced != null)
+        {
+            if (_since < AnnounceShow)
+                return;
+            _announced = null;
+            if (_queue.Count == 0)
+                Display(_shown);
+        }
         if (_queue.Count > 0)
         {
             if (_since >= MinShow)
@@ -159,6 +217,7 @@ public partial class NewsTicker : GlassPanel
     void Display(NewsItem? item, bool replay = false)
     {
         _since = 0;
+        _announced = null;
         _shown = item;
         if (item == null)
         {

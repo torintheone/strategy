@@ -48,6 +48,9 @@ public partial class Main : Node
     EventsTray _eventsTray = null!;
     NewsTicker _newsTicker = null!;
     NewsPanel _newsPanel = null!;
+    BroadcastDialog _broadcastDialog = null!;
+    // Последний телевыпуск, о котором игрок уже знает (окном или строкой в ленте).
+    int _seenBroadcast;
     DiplomacyScreen _diplomacy = null!;
     ScienceScreen _science = null!;
     ProjectDialog _projectDialog = null!;
@@ -99,6 +102,7 @@ public partial class Main : Node
     string? _smokeAnnexed;
     int _smokeEvent;
     bool _smokeEventShown;
+    bool _smokeBroadcast;
     // В снимке только последние записи журнала, поэтому смоук-тест копит всё, что успел увидеть.
     readonly HashSet<(string Country, string Kind)> _smokeJournal = [];
 
@@ -201,6 +205,7 @@ public partial class Main : Node
         _uiRoot.AddChild(_newsTicker);
         _newsTicker.Setup(_data);
         _newsTicker.Toggled += ToggleNews;
+        _newsTicker.BroadcastRequested += ShowBroadcast;
         _newsPanel = new NewsPanel { Visible = false };
         _uiRoot.AddChild(_newsPanel);
         _newsPanel.Setup(_data);
@@ -210,6 +215,9 @@ public partial class Main : Node
             if (_map.Country(id) is { } country)
                 SelectCountry(country, center: true);
         };
+        _newsPanel.SetBroadcastWindow(GameSettings.BroadcastWindow);
+        _newsPanel.BroadcastWindowToggled += on => GameSettings.BroadcastWindow = on;
+        _newsPanel.BroadcastChosen += ShowBroadcast;
 
         _countryPanel = new CountryPanel { Visible = false };
         _uiRoot.AddChild(_countryPanel);
@@ -390,6 +398,14 @@ public partial class Main : Node
             if (w.PlayerCountry is { } me)
                 Politeconomy.Sim.Events.EventModel.Decide(w, me, id, option);
         });
+        _broadcastDialog = new BroadcastDialog();
+        _uiRoot.AddChild(_broadcastDialog);
+        _broadcastDialog.Setup(_data);
+        _broadcastDialog.CountryChosen += id =>
+        {
+            if (_map.Country(id) is { } country)
+                SelectCountry(country, center: true);
+        };
         _eventsTray = new EventsTray();
         _uiRoot.AddChild(_eventsTray);
         _eventsTray.Setup();
@@ -464,6 +480,7 @@ public partial class Main : Node
             _diplomacy.Refresh(snapshot);
         _eventsTray.Show(snapshot.Events?.Pending);
         _newsTicker.Show(snapshot.News, snapshot.PlayerCountry);
+        _newsTicker.SetLatest(snapshot.News.LastBroadcast(snapshot.PlayerCountry));
         if (_newsPanel.Visible)
             _newsPanel.Refresh(snapshot.News, snapshot.PlayerCountry);
         Recolor(snapshot);
@@ -569,6 +586,11 @@ public partial class Main : Node
         {
             if (key == Key.Escape && !_defeatDialog.Visible)
                 CloseDialogs();
+            // Телевыпуск листается с клавиатуры.
+            else if (_broadcastDialog.Visible && key is Key.Enter or Key.KpEnter or Key.Space or Key.Right)
+                _broadcastDialog.Next();
+            else if (_broadcastDialog.Visible && key == Key.Left)
+                _broadcastDialog.Previous();
             return;
         }
         if (physical is Key.G or Key.M or Key.P or Key.O or Key.L or Key.B or Key.N or Key.I)
@@ -867,6 +889,7 @@ public partial class Main : Node
                                && snapshot.Countries.Values.Count(c => c.Ai is { } a && a.Decisions.Any(d => d.Kind == "event")) > 5),
                     ("новости", snapshot.News.Items.Any(n => n.Home && n.Source.StartsWith("event:")) && snapshot.News.Items.Any(n => !n.Home)
                                 && snapshot.News.Items.All(n => _data.News.Topic(n.Topic) != null) && _newsTicker.Current != null),
+                    ("телевыпуск", SmokeBroadcast(snapshot)),
                     ("ИИ", snapshot.Countries.Values.Count(c => c.Ai is { Decisions.Count: > 0 }) > 50 && rus.Ai == null
                            && snapshot.Countries["DEU"].Ai is { Priorities.Count: 4 }),
                     ("мир", _smokeAnnexed != null && snapshot.Owners.GetValueOrDefault(_smokeAnnexed) == "RUS" && _smokeJournal.Contains(("RUS", "peace"))
@@ -890,6 +913,27 @@ public partial class Main : Node
                 _smokeStep++;
                 break;
         }
+    }
+
+    /// <summary>
+    /// Телевыпуск в дымовом тесте: за два месяца для России вышли выпуски по понедельникам, окно открылось само
+    /// (или откроется сейчас), листается до конца и закрывается; в ленте есть кнопка «Выпуск».
+    /// </summary>
+    bool SmokeBroadcast(WorldSnapshot snapshot)
+    {
+        if (snapshot.News.LastBroadcast("RUS") is not { Stories.Count: > 0 } show || snapshot.News.Broadcasts!.Any(b => b.Date.DayOfWeek != DayOfWeek.Monday))
+            return false;
+        CloseDialogs();
+        _broadcastDialog.Show(show);
+        var pages = 0;
+        while (_broadcastDialog.Visible && pages < 20)
+        {
+            _broadcastDialog.Next();
+            pages++;
+        }
+        _newsTicker.Announce(show);
+        return pages == show.Stories.Count + 2 && !_broadcastDialog.Visible && _newsTicker.Announced == show
+               && show.Script().All(line => line.IndexOfAny(['%', '$', Fmt.Minus, Fmt.Nbsp]) < 0) && (_smokeBroadcast || snapshot.News.Broadcasts!.Count > 0);
     }
 
     /// <summary>
@@ -1321,6 +1365,24 @@ public partial class Main : Node
                 _newsPanel.SetFilter("home");
                 SelectCountry(_map.Country("BRA"));
             }),
+            // Телевыпуск: последний выпуск «Недели» для Бразилии — приветствие ведущего и сюжет.
+            ("73_broadcast", () =>
+            {
+                _shotDrain = false;
+                if (_newsPanel.Visible)
+                    ToggleNews();
+                SelectRegion(null);
+                if (_host!.Snapshot.News.LastBroadcast(_host.Snapshot.PlayerCountry) is { } show)
+                    ShowBroadcast(show.Id);
+            }),
+            ("74_broadcast_story", () => _broadcastDialog.Next()),
+            ("75_news_broadcasts", () =>
+            {
+                CloseDialogs();
+                if (!_newsPanel.Visible)
+                    ToggleNews();
+                _newsPanel.SetFilter("tv");
+            }),
         };
         if (_shotStep > 0)
         {
@@ -1532,7 +1594,7 @@ public partial class Main : Node
     }
 
     bool DialogOpen => _resultsDialog.Visible || _coalitionDialog.Visible || _defeatDialog.Visible || _summaryDialog.Visible || _confirmDialog.Visible
-                       || _debateDialog.Visible || _protestDialog.Visible || _projectDialog.Visible || _eventDialog.Visible;
+                       || _debateDialog.Visible || _protestDialog.Visible || _projectDialog.Visible || _eventDialog.Visible || _broadcastDialog.Visible;
 
     /// <summary>Дипломатическое действие игрока: выполняется в потоке модели.</summary>
     void PostDiplomacy(string partner, string action) => _host!.Post(w =>
@@ -1587,6 +1649,7 @@ public partial class Main : Node
                 _seenElections.Add(ElectionKey(_seenFor, e));
         if (!_dialogsPrimed)
             _seenSummary = snapshot.LastReign;
+        _seenBroadcast = Math.Max(_seenBroadcast, snapshot.News.LastBroadcast(_seenFor)?.Id ?? 0);
         _dialogsPrimed = true;
     }
 
@@ -1599,6 +1662,12 @@ public partial class Main : Node
     {
         if (!_dialogsPrimed || snapshot.PlayerCountry != _seenFor)
             PrimeDialogs(snapshot);
+        // Телевыпуск «только в ленте» не ждёт, пока закроются окна: о нём сообщает строка ленты.
+        if (!GameSettings.BroadcastWindow && snapshot.News.LastBroadcast(snapshot.PlayerCountry) is { } quiet && quiet.Id > _seenBroadcast)
+        {
+            _seenBroadcast = quiet.Id;
+            _newsTicker.Announce(quiet);
+        }
         if (DialogOpen)
             return;
         var player = snapshot.PlayerCountry;
@@ -1664,6 +1733,15 @@ public partial class Main : Node
                 "Подписать", () => PostDiplomacy(partner, "peace_accept"), "Подумать");
             PauseForDialog();
         }
+        else if (snapshot.News.LastBroadcast(player) is { } show && show.Id > _seenBroadcast)
+        {
+            // Телевыпуск — последним: важные окна (выборы, события) идут раньше.
+            _seenBroadcast = show.Id;
+            _broadcastDialog.Show(show);
+            if (_smoke)
+                _smokeBroadcast = _broadcastDialog.Visible && _broadcastDialog.Pages == show.Stories.Count + 2;
+            PauseForDialog();
+        }
         else if (snapshot.LastReign is { } summary && !ReferenceEquals(summary, _seenSummary))
         {
             _seenSummary = summary;
@@ -1688,6 +1766,17 @@ public partial class Main : Node
         _protestDialog.Visible = false;
         _eventDialog.Visible = false;
         _projectDialog.Visible = false;
+        _broadcastDialog.Visible = false;
+    }
+
+    /// <summary>Открыть телевыпуск страны игрока (из ленты, списка или сам по себе в понедельник).</summary>
+    void ShowBroadcast(int id)
+    {
+        if (DialogOpen || _host?.Snapshot.News.Broadcasts?.FirstOrDefault(b => b.Id == id) is not { } show)
+            return;
+        _seenBroadcast = Math.Max(_seenBroadcast, id);
+        _broadcastDialog.Show(show);
+        PauseForDialog();
     }
 
     /// <summary>Окно новой стройки: что даст, цена, срок и способы оплаты.</summary>

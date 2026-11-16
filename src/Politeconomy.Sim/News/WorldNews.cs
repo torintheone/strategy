@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Politeconomy.Sim.News;
 
-/// <summary>Лента новостей мира и память о том, о каких значениях показателей уже сообщали. MODEL.md, «Новости».</summary>
+/// <summary>Лента новостей мира, память о том, о каких значениях показателей уже сообщали, и телевыпуски. MODEL.md, «Новости», «Телевыпуск».</summary>
 public sealed class WorldNews
 {
     /// <summary>Новости, новые — в конце. Хранятся последние: отдельно о своей стране, отдельно остальные.</summary>
@@ -16,6 +16,12 @@ public sealed class WorldNews
     public int NextId { get; set; } = 1;
     /// <summary>Сколько новостей вышло за всю игру: home — о своей стране, world — попавших в ленту чужих, skipped — не прошедших отбор.</summary>
     public SortedDictionary<string, int> Counts { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>Телевыпуски страны игрока, новые — в конце; хранятся последние (balance.json → broadcast → keep).</summary>
+    public List<Broadcast> Broadcasts { get; set; } = [];
+    /// <summary>Ведущий телевыпуска каждой страны, для которой выпуск уже выходил.</summary>
+    public SortedDictionary<string, BroadcastAnchor> Anchors { get; set; } = new(StringComparer.Ordinal);
+    public int NextBroadcast { get; set; } = 1;
 
     /// <summary>Растёт с каждой новостью: по нему интерфейс понимает, что лента изменилась (не сохраняется).</summary>
     [JsonIgnore] public int Version { get; set; }

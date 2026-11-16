@@ -11,7 +11,8 @@ public sealed record NewsFile(
     IReadOnlyList<NewsIndicatorRecord> Indicators,
     IReadOnlyList<NewsPriceRecord> Prices,
     IReadOnlyDictionary<string, NewsSourceRecord> Sources,
-    IReadOnlyDictionary<string, NewsSourceRecord> Events)
+    IReadOnlyDictionary<string, NewsSourceRecord> Events,
+    NewsBroadcastRecord? Broadcast = null)
 {
     public NewsTopicRecord? Topic(string id) => Topics.FirstOrDefault(t => t.Id == id);
 }
@@ -50,6 +51,29 @@ public sealed record NewsPriceRecord(string Price, double Step, string Topic, in
 /// <summary>Источник новости: рубрика, важность (0–100), тон; Sentences — сколько первых предложений записи взять в новость (0 — весь текст).</summary>
 public sealed record NewsSourceRecord(string Topic, int Weight, string Tone = "neutral", int Sentences = 0);
 
+/// <summary>
+/// Тексты телевыпуска: название передачи, приветствия ({show} — передача, {anchor} — ведущий; берутся по очереди),
+/// фраза нового ведущего, вступления перед своими сюжетами (Home) и перед мировыми (World), фраза, если в стране за
+/// неделю ничего не случилось (HomeQuiet); Markets — вместо названия страны у новостей мировых рынков; Figures —
+/// сюжет «главные цифры страны», когда новостей не хватило; прощания (по очереди). Всё пишется для чтения вслух:
+/// без сокращений и знаков.
+/// </summary>
+public sealed record NewsBroadcastRecord(
+    string Show,
+    IReadOnlyList<string> Openings,
+    string Debut,
+    string Home,
+    string World,
+    string HomeQuiet,
+    string Markets,
+    NewsFiguresRecord Figures,
+    IReadOnlyList<string> Closings);
+
+/// <summary>Сюжет «главные цифры страны»: вступление ведущего, заголовок и показатели с подписями («безработица 5,6%»).</summary>
+public sealed record NewsFiguresRecord(string Lead, string Title, IReadOnlyList<NewsFigureRecord> Stats);
+
+public sealed record NewsFigureRecord(string Stat, string Label);
+
 // Коэффициенты новостей из data/balance.json (раздел news).
 
 public sealed class NewsBalance
@@ -70,4 +94,26 @@ public sealed class NewsBalance
     public double EnemyBonus { get; init; } = 20;
     public double TradeBonus { get; init; } = 10;
     public double TradeShare { get; init; } = 5;
+}
+
+/// <summary>Коэффициенты телевыпуска из data/balance.json (раздел broadcast). MODEL.md, «Телевыпуск».</summary>
+public sealed class BroadcastBalance
+{
+    /// <summary>Сколько сюжетов в выпуске: не меньше StoriesMin (если столько новостей есть), не больше StoriesMax.</summary>
+    public int StoriesMin { get; init; } = 3;
+    public int StoriesMax { get; init; } = 5;
+    /// <summary>Сюжеты сверх StoriesMin — только если их важность не ниже ExtraMin.</summary>
+    public int ExtraMin { get; init; } = 75;
+    /// <summary>Из новостей за сколько последних дней выбираются сюжеты; новость старше недели теряет Stale важности за день.</summary>
+    public int WindowDays { get; init; } = 14;
+    public double Stale { get; init; } = 2;
+    /// <summary>Сколько мировых сюжетов об одной стране может быть в выпуске.</summary>
+    public int PerCountry { get; init; } = 1;
+    /// <summary>Сколько последних выпусков хранить.</summary>
+    public int Keep { get; init; } = 12;
+    /// <summary>Ведущий: возраст на старте «от, до», доля женщин, сколько лет ведёт «от, до», возраст, в котором уходит.</summary>
+    public IReadOnlyList<int> AnchorAge { get; init; } = [30, 50];
+    public double AnchorFemaleShare { get; init; } = 0.5;
+    public IReadOnlyList<int> AnchorYears { get; init; } = [6, 12];
+    public int AnchorRetireAge { get; init; } = 67;
 }

@@ -95,6 +95,41 @@ public static partial class DataValidator
         if (b.WorldMin is < 0 or > 150 || b.HomeBonus < 0 || b.RankBonus < 0 || b.RankSpan <= 0 || b.NeighborBonus < 0 || b.AllyBonus < 0
             || b.EnemyBonus < 0 || b.TradeBonus < 0 || b.TradeShare < 0)
             add("balance.json", "news: поправки не могут быть отрицательными, rank_span — больше нуля");
+
+        if (news.Broadcast is not { } tv)
+            add(file, "нет раздела broadcast (тексты телевыпуска)");
+        else
+        {
+            if (new[] { tv.Show, tv.Debut, tv.Home, tv.World, tv.HomeQuiet, tv.Markets }.Any(string.IsNullOrWhiteSpace))
+                add(file, "broadcast: show, debut, home, world, home_quiet и markets не могут быть пустыми");
+            if (tv.Openings is not { Count: > 0 } || tv.Closings is not { Count: > 0 })
+                add(file, "broadcast: нужно хотя бы одно приветствие (openings) и прощание (closings)");
+            if (tv.Figures is not { Stats.Count: > 0 } figures || string.IsNullOrWhiteSpace(figures.Lead) || string.IsNullOrWhiteSpace(figures.Title))
+                add(file, "broadcast: в figures нужны lead, title и хотя бы один показатель");
+            else
+                foreach (var f in figures.Stats)
+                    if (!indicators.Contains(f.Stat) || string.IsNullOrWhiteSpace(f.Label))
+                        add(file, $"broadcast → figures: показатель {f.Stat} — нет в indicators.json или нет подписи");
+            var all = new[] { tv.Debut, tv.Home, tv.World, tv.HomeQuiet, tv.Markets, tv.Figures?.Lead, tv.Figures?.Title }.Concat(tv.Openings ?? [])
+                .Concat(tv.Closings ?? []).Concat(tv.Figures?.Stats.Select(f => f.Label) ?? []).OfType<string>();
+            foreach (var text in all)
+            {
+                foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(text, @"\{[^}]*\}"))
+                    if (m.Value is not ("{show}" or "{anchor}"))
+                        add(file, $"broadcast: неизвестная подстановка {m.Value} в «{text}»");
+                // Текст читает синтезатор речи: цифры с единицами и сокращения он прочтёт неверно.
+                if (text.IndexOfAny(['%', '$', '№', '−']) >= 0)
+                    add(file, $"broadcast: «{text}» — текст читается вслух, знаки %, $, №, − пишите словами");
+            }
+        }
+        var tb = data.BroadcastBalance;
+        if (tb.StoriesMin < 1 || tb.StoriesMax < tb.StoriesMin || tb.StoriesMax > 8)
+            add("balance.json", "broadcast: нужно 1 ≤ stories_min ≤ stories_max ≤ 8");
+        if (tb.WindowDays is < 7 or > 60 || tb.Stale < 0 || tb.PerCountry < 1 || tb.Keep < 1)
+            add("balance.json", "broadcast: window_days — от 7 до 60, stale — не меньше нуля, per_country и keep — не меньше 1");
+        if (tb.AnchorAge is not [var a0, var a1] || a0 < 18 || a1 < a0 || tb.AnchorYears is not [var y0, var y1] || y0 < 1 || y1 < y0
+            || tb.AnchorFemaleShare is < 0 or > 1 || tb.AnchorRetireAge <= (tb.AnchorAge is [_, var top] ? top : 0))
+            add("balance.json", "broadcast: anchor_age и anchor_years — «от, до», anchor_female_share — от 0 до 1, anchor_retire_age — старше anchor_age");
     }
 
     static bool IsHexColor(string? s) => s is { Length: 7 } && s[0] == '#' && s.Skip(1).All(Uri.IsHexDigit);

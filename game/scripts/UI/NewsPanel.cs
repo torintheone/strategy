@@ -7,8 +7,9 @@ using Politeconomy.Sim.Text;
 namespace Politeconomy.Game.UI;
 
 /// <summary>
-/// Список новостей над лентой: все, только свои («Дома») или только чужие («В мире»), свежие сверху. Щелчок по
-/// новости показывает её страну на карте.
+/// Список новостей над лентой: все, только свои («Дома») или только чужие («В мире»), свежие сверху; на вкладке
+/// «Выпуски» — прошлые телевыпуски. Щелчок по новости показывает её страну на карте, по выпуску — открывает его.
+/// Переключатель «Выпуск окном» — показывать телевыпуск окном (с паузой) или только строкой в ленте.
 /// </summary>
 public partial class NewsPanel : GlassPanel
 {
@@ -28,6 +29,13 @@ public partial class NewsPanel : GlassPanel
 
     /// <summary>Щелчок по новости: страна, о которой она.</summary>
     public event Action<string>? CountryChosen;
+    /// <summary>Щелчок по выпуску на вкладке «Выпуски»: его номер.</summary>
+    public event Action<int>? BroadcastChosen;
+    /// <summary>Переключатель «Выпуск окном»: новое значение.</summary>
+    public event Action<bool>? BroadcastWindowToggled;
+
+    CheckButton _window = null!;
+    IReadOnlyList<Politeconomy.Sim.News.Broadcast> _broadcasts = [];
     public event Action? Closed;
 
     public void Setup(GameData data)
@@ -56,6 +64,7 @@ public partial class NewsPanel : GlassPanel
                  {
                      ("all", "Все", "Все новости"), ("home", "Дома", "Новости вашей страны и то, что её касается"),
                      ("world", "В мире", "Важное в других странах и на мировых рынках"),
+                     ("tv", "Выпуски", "Телевыпуски «Неделя» — каждый понедельник"),
                  })
         {
             var button = new Button { Text = name, ToggleMode = true, ButtonGroup = group, FocusMode = FocusModeEnum.None, TooltipText = tip, ButtonPressed = id == _filter };
@@ -72,6 +81,15 @@ public partial class NewsPanel : GlassPanel
         _count.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _count.HorizontalAlignment = HorizontalAlignment.Right;
         header.AddChild(_count);
+        _window = new CheckButton
+        {
+            Text = "Выпуск окном", FocusMode = FocusModeEnum.None,
+            TooltipText = "Телевыпуск выходит по понедельникам. Включено — он открывается окном и игра встаёт на паузу; " +
+                          "выключено — о выпуске сообщает строка в ленте, а посмотреть его можно щелчком или на вкладке «Выпуски».",
+        };
+        _window.AddThemeFontSizeOverride("font_size", 13);
+        _window.Toggled += on => BroadcastWindowToggled?.Invoke(on);
+        header.AddChild(_window);
         var close = new Button { Text = "×", Flat = true, TooltipText = "Закрыть (Esc)", FocusMode = FocusModeEnum.None };
         close.AddThemeFontSizeOverride("font_size", 22);
         close.Pressed += () => Closed?.Invoke();
@@ -96,6 +114,9 @@ public partial class NewsPanel : GlassPanel
         Rebuild();
     }
 
+    /// <summary>Поставить переключатель «Выпуск окном», не вызывая событие.</summary>
+    public void SetBroadcastWindow(bool on) => _window.SetPressedNoSignal(on);
+
     public void Refresh(NewsSnapshot news, string? player)
     {
         if (news.Version == _version && player == _player && _shownFilter == _filter)
@@ -103,6 +124,7 @@ public partial class NewsPanel : GlassPanel
         _version = news.Version;
         _player = player;
         _items = news.Items;
+        _broadcasts = news.Broadcasts?.Where(b => b.Country == player).ToList() ?? [];
         Rebuild();
     }
 
@@ -113,6 +135,21 @@ public partial class NewsPanel : GlassPanel
         {
             _list.RemoveChild(child);
             child.QueueFree();
+        }
+        if (_filter == "tv")
+        {
+            for (var i = _broadcasts.Count - 1; i >= 0; i--)
+                _list.AddChild(BroadcastRow(_broadcasts[i]));
+            _count.Text = _broadcasts.Count == 0 ? "" : Fmt.Plural(_broadcasts.Count, "выпуск", "выпуска", "выпусков");
+            if (_broadcasts.Count == 0)
+            {
+                var none = UiTheme.Text(_player == null
+                    ? "Телевыпуск выходит для вашей страны — сначала выберите её."
+                    : "Выпусков пока не было. «Неделя» выходит каждый понедельник.", 14, null, UiTheme.TextMuted);
+                none.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+                _list.AddChild(none);
+            }
+            return;
         }
         var shown = 0;
         var total = 0;
@@ -136,6 +173,45 @@ public partial class NewsPanel : GlassPanel
             empty.AutowrapMode = TextServer.AutowrapMode.WordSmart;
             _list.AddChild(empty);
         }
+    }
+
+    /// <summary>Строка выпуска: дата, ведущий и заголовки сюжетов; щелчок открывает выпуск.</summary>
+    Control BroadcastRow(Politeconomy.Sim.News.Broadcast b)
+    {
+        var normal = UiTheme.Box(new Color(1, 1, 1, 0), null, 8, 10, 6);
+        var hover = UiTheme.Box(new Color(1, 1, 1, 0.07f), null, 8, 10, 6);
+        var row = new PanelContainer { MouseFilter = MouseFilterEnum.Pass, MouseDefaultCursorShape = CursorShape.PointingHand, TooltipText = "Щелчок — открыть выпуск" };
+        row.AddThemeStyleboxOverride("panel", normal);
+        var line = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
+        line.AddThemeConstantOverride("separation", 10);
+        row.AddChild(line);
+        var date = UiTheme.Text(Fmt.Date(b.Date), 13, UiTheme.Numbers, UiTheme.TextMuted);
+        date.CustomMinimumSize = new Vector2(132, 0);
+        date.SizeFlagsVertical = SizeFlags.ShrinkBegin;
+        date.MouseFilter = MouseFilterEnum.Ignore;
+        line.AddChild(date);
+        var column = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, MouseFilter = MouseFilterEnum.Ignore };
+        column.AddThemeConstantOverride("separation", 2);
+        line.AddChild(column);
+        var title = UiTheme.Text($"{Fmt.Quote(b.Show)} · ведёт {b.Anchor.Name}", 13, UiTheme.SemiBold, UiTheme.Accent);
+        title.MouseFilter = MouseFilterEnum.Ignore;
+        column.AddChild(title);
+        var text = UiTheme.Text(string.Join(" · ", b.Stories.Select(s => s.Headline)), 14, null, UiTheme.TextSecondary);
+        text.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        text.MouseFilter = MouseFilterEnum.Ignore;
+        column.AddChild(text);
+        row.MouseEntered += () => row.AddThemeStyleboxOverride("panel", hover);
+        row.MouseExited += () => row.AddThemeStyleboxOverride("panel", normal);
+        var id = b.Id;
+        row.GuiInput += e =>
+        {
+            if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true })
+            {
+                BroadcastChosen?.Invoke(id);
+                row.AcceptEvent();
+            }
+        };
+        return row;
     }
 
     Control Row(NewsItem item)

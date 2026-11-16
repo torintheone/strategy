@@ -4,19 +4,22 @@ using Politeconomy.Sim.News;
 namespace Politeconomy.Sim.Engine;
 
 /// <summary>
-/// Лента новостей для интерфейса: новости (новые — в конце) и номер версии, который растёт с каждой новостью.
-/// Снимок пересобирается, только когда лента изменилась.
+/// Лента новостей для интерфейса: новости и телевыпуски (новые — в конце) и номер версии, который растёт с каждой
+/// новостью и выпуском. Снимок пересобирается, только когда лента изменилась.
 /// </summary>
-public sealed record NewsSnapshot(IReadOnlyList<NewsItem> Items, int Version)
+public sealed record NewsSnapshot(IReadOnlyList<NewsItem> Items, int Version, IReadOnlyList<Broadcast>? Broadcasts = null)
 {
     public static readonly NewsSnapshot Empty = new([], 0);
+
+    /// <summary>Последний выпуск для страны (null — выпусков ещё не было).</summary>
+    public Broadcast? LastBroadcast(string? country) => country == null ? null : Broadcasts?.LastOrDefault(b => b.Country == country);
 
     public static NewsSnapshot Capture(World world)
     {
         if (world.News is not { } news)
             return Empty;
         if (news.Snapshot is not { } cached || cached.Version != news.Version)
-            news.Snapshot = cached = new NewsSnapshot(news.Items.ToList(), news.Version);
+            news.Snapshot = cached = new NewsSnapshot(news.Items.ToList(), news.Version, news.Broadcasts.ToList());
         return cached;
     }
 }

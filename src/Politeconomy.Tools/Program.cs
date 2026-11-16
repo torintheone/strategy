@@ -26,7 +26,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] | diplomacy [--country ISO] | ai [--years N] | war [--attacker ISO --defender ISO] | events [--years N] [--country ISO] | news [--years N] [--country ISO|none] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] | diplomacy [--country ISO] | ai [--years N] | war [--attacker ISO --defender ISO] | events [--years N] [--country ISO] | news [--years N] [--country ISO|none] [--broadcasts N] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -857,7 +857,9 @@ int NewsReport()
     if (player != "none")
         Politeconomy.Sim.Politics.PoliticsActions.PlayAs(world, player);
     var all = new List<Politeconomy.Sim.News.NewsItem>();
+    var broadcasts = new List<Politeconomy.Sim.News.Broadcast>();
     var lastId = 0;
+    var lastBroadcast = 0;
     var end = world.Date.AddYears(runYears);
     var timer = Stopwatch.StartNew();
     while (world.Date < end)
@@ -870,6 +872,11 @@ int NewsReport()
         foreach (var item in world.News!.Items.Where(i => i.Id > lastId))
             all.Add(item);
         lastId = world.News.NextId - 1;
+        if (world.News.Broadcasts.Count > 0 && world.News.Broadcasts[^1].Id > lastBroadcast)
+        {
+            broadcasts.Add(world.News.Broadcasts[^1]);
+            lastBroadcast = world.News.Broadcasts[^1].Id;
+        }
     }
     var counts = world.News!.Counts;
     Console.WriteLine($"Новости за {runYears} лет, игрок — {(player == "none" ? "нет (наблюдатель)" : world[player].Name)}; прогон {timer.Elapsed.TotalSeconds:F0} с.");
@@ -894,6 +901,18 @@ int NewsReport()
     Console.WriteLine($"В мире, первые два года ({firstYears.Count(i => !i.Home)}):");
     foreach (var i in firstYears.Where(i => !i.Home))
         Console.WriteLine(Line(i));
+    if (player != "none")
+    {
+        Console.WriteLine($"Телевыпуски: {broadcasts.Count} за {runYears} лет, сюжетов в выпуске: " + string.Join(", ",
+            broadcasts.GroupBy(b => b.Stories.Count).OrderBy(g => g.Key).Select(g => $"{g.Key} — {g.Count()}")) +
+            $"; со своими сюжетами {broadcasts.Count(b => b.Stories.Any(s => s.Home))}, ведущих {broadcasts.Select(b => b.Anchor.Number).Distinct().Count()}.");
+        foreach (var b in broadcasts.Take(int.TryParse(Option("--broadcasts"), out var shown) ? shown : 4))
+        {
+            Console.WriteLine($"  {b.Date:yyyy-MM-dd} №{b.Id}, ведёт {b.Anchor.Name} ({b.Anchor.Age(b.Date)}):");
+            foreach (var line in b.Script())
+                Console.WriteLine("    " + line);
+        }
+    }
     return 0;
 }
 

@@ -53,6 +53,9 @@ public static class CharacterFactory
 
     static double Quality(DeterministicRandom r, double mean, double spread) => Math.Clamp(mean + r.NextGaussian() * spread, 1, 99);
 
+    /// <summary>Случайное имя по культуре страны: для персонажей вне правительства (ведущий телевыпуска).</summary>
+    public static string RandomName(GameData data, string country, bool female, DeterministicRandom r) => Name(CultureOf(data, country), female, r);
+
     static string Name(CultureRecord culture, bool female, DeterministicRandom r)
     {
         var given = female ? culture.Female : culture.Male;
