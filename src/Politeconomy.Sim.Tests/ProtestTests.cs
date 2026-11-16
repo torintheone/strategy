@@ -25,7 +25,8 @@ public class ProtestTests
     [Fact]
     public void RadicalOrganizedClassTakesToTheStreets()
     {
-        var sim = NewGame();
+        // Без событий: решения по умолчанию (например, «разрешить митинг») сдвигают склонность к протестам, а тест проверяет саму механику.
+        var sim = TestData.WithoutAi(3);
         var world = sim.World;
         PoliticsActions.PlayAs(world, "FRA");
         var s = world.Society!["FRA"];
