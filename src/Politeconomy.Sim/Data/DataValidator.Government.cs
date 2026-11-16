@@ -36,7 +36,11 @@ public static partial class DataValidator
                 add("government.json", $"пост {p.Id}: статьи расходов «{s}» нет в budget.json");
             foreach (var s in (p.Stats ?? []).Where(s => data.Indicators.Indicators.All(i => i.Id != s)))
                 add("government.json", $"пост {p.Id}: показателя «{s}» нет в indicators.json");
+            if (p.Advice is not { } a || a.Axis is < 0 or > 2 || string.IsNullOrWhiteSpace(a.Left) || string.IsNullOrWhiteSpace(a.Right) || string.IsNullOrWhiteSpace(a.Weak))
+                add("government.json", $"пост {p.Id}: нужен совет advice — axis от 0 до 2, тексты left, right и weak");
         }
+        if (string.IsNullOrWhiteSpace(g.AdviceSteady))
+            add("government.json", "нет advice_steady — совета, когда в ведомстве нет проблем");
         if (g.Posts.Count != 18)
             add("government.json", $"постов в правительстве {g.Posts.Count}, по ТЗ — 18");
         var traits = new HashSet<string>(StringComparer.Ordinal);

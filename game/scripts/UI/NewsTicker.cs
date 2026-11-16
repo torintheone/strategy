@@ -10,7 +10,8 @@ namespace Politeconomy.Game.UI;
 /// Лента новостей внизу экрана: одна строка — метка «Дома» или страна, рубрика цветом, текст и дата. Новые новости
 /// сменяют друг друга (важные — первыми), в затишье лента листает последние. Щелчок раскрывает список всех новостей.
 /// О новом телевыпуске (если он не открылся окном) лента сообщает строкой «Телевыпуск»: щелчок по ней открывает
-/// выпуск; кнопка «Выпуск» справа открывает последний.
+/// выпуск; кнопка «Выпуск» справа открывает последний. Кнопка «Газета» открывает газету; пока свежий номер не
+/// прочитан, на ней точка.
 /// </summary>
 public partial class NewsTicker : GlassPanel
 {
@@ -30,6 +31,7 @@ public partial class NewsTicker : GlassPanel
     Label _date = null!;
     Button _all = null!;
     Button _tv = null!;
+    Button _paper = null!;
     Politeconomy.Sim.News.Broadcast? _announced;
     Politeconomy.Sim.News.Broadcast? _latest;
     Tween? _fade;
@@ -46,6 +48,8 @@ public partial class NewsTicker : GlassPanel
 
     /// <summary>Щелчок по ленте: раскрыть или свернуть список новостей.</summary>
     public event Action? Toggled;
+    /// <summary>Открыть газету (кнопка «Газета»).</summary>
+    public event Action? PaperRequested;
     /// <summary>Открыть телевыпуск: щелчок по строке о нём или по кнопке «Выпуск».</summary>
     public event Action<int>? BroadcastRequested;
 
@@ -103,6 +107,10 @@ public partial class NewsTicker : GlassPanel
                 BroadcastRequested?.Invoke(_latest.Id);
         };
         line.AddChild(_tv);
+        _paper = new Button { Text = "Газета", FocusMode = FocusModeEnum.None, Visible = false, TooltipText = "Газета выходит 1-го числа (K)" };
+        _paper.AddThemeFontSizeOverride("font_size", 13);
+        _paper.Pressed += () => PaperRequested?.Invoke();
+        line.AddChild(_paper);
         _all = new Button { Text = "Все новости", FocusMode = FocusModeEnum.None, ToggleMode = true, TooltipText = "Список новостей (J)" };
         _all.AddThemeFontSizeOverride("font_size", 13);
         _all.Pressed += () => Toggled?.Invoke();
@@ -156,6 +164,14 @@ public partial class NewsTicker : GlassPanel
     {
         _latest = show;
         _tv.Visible = show != null;
+    }
+
+    /// <summary>Кнопка «Газета»: видна, когда номер уже вышел; «• Газета» — свежий номер ещё не прочитан.</summary>
+    public void SetPaper(bool any, bool unread)
+    {
+        _paper.Visible = any;
+        _paper.Text = unread ? "• Газета" : "Газета";
+        _paper.AddThemeColorOverride("font_color", unread ? UiTheme.Accent : UiTheme.TextPrimary);
     }
 
     /// <summary>Сообщить о новом выпуске строкой в ленте: «Телевыпуск · «Неделя»: главный сюжет и ещё два».</summary>

@@ -12,7 +12,8 @@ public sealed record NewsFile(
     IReadOnlyList<NewsPriceRecord> Prices,
     IReadOnlyDictionary<string, NewsSourceRecord> Sources,
     IReadOnlyDictionary<string, NewsSourceRecord> Events,
-    NewsBroadcastRecord? Broadcast = null)
+    NewsBroadcastRecord? Broadcast = null,
+    NewspaperRecord? Newspaper = null)
 {
     public NewsTopicRecord? Topic(string id) => Topics.FirstOrDefault(t => t.Id == id);
 }
@@ -74,6 +75,34 @@ public sealed record NewsFiguresRecord(string Lead, string Title, IReadOnlyList<
 
 public sealed record NewsFigureRecord(string Stat, string Label);
 
+/// <summary>
+/// Тексты газеты: издание каждого тона (Free — независимое, Loyal — близкое к власти, State — государственное),
+/// хвалебные заголовки государственной газеты и текст под ними, заголовок месяца без новостей, разоблачение
+/// приукрашенного доклада. MODEL.md, «Газета».
+/// </summary>
+public sealed record NewspaperRecord(
+    NewspaperPressRecord Free,
+    NewspaperPressRecord Loyal,
+    NewspaperPressRecord State,
+    IReadOnlyList<string> Praise,
+    string PraiseBody,
+    string Quiet,
+    string QuietBody,
+    string Expose,
+    string ExposeBody)
+{
+    public NewspaperPressRecord Press(string press) => press switch { "free" => Free, "loyal" => Loyal, _ => State };
+}
+
+/// <summary>Издание: название, девиз и абзацы под хорошими, плохими, нейтральными своими новостями и под мировыми.</summary>
+public sealed record NewspaperPressRecord(
+    string Name,
+    string Motto,
+    IReadOnlyList<string> Good,
+    IReadOnlyList<string> Bad,
+    IReadOnlyList<string> Neutral,
+    IReadOnlyList<string> World);
+
 // Коэффициенты новостей из data/balance.json (раздел news).
 
 public sealed class NewsBalance
@@ -116,4 +145,26 @@ public sealed class BroadcastBalance
     public double AnchorFemaleShare { get; init; } = 0.5;
     public IReadOnlyList<int> AnchorYears { get; init; } = [6, 12];
     public int AnchorRetireAge { get; init; } = 67;
+}
+
+/// <summary>
+/// Коэффициенты газеты из data/balance.json (раздел newspaper). Тон издания — по свободе прессы: от FreeMin —
+/// независимое, от LoyalMin — близкое к власти (молчит о плохих домашних новостях важностью ниже HideMax), ниже —
+/// государственное (молчит обо всём плохом дома и хвалит власть). На первой полосе — заголовок месяца и Stories
+/// материалов; хранится Keep номеров. Независимая газета разоблачает министра, который приукрасил доклад хотя бы на
+/// ExposeSpin, если цифра в докладе отличается от настоящей больше чем на долю ExposeGap; важность разоблачения —
+/// ExposeWeight, одного министра — не чаще раза в ExposeMonths месяцев, а в стране — раза в ExposeEvery. MODEL.md, «Газета».
+/// </summary>
+public sealed class NewspaperBalance
+{
+    public double FreeMin { get; init; } = 60;
+    public double LoyalMin { get; init; } = 30;
+    public int HideMax { get; init; } = 100;
+    public int Stories { get; init; } = 3;
+    public int Keep { get; init; } = 12;
+    public double ExposeSpin { get; init; } = 0.15;
+    public double ExposeGap { get; init; } = 0.05;
+    public int ExposeWeight { get; init; } = 85;
+    public int ExposeMonths { get; init; } = 12;
+    public int ExposeEvery { get; init; } = 4;
 }

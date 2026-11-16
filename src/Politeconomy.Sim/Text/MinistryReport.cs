@@ -5,8 +5,10 @@ namespace Politeconomy.Sim.Text;
 
 /// <summary>
 /// Доклад министра: по каждому показателю ведомства — значение, как было год-полтора назад и как у типичной страны мира
-/// (медиана), с оценкой «лучше» или «хуже»; плюс замечания о рисках по показателям ведомства и несколько слов
-/// о самом министре.
+/// (медиана), с оценкой «лучше» или «хуже»; плюс замечания о рисках по показателям ведомства, совет министра и несколько
+/// слов о нём самом. Слабый или нечестный министр приукрашивает нынешние цифры (прошлые и мировые — настоящие), и
+/// замечания он пишет уже по приукрашенным; совет зависит от его взглядов, у слабого министра он плохой. В докладе
+/// об этом ничего не сказано: узнать можно из газеты или сравнив с графиками. MODEL.md, «Доклады министров».
 /// </summary>
 public static class MinistryReport
 {
@@ -30,11 +32,19 @@ public static class MinistryReport
     public static IReadOnlyList<string> Lines(GameData data, PostRecord post, CountrySnapshot country, WorldSnapshot world, CharacterSnapshot? minister)
     {
         var lines = new List<string>();
+        var spin = minister == null ? 0 : Spin(data.ReportsBalance, minister.Competence, minister.Corruption, minister.Traits);
+        // Цифры, какими их видит министр в докладе.
+        double Shown(string id)
+        {
+            var value = country.Stat(id)?.Value ?? double.NaN;
+            return spin <= 0 || !double.IsFinite(value) ? value : Reported(data, id, value, Median(world, id), spin);
+        }
         foreach (var id in post.Stats ?? [])
         {
             if (country.Stat(id) is not { } stat || !double.IsFinite(stat.Value))
                 continue;
             var def = data.Indicator(id);
+            stat = stat with { Value = Shown(id) };
             var text = $"{def.Name}: {Fmt.Value(def.Format, stat.Value, def.Unit)}";
             var year = ReferenceYear(world.Date);
             var before = (country.History?.Series(id) ?? []).Where(p => p.Year == year).Select(p => (double?)p.Value).FirstOrDefault();
@@ -51,10 +61,69 @@ public static class MinistryReport
                 text += $"; у типичной страны мира — {Fmt.Value(def.Format, m, def.Unit)}";
             lines.Add(text + ".");
         }
-        lines.AddRange(Warnings(country, post.Stats ?? []));
+        var warnings = Warnings(Shown, post.Stats ?? []).ToList();
+        lines.AddRange(warnings);
         if (minister != null)
+        {
+            lines.Add("Совет министра: " + Lower(Advice(data, post, minister.Competence, minister.Views, warnings.Count > 0)));
             lines.Add(About(minister));
+        }
         return lines;
+    }
+
+    static string Lower(string text) => text.Length == 0 ? text : char.ToLowerInvariant(text[0]) + text[1..];
+
+    /// <summary>
+    /// Насколько министр приукрашивает цифры (доля, 0 — честно): слабый — до WeakSpin, нечестный — до CorruptSpin,
+    /// черты «коррупционер» и «популист» добавляют; всего не больше MaxSpin.
+    /// </summary>
+    public static double Spin(ReportsBalance b, double competence, double corruption, IReadOnlyList<string> traits)
+    {
+        var spin = b.WeakSpin * Math.Max(0, (b.HonestCompetence - competence) / Math.Max(1, b.HonestCompetence))
+                   + b.CorruptSpin * Math.Max(0, (corruption - b.CorruptFrom) / Math.Max(1, 100 - b.CorruptFrom));
+        if (traits.Contains("corrupt"))
+            spin += b.TraitSpin;
+        if (traits.Contains("populist"))
+            spin += b.PopulistSpin;
+        return Math.Clamp(spin, 0, b.MaxSpin);
+    }
+
+    /// <summary>Приукрашивается ли показатель: у нейтральных нет «лучше», рейтинг публикует агентство.</summary>
+    public static bool Spinnable(GameData data, string id) => !Neutral.Contains(id) && data.Indicator(id).Format != "rating";
+
+    /// <summary>
+    /// Цифра в докладе: настоящая, сдвинутая в лучшую сторону на долю spin от того, насколько страна хуже типичной
+    /// (но не меньше чем на десятую часть самого значения) — чем хуже дела, тем сильнее приукрашивание.
+    /// Положительное значение не уходит ниже нуля, проценты и индексы — выше 100.
+    /// </summary>
+    public static double Reported(GameData data, string id, double value, double? median, double spin)
+    {
+        if (spin <= 0 || !double.IsFinite(value) || !Spinnable(data, id))
+            return value;
+        var better = LowerIsBetter.Contains(id) ? -1 : 1;
+        var worse = Math.Max(0, better * ((median ?? value) - value));
+        var shown = value + better * spin * Math.Max(worse, Math.Abs(value) * 0.1);
+        if (value >= 0)
+            shown = Math.Max(0, shown);
+        if (value <= 100 && data.Indicator(id).Format is "percent" or "number0")
+            shown = Math.Min(100, shown);
+        return shown;
+    }
+
+    /// <summary>
+    /// Совет министра: если в ведомстве нет проблем — продолжать курс; у слабого министра — плохой совет; иначе —
+    /// по его взглядам на оси, важной для ведомства (слева — перераспределение, свободы, открытость; справа — рынок,
+    /// порядок, суверенитет).
+    /// </summary>
+    public static string Advice(GameData data, PostRecord post, double competence, IReadOnlyList<double> views, bool problems)
+    {
+        if (post.Advice is not { } a)
+            return data.Government.AdviceSteady;
+        if (competence < data.ReportsBalance.BadAdviceCompetence)
+            return a.Weak;
+        if (!problems)
+            return data.Government.AdviceSteady;
+        return a.Axis < views.Count && views[a.Axis] < 0 ? a.Left : a.Right;
     }
 
     /// <summary>
@@ -65,16 +134,15 @@ public static class MinistryReport
 
     static bool Better(string id, double now, double before) => LowerIsBetter.Contains(id) ? now < before : now > before;
 
-    static double? Median(WorldSnapshot world, string id)
+    public static double? Median(WorldSnapshot world, string id)
     {
         var values = world.Countries.Values.Select(c => c.Stat(id)?.Value ?? double.NaN).Where(double.IsFinite).OrderBy(v => v).ToList();
         return values.Count == 0 ? null : values[values.Count / 2];
     }
 
     /// <summary>Замечания о рисках — только по тем показателям, за которые отвечает ведомство.</summary>
-    static IEnumerable<string> Warnings(CountrySnapshot c, IReadOnlyList<string> stats)
+    static IEnumerable<string> Warnings(Func<string, double> S, IReadOnlyList<string> stats)
     {
-        double S(string id) => c.Stat(id)?.Value ?? double.NaN;
         bool Has(string id) => stats.Contains(id);
         var inflation = S("inflation_pct");
         var target = S("inflation_anchor_pct");

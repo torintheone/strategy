@@ -26,7 +26,7 @@ var years = int.TryParse(Option("--years"), out var y) ? y : 50;
 
 if (command is "help" or "--help" or "-h")
 {
-    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] | diplomacy [--country ISO] | ai [--years N] | war [--attacker ISO --defender ISO] | events [--years N] [--country ISO] | news [--years N] [--country ISO|none] [--broadcasts N] [--data <папка>]");
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] | diplomacy [--country ISO] | ai [--years N] | war [--attacker ISO --defender ISO] | events [--years N] [--country ISO] | news [--years N] [--country ISO|none] [--broadcasts N] [--papers N] [--data <папка>]");
     return 0;
 }
 if (dataDir is null)
@@ -860,6 +860,8 @@ int NewsReport()
     var broadcasts = new List<Politeconomy.Sim.News.Broadcast>();
     var lastId = 0;
     var lastBroadcast = 0;
+    var papers = new List<Politeconomy.Sim.News.Newspaper>();
+    var lastPaper = 0;
     var end = world.Date.AddYears(runYears);
     var timer = Stopwatch.StartNew();
     while (world.Date < end)
@@ -872,6 +874,11 @@ int NewsReport()
         foreach (var item in world.News!.Items.Where(i => i.Id > lastId))
             all.Add(item);
         lastId = world.News.NextId - 1;
+        if (world.News.Papers.Count > 0 && world.News.Papers[^1].Id > lastPaper)
+        {
+            papers.Add(world.News.Papers[^1]);
+            lastPaper = world.News.Papers[^1].Id;
+        }
         if (world.News.Broadcasts.Count > 0 && world.News.Broadcasts[^1].Id > lastBroadcast)
         {
             broadcasts.Add(world.News.Broadcasts[^1]);
@@ -906,6 +913,17 @@ int NewsReport()
         Console.WriteLine($"Телевыпуски: {broadcasts.Count} за {runYears} лет, сюжетов в выпуске: " + string.Join(", ",
             broadcasts.GroupBy(b => b.Stories.Count).OrderBy(g => g.Key).Select(g => $"{g.Key} — {g.Count()}")) +
             $"; со своими сюжетами {broadcasts.Count(b => b.Stories.Any(s => s.Home))}, ведущих {broadcasts.Select(b => b.Anchor.Number).Distinct().Count()}.");
+        Console.WriteLine($"Газета: {papers.Count} номеров, тон: " + string.Join(", ", papers.GroupBy(p => p.Press).Select(g => $"{g.Key} {g.Count()}")) +
+            $"; разоблачений {papers.Count(p => p.Lead.Kind == "expose" || p.Stories.Any(s => s.Kind == "expose"))}, похвал {papers.Count(p => p.Lead.Kind == "praise")}, " +
+            $"тихих месяцев {papers.Count(p => p.Lead.Kind == "quiet")}.");
+        var tones = world.Countries.GroupBy(c => Politeconomy.Sim.News.NewspaperModel.Press(world, c.Id)).ToDictionary(g => g.Key, g => g.Select(c => c.Id).ToList());
+        Console.WriteLine("Тон газет в мире: " + string.Join("; ", tones.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key} {kv.Value.Count} ({string.Join(" ", kv.Value.Take(12))}…)")));
+        foreach (var p in papers.Take(int.TryParse(Option("--papers"), out var shownPapers) ? shownPapers : 3))
+        {
+            Console.WriteLine($"  {p.Date:yyyy-MM-dd} «{p.Name}» №{p.Id} ({p.Motto}):");
+            foreach (var story in new[] { p.Lead }.Concat(p.Stories))
+                Console.WriteLine($"    [{story.Kind}{(story == p.Lead ? ", заголовок" : "")}] {(story.Country == null ? "" : world[story.Country].Name + ": ")}{story.Headline}. {story.Body}");
+        }
         foreach (var b in broadcasts.Take(int.TryParse(Option("--broadcasts"), out var shown) ? shown : 4))
         {
             Console.WriteLine($"  {b.Date:yyyy-MM-dd} №{b.Id}, ведёт {b.Anchor.Name} ({b.Anchor.Age(b.Date)}):");

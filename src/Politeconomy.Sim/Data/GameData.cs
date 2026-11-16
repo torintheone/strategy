@@ -152,6 +152,16 @@ public sealed class GameData
 
     static readonly BroadcastBalance DefaultBroadcast = new();
 
+    /// <summary>Коэффициенты газеты; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public NewspaperBalance NewspaperBalance => Balance.Newspaper ?? DefaultNewspaper;
+
+    static readonly NewspaperBalance DefaultNewspaper = new();
+
+    /// <summary>Честность докладов министров; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public ReportsBalance ReportsBalance => Balance.Reports ?? DefaultReports;
+
+    static readonly ReportsBalance DefaultReports = new();
+
     /// <summary>Коэффициенты ИИ стран; если раздела нет в balance.json — значения по умолчанию.</summary>
     public AiBalance AiBalance => Balance.Ai ?? DefaultAi;
 

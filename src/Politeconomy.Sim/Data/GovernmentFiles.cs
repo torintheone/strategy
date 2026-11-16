@@ -7,7 +7,8 @@ public sealed record GovernmentFile(
     IReadOnlyDictionary<string, string> LeaderTitles,
     IReadOnlyList<PostRecord> Posts,
     IReadOnlyList<TraitRecord> Traits,
-    IReadOnlyDictionary<string, int> ParliamentSeats);
+    IReadOnlyDictionary<string, int> ParliamentSeats,
+    string AdviceSteady = "");
 
 /// <summary>Тип политической системы: как называется глава и какой у страны парламент (real, formal, none).</summary>
 public sealed record SystemRecord(string Id, string Leader, string Parliament, string ParliamentName);
@@ -21,7 +22,15 @@ public sealed record PostRecord(
     IReadOnlyList<string> Spending,
     bool Security = false,
     bool Finance = false,
-    IReadOnlyList<string>? Stats = null);
+    IReadOnlyList<string>? Stats = null,
+    PostAdviceRecord? Advice = null);
+
+/// <summary>
+/// Совет министра в докладе: по какой оси взглядов он выбирается (0 — экономическая, 1 — гражданская, 2 — внешняя),
+/// совет министра с взглядами слева (перераспределение, свободы, открытость) и справа (рынок, порядок, суверенитет),
+/// плохой совет слабого министра. MODEL.md, «Доклады министров».
+/// </summary>
+public sealed record PostAdviceRecord(int Axis, string Left, string Right, string Weak);
 
 /// <summary>Черта персонажа: прибавки к его качествам и как часто она встречается.</summary>
 public sealed record TraitRecord(

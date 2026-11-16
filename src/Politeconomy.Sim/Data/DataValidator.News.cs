@@ -122,6 +122,39 @@ public static partial class DataValidator
                     add(file, $"broadcast: «{text}» — текст читается вслух, знаки %, $, №, − пишите словами");
             }
         }
+        if (news.Newspaper is not { } paper)
+            add(file, "нет раздела newspaper (тексты газеты)");
+        else
+        {
+            foreach (var (id, press) in new[] { ("free", paper.Free), ("loyal", paper.Loyal), ("state", paper.State) })
+                if (press is null || string.IsNullOrWhiteSpace(press.Name) || string.IsNullOrWhiteSpace(press.Motto)
+                    || new[] { press.Good, press.Bad, press.Neutral, press.World }.Any(l => l is not { Count: > 0 } || l.Any(string.IsNullOrWhiteSpace)))
+                    add(file, $"newspaper → {id}: нужны name, motto и хотя бы по одному абзацу в good, bad, neutral и world");
+            if (paper.Praise is not { Count: > 0 } || new[] { paper.PraiseBody, paper.Quiet, paper.QuietBody, paper.Expose, paper.ExposeBody }.Any(string.IsNullOrWhiteSpace))
+                add(file, "newspaper: нужны praise, praise_body, quiet, quiet_body, expose и expose_body");
+            void Allowed(string? text, params string[] allowed)
+            {
+                foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(text ?? "", @"\{[^}]*\}"))
+                    if (!allowed.Contains(m.Value))
+                        add(file, $"newspaper: неизвестная подстановка {m.Value} в «{text}»");
+            }
+            foreach (var t in (paper.Praise ?? []).Append(paper.PraiseBody))
+                Allowed(t, "{leader}");
+            Allowed(paper.Expose, "{post}", "{post_lower}", "{minister}", "{stat}", "{reported}", "{real}", "{a}");
+            Allowed(paper.ExposeBody, "{post}", "{post_lower}", "{minister}", "{stat}", "{reported}", "{real}", "{a}");
+            foreach (var press in new[] { paper.Free, paper.Loyal, paper.State }.Where(p => p != null))
+                foreach (var t in press.Good.Concat(press.Bad).Concat(press.Neutral).Concat(press.World))
+                    Allowed(t, "{leader}");
+        }
+        var pb = data.NewspaperBalance;
+        if (pb.LoyalMin < 0 || pb.FreeMin <= pb.LoyalMin || pb.FreeMin > 100 || pb.Stories is < 1 or > 6 || pb.Keep < 1
+            || pb.ExposeSpin < 0 || pb.ExposeGap < 0 || pb.ExposeWeight is < 0 or > 150 || pb.ExposeMonths < 1 || pb.ExposeEvery < 1)
+            add("balance.json", "newspaper: нужно 0 ≤ loyal_min < free_min ≤ 100, stories от 1 до 6, keep, expose_months и expose_every — не меньше 1");
+        var rb = data.ReportsBalance;
+        if (rb.HonestCompetence is < 0 or > 100 || rb.CorruptFrom is < 0 or >= 100 || rb.BadAdviceCompetence is < 0 or > 100
+            || new[] { rb.WeakSpin, rb.CorruptSpin, rb.TraitSpin, rb.PopulistSpin }.Any(x => x < 0) || rb.MaxSpin is < 0 or > 1)
+            add("balance.json", "reports: пороги — от 0 до 100, прибавки — не меньше нуля, max_spin — от 0 до 1");
+
         var tb = data.BroadcastBalance;
         if (tb.StoriesMin < 1 || tb.StoriesMax < tb.StoriesMin || tb.StoriesMax > 8)
             add("balance.json", "broadcast: нужно 1 ≤ stories_min ≤ stories_max ≤ 8");

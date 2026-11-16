@@ -36,6 +36,8 @@ public static class UiTheme
     public static Font Medium { get; private set; } = null!;
     public static Font SemiBold { get; private set; } = null!;
     public static Font SerifBold { get; private set; } = null!;
+    /// <summary>PT Serif обычный — текст газеты.</summary>
+    public static Font Serif { get; private set; } = null!;
     /// <summary>Цифры одинаковой ширины: значения в панелях не «прыгают», когда меняются.</summary>
     public static Font Numbers { get; private set; } = null!;
     /// <summary>Названия стран на карте: заглавные с разрядкой.</summary>
@@ -52,6 +54,7 @@ public static class UiTheme
         Numbers = Weight(plex, 500, tabular: true);
         MapCountryFont = Weight(plex, 600, spacing: 2);
         SerifBold = GD.Load<FontFile>("res://assets/fonts/PTSerif-Bold.ttf");
+        Serif = GD.Load<FontFile>("res://assets/fonts/PTSerif-Regular.ttf");
 
         var t = new Theme { DefaultFont = Regular, DefaultFontSize = 15 };
 

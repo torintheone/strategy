@@ -49,6 +49,9 @@ public partial class Main : Node
     NewsTicker _newsTicker = null!;
     NewsPanel _newsPanel = null!;
     BroadcastDialog _broadcastDialog = null!;
+    NewspaperDialog _newspaper = null!;
+    // Последний номер газеты, который игрок открыл.
+    int _readPaper;
     // Последний телевыпуск, о котором игрок уже знает (окном или строкой в ленте).
     int _seenBroadcast;
     DiplomacyScreen _diplomacy = null!;
@@ -206,6 +209,7 @@ public partial class Main : Node
         _newsTicker.Setup(_data);
         _newsTicker.Toggled += ToggleNews;
         _newsTicker.BroadcastRequested += ShowBroadcast;
+        _newsTicker.PaperRequested += () => ShowNewspaper();
         _newsPanel = new NewsPanel { Visible = false };
         _uiRoot.AddChild(_newsPanel);
         _newsPanel.Setup(_data);
@@ -406,6 +410,9 @@ public partial class Main : Node
             if (_map.Country(id) is { } country)
                 SelectCountry(country, center: true);
         };
+        _newspaper = new NewspaperDialog();
+        _uiRoot.AddChild(_newspaper);
+        _newspaper.Setup(_data);
         _eventsTray = new EventsTray();
         _uiRoot.AddChild(_eventsTray);
         _eventsTray.Setup();
@@ -481,6 +488,8 @@ public partial class Main : Node
         _eventsTray.Show(snapshot.Events?.Pending);
         _newsTicker.Show(snapshot.News, snapshot.PlayerCountry);
         _newsTicker.SetLatest(snapshot.News.LastBroadcast(snapshot.PlayerCountry));
+        var papers = snapshot.News.PapersOf(snapshot.PlayerCountry);
+        _newsTicker.SetPaper(papers.Count > 0, papers.Count > 0 && papers[^1].Id > _readPaper);
         if (_newsPanel.Visible)
             _newsPanel.Refresh(snapshot.News, snapshot.PlayerCountry);
         Recolor(snapshot);
@@ -591,6 +600,15 @@ public partial class Main : Node
                 _broadcastDialog.Next();
             else if (_broadcastDialog.Visible && key == Key.Left)
                 _broadcastDialog.Previous();
+            else if (_newspaper.Visible && key is Key.Left or Key.Right)
+                _newspaper.Turn(key == Key.Left ? -1 : 1);
+            else if (_newspaper.Visible && physical == Key.K)
+                _newspaper.Visible = false;
+            return;
+        }
+        if (physical == Key.K)
+        {
+            ShowNewspaper();
             return;
         }
         if (physical is Key.G or Key.M or Key.P or Key.O or Key.L or Key.B or Key.N or Key.I)
@@ -890,6 +908,7 @@ public partial class Main : Node
                     ("новости", snapshot.News.Items.Any(n => n.Home && n.Source.StartsWith("event:")) && snapshot.News.Items.Any(n => !n.Home)
                                 && snapshot.News.Items.All(n => _data.News.Topic(n.Topic) != null) && _newsTicker.Current != null),
                     ("телевыпуск", SmokeBroadcast(snapshot)),
+                    ("газета", SmokeNewspaper(snapshot)),
                     ("ИИ", snapshot.Countries.Values.Count(c => c.Ai is { Decisions.Count: > 0 }) > 50 && rus.Ai == null
                            && snapshot.Countries["DEU"].Ai is { Priorities.Count: 4 }),
                     ("мир", _smokeAnnexed != null && snapshot.Owners.GetValueOrDefault(_smokeAnnexed) == "RUS" && _smokeJournal.Contains(("RUS", "peace"))
@@ -934,6 +953,26 @@ public partial class Main : Node
         _newsTicker.Announce(show);
         return pages == show.Stories.Count + 2 && !_broadcastDialog.Visible && _newsTicker.Announced == show
                && show.Script().All(line => line.IndexOfAny(['%', '$', Fmt.Minus, Fmt.Nbsp]) < 0) && (_smokeBroadcast || snapshot.News.Broadcasts!.Count > 0);
+    }
+
+    /// <summary>
+    /// Газета в дымовом тесте: за два месяца для России вышли номера 1-го числа, газета открывается кнопкой на
+    /// последнем номере, листается назад и закрывается; доклад министра с советом строится.
+    /// </summary>
+    bool SmokeNewspaper(WorldSnapshot snapshot)
+    {
+        var papers = snapshot.News.PapersOf("RUS");
+        if (papers.Count < 2 || papers.Any(p => p.Date.Day != 1))
+            return false;
+        CloseDialogs();
+        ShowNewspaper();
+        var last = _newspaper.ShownId;
+        _newspaper.Turn(-1);
+        var turned = _newspaper.ShownId;
+        CloseDialogs();
+        var post = _data.Government.Posts.First(p => p.Id == "finance");
+        var report = MinistryReport.Lines(_data, post, snapshot.Countries["RUS"], snapshot, snapshot.Countries["RUS"].Government?.Minister("finance"));
+        return last == papers[^1].Id && turned == papers[^2].Id && !_newspaper.Visible && report.Any(l => l.StartsWith("Совет министра: "));
     }
 
     /// <summary>
@@ -1383,6 +1422,19 @@ public partial class Main : Node
                     ToggleNews();
                 _newsPanel.SetFilter("tv");
             }),
+            // Газета: последний номер для Бразилии; затем доклад министра финансов с советом.
+            ("76_newspaper", () =>
+            {
+                if (_newsPanel.Visible)
+                    ToggleNews();
+                ShowNewspaper();
+            }),
+            ("77_ministry_report", () =>
+            {
+                CloseDialogs();
+                OpenMinistries("BRA");
+                _ministries.SelectPost("finance");
+            }),
         };
         if (_shotStep > 0)
         {
@@ -1594,7 +1646,7 @@ public partial class Main : Node
     }
 
     bool DialogOpen => _resultsDialog.Visible || _coalitionDialog.Visible || _defeatDialog.Visible || _summaryDialog.Visible || _confirmDialog.Visible
-                       || _debateDialog.Visible || _protestDialog.Visible || _projectDialog.Visible || _eventDialog.Visible || _broadcastDialog.Visible;
+                       || _debateDialog.Visible || _protestDialog.Visible || _projectDialog.Visible || _eventDialog.Visible || _broadcastDialog.Visible || _newspaper.Visible;
 
     /// <summary>Дипломатическое действие игрока: выполняется в потоке модели.</summary>
     void PostDiplomacy(string partner, string action) => _host!.Post(w =>
@@ -1767,6 +1819,24 @@ public partial class Main : Node
         _eventDialog.Visible = false;
         _projectDialog.Visible = false;
         _broadcastDialog.Visible = false;
+        _newspaper.Visible = false;
+    }
+
+    /// <summary>Открыть газету страны игрока на последнем номере (кнопка «Газета», клавиша K). Сама газета не всплывает.</summary>
+    void ShowNewspaper()
+    {
+        if (DialogOpen || _host == null)
+            return;
+        var papers = _host.Snapshot.News.PapersOf(_host.Snapshot.PlayerCountry);
+        if (papers.Count == 0)
+        {
+            _toasts.Push("Газета выходит 1-го числа каждого месяца — первый номер ещё не вышел.");
+            return;
+        }
+        _readPaper = Math.Max(_readPaper, papers[^1].Id);
+        _newsTicker.SetPaper(true, false);
+        _newspaper.Show(papers, _host.Snapshot.PlayerCountry!);
+        PauseForDialog();
     }
 
     /// <summary>Открыть телевыпуск страны игрока (из ленты, списка или сам по себе в понедельник).</summary>

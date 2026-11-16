@@ -604,6 +604,30 @@
   "trade_bonus": 10,
   "trade_share": 5
  },
+ "newspaper": {
+  "_comment": "Газета (MODEL.md, «Газета»): выходит 1-го числа для страны игрока. Тон — по свободе прессы страны: от free_min — независимое издание (пишет обо всём, разоблачает приукрашенные доклады), от loyal_min — близкое к власти (молчит о плохих домашних новостях важностью ниже hide_max — с прибавкой home_bonus за свою страну, как в ленте), ниже — государственное (о плохом дома молчит, хвалит власть). На первой полосе — заголовок месяца и stories материалов, хранится keep номеров. Разоблачение: министр приукрасил доклад хотя бы на expose_spin, и цифра в докладе отличается от настоящей больше чем на долю expose_gap; важность expose_weight; об одном министре — не чаще раза в expose_months месяцев, в стране — не чаще раза в expose_every месяцев.",
+  "free_min": 60,
+  "loyal_min": 30,
+  "hide_max": 100,
+  "stories": 3,
+  "keep": 12,
+  "expose_spin": 0.15,
+  "expose_gap": 0.05,
+  "expose_weight": 85,
+  "expose_months": 12,
+  "expose_every": 4
+ },
+ "reports": {
+  "_comment": "Честность докладов министров (MODEL.md, «Доклады министров»). Насколько цифры в докладе лучше настоящих (доля значения): слабый министр (компетентность ниже honest_competence) — до weak_spin, нечестный (коррупционность выше corrupt_from) — до corrupt_spin; черты «коррупционер» и «популист» прибавляют trait_spin и populist_spin; всего не больше max_spin. Министр с компетентностью ниже bad_advice_competence даёт плохой совет (government.json → posts → advice → weak).",
+  "honest_competence": 45,
+  "weak_spin": 0.2,
+  "corrupt_from": 55,
+  "corrupt_spin": 0.3,
+  "trait_spin": 0.1,
+  "populist_spin": 0.05,
+  "max_spin": 0.35,
+  "bad_advice_competence": 35
+ },
  "broadcast": {
   "_comment": "Телевыпуск (MODEL.md, «Телевыпуск»): выходит по понедельникам для страны игрока. Сюжеты — новости ленты за последние window_days дней, ещё не показанные в выпусках; новость старше недели теряет stale важности за каждый день сверх недели. В выпуске от stories_min до stories_max сюжетов: сюжеты сверх stories_min — только с важностью от extra_min; один сюжет на источник, мировых сюжетов об одной стране — не больше per_country. Если новостей не хватило на stories_min, выходит сюжет «Главные цифры страны» (news.json → broadcast → figures). keep — сколько выпусков хранить. Ведущий: возраст на старте anchor_age (от, до), доля женщин anchor_female_share, ведёт anchor_years лет (от, до), но уходит не позже anchor_retire_age лет.",
   "stories_min": 3,

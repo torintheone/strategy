@@ -19,7 +19,7 @@ public static class NewsModel
     /// <summary>Вместо источника: запись журнала новостью не становится.</summary>
     public const string None = "-";
 
-    public static IReadOnlyList<ISimSystem> Systems() => [new Systems.NewsSystem(), new Systems.BroadcastSystem()];
+    public static IReadOnlyList<ISimSystem> Systems() => [new Systems.NewsSystem(), new Systems.NewspaperSystem(), new Systems.BroadcastSystem()];
 
     public static void Setup(World world) => world.News = new WorldNews();
 
