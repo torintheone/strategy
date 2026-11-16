@@ -34,7 +34,7 @@ public static class LawText
         "доля" => Fmt.Signed(v * 100, 0) + "%",
         "% ВВП" => Fmt.Signed(v, 1) + "%" + Fmt.Nbsp + "ВВП",
         "лет" => Fmt.Signed(v, 1) + Fmt.Nbsp + "года",
-        "пункты" => Fmt.Signed(v, 0),
+        "пункты" => Fmt.Signed(v, v == Math.Round(v) ? 0 : 1),
         _ => Fmt.Signed(v, 2),
     };
 

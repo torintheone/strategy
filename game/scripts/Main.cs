@@ -914,7 +914,7 @@ public partial class Main : Node
                     ("события", _smokeEventShown && _smokeJournal.Contains(("RUS", "event")) && snapshot.Events is { } ev
                                && ev.History.Any(h => h.Event == "record_harvest" && h.Option == "export") && ev.Active.Count > 0
                                && snapshot.Countries.Values.Count(c => c.Ai is { } a && a.Decisions.Any(d => d.Kind == "event")) > 5),
-                    ("события 35–65", _data.Events.Events.Count(e => !e.Chain) >= 60 && _smokeTreaty != null
+                    ("события 35–95", _data.Events.Events.Count(e => !e.Chain) >= 90 && _smokeTreaty != null
                                       && snapshot.Diplomacy!.Partners.Any(p => p.Id == _smokeTreaty && p.Treaties.Contains("investment"))
                                       && _data.Events.Events.Any(e => e.Options.Any(o => o.Fund))),
                     ("новости", snapshot.News.Items.Any(n => n.Home && n.Source.StartsWith("event:")) && snapshot.News.Items.Any(n => !n.Home)
@@ -1460,6 +1460,17 @@ public partial class Main : Node
                         When = [new Politeconomy.Sim.Data.EventCondition(Partner: new Politeconomy.Sim.Data.EventPartner(RelationsMin: 0, TradeMin: 1, CanSign: "free_trade"))],
                     };
                     Politeconomy.Sim.Events.EventModel.Fire(w, w["BRA"], offer);
+                });
+            }),
+            // Политическое событие: митинг оппозиции — окно с причинами и вариантами (условия смягчены для кадра).
+            ("79_event_politics", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w =>
+                {
+                    foreach (var pending in w.Events!["BRA"].Pending.ToList())
+                        Politeconomy.Sim.Events.EventModel.Decide(w, "BRA", pending.Id, w.Data.Events.Event(pending.Event)!.Options.First(o => o.Default).Id);
+                    Politeconomy.Sim.Events.EventModel.Fire(w, w["BRA"], w.Data.Events.Event("opposition_rally")! with { When = [] });
                 });
             }),
         };

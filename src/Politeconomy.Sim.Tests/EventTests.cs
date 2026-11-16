@@ -370,4 +370,52 @@ public class EventTests
         Assert.Equal(40, g.Minister("energy")!.Loyalty);
         Assert.True(loyalty < 40);
     }
+
+    [Fact]
+    public void ThirdOfTheLatestEventsAreAboutSocietyAndPolitics()
+    {
+        var events = TestData.Game.Events.Events;
+        Assert.True(events.Count(e => !e.Chain) >= 90);
+        // Часть 7.5b: из 30 новых событий не меньше трети — про общество и политику, а не про экономику.
+        var latest = events.Skip(64).Take(30).ToList();
+        Assert.Equal(30, latest.Count);
+        Assert.True(latest.Count(e => e.Category is "social" or "politics" or "scandal" or "characters") >= 10);
+        // Все варианты закрыты своими «что будет» и ведут себя по данным.
+        Assert.All(latest.SelectMany(e => e.Options), o => Assert.NotEmpty(EventText.Consequences(TestData.Game, o)));
+    }
+
+    [Fact]
+    public void PoliticalEventsNeedTheRightRegimeAndMood()
+    {
+        var world = NewWorld();
+        void Set(string country, string stat, double value) => world[country].Stats[stat] = world[country].Stats[stat] with { Value = value };
+        // Митинг оппозиции — только там, где власть непопулярна и собираться можно.
+        Set("DEU", "approval_pct", 30);
+        Assert.True(Holds(world, "DEU", "opposition_rally", out var rally));
+        Assert.Contains(rally.Why, w => w.Contains("Одобрение власти"));
+        Set("DEU", "approval_pct", 70);
+        Assert.False(Holds(world, "DEU", "opposition_rally", out _));
+        Set("PRK", "approval_pct", 30);
+        Assert.False(Holds(world, "PRK", "opposition_rally", out _));
+        // Болезнь главы, слухи о заговоре и амнистия — только в несвободных режимах.
+        Assert.True(Holds(world, "PRK", "leader_illness", out _));
+        Assert.False(Holds(world, "DEU", "leader_illness", out _));
+        Assert.False(Holds(world, "DEU", "amnesty_demand", out _));
+        // Срок главы заканчивается у президента с высоким рейтингом, а не у канцлера.
+        world.Laws!["FRA"].Current["term_limits"] = "two";
+        Set("FRA", "approval_pct", 70);
+        Assert.True(Holds(world, "FRA", "term_limit_end", out _));
+        Set("DEU", "approval_pct", 70);
+        Assert.False(Holds(world, "DEU", "term_limit_end", out _));
+        // Вотум недоверия — только в парламентских системах.
+        Set("DEU", "ruling_poll_pct", 30);
+        Set("USA", "ruling_poll_pct", 30);
+        Assert.True(Holds(world, "DEU", "no_confidence_threat", out _));
+        Assert.False(Holds(world, "USA", "no_confidence_threat", out _));
+        // Забастовка учителей — когда школам дают меньше денег, чем на старте.
+        Assert.False(Holds(world, "FRA", "teachers_strike", out _));
+        var education = TestData.Game.Budget.Spending.ToList().FindIndex(x => x.Id == "education");
+        world.Economy!["FRA"].SpendingPlan[education] *= 0.85;
+        Assert.True(Holds(world, "FRA", "teachers_strike", out _));
+    }
 }
