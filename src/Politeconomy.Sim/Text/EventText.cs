@@ -67,6 +67,10 @@ public static class EventText
                 .Select(kv => $"{(kv.Key == "army" ? "армия" : "полиция")} {Fmt.Signed(kv.Value, 0)}")));
         if (o.Relations is { } relations)
             lines.Add($"Отношения {RelationsWith(relations.With)}: {Fmt.Signed(relations.Value, 0)}");
+        if (o.Treaty != null)
+            lines.Add($"Договор с этой страной: «{data.Diplomacy.Treaties.FirstOrDefault(t => t.Id == o.Treaty)?.Name ?? o.Treaty}»");
+        if (o.Fund)
+            lines.Add($"Просьба о кредите: «{data.Diplomacy.Fund.Name}» решит, дать ли деньги");
         if (o.Subject == "fire")
             lines.Add("Министр уходит в отставку");
         else if (double.TryParse(o.Subject, System.Globalization.CultureInfo.InvariantCulture, out var shift) && shift != 0)

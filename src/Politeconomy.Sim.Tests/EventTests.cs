@@ -237,4 +237,137 @@ public class EventTests
         sim.RunUntil(world.Date.AddMonths(3));
         Assert.Equal(SaveGame.Hash(world), SaveGame.Hash(loaded));
     }
+
+    [Fact]
+    public void OfferedTreatyIsSignedOnceAndNotOfferedAgain()
+    {
+        var world = NewWorld();
+        PoliticsActions.PlayAs(world, "DEU");
+        // Германия и Франция: хорошие отношения и большая торговля — партнёр предлагает свободную торговлю.
+        Assert.True(Holds(world, "DEU", "free_trade_offer", out var match));
+        var partner = match.Partner!;
+        Assert.False(DiplomacyModel.HasTreaty(world, "DEU", partner, "free_trade"));
+        var instance = EventModel.Fire(world, world["DEU"], Event("free_trade_offer"))!;
+        Assert.Equal(partner, instance.Partner);
+        var option = Event("free_trade_offer").Option("sign")!;
+        Assert.Contains(EventText.Consequences(TestData.Game, option), l => l.Contains("Соглашение о свободной торговле"));
+        Assert.True(EventModel.Decide(world, "DEU", instance.Id, "sign"));
+        Assert.True(DiplomacyModel.HasTreaty(world, "DEU", partner, "free_trade"));
+        Assert.Contains(world.Journal, j => j.Country == "DEU" && j.Text.Contains("Подписан договор"));
+        // Тот же партнёр договор второй раз не предлагает — найдётся другой или никто.
+        Assert.False(Holds(world, "DEU", "free_trade_offer", out var again) && again.Partner == partner);
+        // Отказ от предложенного договора его не подписывает.
+        var other = EventModel.Fire(world, world["DEU"], Event("investment_treaty_offer"))!;
+        Assert.True(EventModel.Decide(world, "DEU", other.Id, "refuse"));
+        Assert.False(DiplomacyModel.HasTreaty(world, "DEU", other.Partner!, "investment"));
+    }
+
+    [Fact]
+    public void AiSignsOfferedTreatiesToo()
+    {
+        var world = NewWorld();
+        var record = Event("investment_treaty_offer");
+        var instance = EventModel.Fire(world, world["ITA"], record)!;
+        Assert.NotNull(instance.Partner);
+        EventModel.Decide(world, "ITA", instance.Id, "sign");
+        Assert.True(DiplomacyModel.HasTreaty(world, "ITA", instance.Partner!, "investment"));
+        // Пересчёт после подписания договора идёт сразу: у ИИ тоже нет «грязного» состояния.
+        Assert.False(world.Diplomacy!.Dirty);
+        Assert.Null(world.Diplomacy.Actor);
+    }
+
+    [Fact]
+    public void DefaultThresholdAsksTheFundOrCutsOrRestructures()
+    {
+        var world = NewWorld();
+        PoliticsActions.PlayAs(world, "ARG");
+        var e = world.Economy!["ARG"];
+        e.Rating = 6;
+        e.Debt = e.NominalGdp * 1.1;
+        world["ARG"].Stats["credit_rating"] = world["ARG"].Stats["credit_rating"] with { Value = 6 };
+        world["ARG"].Stats["gov_debt_pct_gdp"] = world["ARG"].Stats["gov_debt_pct_gdp"] with { Value = 110 };
+        world["ARG"].Stats["interest_pct_gdp"] = world["ARG"].Stats["interest_pct_gdp"] with { Value = 5 };
+        Assert.True(Holds(world, "ARG", "default_threshold", out var why));
+        Assert.Contains(why.Why, w => w.Contains("Кредитный рейтинг"));
+        Assert.False(Holds(world, "DEU", "default_threshold", out _));
+        var debt = e.Debt;
+        var instance = EventModel.Fire(world, world["ARG"], Event("default_threshold"))!;
+        // Реструктуризация списывает часть долга сразу.
+        Assert.True(EventModel.Decide(world, "ARG", instance.Id, "restructure"));
+        Assert.InRange(e.Debt, debt - e.NominalGdp * 0.07, debt - e.NominalGdp * 0.05);
+        // Просьба о кредите — решение совета: если он согласен, появляется программа, если нет — страна узнает почему.
+        var second = EventModel.Fire(world, world["ARG"], Event("default_threshold") with { When = [] })!;
+        Assert.True(EventModel.Decide(world, "ARG", second.Id, "fund"));
+        Assert.True(world.Diplomacy!.Programs.ContainsKey("ARG") || world.Journal.Any(j => j.Country == "ARG" && j.Text.Contains("отказал")));
+        Assert.Contains(EventText.Consequences(TestData.Game, Event("default_threshold").Option("fund")!), l => l.Contains("кредите"));
+    }
+
+    [Fact]
+    public void SecondWaveFollowsTheInfectionAndRemembersIt()
+    {
+        var world = NewWorld();
+        PoliticsActions.PlayAs(world, "BRA");
+        Assert.True(Event("infection_second_wave").Chain);
+        Assert.All(new[] { "quarantine", "vaccinate", "minimal" }, o =>
+            Assert.Contains(Event("new_infection").Option(o)!.Next!, n => n.Event == "infection_second_wave"));
+        var instance = EventModel.Fire(world, world["BRA"], Event("new_infection"))!;
+        EventModel.Decide(world, "BRA", instance.Id, "minimal");
+        // С вероятностью 0,6 за решением следует продолжение; проверяем сам механизм продолжения напрямую.
+        var wave = EventModel.Fire(world, world["BRA"], Event("infection_second_wave"), instance);
+        Assert.NotNull(wave);
+        Assert.Equal("infection_second_wave", wave!.Event);
+    }
+
+    [Fact]
+    public void NewEventsFollowTheStateOfTheCountry()
+    {
+        var world = NewWorld();
+        // Авария на АЭС — только там, где есть атомная энергетика.
+        Assert.True(Holds(world, "FRA", "nuclear_accident", out var nuclear));
+        Assert.Contains(nuclear.Why, w => w.Contains("Атом"));
+        Assert.False(Holds(world, "ARE", "nuclear_accident", out _) && world["ARE"].Stat("power_nuclear_pct") < 8);
+        Assert.False(Holds(world, "NZL", "nuclear_accident", out _));
+        // Нефтяной ветер — только при дорогой нефти и у экспортёра.
+        Assert.False(Holds(world, "SAU", "oil_windfall", out _));
+        world.Economy!.OilPrice = 1.6;
+        Assert.True(Holds(world, "SAU", "oil_windfall", out _));
+        Assert.False(Holds(world, "DEU", "oil_windfall", out _));
+        // Валютный кризис — когда курс упал на четверть, а резервов мало.
+        Assert.False(Holds(world, "DEU", "currency_crisis", out _));
+        world["TUR"].Stats["exchange_rate_change_pct"] = world["TUR"].Stats["exchange_rate_change_pct"] with { Value = 40 };
+        world["TUR"].Stats["reserves_pct_gdp"] = world["TUR"].Stats["reserves_pct_gdp"] with { Value = 5 };
+        Assert.True(Holds(world, "TUR", "currency_crisis", out var crisis));
+        Assert.Contains(crisis.Why, w => w.Contains("Курс"));
+    }
+
+    [Fact]
+    public void MinisterEventsPickTheRightMinister()
+    {
+        var world = NewWorld();
+        PoliticsActions.PlayAs(world, "FRA");
+        var g = world.Government!["FRA"];
+        foreach (var m in g.Ministers.Values)
+        {
+            m.Competence = 60;
+            m.Loyalty = 70;
+        }
+        Assert.False(Holds(world, "FRA", "incompetent_minister", out _));
+        Assert.False(Holds(world, "FRA", "minister_defects", out _));
+        g.Minister("transport")!.Competence = 12;
+        g.Minister("energy")!.Loyalty = 10;
+        Assert.True(Holds(world, "FRA", "incompetent_minister", out var weak));
+        Assert.Equal("transport", weak.Subject);
+        Assert.True(Holds(world, "FRA", "minister_defects", out var defector));
+        Assert.Equal("energy", defector.Subject);
+        // Увольнение «героя» ставит на пост нового человека; «число» — сдвиг лояльности.
+        var instance = EventModel.Fire(world, world["FRA"], Event("incompetent_minister"))!;
+        var before = g.Minister("transport")!.Id;
+        Assert.True(EventModel.Decide(world, "FRA", instance.Id, "fire"));
+        Assert.NotEqual(before, g.Minister("transport")!.Id);
+        var second = EventModel.Fire(world, world["FRA"], Event("minister_defects"))!;
+        var loyalty = g.Minister("energy")!.Loyalty;
+        Assert.True(EventModel.Decide(world, "FRA", second.Id, "concede"));
+        Assert.Equal(40, g.Minister("energy")!.Loyalty);
+        Assert.True(loyalty < 40);
+    }
 }

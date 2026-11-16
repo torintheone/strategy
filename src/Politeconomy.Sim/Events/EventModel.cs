@@ -320,6 +320,8 @@ public static class EventModel
         }
         if (o.Relations is { } relations)
             DiplomacyModel.EventRelations(world, id, relations.With, instance.Partner, relations.Value);
+        if (o.Treaty != null || o.Fund)
+            DiplomacyModel.EventAction(world, id, instance.Partner, o.Treaty, o.Fund);
         if (o.Subject != null && instance.Subject is { } post && g?.Minister(post) is { } minister && minister.Id == instance.SubjectId)
         {
             if (o.Subject == "fire")

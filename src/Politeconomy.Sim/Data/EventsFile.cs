@@ -79,10 +79,11 @@ public sealed record EventCondition(
 /// <summary>
 /// Какую страну событие берёт в партнёры: сосед (Neighbor), отношения (RelationsMin/RelationsMax), доля в нашей
 /// торговле, % (TradeMin), место по мощи не ниже (RankMax), воюет ли она (War), было ли у неё за последние два месяца
-/// событие категории Recent (например, disaster). Из подходящих — с самой большой долей в торговле.
+/// событие категории Recent (например, disaster), можно ли подписать с ней договор CanSign (id из diplomacy.json:
+/// его ещё нет, и ничто не мешает, кроме отношений — общий блок, союз, нейтралитет). Из подходящих — с самой большой долей в торговле.
 /// </summary>
 public sealed record EventPartner(bool? Neighbor = null, double? RelationsMin = null, double? RelationsMax = null, double? TradeMin = null, int? RankMax = null,
-    bool? War = null, string? Recent = null);
+    bool? War = null, string? Recent = null, string? CanSign = null);
 
 /// <summary>Вес растёт с показателем: × 1 при значении From, × Factor при значении To (между ними — линейно, дальше — не меняется).</summary>
 public sealed record EventScale(string Stat, double From, double To, double Factor);
@@ -91,7 +92,8 @@ public sealed record EventScale(string Stat, double From, double To, double Fact
 /// Вариант решения. Months — сколько месяцев действуют Effects (ключи поправок модели, как у законов) и Moods
 /// (удовлетворённость классов, пункты). Сразу: Cost (% ВВП — в долг; отрицательный — доход), Popularity (главы),
 /// Groups (одобрение групп интересов), Loyalty (police, army), Relations, Subject (fire — уволить «героя»; число —
-/// сдвиг его лояльности), Next (продолжения). Requires — условия, без которых вариант закрыт (RequiresText — почему).
+/// сдвиг его лояльности), Treaty (подписать договор с партнёром события — id из diplomacy.json), Fund (попросить кредит
+/// Валютного совета), Next (продолжения). Requires — условия, без которых вариант закрыт (RequiresText — почему).
 /// Ai — насколько вариант служит приоритетам ИИ: рост, стабильность, сила, переизбрание. Default — вариант, который
 /// сработает, если игрок не решит в срок.
 /// </summary>
@@ -112,7 +114,9 @@ public sealed record EventOptionRecord(
     IReadOnlyList<EventCondition>? Requires = null,
     string? RequiresText = null,
     IReadOnlyList<double>? Ai = null,
-    bool Default = false);
+    bool Default = false,
+    string? Treaty = null,
+    bool Fund = false);
 
 /// <summary>Сдвиг отношений: With — partner (партнёр события), neighbors (соседи), powers (первые пять по мощи), all (все).</summary>
 public sealed record EventRelations(string With, double Value);

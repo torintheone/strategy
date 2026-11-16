@@ -226,6 +226,10 @@ public static class EventConditions
                 continue;
             if (x.Recent is { } category && !Recent(world, other.Id, category))
                 continue;
+            // Договор можно подписать: его ещё нет и ничто не мешает, кроме отношений (общий блок, союз, нейтралитет).
+            // ИИ договоров стране игрока не навязывает: игрок решает сам, когда предложение приходит ему.
+            if (x.CanSign is { } treaty && (DiplomacyModel.Obstacle(world, c.Id, other.Id, treaty) != null || (other.Id == world.PlayerCountry && c.Id != world.PlayerCountry)))
+                continue;
             best = (other.Id, trade);
         }
         if (best.Id == null)

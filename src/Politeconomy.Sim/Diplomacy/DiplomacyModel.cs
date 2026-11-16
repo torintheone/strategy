@@ -528,23 +528,35 @@ public static partial class DiplomacyModel
     public static bool HasTreaty(World world, string a, string b, string type) =>
         world.Diplomacy?.Treaties.Any(t => t.Type == type && WorldDiplomacy.Key(t.A, t.B) == WorldDiplomacy.Key(a, b)) == true;
 
+    /// <summary>
+    /// Что мешает договору независимо от отношений: такого договора нет, он уже действует, у сторон нет нефти и газа
+    /// на обмен, они уже в общем торговом блоке или союзе, одна из них нейтральна. null — препятствий нет.
+    /// </summary>
+    public static string? Obstacle(World world, string a, string b, string type)
+    {
+        if (world.Data.Diplomacy.Treaties.All(t => t.Id != type))
+            return "Такого договора нет.";
+        if (HasTreaty(world, a, b, type))
+            return "Договор уже действует.";
+        if (type == "energy" && EnergyExporter(world, a) == EnergyExporter(world, b))
+            return EnergyExporter(world, a) ? "Обе страны сами продают нефть и газ." : "Ни одна из стран не продаёт нефть и газ.";
+        if (type == "free_trade" && BlocsOf(world, a).FirstOrDefault(x => x.Trade > 0 && InBloc(world, x.Id, b)) is { } common)
+            return $"Вы уже вместе в «{common.Name}»: торговля между вами и так свободная.";
+        if (type == "alliance" && (NeutralReason(world, a) ?? NeutralReason(world, b)) is { } neutral)
+            return neutral;
+        if (type == "alliance" && BlocsOf(world, a).FirstOrDefault(x => x.Military && InBloc(world, x.Id, b)) is { } pact)
+            return $"Вы уже союзники по «{pact.Name}».";
+        return null;
+    }
+
     /// <summary>Согласится ли партнёр на договор и почему (для подсказки игроку).</summary>
     public static (bool Accepts, string Reason) Acceptance(World world, string a, string b, string type)
     {
         var data = world.Data;
         var bal = data.DiplomacyBalance;
-        if (data.Diplomacy.Treaties.FirstOrDefault(t => t.Id == type) is not { } record)
-            return (false, "Такого договора нет.");
-        if (HasTreaty(world, a, b, type))
-            return (false, "Договор уже действует.");
-        if (type == "energy" && EnergyExporter(world, a) == EnergyExporter(world, b))
-            return (false, EnergyExporter(world, a) ? "Обе страны сами продают нефть и газ." : "Ни одна из стран не продаёт нефть и газ.");
-        if (type == "free_trade" && BlocsOf(world, a).FirstOrDefault(x => x.Trade > 0 && InBloc(world, x.Id, b)) is { } common)
-            return (false, $"Вы уже вместе в «{common.Name}»: торговля между вами и так свободная.");
-        if (type == "alliance" && (NeutralReason(world, a) ?? NeutralReason(world, b)) is { } neutral)
-            return (false, neutral);
-        if (type == "alliance" && BlocsOf(world, a).FirstOrDefault(x => x.Military && InBloc(world, x.Id, b)) is { } pact)
-            return (false, $"Вы уже союзники по «{pact.Name}».");
+        if (Obstacle(world, a, b, type) is { } obstacle)
+            return (false, obstacle);
+        var record = data.Diplomacy.Treaties.First(t => t.Id == type);
         var need = record.MinRelations;
         var notes = new List<string>();
         if (type == "free_trade" && Politics.PoliticsModel.HeadParty(world, b) is { } party && party.Position[0] < bal.Protectionist)

@@ -98,6 +98,8 @@ public static partial class DataValidator
             }
             if (x.Partner != null && !subjectAllowed)
                 add(file, $"{where}: условие по партнёру допустимо только в when события");
+            if (x.Partner?.CanSign is { } canSign && data.Diplomacy.Treaties.All(t => t.Id != canSign))
+                add(file, $"{where}: у партнёра can_sign «{canSign}» — такого договора нет в diplomacy.json");
             if (x.Partner?.Recent is { } recent && !categories.Contains(recent))
                 add(file, $"{where}: у партнёра recent «{recent}» — такой категории нет");
             if (x.Hazard is { } hazard && !events.Hazards.ContainsKey(hazard))
@@ -173,6 +175,13 @@ public static partial class DataValidator
                         add(file, $"{at}: отношения with «{relations.With}» — нужно partner, neighbors, powers или all");
                     if (relations.With == "partner" && !partner && !e.Chain)
                         add(file, $"{at}: отношения с партнёром, но в условиях события партнёра нет");
+                }
+                if (o.Treaty != null)
+                {
+                    if (data.Diplomacy.Treaties.All(t => t.Id != o.Treaty))
+                        add(file, $"{at}: договора «{o.Treaty}» нет в diplomacy.json");
+                    if (!partner && !e.Chain)
+                        add(file, $"{at}: договор с партнёром, но в условиях события партнёра нет");
                 }
                 if (o.Subject != null)
                 {

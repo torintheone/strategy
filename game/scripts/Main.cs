@@ -106,6 +106,7 @@ public partial class Main : Node
     int _smokeEvent;
     bool _smokeEventShown;
     bool _smokeBroadcast;
+    string? _smokeTreaty;
     // В снимке только последние записи журнала, поэтому смоук-тест копит всё, что успел увидеть.
     readonly HashSet<(string Country, string Kind)> _smokeJournal = [];
 
@@ -849,6 +850,14 @@ public partial class Main : Node
                     var smokeEvent = w.Data.Events.Event("record_harvest")!;
                     if (Politeconomy.Sim.Events.EventModel.Fire(w, w["RUS"], smokeEvent with { When = [] }) is { } fired)
                         _smokeEvent = fired.Id;
+                    // Предложение договора: партнёр предлагает защиту инвестиций, Россия подписывает (условия — смягчены).
+                    var offer = w.Data.Events.Event("investment_treaty_offer")! with
+                    {
+                        When = [new Politeconomy.Sim.Data.EventCondition(Partner: new Politeconomy.Sim.Data.EventPartner(RelationsMin: 12, CanSign: "investment"))],
+                    };
+                    if (Politeconomy.Sim.Events.EventModel.Fire(w, w["RUS"], offer) is { Partner: { } offered } offerInstance
+                        && Politeconomy.Sim.Events.EventModel.Decide(w, "RUS", offerInstance.Id, "sign"))
+                        _smokeTreaty = offered;
                     // Война: Россия нарушает перемирие с Украиной.
                     Politeconomy.Sim.Military.WarModel.DeclareByPlayer(w, "RUS", "UKR");
                     // Мир: Россия занимает регион Грузии и подписывает мир с уставшей Грузией — регион переходит России.
@@ -905,6 +914,9 @@ public partial class Main : Node
                     ("события", _smokeEventShown && _smokeJournal.Contains(("RUS", "event")) && snapshot.Events is { } ev
                                && ev.History.Any(h => h.Event == "record_harvest" && h.Option == "export") && ev.Active.Count > 0
                                && snapshot.Countries.Values.Count(c => c.Ai is { } a && a.Decisions.Any(d => d.Kind == "event")) > 5),
+                    ("события 35–65", _data.Events.Events.Count(e => !e.Chain) >= 60 && _smokeTreaty != null
+                                      && snapshot.Diplomacy!.Partners.Any(p => p.Id == _smokeTreaty && p.Treaties.Contains("investment"))
+                                      && _data.Events.Events.Any(e => e.Options.Any(o => o.Fund))),
                     ("новости", snapshot.News.Items.Any(n => n.Home && n.Source.StartsWith("event:")) && snapshot.News.Items.Any(n => !n.Home)
                                 && snapshot.News.Items.All(n => _data.News.Topic(n.Topic) != null) && _newsTicker.Current != null),
                     ("телевыпуск", SmokeBroadcast(snapshot)),
@@ -1434,6 +1446,21 @@ public partial class Main : Node
                 CloseDialogs();
                 OpenMinistries("BRA");
                 _ministries.SelectPost("finance");
+            }),
+            // Предложение договора от другой страны: окно события с вариантом «Подписать договор».
+            ("78_event_treaty_offer", () =>
+            {
+                CloseScreens();
+                CloseDialogs();
+                SetMode(_data.MapModes.Modes.First(m => m.Kind == "political"));
+                _host!.Post(w =>
+                {
+                    var offer = w.Data.Events.Event("free_trade_offer")! with
+                    {
+                        When = [new Politeconomy.Sim.Data.EventCondition(Partner: new Politeconomy.Sim.Data.EventPartner(RelationsMin: 0, TradeMin: 1, CanSign: "free_trade"))],
+                    };
+                    Politeconomy.Sim.Events.EventModel.Fire(w, w["BRA"], offer);
+                });
             }),
         };
         if (_shotStep > 0)
