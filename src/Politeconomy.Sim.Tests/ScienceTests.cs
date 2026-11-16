@@ -60,8 +60,9 @@ public class ScienceTests
     [Fact]
     public void PlayerSetsPriorityAndAllocation()
     {
-        var sim = NewGame();
-        var same = NewGame();
+        // Без событий и ИИ: переманивание учёных, договоры и прочее сдвигают отдачу от науки и перекрывают сравнение.
+        var sim = TestData.WithoutAi(3);
+        var same = TestData.WithoutAi(3);
         var world = sim.World;
         const string id = "IND";
         Assert.False(ScienceModel.Allocate(world, id, "medicine", 0.5), "только в своей стране");

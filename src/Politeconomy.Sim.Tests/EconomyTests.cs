@@ -126,11 +126,15 @@ public class EconomyTests
         Assert.Equal(SaveGame.Hash(sim.World), SaveGame.Hash(loaded.World));
     }
 
-    /// <summary>Два одинаковых мира: в первом что-то меняем, оба живут год с одинаковыми случайными толчками.</summary>
+    /// <summary>
+    /// Два одинаковых мира: в первом что-то меняем, оба живут год с одинаковыми случайными толчками. Без ИИ и событий:
+    /// иначе событие, случившееся в одном мире и не случившееся в другом (их условия зависят от состояния страны),
+    /// перекрыло бы небольшой эффект, который проверяет тест.
+    /// </summary>
     static (World Changed, World Base) Compare(Action<World> change, int months = 12)
     {
-        var a = GameSetup.NewGame(TestData.Game, 3).Simulation;
-        var b = GameSetup.NewGame(TestData.Game, 3).Simulation;
+        var a = TestData.WithoutAi(3);
+        var b = TestData.WithoutAi(3);
         change(a.World);
         a.RunUntil(a.World.Date.AddMonths(months));
         b.RunUntil(b.World.Date.AddMonths(months));

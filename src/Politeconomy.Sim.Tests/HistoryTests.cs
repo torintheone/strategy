@@ -24,7 +24,7 @@ public class HistoryTests
         sim.RunUntil(new DateOnly(year + 1, 1, 2));
         Assert.Equal(year, h.LastYear);
         Assert.Equal(length + 1, bra["gdp_growth_pct"].Count);
-        Assert.Equal(sim.World.Countries.First(c => c.Id == "BRA").Stats["approval_pct"].Value, bra["approval_pct"][^1]!.Value, 3);
+        Assert.Equal(sim.World.Countries.First(c => c.Id == "BRA").Stats["approval_pct"].Value, bra["approval_pct"][^1]!.Value, 1e-4);
     }
 
     [Fact]
