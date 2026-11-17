@@ -37,6 +37,8 @@ public static partial class DataValidator
                     add(file, $"угроза {hazard}, {country}: уровень {level} вне 1…3");
             }
         var b = data.EventsBalance;
+        if (b.CooldownScale is <= 0 or > 1)
+            add("balance.json", "events: cooldown_scale — от 0 (не включая) до 1");
         if (b.Rate <= 0 || b.Days.Count == 0 || b.Days.Any(d => d is < 1 or > 28) || b.DeadlineDays <= 0 || b.QuietDays < 0)
             add("balance.json", "events: rate и deadline_days должны быть больше нуля, days — числа месяца от 1 до 28");
 

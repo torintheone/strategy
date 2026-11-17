@@ -65,7 +65,7 @@ public static partial class DiplomacyModel
         if (fund)
             RequestLoan(world, country);
         (d.Actor, d.OnNote) = (actor, note);
-        if (actor == null && country != world.PlayerCountry && d.Dirty)
+        if (actor == null && country != world.PlayerCountry && d.Dirty && !d.Batch)
         {
             d.Dirty = false;
             Refresh(world);

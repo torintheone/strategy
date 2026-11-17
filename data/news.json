@@ -149,7 +149,7 @@
     "project": { "topic": "economy", "weight": 30 },
     "council": { "topic": "diplomacy", "weight": 50 },
     "fund": { "topic": "economy", "weight": 45 },
-    "treaty": { "topic": "diplomacy", "weight": 30 },
+    "treaty": { "topic": "diplomacy", "weight": 24 },
     "treaty_cancel": { "topic": "diplomacy", "weight": 40, "tone": "bad" },
     "visit": { "topic": "diplomacy", "weight": 5 },
     "aid": { "topic": "diplomacy", "weight": 30 },
@@ -164,15 +164,15 @@
     "peace_treaty": { "topic": "war", "weight": 85, "tone": "good" }
   },
   "events": {
-    "economy": { "topic": "economy", "weight": 40 },
-    "social": { "topic": "society", "weight": 36 },
-    "politics": { "topic": "politics", "weight": 40 },
-    "scandal": { "topic": "politics", "weight": 42, "tone": "bad" },
-    "disaster": { "topic": "disaster", "weight": 50, "tone": "bad" },
-    "epidemic": { "topic": "disaster", "weight": 50, "tone": "bad" },
-    "technology": { "topic": "science", "weight": 36 },
-    "international": { "topic": "diplomacy", "weight": 40 },
-    "characters": { "topic": "politics", "weight": 28 }
+    "economy": { "topic": "economy", "weight": 16 },
+    "social": { "topic": "society", "weight": 14 },
+    "politics": { "topic": "politics", "weight": 16 },
+    "scandal": { "topic": "politics", "weight": 22, "tone": "bad" },
+    "disaster": { "topic": "disaster", "weight": 42, "tone": "bad" },
+    "epidemic": { "topic": "disaster", "weight": 34, "tone": "bad" },
+    "technology": { "topic": "science", "weight": 14 },
+    "international": { "topic": "diplomacy", "weight": 18 },
+    "characters": { "topic": "politics", "weight": 10 }
   },
   "broadcast": {
     "show": "Неделя",

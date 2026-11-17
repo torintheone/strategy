@@ -17,6 +17,11 @@ public sealed class GovernmentBalance
     public IReadOnlyList<double> CorruptionMean { get; init; } = [45, 40, 32, 20];
     public double CorruptionSpread { get; init; } = 15;
     public double PopularityMean { get; init; } = 45;
+    /// <summary>
+    /// Какую долю разрыва до PopularityMean популярность главы «забывает» каждый месяц: толчки событий, визитов и
+    /// скандалов не копятся годами, а затухают (без этого частые события накачивали популярность до предела).
+    /// </summary>
+    public double PopularityReversion { get; init; } = 0.03;
     public double PopularitySpread { get; init; } = 12;
     /// <summary>Разброс взглядов по трём осям (−100…100).</summary>
     public double ViewsSpread { get; init; } = 35;

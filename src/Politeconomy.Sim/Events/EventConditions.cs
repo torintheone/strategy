@@ -23,10 +23,17 @@ public static class EventConditions
         public List<string> Why = [];
     }
 
+    /// <summary>
+    /// Все ли условия выполняются. Условия по партнёру проверяются последними: поиск партнёра перебирает все страны
+    /// и в сотни раз дороже условий по показателям, а при невыполненном дешёвом условии он не нужен вовсе.
+    /// </summary>
     public static bool Holds(World world, Country c, IReadOnlyList<EventCondition> conditions, Match m)
     {
         foreach (var condition in conditions)
-            if (!Holds(world, c, condition, m))
+            if (condition.Partner == null && !Holds(world, c, condition, m))
+                return false;
+        foreach (var condition in conditions)
+            if (condition.Partner != null && !Holds(world, c, condition, m))
                 return false;
         return true;
     }
@@ -201,26 +208,34 @@ public static class EventConditions
         return true;
     }
 
-    /// <summary>Страна-партнёр по условиям: из подходящих — с самой большой долей в нашей торговле.</summary>
+    /// <summary>
+    /// Страна-партнёр по условиям: из подходящих — с самой большой долей в нашей торговле. Это самое дорогое условие
+    /// (перебор всех стран для каждой страны в каждый день событий), поэтому сначала идут дешёвые проверки по массивам
+    /// торговли и отношений, а дорогие (соседство по ключу-строке, события партнёра, препятствия договору) — только для
+    /// тех, кто их прошёл.
+    /// </summary>
     static bool Partner(World world, Country c, EventPartner x, Match m)
     {
-        if (world.Diplomacy is not { } d)
+        if (world.Diplomacy is not { } d || !d.Index.TryGetValue(c.Id, out var ci))
             return false;
+        DiplomacyModel.Ensure(world);
         var best = (Id: (string?)null, Trade: -1.0);
+        var trades = d.Trade[ci];
+        var relationsRow = d.Relations[ci];
         foreach (var other in world.Countries)
         {
-            if (other.Id == c.Id)
+            if (other.Id == c.Id || !d.Index.TryGetValue(other.Id, out var oi))
                 continue;
-            if (x.Neighbor is { } neighbor && d.Neighbors.Contains(WorldDiplomacy.Key(c.Id, other.Id)) != neighbor)
-                continue;
-            var trade = DiplomacyModel.TradeShare(world, c.Id, other.Id);
+            var trade = trades[oi];
             if (trade <= best.Trade || (x.TradeMin is { } tradeMin && trade * 100 < tradeMin))
                 continue;
-            var relations = DiplomacyModel.Relations(world, c.Id, other.Id);
+            var relations = relationsRow[oi];
             if ((x.RelationsMin is { } min && relations < min) || (x.RelationsMax is { } max && relations > max))
                 continue;
             // Место по мощи — из показателя страны (он сохраняется), а не из кэша дипломатии: после загрузки кэш пуст до начала месяца.
             if (x.RankMax is { } rank && !(other.Stats.GetValueOrDefault("power_rank")?.Value <= rank))
+                continue;
+            if (x.Neighbor is { } neighbor && d.Neighbors.Contains(WorldDiplomacy.Key(c.Id, other.Id)) != neighbor)
                 continue;
             if (x.War is { } war && Military.WarModel.AtWar(world, other.Id) != war)
                 continue;

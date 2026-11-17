@@ -21,6 +21,8 @@ public sealed class CabinetSystem : ISimSystem
         foreach (var country in world.Countries)
         {
             var g = government[country.Id];
+            // Популярность главы возвращается к обычной: события, визиты и скандалы сдвигают её на время, а не навсегда.
+            g.Leader.Popularity = Math.Clamp(g.Leader.Popularity + (b.PopularityMean - g.Leader.Popularity) * b.PopularityReversion, 1, 99);
             foreach (var post in data.Government.Posts)
             {
                 var minister = g.Ministers[post.Id];

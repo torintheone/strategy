@@ -88,8 +88,9 @@ public class ProtestTests
     [Fact]
     public void MassUnrestHurtsTheEconomyAndLegitimacy()
     {
-        var sim = NewGame();
-        var calm = NewGame();
+        // Без событий и ИИ: сравниваем два мира, и случайное событие в одном из них перекрыло бы эффект беспорядков.
+        var sim = TestData.WithoutAi(3);
+        var calm = TestData.WithoutAi(3);
         var world = sim.World;
         PoliticsActions.PlayAs(world, "DEU");
         for (var month = 0; month < 4; month++)

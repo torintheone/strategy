@@ -82,8 +82,9 @@ public class GroupTests
     [Fact]
     public void AngryFinanciersPullCapitalOut()
     {
-        var sim = NewGame();
-        var baseline = NewGame();
+        // Без событий и ИИ: событие, которое случилось в одном мире и не случилось в другом, перекрыло бы сравнение.
+        var sim = TestData.WithoutAi(3);
+        var baseline = TestData.WithoutAi(3);
         var world = sim.World;
         PoliticsActions.PlayAs(world, "GBR");
         Enact(world, "GBR", "capital_controls", "controls");

@@ -207,9 +207,10 @@ public class EventTests
         Assert.Equal(SaveGame.Hash(first.World), SaveGame.Hash(second.World));
         var events = first.World.Events!;
         var total = events.Counts.Values.Sum();
-        // За два года в 198 странах — сотни событий десятка разных видов; у каждой страны не больше нескольких в год.
-        Assert.InRange(total, 150, 198 * 2 * 6);
-        Assert.True(events.Counts.Count >= 12, string.Join(", ", events.Counts.Keys));
+        // За два года в 198 странах — тысячи событий десятков разных видов; у страны — 10–15 в год, в первые годы больше
+        // (в начале все события «подходящие» сразу), но не больше двух десятков.
+        Assert.InRange(total, 198 * 2 * 4, 198 * 2 * 20);
+        Assert.True(events.Counts.Count >= 60, string.Join(", ", events.Counts.Keys));
         var decisions = first.World.Ai!.Countries.Values.SelectMany(c => c.Decisions).Where(d => d.Kind == "event").ToList();
         Assert.NotEmpty(decisions);
         Assert.All(decisions, d => Assert.Contains("приоритетам", d.Why));
@@ -417,5 +418,59 @@ public class EventTests
         var education = TestData.Game.Budget.Spending.ToList().FindIndex(x => x.Id == "education");
         world.Economy!["FRA"].SpendingPlan[education] *= 0.85;
         Assert.True(Holds(world, "FRA", "teachers_strike", out _));
+    }
+
+    [Fact]
+    public void ReleaseHasOverHundredTwentyEventsInEveryCategory()
+    {
+        var events = TestData.Game.Events;
+        Assert.True(events.Events.Count(e => !e.Chain) >= 120, "по ТЗ к релизу — не меньше 120 событий");
+        Assert.All(events.Categories, c => Assert.True(events.Events.Count(e => e.Category == c.Id) >= 4, c.Id));
+        // Темы не повторяются: у всех событий разные заголовки (с точностью до подстановок).
+        var titles = events.Events.Select(e => e.Title.Replace("{partner}", "").Replace("{subject_post}", "").Replace(":", "").Trim()).ToList();
+        Assert.Equal(titles.Count, titles.Distinct().Count());
+        // Каждое «условие страны» объясняется словами, а у события с «героем» или партнёром — подстановка есть в тексте.
+        Assert.All(events.Events.Where(e => !e.Chain && e.When.Any(c => c.Partner != null)), e => Assert.Contains("{partner}", e.Title + e.Text));
+    }
+
+    [Fact]
+    public void LastEventsFollowTheStateOfTheCountry()
+    {
+        var world = NewWorld();
+        void Set(string country, string stat, double value) => world[country].Stats[stat] = world[country].Stats[stat] with { Value = value };
+        // Нехватка рабочих и безработная молодёжь — противоположные состояния рынка труда.
+        Set("DEU", "unemployment_pct", 3.5);
+        Set("DEU", "gdp_growth_pct", 2);
+        Assert.True(Holds(world, "DEU", "labor_shortage", out _));
+        Assert.False(Holds(world, "DEU", "unemployed_youth", out _));
+        Set("NGA", "unemployment_pct", 12);
+        Assert.True(Holds(world, "NGA", "unemployed_youth", out var youth));
+        Assert.Contains(youth.Why, w => w.Contains("Безработица"));
+        Assert.False(Holds(world, "NGA", "labor_shortage", out _));
+        // Спор с центробанком — только при независимом банке и высокой инфляции; «героем» становится его глава.
+        Set("DEU", "inflation_pct", 12);
+        world.Laws!["DEU"].Current["central_bank"] = "independent";
+        Assert.True(Holds(world, "DEU", "central_bank_dispute", out var dispute));
+        Assert.Equal("central_bank", dispute.Subject);
+        world.Laws["DEU"].Current["central_bank"] = "government";
+        Assert.False(Holds(world, "DEU", "central_bank_dispute", out _));
+        // Дыра в бюджете и военные пенсионеры.
+        Set("FRA", "budget_balance_pct_gdp", -8);
+        Assert.True(Holds(world, "FRA", "budget_overrun", out _));
+        Set("FRA", "budget_balance_pct_gdp", -1);
+        Assert.False(Holds(world, "FRA", "budget_overrun", out _));
+        Set("RUS", "inflation_pct", 9);
+        Assert.True(Holds(world, "RUS", "military_pensions", out _));
+        Set("RUS", "inflation_pct", 2);
+        Assert.False(Holds(world, "RUS", "military_pensions", out _));
+    }
+
+    [Fact]
+    public void HousingBubbleBurstsAfterAnyChoiceButMostOftenAfterDoingNothing()
+    {
+        var bubble = Event("housing_bubble");
+        var chances = bubble.Options.ToDictionary(o => o.Id, o => o.Next?.Where(n => n.Event == "housing_crash").Sum(n => n.Chance) ?? 0);
+        Assert.All(chances.Values, c => Assert.True(c > 0));
+        Assert.Equal(chances.Values.Max(), chances["nothing"]);
     }
 }

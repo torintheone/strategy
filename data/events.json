@@ -29,8 +29,8 @@
    "cooldown_months": 48,
    "when": [{"any": [{"stat": "coal_rents_pct_gdp", "min": 0.3}, {"stat": "mineral_rents_pct_gdp", "min": 1.5}]}, {"stat": "inflation_pct", "min": 6}],
    "options": [
-    {"id": "raise", "name": "Поднять зарплаты на госшахтах", "text": "Шахтёры вернутся к работе, но за ними придут другие отрасли.", "months": 24, "effects": {"spending.industry": 0.1}, "moods": {"skilled": 3, "unskilled": 1}, "groups": {"unions": 6, "resource_lobby": -3}, "ai": [0, 1, 0, 1]},
-    {"id": "arbitration", "name": "Третейский суд", "text": "Спор уйдёт в суд: добыча встанет на несколько недель, но обе стороны примут решение.", "months": 6, "effects": {"potential_growth": -0.1}, "moods": {"skilled": 1}, "groups": {"unions": 2}, "ai": [0.5, 0.5, 0, 0.3], "default": true},
+    {"id": "raise", "name": "Поднять зарплаты на госшахтах", "text": "Шахтёры вернутся к работе, но за ними придут другие отрасли.", "months": 24, "effects": {"spending.industry": 0.1}, "moods": {"skilled": 3, "unskilled": 1}, "groups": {"unions": 3.5, "resource_lobby": -3}, "ai": [0, 1, 0, 1]},
+    {"id": "arbitration", "name": "Третейский суд", "text": "Спор уйдёт в суд: добыча встанет на несколько недель, но обе стороны примут решение.", "months": 6, "effects": {"potential_growth": -0.1}, "moods": {"skilled": 1}, "groups": {"unions": 1.0}, "ai": [0.5, 0.5, 0, 0.3], "default": true},
     {"id": "disperse", "name": "Разогнать", "text": "Полиция откроет шахты силой. Работа возобновится, но рабочие этого не забудут.", "months": 24, "effects": {"index.civil_liberties": -2, "radicalism": 1.5, "legitimacy": -1.5}, "moods": {"skilled": -4, "unskilled": -2}, "groups": {"unions": -10, "security": 2, "resource_lobby": 3}, "loyalty": {"police": -2}, "ai": [0.3, -0.5, 1, -1]}
    ]
   },
@@ -44,7 +44,7 @@
    "cooldown_months": 36,
    "when": [{"world": "oil_price", "max": 0.72}, {"any": [{"stat": "oil_rents_pct_gdp", "min": 5}, {"stat": "gas_rents_pct_gdp", "min": 5}]}],
    "options": [
-    {"id": "fund", "name": "Тратить суверенный фонд", "text": "Закрыть дыру накоплениями: никто ничего не заметит, пока деньги не кончатся.", "cost": 1.5, "months": 12, "moods": {"officials": 1, "pensioners": 1}, "ai": [0.3, 1, 0, 1]},
+    {"id": "fund", "name": "Тратить суверенный фонд", "text": "Закрыть дыру накоплениями: никто ничего не заметит, пока деньги не кончатся.", "cost": 0.75, "months": 12, "moods": {"officials": 1, "pensioners": 1}, "ai": [0.3, 1, 0, 1]},
     {"id": "cut", "name": "Сократить расходы", "text": "Жить по средствам: урезать пособия, стройки и аппарат.", "months": 24, "effects": {"spending.social": -0.4, "spending.transport": -0.2, "spending.administration": -0.2}, "moods": {"pensioners": -3, "officials": -3, "unemployed": -2}, "popularity": -3, "ai": [0.5, -0.3, 0.3, -1]},
     {"id": "float", "name": "Отпустить курс", "text": "Валюта подешевеет: бюджет в своей валюте сойдётся, экспортёрам станет легче, но цены вырастут.", "months": 12, "effects": {"inflation_target": 2, "exchange_volatility": 0.5, "potential_growth": 0.2}, "moods": {"capitalists": 1, "clerks": -2, "pensioners": -2}, "ai": [1, 0, 0, -0.3], "default": true}
    ]
@@ -59,8 +59,8 @@
    "cooldown_months": 60,
    "when": [{"stat": "housing_price_index", "min": 125}],
    "options": [
-    {"id": "credit", "name": "Ужесточить кредит", "text": "Банки станут осторожнее: цены остынут, строек станет меньше.", "months": 24, "effects": {"housing_price": -0.08, "housing_build": -0.1, "potential_growth": -0.1}, "moods": {"professionals": -1, "capitalists": -1}, "groups": {"financiers": -5}, "ai": [0, 1, 0, 0]},
-    {"id": "tax", "name": "Налог на перепродажу", "text": "Спекулянтам станет невыгодно перепродавать квартиры.", "months": 36, "effects": {"revenue.property": 0.1, "housing_price": -0.05}, "moods": {"capitalists": -2, "small_business": -1}, "groups": {"financiers": -3, "industrialists": -2}, "ai": [0, 0.6, 0, 0.4]},
+    {"id": "credit", "name": "Ужесточить кредит", "text": "Банки станут осторожнее: цены остынут, строек станет меньше.", "months": 24, "effects": {"housing_price": -0.08, "housing_build": -0.1, "potential_growth": -0.1}, "moods": {"professionals": -1, "capitalists": -1}, "groups": {"financiers": -5}, "ai": [0, 1, 0, 0], "next": [{"event": "housing_crash", "months": 24, "chance": 0.15}]},
+    {"id": "tax", "name": "Налог на перепродажу", "text": "Спекулянтам станет невыгодно перепродавать квартиры.", "months": 36, "effects": {"revenue.property": 0.1, "housing_price": -0.05}, "moods": {"capitalists": -2, "small_business": -1}, "groups": {"financiers": -3, "industrialists": -2}, "ai": [0, 0.6, 0, 0.4], "next": [{"event": "housing_crash", "months": 24, "chance": 0.2}]},
     {"id": "nothing", "name": "Ничего не делать", "text": "Рынок разберётся сам. Или лопнет.", "months": 0, "next": [{"event": "housing_crash", "months": 18, "chance": 0.5}], "ai": [0.5, -0.5, 0, 0.3], "default": true}
    ]
   },
@@ -75,8 +75,8 @@
    "cooldown_months": 0,
    "when": [],
    "options": [
-    {"id": "bail", "name": "Выкупить плохие долги", "text": "Государство заберёт у банков безнадёжную ипотеку. Дорого, но кредит не остановится.", "cost": 2, "months": 12, "effects": {"spread": 0.3}, "moods": {"clerks": 1}, "groups": {"financiers": 6}, "ai": [0.5, 1, 0, 0.5]},
-    {"id": "owners", "name": "Помочь заёмщикам", "text": "Отсрочки и субсидии тем, кто платит за единственное жильё.", "cost": 0.8, "months": 24, "effects": {"potential_growth": -0.3, "housing_price": -0.1}, "moods": {"professionals": 2, "clerks": 2}, "popularity": 2, "ai": [0, 0.5, 0, 1]},
+    {"id": "bail", "name": "Выкупить плохие долги", "text": "Государство заберёт у банков безнадёжную ипотеку. Дорого, но кредит не остановится.", "cost": 1.0, "months": 12, "effects": {"spread": 0.3}, "moods": {"clerks": 1}, "groups": {"financiers": 6}, "ai": [0.5, 1, 0, 0.5]},
+    {"id": "owners", "name": "Помочь заёмщикам", "text": "Отсрочки и субсидии тем, кто платит за единственное жильё.", "cost": 0.4, "months": 24, "effects": {"potential_growth": -0.3, "housing_price": -0.1}, "moods": {"professionals": 2, "clerks": 2}, "popularity": 2, "ai": [0, 0.5, 0, 1]},
     {"id": "let", "name": "Дать рынку упасть", "text": "Никого не спасать: кто рисковал, тот и платит.", "months": 24, "effects": {"potential_growth": -0.8, "housing_price": -0.2, "housing_build": -0.25, "natural_unemployment": 0.3}, "moods": {"capitalists": -3, "professionals": -2, "skilled": -2}, "groups": {"financiers": -8}, "ai": [-0.5, -0.5, 0, -0.5], "default": true}
    ]
   },
@@ -90,7 +90,7 @@
    "cooldown_months": 60,
    "when": [{"stat": "brain_drain_pct", "min": 2}],
    "options": [
-    {"id": "grants", "name": "Гранты учёным", "text": "Деньги лабораториям и молодым исследователям.", "months": 36, "effects": {"spending.science": 0.1, "research": 0.08}, "moods": {"professionals": 2}, "groups": {"intelligentsia": 5}, "ai": [1, 0.2, 0.3, 0]},
+    {"id": "grants", "name": "Гранты учёным", "text": "Деньги лабораториям и молодым исследователям.", "months": 36, "effects": {"spending.science": 0.1, "research": 0.08}, "moods": {"professionals": 2}, "groups": {"intelligentsia": 2.0}, "ai": [1, 0.2, 0.3, 0]},
     {"id": "it", "name": "Налоговые льготы ИТ", "text": "Компаниям станет выгоднее нанимать специалистов дома.", "months": 36, "effects": {"revenue.cit": -0.03, "potential_growth": 0.1}, "moods": {"professionals": 2, "capitalists": 1}, "ai": [1, 0, 0, 0.3], "default": true},
     {"id": "restrict", "name": "Ограничить выезд", "text": "Специалисты, обученные за счёт государства, должны отработать дома.", "months": 36, "effects": {"index.civil_liberties": -5, "migration": 0.2, "radicalism": 1}, "moods": {"professionals": -5, "clerks": -1}, "groups": {"intelligentsia": -10}, "requires": [{"regime": ["authoritarian", "hybrid"]}], "requires_text": "В демократии суд отменит такой запрет.", "ai": [0, -0.5, 1, -0.5]}
    ]
@@ -135,8 +135,8 @@
    "cooldown_months": 72,
    "when": [{"any": [{"stat": "gdp_growth_pct", "max": -1.5}, {"stat": "policy_rate_pct", "min": 15}, {"stat": "bond_yield_pct", "min": 12}]}],
    "options": [
-    {"id": "bail", "name": "Спасти", "text": "Влить в банк государственные деньги. Вкладчики успокоятся, а банкиры запомнят, что их спасут.", "cost": 2, "months": 12, "effects": {"spread": 0.2}, "moods": {"clerks": 1, "unskilled": -1}, "groups": {"financiers": 8}, "ai": [0.5, 1, 0, 0.3]},
-    {"id": "nationalize", "name": "Национализировать", "text": "Банк становится государственным, акционеры теряют всё.", "cost": 1, "months": 24, "effects": {"spread": 0.4, "potential_growth": -0.1}, "moods": {"capitalists": -3}, "groups": {"financiers": -8}, "ai": [0, 0.6, 0.5, 0.3]},
+    {"id": "bail", "name": "Спасти", "text": "Влить в банк государственные деньги. Вкладчики успокоятся, а банкиры запомнят, что их спасут.", "cost": 1.0, "months": 12, "effects": {"spread": 0.2}, "moods": {"clerks": 1, "unskilled": -1}, "groups": {"financiers": 8}, "ai": [0.5, 1, 0, 0.3]},
+    {"id": "nationalize", "name": "Национализировать", "text": "Банк становится государственным, акционеры теряют всё.", "cost": 0.5, "months": 24, "effects": {"spread": 0.4, "potential_growth": -0.1}, "moods": {"capitalists": -3}, "groups": {"financiers": -8}, "ai": [0, 0.6, 0.5, 0.3]},
     {"id": "fail", "name": "Дать рухнуть", "text": "Вкладчики получат только страховку. Паника перекинется на другие банки.", "months": 18, "effects": {"potential_growth": -0.9, "spread": 0.8, "natural_unemployment": 0.3}, "moods": {"clerks": -4, "small_business": -4, "pensioners": -3}, "groups": {"financiers": -5, "small_business": -6}, "popularity": -3, "ai": [-1, -1, 0, -1], "default": true}
    ]
   },
@@ -151,7 +151,7 @@
    "when": [{"stat": "rule_of_law_index", "min": 50}, {"stat": "corruption_index", "max": 50}, {"stat": "gdp_growth_pct", "min": 1}, {"war": false}],
    "options": [
     {"id": "breaks", "name": "Налоговые льготы", "text": "Завод придёт наверняка, но налогов заплатит мало.", "months": 60, "effects": {"revenue.cit": -0.02, "potential_growth": 0.15, "natural_unemployment": -0.1}, "moods": {"skilled": 1}, "groups": {"industrialists": -2}, "ai": [1, 0.2, 0, 0.5]},
-    {"id": "localization", "name": "Требование локализации", "text": "Детали должны делать местные поставщики. Завод будет меньше, но свои заводы получат заказы.", "months": 60, "effects": {"potential_growth": 0.08}, "groups": {"industrialists": 3, "unions": 2}, "ai": [0.5, 0.3, 0.5, 0.3], "default": true},
+    {"id": "localization", "name": "Требование локализации", "text": "Детали должны делать местные поставщики. Завод будет меньше, но свои заводы получат заказы.", "months": 60, "effects": {"potential_growth": 0.08}, "groups": {"industrialists": 3, "unions": 1.0}, "ai": [0.5, 0.3, 0.5, 0.3], "default": true},
     {"id": "refuse", "name": "Отказ", "text": "Свой рынок — своим производителям.", "months": 0, "groups": {"industrialists": 3}, "ai": [-0.5, 0, 0.3, -0.3]}
    ]
   },
@@ -196,7 +196,7 @@
    "when": [{"stat": "agriculture_pct_gdp", "min": 6}, {"war": false}],
    "options": [
     {"id": "export", "name": "Продать за рубеж", "text": "Валюта для страны, доход для фермеров.", "cost": -0.3, "months": 12, "effects": {"potential_growth": 0.15}, "moods": {"farmers": 3}, "groups": {"agrarians": 4}, "ai": [1, 0.2, 0, 0.3]},
-    {"id": "reserve", "name": "Заложить в резерв", "text": "Государство выкупит зерно: еда в следующем году будет дешевле.", "cost": 0.1, "months": 18, "effects": {"food_inflation": -0.25}, "moods": {"farmers": 1, "pensioners": 1, "unskilled": 1}, "ai": [0, 1, 0, 0.6], "default": true}
+    {"id": "reserve", "name": "Заложить в резерв", "text": "Государство выкупит зерно: еда в следующем году будет дешевле.", "cost": 0.05, "months": 18, "effects": {"food_inflation": -0.25}, "moods": {"farmers": 1, "pensioners": 1, "unskilled": 1}, "ai": [0, 1, 0, 0.6], "default": true}
    ]
   },
   {
@@ -226,7 +226,7 @@
    "options": [
     {"id": "work", "name": "Стимулы работать дольше", "text": "Кто работает после пенсионного возраста, получит прибавку позже — и меньше возьмёт сейчас.", "months": 96, "effects": {"older_participation": 0.05, "spending.social": -0.2}, "moods": {"pensioners": -3, "skilled": -1}, "groups": {"unions": -5}, "popularity": -3, "ai": [0.8, 0, 0, -1]},
     {"id": "contributions", "name": "Поднять взносы", "text": "Платить будут работодатели и работники.", "months": 96, "effects": {"revenue.social": 0.04, "natural_unemployment": 0.1}, "moods": {"small_business": -2, "capitalists": -1}, "groups": {"industrialists": -4, "small_business": -3}, "ai": [-0.3, 0.4, 0, 0]},
-    {"id": "borrow", "name": "Закрыть дыру займами", "text": "Пенсии не трогать, недостающее занять.", "cost": 0.8, "months": 24, "effects": {"spread": 0.15}, "moods": {"pensioners": 1}, "ai": [0, 0.3, 0, 0.8], "default": true}
+    {"id": "borrow", "name": "Закрыть дыру займами", "text": "Пенсии не трогать, недостающее занять.", "cost": 0.4, "months": 24, "effects": {"spread": 0.15}, "moods": {"pensioners": 1}, "ai": [0, 0.3, 0, 0.8], "default": true}
    ]
   },
   {
@@ -239,8 +239,8 @@
    "cooldown_months": 48,
    "when": [{"funding": "health", "max": 0.93}],
    "options": [
-    {"id": "raise", "name": "Поднять зарплаты врачам", "text": "Больницы заработают, бюджет здравоохранения вырастет.", "months": 36, "effects": {"spending.health": 0.2}, "moods": {"professionals": 3}, "groups": {"intelligentsia": 3, "unions": 3}, "ai": [0, 0.8, 0, 1]},
-    {"id": "talk", "name": "Переговоры и разовая премия", "text": "Выиграть время.", "cost": 0.1, "months": 12, "moods": {"professionals": 1}, "ai": [0.3, 0.5, 0, 0.3], "default": true},
+    {"id": "raise", "name": "Поднять зарплаты врачам", "text": "Больницы заработают, бюджет здравоохранения вырастет.", "months": 36, "effects": {"spending.health": 0.2}, "moods": {"professionals": 3}, "groups": {"intelligentsia": 1.0, "unions": 2.0}, "ai": [0, 0.8, 0, 1]},
+    {"id": "talk", "name": "Переговоры и разовая премия", "text": "Выиграть время.", "cost": 0.05, "months": 12, "moods": {"professionals": 1}, "ai": [0.3, 0.5, 0, 0.3], "default": true},
     {"id": "ban", "name": "Запретить забастовку", "text": "Медикам бастовать нельзя — закон на стороне пациентов.", "months": 24, "effects": {"index.civil_liberties": -2, "disease_burden": 0.05, "radicalism": 1}, "moods": {"professionals": -4}, "groups": {"intelligentsia": -6, "unions": -6}, "ai": [0.2, -0.5, 1, -0.8]}
    ]
   },
@@ -254,8 +254,8 @@
    "cooldown_months": 36,
    "when": [{"hazard": "earthquake"}],
    "options": [
-    {"id": "rebuild", "name": "Восстановление из бюджета", "text": "Отстроить заново за счёт страны.", "cost": 1.0, "months": 12, "effects": {"potential_growth": -0.2, "housing_build": 0.15}, "moods": {"unskilled": 1}, "popularity": 2, "ai": [0.5, 1, 0, 1]},
-    {"id": "aid", "name": "Международная помощь", "text": "Принять деньги и спасателей из-за рубежа. Дешевле для бюджета, но помощь не забудут — те, кто её дал.", "cost": 0.3, "months": 12, "effects": {"potential_growth": -0.3}, "relations": {"with": "powers", "value": 3}, "popularity": -1, "ai": [0.3, 0.5, -0.5, 0.3], "default": true},
+    {"id": "rebuild", "name": "Восстановление из бюджета", "text": "Отстроить заново за счёт страны.", "cost": 0.5, "months": 12, "effects": {"potential_growth": -0.2, "housing_build": 0.15}, "moods": {"unskilled": 1}, "popularity": 2, "ai": [0.5, 1, 0, 1]},
+    {"id": "aid", "name": "Международная помощь", "text": "Принять деньги и спасателей из-за рубежа. Дешевле для бюджета, но помощь не забудут — те, кто её дал.", "cost": 0.15, "months": 12, "effects": {"potential_growth": -0.3}, "relations": {"with": "powers", "value": 3}, "popularity": -1, "ai": [0.3, 0.5, -0.5, 0.3], "default": true},
     {"id": "minimal", "name": "Пусть справляются сами", "text": "Регион получит только то, что положено по обычному бюджету.", "months": 24, "effects": {"potential_growth": -0.6, "legitimacy": -2, "radicalism": 1}, "moods": {"unskilled": -3, "farmers": -2}, "popularity": -4, "ai": [-0.5, -1, 0, -1]}
    ]
   },
@@ -269,8 +269,8 @@
    "cooldown_months": 36,
    "when": [{"hazard": "flood"}],
    "options": [
-    {"id": "rebuild", "name": "Восстановить и строить дамбы", "text": "Отстроить заново и защитить от следующего паводка.", "cost": 1.0, "months": 12, "effects": {"potential_growth": -0.2, "spending.transport": 0.1}, "moods": {"unskilled": 1}, "popularity": 2, "ai": [0.5, 1, 0, 1]},
-    {"id": "aid", "name": "Международная помощь", "text": "Принять деньги и спасателей из-за рубежа. Дешевле для бюджета, но помощь не забудут — те, кто её дал.", "cost": 0.3, "months": 12, "effects": {"potential_growth": -0.3}, "relations": {"with": "powers", "value": 3}, "popularity": -1, "ai": [0.3, 0.5, -0.5, 0.3], "default": true},
+    {"id": "rebuild", "name": "Восстановить и строить дамбы", "text": "Отстроить заново и защитить от следующего паводка.", "cost": 0.5, "months": 12, "effects": {"potential_growth": -0.2, "spending.transport": 0.1}, "moods": {"unskilled": 1}, "popularity": 2, "ai": [0.5, 1, 0, 1]},
+    {"id": "aid", "name": "Международная помощь", "text": "Принять деньги и спасателей из-за рубежа. Дешевле для бюджета, но помощь не забудут — те, кто её дал.", "cost": 0.15, "months": 12, "effects": {"potential_growth": -0.3}, "relations": {"with": "powers", "value": 3}, "popularity": -1, "ai": [0.3, 0.5, -0.5, 0.3], "default": true},
     {"id": "minimal", "name": "Пусть справляются сами", "text": "Регион получит только то, что положено по обычному бюджету.", "months": 24, "effects": {"potential_growth": -0.6, "legitimacy": -2, "radicalism": 1}, "moods": {"unskilled": -3, "farmers": -2}, "popularity": -4, "ai": [-0.5, -1, 0, -1]}
    ]
   },
@@ -284,7 +284,7 @@
    "cooldown_months": 36,
    "when": [{"hazard": "drought"}, {"any": [{"stat": "agriculture_pct_gdp", "min": 6}, {"stat": "employment_agriculture_pct", "min": 20}]}],
    "options": [
-    {"id": "import", "name": "Импорт зерна", "text": "Купить еду за границей: цены в магазинах удержатся, фермеры останутся ни с чем.", "cost": 0.4, "months": 12, "effects": {"potential_growth": -0.3, "food_inflation": 0.1}, "moods": {"farmers": -3}, "ai": [0, 1, 0, 0.6], "default": true},
+    {"id": "import", "name": "Импорт зерна", "text": "Купить еду за границей: цены в магазинах удержатся, фермеры останутся ни с чем.", "cost": 0.2, "months": 12, "effects": {"potential_growth": -0.3, "food_inflation": 0.1}, "moods": {"farmers": -3}, "ai": [0, 1, 0, 0.6], "default": true},
     {"id": "subsidies", "name": "Субсидии фермерам", "text": "Помочь хозяйствам пережить год: еда подорожает, но деревня выстоит.", "months": 12, "effects": {"spending.agriculture": 0.3, "potential_growth": -0.2, "food_inflation": 0.4}, "moods": {"farmers": 3}, "groups": {"agrarians": 6}, "ai": [0.3, 0.5, 0, 1]},
     {"id": "export_ban", "name": "Ограничить экспорт", "text": "Всё выращенное остаётся дома. Соседи, которые покупали нашу еду, будут недовольны.", "months": 12, "effects": {"potential_growth": -0.45, "food_inflation": 0.15}, "moods": {"farmers": -4}, "groups": {"agrarians": -6}, "relations": {"with": "neighbors", "value": -2}, "ai": [-0.3, 0.5, 0.5, 0.3]}
    ]
@@ -299,8 +299,8 @@
    "cooldown_months": 36,
    "when": [{"hazard": "wildfire"}],
    "options": [
-    {"id": "fight", "name": "Бросить все силы и армию", "text": "Самолёты, солдаты, добровольцы.", "cost": 0.3, "months": 6, "effects": {"pollution": 0.05}, "popularity": 2, "ai": [0, 1, 0.2, 1]},
-    {"id": "aid", "name": "Попросить помощи у соседей", "text": "Соседи пришлют пожарных и технику.", "cost": 0.1, "months": 6, "effects": {"pollution": 0.08}, "relations": {"with": "neighbors", "value": 2}, "ai": [0, 0.6, -0.3, 0.3], "default": true},
+    {"id": "fight", "name": "Бросить все силы и армию", "text": "Самолёты, солдаты, добровольцы.", "cost": 0.15, "months": 6, "effects": {"pollution": 0.05}, "popularity": 2, "ai": [0, 1, 0.2, 1]},
+    {"id": "aid", "name": "Попросить помощи у соседей", "text": "Соседи пришлют пожарных и технику.", "cost": 0.05, "months": 6, "effects": {"pollution": 0.08}, "relations": {"with": "neighbors", "value": 2}, "ai": [0, 0.6, -0.3, 0.3], "default": true},
     {"id": "minimal", "name": "Ждать дождей", "text": "Тушить только то, что угрожает городам.", "months": 12, "effects": {"pollution": 0.15, "potential_growth": -0.2, "legitimacy": -2}, "moods": {"farmers": -3}, "popularity": -4, "ai": [0, -1, 0, -1]}
    ]
   },
@@ -314,7 +314,7 @@
    "cooldown_months": 36,
    "when": [{"any": [{"stat": "power_reserve_pct", "max": 6}, {"stat": "power_shortage_pct", "min": 1}]}],
    "options": [
-    {"id": "repair", "name": "Срочный ремонт и резервные мощности", "text": "Вложиться в сети и станции сейчас.", "cost": 0.4, "months": 24, "effects": {"power_investment": 0.2}, "ai": [0.8, 0.6, 0, 0.5]},
+    {"id": "repair", "name": "Срочный ремонт и резервные мощности", "text": "Вложиться в сети и станции сейчас.", "cost": 0.2, "months": 24, "effects": {"power_investment": 0.2}, "ai": [0.8, 0.6, 0, 0.5]},
     {"id": "import", "name": "Закупать электричество у соседей", "text": "Дороже, зато быстро.", "months": 12, "effects": {"spending.energy": 0.15}, "relations": {"with": "neighbors", "value": 1}, "ai": [0.3, 0.6, -0.3, 0.3], "default": true},
     {"id": "ration", "name": "Графики отключений", "text": "Свет по расписанию — для всех, кроме больниц.", "months": 12, "effects": {"potential_growth": -0.4}, "moods": {"small_business": -3, "skilled": -2, "unskilled": -2, "pensioners": -2}, "popularity": -3, "ai": [-0.5, -0.5, 0, -1]}
    ]
@@ -331,7 +331,7 @@
    "when": [],
    "options": [
     {"id": "quarantine", "name": "Карантин", "text": "Закрыть школы, рынки и границы. Смертей будет мало, экономика встанет.", "months": 6, "effects": {"potential_growth": -1.5, "life_expectancy": -0.1}, "moods": {"small_business": -4, "skilled": -2, "unskilled": -2}, "groups": {"small_business": -6}, "ai": [-0.5, 1, 0, 0.2], "next": [{"event": "infection_second_wave", "months": 5, "chance": 0.3}]},
-    {"id": "vaccinate", "name": "Массовая вакцинация", "text": "Закупить или сделать вакцину и привить всех, кого успеем.", "cost": 0.5, "months": 12, "effects": {"potential_growth": -0.3, "life_expectancy": -0.15}, "requires": [{"any": [{"tech": "targeted_drugs"}, {"stat": "gdp_per_capita_usd", "min": 4000}]}], "requires_text": "Нужна своя фармацевтика или деньги на импорт вакцин.", "ai": [0.5, 1, 0, 1], "next": [{"event": "infection_second_wave", "months": 6, "chance": 0.15}]},
+    {"id": "vaccinate", "name": "Массовая вакцинация", "text": "Закупить или сделать вакцину и привить всех, кого успеем.", "cost": 0.25, "months": 12, "effects": {"potential_growth": -0.3, "life_expectancy": -0.15}, "requires": [{"any": [{"tech": "targeted_drugs"}, {"stat": "gdp_per_capita_usd", "min": 4000}]}], "requires_text": "Нужна своя фармацевтика или деньги на импорт вакцин.", "ai": [0.5, 1, 0, 1], "next": [{"event": "infection_second_wave", "months": 6, "chance": 0.15}]},
     {"id": "minimal", "name": "Минимальные меры", "text": "Советовать мыть руки и ждать.", "months": 12, "effects": {"potential_growth": -0.4, "life_expectancy": -0.8, "legitimacy": -2}, "moods": {"pensioners": -4, "professionals": -2}, "popularity": -3, "ai": [0.3, -1, 0, -1], "default": true, "next": [{"event": "infection_second_wave", "months": 4, "chance": 0.6}]}
    ]
   },
@@ -420,7 +420,7 @@
    "cooldown_months": 48,
    "when": [{"stat": "tertiary_enrollment_pct", "min": 30}, {"any": [{"stat": "unemployment_pct", "min": 9}, {"stat": "civil_liberties_index", "max": 40}]}],
    "options": [
-    {"id": "dialog", "name": "Диалог и уступки", "text": "Деньги университетам и обещание слушать.", "months": 24, "effects": {"spending.education": 0.1, "index.civil_liberties": 1}, "moods": {"professionals": 2}, "groups": {"intelligentsia": 5}, "ai": [0.2, 0.8, -0.3, 0.6]},
+    {"id": "dialog", "name": "Диалог и уступки", "text": "Деньги университетам и обещание слушать.", "months": 24, "effects": {"spending.education": 0.1, "index.civil_liberties": 1}, "moods": {"professionals": 2}, "groups": {"intelligentsia": 2.0}, "ai": [0.2, 0.8, -0.3, 0.6]},
     {"id": "ignore", "name": "Не вмешиваться", "text": "Каникулы всё успокоят.", "months": 12, "effects": {"radicalism": 1, "protest_rate": 0.2}, "ai": [0, -0.3, 0, -0.2], "default": true},
     {"id": "disperse", "name": "Разогнать", "text": "Очистить кампусы силой, зачинщиков отчислить.", "months": 24, "effects": {"index.civil_liberties": -3, "radicalism": 2, "legitimacy": -2}, "moods": {"professionals": -4}, "groups": {"intelligentsia": -10, "security": 2}, "loyalty": {"police": -2}, "ai": [0, -0.5, 1, -1]}
    ]
@@ -435,8 +435,8 @@
    "cooldown_months": 180,
    "when": [{"income": ["upper_middle", "high"]}, {"stat": "gdp_usd", "min": 100000000000.0}, {"stat": "budget_balance_pct_gdp", "min": -6}, {"war": false}],
    "options": [
-    {"id": "bid", "name": "Подать заявку", "text": "Праздник на весь мир: стройки, туристы, гордость. И долги.", "cost": 0.6, "months": 48, "effects": {"potential_growth": 0.1, "legitimacy": 1}, "popularity": 4, "groups": {"industrialists": 3}, "ai": [0.3, 0, 0.8, 1]},
-    {"id": "modest", "name": "Скромная заявка вместе с соседями", "text": "Разделить расходы и славу.", "cost": 0.2, "months": 36, "effects": {"potential_growth": 0.04}, "popularity": 1, "relations": {"with": "neighbors", "value": 2}, "ai": [0.3, 0.3, 0.2, 0.4], "default": true},
+    {"id": "bid", "name": "Подать заявку", "text": "Праздник на весь мир: стройки, туристы, гордость. И долги.", "cost": 0.3, "months": 48, "effects": {"potential_growth": 0.1, "legitimacy": 1}, "popularity": 4, "groups": {"industrialists": 3}, "ai": [0.3, 0, 0.8, 1]},
+    {"id": "modest", "name": "Скромная заявка вместе с соседями", "text": "Разделить расходы и славу.", "cost": 0.1, "months": 36, "effects": {"potential_growth": 0.04}, "popularity": 1, "relations": {"with": "neighbors", "value": 2}, "ai": [0.3, 0.3, 0.2, 0.4], "default": true},
     {"id": "decline", "name": "Отказаться", "text": "Деньги нужнее дома.", "months": 0, "popularity": -1, "ai": [0.2, 0.3, -0.3, -0.3]}
    ]
   },
@@ -450,8 +450,8 @@
    "cooldown_months": 120,
    "when": [{"tech": "robots"}],
    "options": [
-    {"id": "retrain", "name": "Программы переобучения", "text": "Учить рабочих новым профессиям за счёт государства.", "months": 60, "effects": {"spending.education": 0.1, "natural_unemployment": -0.2, "potential_growth": 0.15}, "moods": {"skilled": 2, "unskilled": 1}, "groups": {"unions": 4}, "ai": [0.8, 0.6, 0, 0.5]},
-    {"id": "tax", "name": "Налог на роботов", "text": "Кто заменяет человека машиной, платит.", "months": 60, "effects": {"revenue.cit": 0.03, "potential_growth": -0.1}, "moods": {"skilled": 1, "capitalists": -2}, "groups": {"industrialists": -6, "unions": 3}, "ai": [-0.5, 0.5, 0, 0.5]},
+    {"id": "retrain", "name": "Программы переобучения", "text": "Учить рабочих новым профессиям за счёт государства.", "months": 60, "effects": {"spending.education": 0.1, "natural_unemployment": -0.2, "potential_growth": 0.15}, "moods": {"skilled": 2, "unskilled": 1}, "groups": {"unions": 2.5}, "ai": [0.8, 0.6, 0, 0.5]},
+    {"id": "tax", "name": "Налог на роботов", "text": "Кто заменяет человека машиной, платит.", "months": 60, "effects": {"revenue.cit": 0.03, "potential_growth": -0.1}, "moods": {"skilled": 1, "capitalists": -2}, "groups": {"industrialists": -6, "unions": 2.0}, "ai": [-0.5, 0.5, 0, 0.5]},
     {"id": "nothing", "name": "Ничего не делать", "text": "Прогресс не остановить — и не надо.", "months": 60, "effects": {"potential_growth": 0.25, "natural_unemployment": 0.4}, "moods": {"unskilled": -3, "skilled": -2, "capitalists": 2}, "groups": {"unions": -5, "industrialists": 4}, "ai": [1, -0.6, 0, -0.5], "default": true}
    ]
   },
@@ -465,7 +465,7 @@
    "cooldown_months": 72,
    "when": [{"stat": "research_effort_pct_gdp", "min": 1.5}, {"stat": "education_quality", "min": 60}],
    "options": [
-    {"id": "program", "name": "Национальная программа", "text": "Государство вложится, чтобы довести открытие до дела.", "months": 60, "effects": {"spending.science": 0.15, "research": 0.12}, "groups": {"intelligentsia": 5}, "ai": [1, 0, 0.5, 0.3]},
+    {"id": "program", "name": "Национальная программа", "text": "Государство вложится, чтобы довести открытие до дела.", "months": 60, "effects": {"spending.science": 0.15, "research": 0.12}, "groups": {"intelligentsia": 2.0}, "ai": [1, 0, 0.5, 0.3]},
     {"id": "business", "name": "Отдать бизнесу", "text": "Компании сами превратят открытие в товар.", "months": 60, "effects": {"potential_growth": 0.12}, "groups": {"industrialists": 4}, "ai": [0.8, 0, 0, 0.2], "default": true},
     {"id": "military", "name": "Засекретить для обороны", "text": "Открытие уйдёт в закрытые институты.", "months": 60, "effects": {"spending.defense": 0.1, "military_power": 0.05}, "groups": {"security": 5, "intelligentsia": -3}, "ai": [0, 0, 1, 0]}
    ]
@@ -510,9 +510,9 @@
    "cooldown_months": 36,
    "when": [{"partner": {"neighbor": true, "war": true}}],
    "options": [
-    {"id": "accept", "name": "Принять", "text": "Лагеря, школы, работа. Часть людей останется навсегда.", "cost": 0.2, "months": 36, "effects": {"migration": 0.3, "radicalism": 0.8}, "moods": {"unskilled": -2}, "relations": {"with": "partner", "value": 4}, "groups": {"religious": 2, "industrialists": 2}, "ai": [0.5, -0.3, 0, -0.3]},
+    {"id": "accept", "name": "Принять", "text": "Лагеря, школы, работа. Часть людей останется навсегда.", "cost": 0.1, "months": 36, "effects": {"migration": 0.3, "radicalism": 0.8}, "moods": {"unskilled": -2}, "relations": {"with": "partner", "value": 4}, "groups": {"religious": 2, "industrialists": 2}, "ai": [0.5, -0.3, 0, -0.3]},
     {"id": "close", "name": "Закрыть границу", "text": "Пусть идут в другие страны.", "months": 36, "effects": {"index.civil_liberties": -1}, "relations": {"with": "partner", "value": -4}, "groups": {"security": 3}, "popularity": 1, "ai": [0, 0.5, 0.5, 0.5]},
-    {"id": "help", "name": "Просить помощи у мира", "text": "Принять немногих и собрать деньги на лагеря у богатых стран.", "cost": 0.05, "months": 24, "effects": {"migration": 0.15}, "relations": {"with": "powers", "value": 1}, "ai": [0.2, 0.5, -0.2, 0.2], "default": true}
+    {"id": "help", "name": "Просить помощи у мира", "text": "Принять немногих и собрать деньги на лагеря у богатых стран.", "cost": 0.03, "months": 24, "effects": {"migration": 0.15}, "relations": {"with": "powers", "value": 1}, "ai": [0.2, 0.5, -0.2, 0.2], "default": true}
    ]
   },
   {
@@ -525,7 +525,7 @@
    "cooldown_months": 24,
    "when": [{"stat": "gdp_per_capita_usd", "min": 3000}, {"partner": {"neighbor": true, "relations_min": -20, "recent": "disaster"}}],
    "options": [
-    {"id": "generous", "name": "Щедрая помощь", "text": "Самолёты со спасателями, госпиталь, деньги.", "cost": 0.1, "months": 0, "relations": {"with": "partner", "value": 8}, "popularity": 1, "ai": [0, 0.3, 0.6, 0.3]},
+    {"id": "generous", "name": "Щедрая помощь", "text": "Самолёты со спасателями, госпиталь, деньги.", "cost": 0.05, "months": 0, "relations": {"with": "partner", "value": 8}, "popularity": 1, "ai": [0, 0.3, 0.6, 0.3]},
     {"id": "symbolic", "name": "Символическая помощь", "text": "Телеграмма с соболезнованиями и один самолёт.", "cost": 0.01, "months": 0, "relations": {"with": "partner", "value": 3}, "ai": [0.2, 0.3, 0.2, 0.2], "default": true},
     {"id": "refuse", "name": "Промолчать", "text": "У нас хватает своих забот.", "months": 0, "relations": {"with": "partner", "value": -3}, "ai": [0.1, 0, -0.3, 0]}
    ]
@@ -540,8 +540,8 @@
    "cooldown_months": 36,
    "when": [{"stat": "health_access_pct", "max": 80}],
    "options": [
-    {"id": "beds", "name": "Развернуть временные койки", "text": "Школьные спортзалы и казармы станут стационарами: дорого, зато очереди исчезнут.", "cost": 0.15, "months": 4, "effects": {"potential_growth": -0.1}, "moods": {"pensioners": 2}, "popularity": 1, "ai": [0.2, 1, 0, 0.6]},
-    {"id": "vaccinate", "name": "Бесплатные прививки для всех", "text": "Прививочные пункты у каждой станции метро и в каждой школе. Следующую волну страна встретит увереннее.", "cost": 0.25, "months": 18, "effects": {"disease_burden": -0.1, "potential_growth": 0.05}, "moods": {"pensioners": 3, "professionals": 1}, "popularity": 2, "ai": [0.4, 1, 0, 0.8]},
+    {"id": "beds", "name": "Развернуть временные койки", "text": "Школьные спортзалы и казармы станут стационарами: дорого, зато очереди исчезнут.", "cost": 0.07, "months": 4, "effects": {"potential_growth": -0.1}, "moods": {"pensioners": 2}, "popularity": 1, "ai": [0.2, 1, 0, 0.6]},
+    {"id": "vaccinate", "name": "Бесплатные прививки для всех", "text": "Прививочные пункты у каждой станции метро и в каждой школе. Следующую волну страна встретит увереннее.", "cost": 0.12, "months": 18, "effects": {"disease_burden": -0.1, "potential_growth": 0.05}, "moods": {"pensioners": 3, "professionals": 1}, "popularity": 2, "ai": [0.4, 1, 0, 0.8]},
     {"id": "wait", "name": "Переждать", "text": "Советовать пить чай и отлёживаться дома. Болезнь отступит сама, но не у всех и не сразу.", "months": 6, "effects": {"potential_growth": -0.25, "life_expectancy": -0.1}, "moods": {"pensioners": -3, "unskilled": -1}, "popularity": -2, "ai": [0.1, -0.5, 0, -0.5], "default": true}
    ]
   },
@@ -555,8 +555,8 @@
    "cooldown_months": 48,
    "when": [{"income": ["low", "lower_middle"]}, {"stat": "infrastructure_condition_pct", "max": 65}, {"stat": "health_access_pct", "max": 85}],
    "options": [
-    {"id": "repair", "name": "Срочно чинить водопровод", "text": "Бригады, трубы и хлор — за счёт бюджета. Вспышка угаснет, а вода станет чище надолго.", "cost": 0.4, "months": 24, "effects": {"disease_burden": -0.12, "infra_efficiency": 0.05}, "moods": {"unskilled": 2, "unemployed": 2}, "popularity": 2, "ai": [0.5, 1, 0, 0.7]},
-    {"id": "aid", "name": "Позвать международных врачей", "text": "Гуманитарные миссии привезут лекарства и людей. Отношения с миром станут теплее, но признать беду придётся публично.", "cost": 0.1, "months": 12, "effects": {"disease_burden": -0.05}, "popularity": -1, "relations": {"with": "powers", "value": 3}, "ai": [0.3, 0.8, -0.2, 0.2]},
+    {"id": "repair", "name": "Срочно чинить водопровод", "text": "Бригады, трубы и хлор — за счёт бюджета. Вспышка угаснет, а вода станет чище надолго.", "cost": 0.2, "months": 24, "effects": {"disease_burden": -0.12, "infra_efficiency": 0.05}, "moods": {"unskilled": 2, "unemployed": 2}, "popularity": 2, "ai": [0.5, 1, 0, 0.7]},
+    {"id": "aid", "name": "Позвать международных врачей", "text": "Гуманитарные миссии привезут лекарства и людей. Отношения с миром станут теплее, но признать беду придётся публично.", "cost": 0.05, "months": 12, "effects": {"disease_burden": -0.05}, "popularity": -1, "relations": {"with": "powers", "value": 3}, "ai": [0.3, 0.8, -0.2, 0.2]},
     {"id": "quarantine", "name": "Оцепить заражённые районы", "text": "Полиция закроет кварталы. Вспышка не выйдет за их пределы, но люди останутся без работы и воды.", "months": 6, "effects": {"potential_growth": -0.2, "radicalism": 0.8, "index.civil_liberties": -2}, "moods": {"unskilled": -4, "unemployed": -3}, "loyalty": {"police": -1}, "ai": [-0.2, 0.5, 0.3, -0.5], "default": true}
    ]
   },
@@ -571,8 +571,8 @@
    "when": [{"partner": {"neighbor": true, "recent": "epidemic"}}],
    "options": [
     {"id": "close", "name": "Закрыть границу", "text": "Болезнь не пройдёт, но торговля встанет, а у соседа этого не забудут.", "months": 6, "effects": {"potential_growth": -0.3, "migration": -0.3}, "moods": {"small_business": -2}, "groups": {"industrialists": -2}, "relations": {"with": "partner", "value": -6}, "ai": [-0.3, 0.8, 0.2, 0.3]},
-    {"id": "screen", "name": "Медосмотр на границе", "text": "Врачи проверят каждого. Очереди будут огромные, но торговля пойдёт.", "cost": 0.1, "months": 6, "effects": {"potential_growth": -0.1}, "relations": {"with": "partner", "value": 1}, "ai": [0.2, 0.6, 0, 0.2], "default": true},
-    {"id": "help", "name": "Отправить врачей и лекарства соседу", "text": "Погасить эпидемию там, где она началась. Дорого, зато сосед не забудет помощь.", "cost": 0.2, "months": 12, "effects": {"potential_growth": -0.05}, "popularity": 1, "relations": {"with": "partner", "value": 8}, "ai": [0.1, 0.5, -0.1, 0.2]}
+    {"id": "screen", "name": "Медосмотр на границе", "text": "Врачи проверят каждого. Очереди будут огромные, но торговля пойдёт.", "cost": 0.05, "months": 6, "effects": {"potential_growth": -0.1}, "relations": {"with": "partner", "value": 1}, "ai": [0.2, 0.6, 0, 0.2], "default": true},
+    {"id": "help", "name": "Отправить врачей и лекарства соседу", "text": "Погасить эпидемию там, где она началась. Дорого, зато сосед не забудет помощь.", "cost": 0.1, "months": 12, "effects": {"potential_growth": -0.05}, "popularity": 1, "relations": {"with": "partner", "value": 8}, "ai": [0.1, 0.5, -0.1, 0.2]}
    ]
   },
   {
@@ -587,7 +587,7 @@
    "when": [],
    "options": [
     {"id": "restrict", "name": "Вернуть ограничения", "text": "Закрыть школы и рынки второй раз. Больных будет меньше, но терпение людей на исходе.", "months": 4, "effects": {"potential_growth": -0.8, "life_expectancy": -0.05, "radicalism": 0.5}, "moods": {"small_business": -4, "skilled": -2, "unskilled": -2}, "groups": {"small_business": -5}, "ai": [-0.3, 0.7, 0, -0.3]},
-    {"id": "booster", "name": "Вторая прививка и ревакцинация", "text": "Закупить вакцину повторно и привить всех, кто согласится. Дорого, но выход из кризиса виден.", "cost": 0.4, "months": 12, "effects": {"potential_growth": -0.2, "life_expectancy": -0.05}, "moods": {"pensioners": 2}, "popularity": 1, "ai": [0.4, 1, 0, 0.7]},
+    {"id": "booster", "name": "Вторая прививка и ревакцинация", "text": "Закупить вакцину повторно и привить всех, кто согласится. Дорого, но выход из кризиса виден.", "cost": 0.2, "months": 12, "effects": {"potential_growth": -0.2, "life_expectancy": -0.05}, "moods": {"pensioners": 2}, "popularity": 1, "ai": [0.4, 1, 0, 0.7]},
     {"id": "endure", "name": "Жить как жили", "text": "Объявить, что ограничений больше не будет. Часть людей поблагодарит, часть — похоронит близких.", "months": 9, "effects": {"potential_growth": -0.3, "life_expectancy": -0.5, "legitimacy": -2}, "moods": {"pensioners": -5, "professionals": -2}, "popularity": -4, "ai": [0.2, -1, 0, -0.8], "default": true}
    ]
   },
@@ -601,9 +601,9 @@
    "cooldown_months": 240,
    "when": [{"stat": "power_nuclear_pct", "min": 8}],
    "options": [
-    {"id": "evacuate", "name": "Эвакуировать округу и остановить станции", "text": "Выселить жителей, остановить реакторы и проверить все блоки. Электричества станет меньше, но доверие к атому сохранится.", "cost": 1.0, "months": 36, "effects": {"power_nuclear": -0.5, "potential_growth": -0.4, "pollution": 0.05}, "moods": {"clerks": -2, "professionals": -1}, "groups": {"intelligentsia": 3, "resource_lobby": -3}, "popularity": -2, "ai": [-0.5, 0.8, -0.1, 0.2], "default": true},
-    {"id": "contain", "name": "Ликвидировать силами страны", "text": "Армия и ликвидаторы засыплют очаг. Станции продолжат работать, но риск не исчезнет, а слухов будет больше фактов.", "cost": 0.6, "months": 24, "effects": {"pollution": 0.1, "legitimacy": -2, "disease_burden": 0.05}, "moods": {"farmers": -4, "unskilled": -2}, "groups": {"security": 2, "intelligentsia": -4}, "loyalty": {"army": 1}, "popularity": -4, "ai": [0.2, -0.5, 0.4, -0.3]},
-    {"id": "help", "name": "Позвать международных экспертов", "text": "Специалисты из других стран придут на помощь и проверят станции. Придётся показать им всё, что скрывали.", "cost": 0.5, "months": 24, "effects": {"power_nuclear": -0.2, "potential_growth": -0.2}, "groups": {"intelligentsia": 4}, "popularity": -1, "relations": {"with": "powers", "value": 4}, "ai": [0.1, 0.7, -0.3, 0.2]}
+    {"id": "evacuate", "name": "Эвакуировать округу и остановить станции", "text": "Выселить жителей, остановить реакторы и проверить все блоки. Электричества станет меньше, но доверие к атому сохранится.", "cost": 0.5, "months": 36, "effects": {"power_nuclear": -0.5, "potential_growth": -0.4, "pollution": 0.05}, "moods": {"clerks": -2, "professionals": -1}, "groups": {"intelligentsia": 1.0, "resource_lobby": -3}, "popularity": -2, "ai": [-0.5, 0.8, -0.1, 0.2], "default": true},
+    {"id": "contain", "name": "Ликвидировать силами страны", "text": "Армия и ликвидаторы засыплют очаг. Станции продолжат работать, но риск не исчезнет, а слухов будет больше фактов.", "cost": 0.3, "months": 24, "effects": {"pollution": 0.1, "legitimacy": -2, "disease_burden": 0.05}, "moods": {"farmers": -4, "unskilled": -2}, "groups": {"security": 2, "intelligentsia": -4}, "loyalty": {"army": 1}, "popularity": -4, "ai": [0.2, -0.5, 0.4, -0.3]},
+    {"id": "help", "name": "Позвать международных экспертов", "text": "Специалисты из других стран придут на помощь и проверят станции. Придётся показать им всё, что скрывали.", "cost": 0.25, "months": 24, "effects": {"power_nuclear": -0.2, "potential_growth": -0.2}, "groups": {"intelligentsia": 1.5}, "popularity": -1, "relations": {"with": "powers", "value": 4}, "ai": [0.1, 0.7, -0.3, 0.2]}
    ]
   },
   {
@@ -616,9 +616,9 @@
    "cooldown_months": 96,
    "when": [{"stat": "power_hydro_pct", "min": 20}, {"hazard": "flood"}],
    "options": [
-    {"id": "rebuild", "name": "Восстановить плотину и деревни", "text": "Бюджет оплатит и новую плотину, и новые дома. Долгая и дорогая стройка, но станция вернётся.", "cost": 0.9, "months": 24, "effects": {"potential_growth": -0.1, "infra_efficiency": 0.03}, "moods": {"farmers": 3, "unskilled": 1}, "popularity": 2, "ai": [0.4, 1, 0, 0.6], "default": true},
-    {"id": "compensate", "name": "Выплатить компенсации и закрыть станцию", "text": "Пострадавшие получат деньги и переедут. Станцию не восстановят — электричество придётся покупать.", "cost": 0.5, "months": 18, "effects": {"potential_growth": -0.3, "power_investment": -0.1}, "moods": {"farmers": 1}, "groups": {"resource_lobby": -3}, "ai": [-0.2, 0.4, 0, 0.2]},
-    {"id": "blame", "name": "Свалить вину на подрядчика", "text": "Найти виноватых среди строителей и возместить ущерб из их залога. Дёшево, но люди запомнят, что власть искала крайних.", "cost": 0.2, "months": 12, "effects": {"legitimacy": -2, "index.rule_of_law": -1}, "moods": {"farmers": -3, "clerks": -1}, "groups": {"industrialists": -3}, "popularity": -3, "ai": [0.3, -0.3, 0, -0.4]}
+    {"id": "rebuild", "name": "Восстановить плотину и деревни", "text": "Бюджет оплатит и новую плотину, и новые дома. Долгая и дорогая стройка, но станция вернётся.", "cost": 0.45, "months": 24, "effects": {"potential_growth": -0.1, "infra_efficiency": 0.03}, "moods": {"farmers": 3, "unskilled": 1}, "popularity": 2, "ai": [0.4, 1, 0, 0.6], "default": true},
+    {"id": "compensate", "name": "Выплатить компенсации и закрыть станцию", "text": "Пострадавшие получат деньги и переедут. Станцию не восстановят — электричество придётся покупать.", "cost": 0.25, "months": 18, "effects": {"potential_growth": -0.3, "power_investment": -0.1}, "moods": {"farmers": 1}, "groups": {"resource_lobby": -3}, "ai": [-0.2, 0.4, 0, 0.2]},
+    {"id": "blame", "name": "Свалить вину на подрядчика", "text": "Найти виноватых среди строителей и возместить ущерб из их залога. Дёшево, но люди запомнят, что власть искала крайних.", "cost": 0.1, "months": 12, "effects": {"legitimacy": -2, "index.rule_of_law": -1}, "moods": {"farmers": -3, "clerks": -1}, "groups": {"industrialists": -3}, "popularity": -3, "ai": [0.3, -0.3, 0, -0.4]}
    ]
   },
   {
@@ -631,8 +631,8 @@
    "cooldown_months": 60,
    "when": [{"stat": "oil_rents_pct_gdp", "min": 2}],
    "options": [
-    {"id": "company", "name": "Заставить компанию платить", "text": "Штрафы и принудительная очистка за счёт владельца. Чистая вода вернётся, а нефтяники придут к вам с претензиями.", "months": 18, "effects": {"pollution": -0.05, "revenue.resource": -0.02}, "moods": {"farmers": 2, "professionals": 1}, "groups": {"resource_lobby": -8, "intelligentsia": 3}, "popularity": 2, "ai": [0.3, 0.6, 0, 0.6]},
-    {"id": "state", "name": "Убрать за счёт бюджета", "text": "Государство справится быстрее, но заплатят налогоплательщики. Нефтяные компании будут благодарны.", "cost": 0.4, "months": 12, "moods": {"farmers": 1}, "groups": {"resource_lobby": 3}, "popularity": -1, "ai": [0.2, 0.5, 0, 0], "default": true},
+    {"id": "company", "name": "Заставить компанию платить", "text": "Штрафы и принудительная очистка за счёт владельца. Чистая вода вернётся, а нефтяники придут к вам с претензиями.", "months": 18, "effects": {"pollution": -0.05, "revenue.resource": -0.02}, "moods": {"farmers": 2, "professionals": 1}, "groups": {"resource_lobby": -8, "intelligentsia": 1.0}, "popularity": 2, "ai": [0.3, 0.6, 0, 0.6]},
+    {"id": "state", "name": "Убрать за счёт бюджета", "text": "Государство справится быстрее, но заплатят налогоплательщики. Нефтяные компании будут благодарны.", "cost": 0.2, "months": 12, "moods": {"farmers": 1}, "groups": {"resource_lobby": 3}, "popularity": -1, "ai": [0.2, 0.5, 0, 0], "default": true},
     {"id": "hush", "name": "Замять", "text": "Объявить, что ущерб невелик. Нефть уйдёт сама, но когда правда выйдет наружу, люди вспомнят, что им не говорили.", "months": 24, "effects": {"pollution": 0.15, "legitimacy": -2, "index.press_freedom": -2}, "moods": {"farmers": -4, "professionals": -2}, "groups": {"resource_lobby": 4, "intelligentsia": -5}, "popularity": -3, "ai": [0.3, -0.6, 0.2, -0.4]}
    ]
   },
@@ -646,8 +646,8 @@
    "cooldown_months": 48,
    "when": [{"any": [{"stat": "coal_rents_pct_gdp", "min": 0.3}, {"stat": "mineral_rents_pct_gdp", "min": 1.5}]}],
    "options": [
-    {"id": "inspect", "name": "Проверить все шахты", "text": "Инспекторы закроют те, где нарушены правила. Добыча упадёт, зато гибнуть будет меньше.", "months": 24, "effects": {"potential_growth": -0.15, "revenue.resource": -0.03, "index.rule_of_law": 1}, "moods": {"skilled": 2, "unskilled": 2}, "groups": {"unions": 5, "resource_lobby": -5}, "popularity": 2, "ai": [-0.2, 0.8, 0, 0.4]},
-    {"id": "payout", "name": "Выплатить семьям и обещать контроль", "text": "Деньги семьям погибших и громкое обещание проверок. Выглядит достойно, но шахты останутся прежними.", "cost": 0.1, "months": 6, "moods": {"skilled": 1}, "groups": {"unions": 2}, "popularity": 1, "ai": [0.2, 0.2, 0, 0.3], "default": true},
+    {"id": "inspect", "name": "Проверить все шахты", "text": "Инспекторы закроют те, где нарушены правила. Добыча упадёт, зато гибнуть будет меньше.", "months": 24, "effects": {"potential_growth": -0.15, "revenue.resource": -0.03, "index.rule_of_law": 1}, "moods": {"skilled": 2, "unskilled": 2}, "groups": {"unions": 3.0, "resource_lobby": -5}, "popularity": 2, "ai": [-0.2, 0.8, 0, 0.4]},
+    {"id": "payout", "name": "Выплатить семьям и обещать контроль", "text": "Деньги семьям погибших и громкое обещание проверок. Выглядит достойно, но шахты останутся прежними.", "cost": 0.05, "months": 6, "moods": {"skilled": 1}, "groups": {"unions": 1.0}, "popularity": 1, "ai": [0.2, 0.2, 0, 0.3], "default": true},
     {"id": "blame", "name": "Обвинить владельцев и арестовать директора", "text": "Громкое дело и показательный суд. Владельцы возмутятся, но улица будет довольна.", "months": 12, "effects": {"index.rule_of_law": -1, "legitimacy": 0.5}, "moods": {"skilled": 2, "unskilled": 2}, "groups": {"resource_lobby": -6, "industrialists": -3}, "popularity": 3, "ai": [0.1, 0.3, 0, 0.5]}
    ]
   },
@@ -661,9 +661,9 @@
    "cooldown_months": 48,
    "when": [{"hazard": "drought"}, {"stat": "power_reserve_pct", "max": 18}],
    "options": [
-    {"id": "cooling", "name": "Открыть пункты охлаждения и платить за свет", "text": "Парки, торговые центры и школы станут убежищами. Жертв будет меньше, а счета за электричество — выше.", "cost": 0.25, "months": 4, "effects": {"power_demand": 0.04, "life_expectancy": -0.02}, "moods": {"pensioners": 3, "unskilled": 1}, "popularity": 2, "ai": [0.2, 0.9, 0, 0.7]},
+    {"id": "cooling", "name": "Открыть пункты охлаждения и платить за свет", "text": "Парки, торговые центры и школы станут убежищами. Жертв будет меньше, а счета за электричество — выше.", "cost": 0.12, "months": 4, "effects": {"power_demand": 0.04, "life_expectancy": -0.02}, "moods": {"pensioners": 3, "unskilled": 1}, "popularity": 2, "ai": [0.2, 0.9, 0, 0.7]},
     {"id": "rolling", "name": "Ввести веерные отключения", "text": "Свет пропадёт по очереди, зато сеть выстоит. Заводы встанут, люди будут недовольны.", "months": 3, "effects": {"potential_growth": -0.4, "radicalism": 0.5}, "moods": {"small_business": -3, "skilled": -2, "unskilled": -1}, "groups": {"industrialists": -3}, "ai": [-0.4, 0.3, 0, -0.5], "default": true},
-    {"id": "import", "name": "Купить электричество у соседей", "text": "Дорого, но без отключений. Лето пройдёт спокойно, а бюджет заплатит.", "cost": 0.35, "months": 3, "effects": {"potential_growth": -0.05}, "popularity": 1, "relations": {"with": "neighbors", "value": 2}, "ai": [0.3, 0.6, -0.1, 0.4]}
+    {"id": "import", "name": "Купить электричество у соседей", "text": "Дорого, но без отключений. Лето пройдёт спокойно, а бюджет заплатит.", "cost": 0.17, "months": 3, "effects": {"potential_growth": -0.05}, "popularity": 1, "relations": {"with": "neighbors", "value": 2}, "ai": [0.3, 0.6, -0.1, 0.4]}
    ]
   },
   {
@@ -676,7 +676,7 @@
    "cooldown_months": 60,
    "when": [{"program": "vaccination"}, {"stat": "education_quality", "max": 65}],
    "options": [
-    {"id": "campaign", "name": "Просветительская кампания", "text": "Врачи, учителя и блогеры расскажут, как работают вакцины. Не все поверят, но большинство одумается.", "cost": 0.15, "months": 18, "effects": {"disease_burden": -0.05}, "moods": {"professionals": 2}, "groups": {"intelligentsia": 3, "religious": -2}, "popularity": 1, "ai": [0.2, 0.8, 0, 0.5]},
+    {"id": "campaign", "name": "Просветительская кампания", "text": "Врачи, учителя и блогеры расскажут, как работают вакцины. Не все поверят, но большинство одумается.", "cost": 0.07, "months": 18, "effects": {"disease_burden": -0.05}, "moods": {"professionals": 2}, "groups": {"intelligentsia": 1.0, "religious": -2}, "popularity": 1, "ai": [0.2, 0.8, 0, 0.5]},
     {"id": "mandatory", "name": "Сделать прививки обязательными", "text": "Без прививки — без школы и работы. Охват вырастет, но свободы станет меньше, а протестов — больше.", "months": 24, "effects": {"disease_burden": -0.15, "index.civil_liberties": -5, "protest_rate": 0.1}, "moods": {"professionals": -2, "small_business": -2}, "groups": {"religious": -8, "intelligentsia": -2, "security": 2}, "popularity": -3, "ai": [0.2, 0.5, 0.2, -0.3]},
     {"id": "ignore", "name": "Не вмешиваться", "text": "Каждый решает за себя. Вспышки будут, но вам не придётся спорить с родителями.", "months": 24, "effects": {"disease_burden": 0.1, "life_expectancy": -0.1}, "moods": {"pensioners": -2}, "groups": {"religious": 2}, "ai": [0.1, -0.3, 0, 0.1], "default": true}
    ]
@@ -691,8 +691,8 @@
    "cooldown_months": 48,
    "when": [{"partner": {"relations_min": 25, "rank_max": 30, "can_sign": "science"}}, {"tech": "computers"}],
    "options": [
-    {"id": "sign", "name": "Подписать договор", "text": "Общие исследования: технологии, которые уже освоил партнёр, осваивать дешевле. Взамен партнёр получит доступ к вашим.", "months": 0, "groups": {"intelligentsia": 3}, "popularity": 1, "relations": {"with": "partner", "value": 4}, "ai": [0.5, 0.4, 0.2, 0.3], "treaty": "science"},
-    {"id": "limited", "name": "Обмен учёными без договора", "text": "Несколько совместных проектов и стажировки. Меньше выгоды, меньше обязательств.", "months": 18, "effects": {"research": 0.03}, "groups": {"intelligentsia": 1}, "relations": {"with": "partner", "value": 2}, "ai": [0.2, 0.2, 0, 0.1], "default": true},
+    {"id": "sign", "name": "Подписать договор", "text": "Общие исследования: технологии, которые уже освоил партнёр, осваивать дешевле. Взамен партнёр получит доступ к вашим.", "months": 0, "groups": {"intelligentsia": 1.0}, "popularity": 1, "relations": {"with": "partner", "value": 4}, "ai": [0.5, 0.4, 0.2, 0.3], "treaty": "science"},
+    {"id": "limited", "name": "Обмен учёными без договора", "text": "Несколько совместных проектов и стажировки. Меньше выгоды, меньше обязательств.", "months": 18, "effects": {"research": 0.03}, "groups": {"intelligentsia": 0.5}, "relations": {"with": "partner", "value": 2}, "ai": [0.2, 0.2, 0, 0.1], "default": true},
     {"id": "refuse", "name": "Отказаться", "text": "Свои секреты — свои. Партнёр обидится, но никто не заглянет в ваши лаборатории.", "months": 12, "effects": {"research": -0.02}, "groups": {"intelligentsia": -2, "security": 1}, "relations": {"with": "partner", "value": -3}, "ai": [-0.2, 0, 0.2, 0]}
    ]
   },
@@ -706,7 +706,7 @@
    "cooldown_months": 60,
    "when": [{"partner": {"rank_max": 12, "relations_max": 40}}, {"stat": "technology_level_pct", "min": 25}],
    "options": [
-    {"id": "raise", "name": "Встречные контракты и гранты", "text": "Деньги тем, кто остаётся: зарплаты, лаборатории, жильё. Дорого, но лучшие останутся.", "cost": 0.2, "months": 24, "effects": {"spending.science": 0.1, "research": 0.04}, "groups": {"intelligentsia": 4}, "popularity": 1, "ai": [0.4, 0.5, 0.2, 0.3]},
+    {"id": "raise", "name": "Встречные контракты и гранты", "text": "Деньги тем, кто остаётся: зарплаты, лаборатории, жильё. Дорого, но лучшие останутся.", "cost": 0.1, "months": 24, "effects": {"spending.science": 0.1, "research": 0.04}, "groups": {"intelligentsia": 1.5}, "popularity": 1, "ai": [0.4, 0.5, 0.2, 0.3]},
     {"id": "limit", "name": "Ограничить выезд исследователей", "text": "Выпускать за границу только по разрешению. Люди останутся, но станут работать хуже и копить обиду.", "months": 24, "effects": {"research": -0.06, "index.civil_liberties": -4, "radicalism": 0.4}, "moods": {"professionals": -4}, "groups": {"intelligentsia": -8, "security": 2}, "ai": [0.1, 0.2, 0.3, -0.2]},
     {"id": "go", "name": "Пусть едут", "text": "Талантам не ставят преград: часть вернётся с опытом и связями, часть — нет.", "months": 18, "effects": {"research": -0.05}, "moods": {"professionals": 1}, "relations": {"with": "partner", "value": 2}, "ai": [0.0, 0.1, -0.2, 0], "default": true}
    ]
@@ -722,7 +722,7 @@
    "when": [{"partner": {"rank_max": 10, "relations_max": 10}}, {"stat": "technology_level_pct", "min": 35}],
    "options": [
     {"id": "expel", "name": "Выслать дипломатов", "text": "Скандал на весь мир. Агентов не будет, зато отношения испортятся надолго.", "months": 12, "groups": {"security": 3}, "popularity": 2, "relations": {"with": "partner", "value": -8}, "ai": [0.0, 0.2, 0.4, 0.4]},
-    {"id": "counter", "name": "Усилить контрразведку", "text": "Новые отделы и проверки на предприятиях. Утечек станет меньше, но и открытости тоже.", "cost": 0.15, "months": 24, "effects": {"research": 0.03, "index.civil_liberties": -2}, "groups": {"security": 4, "intelligentsia": -2}, "ai": [0.2, 0.4, 0.2, 0.1], "default": true},
+    {"id": "counter", "name": "Усилить контрразведку", "text": "Новые отделы и проверки на предприятиях. Утечек станет меньше, но и открытости тоже.", "cost": 0.07, "months": 24, "effects": {"research": 0.03, "index.civil_liberties": -2}, "groups": {"security": 4, "intelligentsia": -2}, "ai": [0.2, 0.4, 0.2, 0.1], "default": true},
     {"id": "note", "name": "Тихая нота и молчание", "text": "Не раздувать дело. Партнёр поймёт намёк, но секреты уже уплыли.", "months": 12, "effects": {"research": -0.04}, "groups": {"security": -3}, "relations": {"with": "partner", "value": -1}, "ai": [0.1, 0.3, -0.2, -0.2]}
    ]
   },
@@ -734,10 +734,10 @@
    "reporter": "economy",
    "weight": 0.25,
    "cooldown_months": 96,
-   "when": [{"tech": "ai"}],
+   "when": [{"any": [{"tech": "ai"}, {"tech": "big_data"}]}],
    "options": [
-    {"id": "support", "name": "Поддержать отрасль", "text": "Налоговые льготы и гранты стартапам. Страна будет в числе лидеров, но офисные работники окажутся в тревоге.", "cost": 0.3, "months": 36, "effects": {"potential_growth": 0.15, "research": 0.06, "unemployment_fear": 0.1}, "moods": {"professionals": 3, "clerks": -3}, "groups": {"intelligentsia": 3, "unions": -4, "industrialists": 3}, "ai": [0.6, -0.2, 0.4, 0.2]},
-    {"id": "regulate", "name": "Ввести правила", "text": "Нейросети — только с маркировкой и проверкой. Развитие замедлится, зато люди будут защищены.", "months": 36, "effects": {"potential_growth": 0.03, "unemployment_fear": -0.1}, "moods": {"clerks": 2, "professionals": -1}, "groups": {"unions": 4, "industrialists": -3}, "ai": [0.0, 0.6, -0.1, 0.4], "default": true},
+    {"id": "support", "name": "Поддержать отрасль", "text": "Налоговые льготы и гранты стартапам. Страна будет в числе лидеров, но офисные работники окажутся в тревоге.", "cost": 0.15, "months": 36, "effects": {"potential_growth": 0.15, "research": 0.06, "unemployment_fear": 0.1}, "moods": {"professionals": 3, "clerks": -3}, "groups": {"intelligentsia": 1.0, "unions": -4, "industrialists": 3}, "ai": [0.6, -0.2, 0.4, 0.2]},
+    {"id": "regulate", "name": "Ввести правила", "text": "Нейросети — только с маркировкой и проверкой. Развитие замедлится, зато люди будут защищены.", "months": 36, "effects": {"potential_growth": 0.03, "unemployment_fear": -0.1}, "moods": {"clerks": 2, "professionals": -1}, "groups": {"unions": 2.5, "industrialists": -3}, "ai": [0.0, 0.6, -0.1, 0.4], "default": true},
     {"id": "nothing", "name": "Не вмешиваться", "text": "Рынок сам разберётся. Производительность вырастет быстро, но и безработных тоже будет больше.", "months": 36, "effects": {"potential_growth": 0.12, "unemployment_fear": 0.2, "natural_unemployment": 0.2}, "moods": {"clerks": -4, "capitalists": 2}, "groups": {"unions": -5}, "ai": [0.5, -0.4, 0.1, -0.2]}
    ]
   },
@@ -751,8 +751,8 @@
    "cooldown_months": 96,
    "when": [{"tech": "electric_cars"}],
    "options": [
-    {"id": "subsidy", "name": "Субсидии на электромобили и зарядки", "text": "Льготы покупателям и сеть зарядных станций. Воздух станет чище, спрос на электричество вырастет.", "cost": 0.3, "months": 36, "effects": {"pollution": -0.07, "power_demand": 0.03, "potential_growth": 0.05}, "moods": {"professionals": 2}, "groups": {"intelligentsia": 3, "resource_lobby": -3}, "ai": [0.2, 0.5, 0.1, 0.5]},
-    {"id": "protect", "name": "Защитить старые автозаводы", "text": "Пошлины на электромобили и поддержка бензиновых моделей. Рабочие мест сохранят, но страна отстанет.", "months": 36, "effects": {"potential_growth": -0.05, "revenue.customs": 0.03}, "moods": {"skilled": 2}, "groups": {"industrialists": 4, "unions": 3, "intelligentsia": -3}, "ai": [-0.2, 0.4, 0.1, 0.3], "default": true},
+    {"id": "subsidy", "name": "Субсидии на электромобили и зарядки", "text": "Льготы покупателям и сеть зарядных станций. Воздух станет чище, спрос на электричество вырастет.", "cost": 0.15, "months": 36, "effects": {"pollution": -0.07, "power_demand": 0.03, "potential_growth": 0.05}, "moods": {"professionals": 2}, "groups": {"intelligentsia": 1.0, "resource_lobby": -3}, "ai": [0.2, 0.5, 0.1, 0.5]},
+    {"id": "protect", "name": "Защитить старые автозаводы", "text": "Пошлины на электромобили и поддержка бензиновых моделей. Рабочие мест сохранят, но страна отстанет.", "months": 36, "effects": {"potential_growth": -0.05, "revenue.customs": 0.03}, "moods": {"skilled": 2}, "groups": {"industrialists": 4, "unions": 2.0, "intelligentsia": -3}, "ai": [-0.2, 0.4, 0.1, 0.3], "default": true},
     {"id": "market", "name": "Предоставить рынку", "text": "Пусть покупатель выбирает. Переход пройдёт быстро, но тяжело для заводов и их рабочих.", "months": 24, "effects": {"pollution": -0.04, "natural_unemployment": 0.1}, "moods": {"skilled": -3}, "groups": {"industrialists": -3, "unions": -4}, "ai": [0.3, -0.3, 0, -0.1]}
    ]
   },
@@ -767,8 +767,8 @@
    "when": [{"tech": "digital_id"}],
    "options": [
     {"id": "mandatory", "name": "Сделать обязательным", "text": "Очереди и бумаги исчезнут, налоги и пособия будут находить людей сами. Свобод станет меньше.", "months": 48, "effects": {"index.corruption": -3, "revenue.other": 0.03, "index.civil_liberties": -6, "protest_rate": 0.1}, "moods": {"officials": 3, "professionals": -3}, "groups": {"security": 5, "intelligentsia": -6}, "ai": [0.3, 0.3, 0.4, -0.1]},
-    {"id": "voluntary", "name": "Оставить добровольным", "text": "Кто хочет — пользуется. Выгоды меньше, зато никто не жалуется.", "months": 36, "effects": {"index.corruption": -1}, "moods": {"officials": 1, "professionals": 1}, "groups": {"intelligentsia": 2}, "ai": [0.1, 0.3, 0, 0.3], "default": true},
-    {"id": "postpone", "name": "Отложить", "text": "Сначала закон о защите данных. Выгода откладывается, но доверие сохранится.", "months": 24, "effects": {"index.civil_liberties": 1}, "groups": {"intelligentsia": 3, "security": -2}, "ai": [-0.1, 0.2, -0.1, 0.1]}
+    {"id": "voluntary", "name": "Оставить добровольным", "text": "Кто хочет — пользуется. Выгоды меньше, зато никто не жалуется.", "months": 36, "effects": {"index.corruption": -1}, "moods": {"officials": 1, "professionals": 1}, "groups": {"intelligentsia": 1.0}, "ai": [0.1, 0.3, 0, 0.3], "default": true},
+    {"id": "postpone", "name": "Отложить", "text": "Сначала закон о защите данных. Выгода откладывается, но доверие сохранится.", "months": 24, "effects": {"index.civil_liberties": 1}, "groups": {"intelligentsia": 1.0, "security": -2}, "ai": [-0.1, 0.2, -0.1, 0.1]}
    ]
   },
   {
@@ -796,7 +796,7 @@
    "cooldown_months": 48,
    "when": [{"stat": "exchange_rate_change_pct", "min": 25}, {"stat": "reserves_pct_gdp", "max": 12}],
    "options": [
-    {"id": "reserves", "name": "Продавать валютные резервы", "text": "Скупить собственную валюту. Курс успокоится на время, но резервы придётся пополнять.", "cost": 0.6, "months": 6, "effects": {"exchange_volatility": -0.4}, "groups": {"financiers": 2}, "popularity": 1, "ai": [0.2, 0.5, 0, 0.4]},
+    {"id": "reserves", "name": "Продавать валютные резервы", "text": "Скупить собственную валюту. Курс успокоится на время, но резервы придётся пополнять.", "cost": 0.3, "months": 6, "effects": {"exchange_volatility": -0.4}, "groups": {"financiers": 2}, "popularity": 1, "ai": [0.2, 0.5, 0, 0.4]},
     {"id": "rate", "name": "Поднять ставку", "text": "Деньги станут дорогими, вклады — выгодными. Курс удержится, а заводы и заёмщики пострадают.", "months": 12, "effects": {"exchange_volatility": -0.3, "potential_growth": -0.4}, "moods": {"small_business": -3, "capitalists": -1}, "groups": {"financiers": 3, "industrialists": -3}, "ai": [-0.3, 0.4, 0, -0.3]},
     {"id": "controls", "name": "Ввести валютный контроль", "text": "Продавать и вывозить валюту — только по разрешению. Курс перестанет скакать, но инвесторы насторожатся.", "months": 18, "effects": {"exchange_volatility": -0.5, "foreign_profit": -0.05, "spread": 0.4}, "moods": {"capitalists": -2}, "groups": {"financiers": -6, "security": 1}, "ai": [-0.2, 0.3, 0.1, 0], "default": true}
    ]
@@ -812,8 +812,8 @@
    "when": [{"world": "oil_price", "min": 1.35}, {"stat": "oil_rents_pct_gdp", "min": 4}],
    "options": [
     {"id": "fund", "name": "Отложить в фонд", "text": "Погасить часть долга и оставить запас на чёрный день. Скучно, но надёжно.", "cost": -1.0, "months": 24, "effects": {"spread": -0.2}, "groups": {"financiers": 4, "unions": -2}, "popularity": -1, "ai": [0.2, 0.8, 0, -0.2], "default": true},
-    {"id": "social", "name": "Раздать на социальные программы", "text": "Выше пенсии и пособия. Люди обрадуются, а когда нефть упадёт, денег не будет.", "cost": 0.3, "months": 24, "effects": {"spending.social": 0.3}, "moods": {"pensioners": 4, "unskilled": 2, "unemployed": 2}, "groups": {"unions": 4}, "popularity": 3, "ai": [0.1, 0.3, 0, 0.9]},
-    {"id": "invest", "name": "Вложить в стройки и заводы", "text": "Дороги, станции и заводские линии. Окупится не сразу, зато оставит страну сильнее.", "cost": 0.2, "months": 36, "effects": {"potential_growth": 0.2, "infra_efficiency": 0.05}, "moods": {"skilled": 2}, "groups": {"industrialists": 5}, "ai": [0.6, 0.4, 0.3, 0.1]}
+    {"id": "social", "name": "Раздать на социальные программы", "text": "Выше пенсии и пособия. Люди обрадуются, а когда нефть упадёт, денег не будет.", "cost": 0.15, "months": 24, "effects": {"spending.social": 0.3}, "moods": {"pensioners": 4, "unskilled": 2, "unemployed": 2}, "groups": {"unions": 2.5}, "popularity": 3, "ai": [0.1, 0.3, 0, 0.9]},
+    {"id": "invest", "name": "Вложить в стройки и заводы", "text": "Дороги, станции и заводские линии. Окупится не сразу, зато оставит страну сильнее.", "cost": 0.1, "months": 36, "effects": {"potential_growth": 0.2, "infra_efficiency": 0.05}, "moods": {"skilled": 2}, "groups": {"industrialists": 5}, "ai": [0.6, 0.4, 0.3, 0.1]}
    ]
   },
   {
@@ -826,9 +826,9 @@
    "cooldown_months": 60,
    "when": [{"stat": "tourism_pct_gdp", "min": 3.5}, {"stat": "gdp_growth_pct", "min": 2}],
    "options": [
-    {"id": "invest", "name": "Строить отели и аэропорты", "text": "Государство поможет отрасли расти. Больше туристов — больше денег, но и больше нагрузки на природу.", "cost": 0.3, "months": 36, "effects": {"potential_growth": 0.12, "pollution": 0.03}, "moods": {"small_business": 3, "unskilled": 1}, "groups": {"industrialists": 2}, "ai": [0.5, 0.2, 0.1, 0.5]},
+    {"id": "invest", "name": "Строить отели и аэропорты", "text": "Государство поможет отрасли расти. Больше туристов — больше денег, но и больше нагрузки на природу.", "cost": 0.15, "months": 36, "effects": {"potential_growth": 0.12, "pollution": 0.03}, "moods": {"small_business": 3, "unskilled": 1}, "groups": {"industrialists": 2}, "ai": [0.5, 0.2, 0.1, 0.5]},
     {"id": "tax", "name": "Ввести туристический налог", "text": "Приезжие платят за красоту. Деньги — в бюджет, но кто-то поедет в другое место.", "months": 24, "effects": {"revenue.other": 0.05, "potential_growth": -0.05}, "groups": {"small_business": -3}, "ai": [0.1, 0.3, 0, 0.2], "default": true},
-    {"id": "limit", "name": "Ограничить поток", "text": "Квоты и запреты в самых популярных местах. Природа выдохнет, а владельцы гостиниц — нет.", "months": 24, "effects": {"pollution": -0.05, "potential_growth": -0.1}, "moods": {"small_business": -3, "professionals": 1}, "groups": {"small_business": -5, "intelligentsia": 2}, "ai": [-0.2, 0.4, 0, -0.1]}
+    {"id": "limit", "name": "Ограничить поток", "text": "Квоты и запреты в самых популярных местах. Природа выдохнет, а владельцы гостиниц — нет.", "months": 24, "effects": {"pollution": -0.05, "potential_growth": -0.1}, "moods": {"small_business": -3, "professionals": 1}, "groups": {"small_business": -5, "intelligentsia": 1.0}, "ai": [-0.2, 0.4, 0, -0.1]}
    ]
   },
   {
@@ -873,7 +873,7 @@
    "options": [
     {"id": "sign", "name": "Подписать союз", "text": "Безопасность и сильный партнёр. Но если союзник начнёт войну, вас позовут воевать.", "months": 36, "effects": {"military_power": 0.05}, "groups": {"security": 5, "intelligentsia": -2}, "popularity": 1, "relations": {"with": "partner", "value": 4}, "ai": [0.2, 0.3, 0.7, 0.1], "treaty": "alliance"},
     {"id": "cooperate", "name": "Оборонное сотрудничество без союза", "text": "Учения, поставки и обмен разведкой — без обязательств воевать.", "months": 24, "effects": {"military_power": 0.02}, "groups": {"security": 2}, "relations": {"with": "partner", "value": 2}, "ai": [0.2, 0.4, 0.2, 0.2], "default": true},
-    {"id": "neutral", "name": "Остаться вне блоков", "text": "Вежливый отказ. Партнёр поймёт, а вы сохраните свободу рук.", "months": 12, "groups": {"security": -3, "intelligentsia": 2}, "relations": {"with": "partner", "value": -2}, "ai": [0.1, 0.3, -0.2, 0.2]}
+    {"id": "neutral", "name": "Остаться вне блоков", "text": "Вежливый отказ. Партнёр поймёт, а вы сохраните свободу рук.", "months": 12, "groups": {"security": -3, "intelligentsia": 1.0}, "relations": {"with": "partner", "value": -2}, "ai": [0.1, 0.3, -0.2, 0.2]}
    ]
   },
   {
@@ -887,7 +887,7 @@
    "when": [{"partner": {"neighbor": true, "relations_max": -5}}],
    "options": [
     {"id": "talks", "name": "Предложить переговоры", "text": "Начальники встретятся и договорятся о правилах. Инцидент исчерпан, но кто-то назовёт это слабостью.", "months": 12, "groups": {"security": -2}, "relations": {"with": "partner", "value": 4}, "ai": [0.3, 0.8, -0.1, 0.2], "default": true},
-    {"id": "reinforce", "name": "Усилить границу", "text": "Новые заставы и танки. Напряжение растёт, но граница под контролем.", "cost": 0.2, "months": 18, "effects": {"military_power": 0.03}, "groups": {"security": 4}, "loyalty": {"army": 1}, "relations": {"with": "partner", "value": -5}, "ai": [-0.1, -0.2, 0.5, 0.3]},
+    {"id": "reinforce", "name": "Усилить границу", "text": "Новые заставы и танки. Напряжение растёт, но граница под контролем.", "cost": 0.1, "months": 18, "effects": {"military_power": 0.03}, "groups": {"security": 4}, "loyalty": {"army": 1}, "relations": {"with": "partner", "value": -5}, "ai": [-0.1, -0.2, 0.5, 0.3]},
     {"id": "retaliate", "name": "Ответить демонстрацией силы", "text": "Учения у границы и жёсткое заявление. Народ доволен, но партнёр тоже не промолчит.", "months": 12, "effects": {"radicalism": 0.3}, "groups": {"security": 5}, "loyalty": {"army": 2}, "popularity": 3, "relations": {"with": "partner", "value": -10}, "ai": [-0.3, -0.6, 0.4, 0.5]}
    ]
   },
@@ -903,7 +903,7 @@
    "options": [
     {"id": "accept", "name": "Взять кредит на их условиях", "text": "Дешёвые деньги сразу, а за это — закупки у кредитора и согласие в голосованиях.", "months": 48, "effects": {"spread": -0.6, "legitimacy": -0.5}, "groups": {"financiers": 3, "intelligentsia": -3}, "popularity": -1, "relations": {"with": "partner", "value": 6}, "ai": [0.4, 0.3, -0.2, 0.3]},
     {"id": "negotiate", "name": "Торговаться об условиях", "text": "Попросить деньги без привязки. Кредит будет скромнее, зато без обязательств.", "months": 36, "effects": {"spread": -0.3}, "groups": {"financiers": 1}, "relations": {"with": "partner", "value": 2}, "ai": [0.3, 0.4, 0, 0.2], "default": true},
-    {"id": "refuse", "name": "Отказаться", "text": "Лучше дорого, но без чужих условий. Рынок поморщится, партнёр поймёт.", "months": 12, "effects": {"spread": 0.1}, "groups": {"intelligentsia": 2}, "relations": {"with": "partner", "value": -3}, "ai": [0, 0.2, 0.3, 0.1]}
+    {"id": "refuse", "name": "Отказаться", "text": "Лучше дорого, но без чужих условий. Рынок поморщится, партнёр поймёт.", "months": 12, "effects": {"spread": 0.1}, "groups": {"intelligentsia": 1.0}, "relations": {"with": "partner", "value": -3}, "ai": [0, 0.2, 0.3, 0.1]}
    ]
   },
   {
@@ -931,7 +931,7 @@
    "cooldown_months": 60,
    "when": [{"minister": "any", "what": "loyalty", "max": 25}],
    "options": [
-    {"id": "concede", "name": "Уступить его требованиям", "text": "Дать министру то, чего он хочет: больше денег и власти в ведомстве. Лояльность вернётся, но и аппетиты тоже.", "cost": 0.2, "months": 12, "groups": {"security": 0}, "popularity": -1, "subject": "30", "ai": [0.2, 0.5, 0, 0.3]},
+    {"id": "concede", "name": "Уступить его требованиям", "text": "Дать министру то, чего он хочет: больше денег и власти в ведомстве. Лояльность вернётся, но и аппетиты тоже.", "cost": 0.1, "months": 12, "groups": {"security": 0}, "popularity": -1, "subject": "30", "ai": [0.2, 0.5, 0, 0.3]},
     {"id": "fire", "name": "Уволить первым", "text": "Отправить в отставку раньше, чем он хлопнет дверью. Громко, но не вам придётся оправдываться.", "months": 12, "effects": {"legitimacy": -0.5}, "popularity": -1, "subject": "fire", "ai": [0.1, 0.3, 0, 0.3], "default": true},
     {"id": "ignore", "name": "Сделать вид, что ничего не происходит", "text": "Рано или поздно он уйдёт сам, а вместе с ним уйдут и секреты.", "months": 12, "effects": {"legitimacy": -1}, "popularity": -2, "subject": "-10", "ai": [0.0, -0.3, 0, -0.3]}
    ]
@@ -946,7 +946,7 @@
    "cooldown_months": 72,
    "when": [{"stat": "corruption_index", "min": 45}, {"stat": "press_freedom_index", "min": 45}],
    "options": [
-    {"id": "investigate", "name": "Начать расследование", "text": "Назначить проверку и пообещать публичные итоги. Доверие вырастет, если дойдёт до дела, но кого-то придётся наказать.", "months": 18, "effects": {"index.corruption": -2, "legitimacy": 1}, "groups": {"intelligentsia": 4, "financiers": -3}, "popularity": -1, "ai": [0.1, 0.5, 0, 0.2]},
+    {"id": "investigate", "name": "Начать расследование", "text": "Назначить проверку и пообещать публичные итоги. Доверие вырастет, если дойдёт до дела, но кого-то придётся наказать.", "months": 18, "effects": {"index.corruption": -2, "legitimacy": 1}, "groups": {"intelligentsia": 1.5, "financiers": -3}, "popularity": -1, "ai": [0.1, 0.5, 0, 0.2]},
     {"id": "deny", "name": "Назвать публикации провокацией", "text": "Заявить, что документы поддельные. Часть людей поверит, часть — нет, а журналисты запомнят.", "months": 24, "effects": {"legitimacy": -3, "index.press_freedom": -2}, "moods": {"professionals": -3, "clerks": -1}, "groups": {"intelligentsia": -5}, "popularity": -3, "ai": [0.0, -0.5, 0, -0.4], "default": true},
     {"id": "amnesty", "name": "Объявить амнистию капиталов", "text": "Вернуть деньги в страну без вопросов. Бюджет получит доход, а честные налогоплательщики — повод для злости.", "cost": -0.3, "months": 12, "effects": {"legitimacy": -1, "revenue.other": 0.03}, "moods": {"capitalists": 2, "clerks": -2}, "groups": {"financiers": 4, "intelligentsia": -3}, "ai": [0.3, 0.1, 0, -0.1]}
    ]
@@ -961,9 +961,9 @@
    "cooldown_months": 48,
    "when": [{"stat": "press_freedom_index", "min": 40}, {"stat": "civil_liberties_index", "max": 65}],
    "options": [
-    {"id": "dismiss", "name": "Уволить офицеров и провести проверку", "text": "Показательное наказание. Улица успокоится, а полиция затаит обиду.", "months": 12, "effects": {"protest_rate": -0.1}, "groups": {"security": -4, "intelligentsia": 3}, "loyalty": {"police": -3}, "popularity": 2, "ai": [0.1, 0.6, -0.1, 0.5]},
+    {"id": "dismiss", "name": "Уволить офицеров и провести проверку", "text": "Показательное наказание. Улица успокоится, а полиция затаит обиду.", "months": 12, "effects": {"protest_rate": -0.1}, "groups": {"security": -4, "intelligentsia": 1.0}, "loyalty": {"police": -3}, "popularity": 2, "ai": [0.1, 0.6, -0.1, 0.5]},
     {"id": "defend", "name": "Защитить полицию", "text": "Заявить, что действовали по инструкции. Силовики будут довольны, остальные — нет.", "months": 18, "effects": {"protest_rate": 0.2, "radicalism": 1, "legitimacy": -2}, "moods": {"professionals": -3, "unskilled": -1}, "groups": {"security": 4, "intelligentsia": -5}, "loyalty": {"police": 2}, "popularity": -3, "ai": [0.0, -0.4, 0.2, -0.4], "default": true},
-    {"id": "reform", "name": "Нательные камеры и независимый надзор", "text": "Каждый обыск — на запись, жалобы — в независимый орган. Дорого, но такое не повторится.", "cost": 0.1, "months": 36, "effects": {"index.rule_of_law": 2, "crime": 0.03}, "groups": {"security": -3, "intelligentsia": 4}, "loyalty": {"police": -1}, "popularity": 1, "ai": [0.1, 0.6, 0, 0.4]}
+    {"id": "reform", "name": "Нательные камеры и независимый надзор", "text": "Каждый обыск — на запись, жалобы — в независимый орган. Дорого, но такое не повторится.", "cost": 0.05, "months": 36, "effects": {"index.rule_of_law": 2, "crime": 0.03}, "groups": {"security": -3, "intelligentsia": 1.5}, "loyalty": {"police": -1}, "popularity": 1, "ai": [0.1, 0.6, 0, 0.4]}
    ]
   },
   {
@@ -976,7 +976,7 @@
    "cooldown_months": 60,
    "when": [{"stat": "inflation_pct", "min": 10}, {"stat": "unemployment_pct", "max": 9}],
    "options": [
-    {"id": "index", "name": "Индексировать зарплаты вслед за ценами", "text": "Люди не обеднеют, но цены продолжат расти.", "months": 24, "effects": {"unskilled_wage": 0.05, "potential_growth": -0.05, "inflation_target": 0.5}, "moods": {"unskilled": 3, "skilled": 2, "pensioners": 1}, "groups": {"unions": 5, "industrialists": -3}, "popularity": 2, "ai": [-0.2, 0.3, 0, 0.6]},
+    {"id": "index", "name": "Индексировать зарплаты вслед за ценами", "text": "Люди не обеднеют, но цены продолжат расти.", "months": 24, "effects": {"unskilled_wage": 0.05, "potential_growth": -0.05, "inflation_target": 0.5}, "moods": {"unskilled": 3, "skilled": 2, "pensioners": 1}, "groups": {"unions": 3.0, "industrialists": -3}, "popularity": 2, "ai": [-0.2, 0.3, 0, 0.6]},
     {"id": "freeze", "name": "Заморозить цены и зарплаты", "text": "Ограничения на год. Цифры успокоятся, а полки опустеют.", "months": 12, "effects": {"food_inflation": -0.15, "potential_growth": -0.2}, "moods": {"small_business": -3, "unskilled": -1}, "groups": {"industrialists": -5, "small_business": -3, "unions": -3}, "ai": [-0.3, 0.2, 0, -0.1]},
     {"id": "squeeze", "name": "Пусть центробанк давит инфляцию", "text": "Дорогие кредиты и ожидания людей на месте. Через год станет спокойнее, но придётся потерпеть.", "months": 24, "effects": {"inflation_target": -0.5, "potential_growth": -0.3}, "moods": {"unemployed": -2, "small_business": -2}, "groups": {"financiers": 3, "unions": -3}, "popularity": -2, "ai": [0.1, 0.4, 0, -0.4], "default": true}
    ]
@@ -991,8 +991,8 @@
    "cooldown_months": 30,
    "when": [{"stat": "approval_pct", "max": 42}, {"regime": ["democracy", "hybrid"]}, {"law": "assembly", "in": ["permit", "free"]}],
    "options": [
-    {"id": "allow", "name": "Разрешить и обеспечить порядок", "text": "Митинг пройдёт на согласованной площади. Люди выговорятся, а власть покажет, что слышит критику.", "months": 6, "effects": {"protest_rate": -0.1}, "moods": {"professionals": 1, "clerks": 1}, "groups": {"intelligentsia": 3}, "popularity": 1, "ai": [0.1, 0.6, -0.1, 0.4], "default": true},
-    {"id": "talk", "name": "Выйти к митингующим", "text": "Пригласить лидеров на разговор и пообещать меры. Напряжение спадёт, а в оппозиции скажут, что вы испугались.", "months": 9, "effects": {"radicalism": -0.5, "legitimacy": 1}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 4}, "popularity": -1, "ai": [0.1, 0.7, -0.1, 0.3]},
+    {"id": "allow", "name": "Разрешить и обеспечить порядок", "text": "Митинг пройдёт на согласованной площади. Люди выговорятся, а власть покажет, что слышит критику.", "months": 6, "effects": {"protest_rate": -0.1}, "moods": {"professionals": 1, "clerks": 1}, "groups": {"intelligentsia": 1.0}, "popularity": 1, "ai": [0.1, 0.6, -0.1, 0.4], "default": true},
+    {"id": "talk", "name": "Выйти к митингующим", "text": "Пригласить лидеров на разговор и пообещать меры. Напряжение спадёт, а в оппозиции скажут, что вы испугались.", "months": 9, "effects": {"radicalism": -0.5, "legitimacy": 1}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 1.5}, "popularity": -1, "ai": [0.1, 0.7, -0.1, 0.3]},
     {"id": "ban", "name": "Запретить и разогнать", "text": "Полиция перекроет площадь. Улица затихнет, но обида останется надолго.", "months": 18, "effects": {"protest_rate": 0.2, "radicalism": 1.2, "index.civil_liberties": -4, "legitimacy": -2}, "moods": {"professionals": -4, "clerks": -2}, "groups": {"intelligentsia": -6, "security": 3}, "loyalty": {"police": -1}, "popularity": -3, "ai": [0.0, -0.4, 0.3, -0.3]}
    ]
   },
@@ -1006,8 +1006,8 @@
    "cooldown_months": 60,
    "when": [{"stat": "approval_pct", "max": 50}, {"stat": "democracy_index", "min": 55}],
    "options": [
-    {"id": "hold", "name": "Назначить референдум", "text": "Решение примут сами люди. Дорого и рискованно, но результат никто не оспорит.", "cost": 0.15, "months": 12, "effects": {"legitimacy": 2, "protest_rate": -0.1}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 4}, "popularity": -1, "ai": [0.1, 0.4, -0.1, 0.2]},
-    {"id": "hearings", "name": "Устроить общественные слушания", "text": "Эксперты и общественность выскажутся, а решит парламент. Компромисс, который устраивает не всех.", "months": 9, "effects": {"legitimacy": 0.5}, "moods": {"professionals": 1}, "groups": {"intelligentsia": 1}, "ai": [0.1, 0.5, 0, 0.2], "default": true},
+    {"id": "hold", "name": "Назначить референдум", "text": "Решение примут сами люди. Дорого и рискованно, но результат никто не оспорит.", "cost": 0.07, "months": 12, "effects": {"legitimacy": 2, "protest_rate": -0.1}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 1.5}, "popularity": -1, "ai": [0.1, 0.4, -0.1, 0.2]},
+    {"id": "hearings", "name": "Устроить общественные слушания", "text": "Эксперты и общественность выскажутся, а решит парламент. Компромисс, который устраивает не всех.", "months": 9, "effects": {"legitimacy": 0.5}, "moods": {"professionals": 1}, "groups": {"intelligentsia": 0.5}, "ai": [0.1, 0.5, 0, 0.2], "default": true},
     {"id": "refuse", "name": "Отказать", "text": "Вопрос не подлежит референдуму. Закон на вашей стороне, но подписи уже собраны.", "months": 12, "effects": {"protest_rate": 0.15, "legitimacy": -1.5}, "moods": {"professionals": -2}, "groups": {"intelligentsia": -4}, "popularity": -2, "ai": [0.0, -0.3, 0.1, -0.3]}
    ]
   },
@@ -1021,7 +1021,7 @@
    "cooldown_months": 48,
    "when": [{"system": ["parliamentary_republic", "constitutional_monarchy", "semi_presidential"]}, {"stat": "ruling_poll_pct", "max": 42}],
    "options": [
-    {"id": "concede", "name": "Уступить партнёрам", "text": "Отдать им посты и деньги ведомств. Правительство устоит, но станет дороже и слабее.", "cost": 0.3, "months": 18, "effects": {"spending.administration": 0.1, "legitimacy": -0.5}, "groups": {"unions": 2, "industrialists": 2}, "popularity": -1, "ai": [0.0, 0.6, 0, 0.4], "default": true},
+    {"id": "concede", "name": "Уступить партнёрам", "text": "Отдать им посты и деньги ведомств. Правительство устоит, но станет дороже и слабее.", "cost": 0.15, "months": 18, "effects": {"spending.administration": 0.1, "legitimacy": -0.5}, "groups": {"unions": 1.0, "industrialists": 2}, "popularity": -1, "ai": [0.0, 0.6, 0, 0.4], "default": true},
     {"id": "gamble", "name": "Поставить вопрос о доверии", "text": "Объявить голосование и рискнуть. Победа укрепит власть, поражение — поставит страну перед выборами.", "months": 12, "effects": {"legitimacy": -1, "protest_rate": 0.1}, "popularity": 1, "ai": [0.1, -0.3, 0.3, 0.5]},
     {"id": "reshuffle", "name": "Обновить программу правительства", "text": "Объявить новый курс и согласовать его с союзниками. Выигрыш времени без громких жертв.", "months": 12, "effects": {"legitimacy": 0.5}, "moods": {"clerks": 1}, "popularity": 0, "ai": [0.1, 0.5, 0, 0.3]}
    ]
@@ -1036,7 +1036,7 @@
    "cooldown_months": 48,
    "when": [{"stat": "press_freedom_index", "min": 25, "max": 60}, {"regime": ["hybrid", "authoritarian"]}],
    "options": [
-    {"id": "defend", "name": "Защитить канал и остановить проверки", "text": "Власть покажет, что терпит критику. Свободу прессы это укрепит, а чиновники обидятся.", "months": 24, "effects": {"index.press_freedom": 4, "legitimacy": 1}, "moods": {"professionals": 3, "clerks": 1}, "groups": {"intelligentsia": 6, "security": -3}, "popularity": 1, "ai": [0.1, 0.3, -0.1, 0.3]},
+    {"id": "defend", "name": "Защитить канал и остановить проверки", "text": "Власть покажет, что терпит критику. Свободу прессы это укрепит, а чиновники обидятся.", "months": 24, "effects": {"index.press_freedom": 4, "legitimacy": 1}, "moods": {"professionals": 3, "clerks": 1}, "groups": {"intelligentsia": 2.0, "security": -3}, "popularity": 1, "ai": [0.1, 0.3, -0.1, 0.3]},
     {"id": "silent", "name": "Не вмешиваться", "text": "Пусть решает суд. Канал закроют или нет — без вас.", "months": 12, "effects": {"index.press_freedom": -1}, "groups": {"intelligentsia": -2}, "ai": [0.0, 0.0, 0, -0.1], "default": true},
     {"id": "close", "name": "Закрыть канал", "text": "Громкий жест: критики станет меньше, а недовольных больше.", "months": 24, "effects": {"index.press_freedom": -8, "legitimacy": -2.5, "radicalism": 0.6}, "moods": {"professionals": -4, "clerks": -2}, "groups": {"intelligentsia": -9, "security": 3}, "popularity": -3, "ai": [0.0, -0.3, 0.3, 0.0]}
    ]
@@ -1052,7 +1052,7 @@
    "when": [{"system": ["presidential_republic", "semi_presidential"]}, {"law": "term_limits", "in": ["one", "two"]}, {"stat": "approval_pct", "min": 55}, {"regime": ["democracy", "hybrid"]}],
    "options": [
     {"id": "extend", "name": "Изменить конституцию и остаться", "text": "Через референдум или парламент срок продлят. Вы останетесь, но слово «демократия» зазвучит иначе.", "months": 60, "effects": {"index.democracy": -6, "legitimacy": -3, "protest_rate": 0.15}, "moods": {"professionals": -3, "clerks": -1}, "groups": {"intelligentsia": -8, "security": 3}, "popularity": 3, "ai": [0.0, -0.5, 0.2, 0.6]},
-    {"id": "leave", "name": "Уйти по закону", "text": "Сохранить правила важнее личной власти. Страна запомнит, что можно уходить красиво.", "months": 36, "effects": {"index.democracy": 2, "legitimacy": 2}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 5}, "popularity": 2, "ai": [0.1, 0.5, -0.1, -0.3], "default": true},
+    {"id": "leave", "name": "Уйти по закону", "text": "Сохранить правила важнее личной власти. Страна запомнит, что можно уходить красиво.", "months": 36, "effects": {"index.democracy": 2, "legitimacy": 2}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 2.0}, "popularity": 2, "ai": [0.1, 0.5, -0.1, -0.3], "default": true},
     {"id": "successor", "name": "Выбрать преемника", "text": "Назвать человека, которого поддержит ваша партия. Уйдёте, но влияние сохраните.", "months": 36, "effects": {"legitimacy": -0.5}, "groups": {"security": 2, "intelligentsia": -2}, "popularity": 0, "ai": [0.1, 0.2, 0.1, 0.2]}
    ]
   },
@@ -1081,7 +1081,7 @@
    "cooldown_months": 60,
    "when": [{"regime": ["hybrid", "authoritarian"]}, {"group": "security", "max": 35}],
    "options": [
-    {"id": "pay", "name": "Задобрить армию", "text": "Повысить жалованье и закупить технику. Офицеры довольны, а бюджет — нет.", "cost": 0.4, "months": 24, "effects": {"spending.defense": 0.1, "military_power": 0.02}, "groups": {"security": 8}, "loyalty": {"army": 6}, "popularity": -1, "ai": [0.0, 0.5, 0.2, 0.2]},
+    {"id": "pay", "name": "Задобрить армию", "text": "Повысить жалованье и закупить технику. Офицеры довольны, а бюджет — нет.", "cost": 0.2, "months": 24, "effects": {"spending.defense": 0.1, "military_power": 0.02}, "groups": {"security": 8}, "loyalty": {"army": 6}, "popularity": -1, "ai": [0.0, 0.5, 0.2, 0.2]},
     {"id": "purge", "name": "Убрать подозрительных генералов", "text": "Тихо перевести их на гражданские должности. Опасных станет меньше, но обиженных — больше.", "months": 18, "effects": {"military_power": -0.03, "legitimacy": -1}, "groups": {"security": -5}, "loyalty": {"army": -4}, "ai": [0.0, 0.2, -0.1, 0.1], "default": true},
     {"id": "ignore", "name": "Не обращать внимания", "text": "Слухи — это слухи. Если заговор есть, он тоже не ждёт разрешения.", "months": 12, "effects": {"legitimacy": -0.5}, "groups": {"security": -2}, "loyalty": {"army": -2}, "ai": [0.0, -0.5, 0, 0.0]}
    ]
@@ -1096,8 +1096,8 @@
    "cooldown_months": 60,
    "when": [{"regime": ["hybrid", "authoritarian"]}, {"stat": "civil_liberties_index", "max": 40}],
    "options": [
-    {"id": "amnesty", "name": "Объявить амнистию", "text": "Освободить большинство осуждённых. Зарубежные партнёры оценят, а силовики — нет.", "months": 24, "effects": {"index.civil_liberties": 5, "legitimacy": 1.5, "protest_rate": -0.1}, "moods": {"professionals": 3}, "groups": {"intelligentsia": 6, "security": -6}, "loyalty": {"police": -1}, "popularity": 1, "relations": {"with": "powers", "value": 3}, "ai": [0.1, 0.3, -0.1, 0.3]},
-    {"id": "partial", "name": "Освободить нескольких", "text": "Помиловать самых известных. Жест заметят, но проблему он не решит.", "months": 12, "effects": {"legitimacy": 0.5}, "groups": {"intelligentsia": 2, "security": -1}, "relations": {"with": "powers", "value": 1}, "ai": [0.0, 0.2, 0, 0.1], "default": true},
+    {"id": "amnesty", "name": "Объявить амнистию", "text": "Освободить большинство осуждённых. Зарубежные партнёры оценят, а силовики — нет.", "months": 24, "effects": {"index.civil_liberties": 5, "legitimacy": 1.5, "protest_rate": -0.1}, "moods": {"professionals": 3}, "groups": {"intelligentsia": 2.0, "security": -6}, "loyalty": {"police": -1}, "popularity": 1, "relations": {"with": "powers", "value": 3}, "ai": [0.1, 0.3, -0.1, 0.3]},
+    {"id": "partial", "name": "Освободить нескольких", "text": "Помиловать самых известных. Жест заметят, но проблему он не решит.", "months": 12, "effects": {"legitimacy": 0.5}, "groups": {"intelligentsia": 1.0, "security": -1}, "relations": {"with": "powers", "value": 1}, "ai": [0.0, 0.2, 0, 0.1], "default": true},
     {"id": "refuse", "name": "Отказать", "text": "Закон есть закон. Недовольство останется, а за границей отношения не потеплеют.", "months": 12, "effects": {"protest_rate": 0.1, "radicalism": 0.4}, "moods": {"professionals": -2}, "groups": {"intelligentsia": -3, "security": 2}, "relations": {"with": "powers", "value": -2}, "ai": [0.0, -0.2, 0.2, -0.1]}
    ]
   },
@@ -1111,8 +1111,8 @@
    "cooldown_months": 60,
    "when": [{"group": "unions", "max": 45}, {"class": "skilled", "what": "satisfaction", "max": 50}, {"law": "unions", "in": ["restricted", "free", "collective"]}],
    "options": [
-    {"id": "negotiate", "name": "Сесть за стол переговоров", "text": "Профсоюзы получат прибавку и гарантии, бизнес — счёт. Забастовка кончится быстро.", "months": 24, "effects": {"unskilled_wage": 0.05, "potential_growth": -0.1}, "moods": {"skilled": 4, "unskilled": 3}, "groups": {"unions": 8, "industrialists": -5}, "popularity": 1, "ai": [0.0, 0.7, 0, 0.5], "default": true},
-    {"id": "arbitrate", "name": "Передать спор арбитру", "text": "Решит суд: ни вашим, ни нашим. Забастовка продлится ещё несколько недель.", "months": 9, "effects": {"potential_growth": -0.3}, "moods": {"skilled": 1}, "groups": {"unions": 1}, "ai": [0.1, 0.3, 0, 0.1]},
+    {"id": "negotiate", "name": "Сесть за стол переговоров", "text": "Профсоюзы получат прибавку и гарантии, бизнес — счёт. Забастовка кончится быстро.", "months": 24, "effects": {"unskilled_wage": 0.05, "potential_growth": -0.1}, "moods": {"skilled": 4, "unskilled": 3}, "groups": {"unions": 5.0, "industrialists": -5}, "popularity": 1, "ai": [0.0, 0.7, 0, 0.5], "default": true},
+    {"id": "arbitrate", "name": "Передать спор арбитру", "text": "Решит суд: ни вашим, ни нашим. Забастовка продлится ещё несколько недель.", "months": 9, "effects": {"potential_growth": -0.3}, "moods": {"skilled": 1}, "groups": {"unions": 0.5}, "ai": [0.1, 0.3, 0, 0.1]},
     {"id": "ban", "name": "Объявить забастовку незаконной", "text": "Полиция и штрафы. Заводы заработают, а рабочие этого не забудут.", "months": 24, "effects": {"radicalism": 1.5, "protest_escalation": 0.1, "index.civil_liberties": -3, "legitimacy": -2}, "moods": {"skilled": -5, "unskilled": -3}, "groups": {"unions": -10, "industrialists": 4, "security": 2}, "loyalty": {"police": -1}, "popularity": -4, "ai": [0.2, -0.5, 0.2, -0.5]}
    ]
   },
@@ -1126,7 +1126,7 @@
    "cooldown_months": 48,
    "when": [{"funding": "education", "max": 0.93}],
    "options": [
-    {"id": "raise", "name": "Поднять зарплаты", "text": "Бюджет добавит денег школам. Учителя вернутся, а качество образования выиграет.", "cost": 0.25, "months": 36, "effects": {"spending.education": 0.15}, "moods": {"professionals": 3, "clerks": 1}, "groups": {"unions": 3, "intelligentsia": 4}, "popularity": 2, "ai": [0.2, 0.8, 0, 0.7]},
+    {"id": "raise", "name": "Поднять зарплаты", "text": "Бюджет добавит денег школам. Учителя вернутся, а качество образования выиграет.", "cost": 0.12, "months": 36, "effects": {"spending.education": 0.15}, "moods": {"professionals": 3, "clerks": 1}, "groups": {"unions": 2.0, "intelligentsia": 1.5}, "popularity": 2, "ai": [0.2, 0.8, 0, 0.7]},
     {"id": "partial", "name": "Обещать прибавку со следующего года", "text": "Забастовка закончится, а обещания — как получится.", "months": 12, "effects": {"legitimacy": -0.5}, "moods": {"professionals": -1}, "groups": {"unions": -1}, "ai": [0.0, 0.3, 0, 0.1], "default": true},
     {"id": "fire", "name": "Уволить зачинщиков", "text": "Учителя вернутся в классы, но самые активные — нет. Родителям это не понравится.", "months": 24, "effects": {"index.civil_liberties": -2, "radicalism": 0.8, "legitimacy": -1.5}, "moods": {"professionals": -4, "clerks": -2}, "groups": {"unions": -6, "intelligentsia": -5}, "popularity": -3, "ai": [0.0, -0.4, 0.1, -0.4]}
    ]
@@ -1141,7 +1141,7 @@
    "cooldown_months": 48,
    "when": [{"class": "farmers", "what": "satisfaction", "max": 46}],
    "options": [
-    {"id": "support", "name": "Поднять закупочные цены", "text": "Государство покупает зерно и мясо дороже рынка. Фермеры уедут домой, горожане заплатят за еду больше.", "cost": 0.2, "months": 24, "effects": {"spending.agriculture": 0.15, "food_inflation": 0.1}, "moods": {"farmers": 5, "unskilled": -1}, "groups": {"agrarians": 8}, "popularity": 1, "ai": [0.0, 0.7, 0, 0.6]},
+    {"id": "support", "name": "Поднять закупочные цены", "text": "Государство покупает зерно и мясо дороже рынка. Фермеры уедут домой, горожане заплатят за еду больше.", "cost": 0.1, "months": 24, "effects": {"spending.agriculture": 0.15, "food_inflation": 0.1}, "moods": {"farmers": 5, "unskilled": -1}, "groups": {"agrarians": 8}, "popularity": 1, "ai": [0.0, 0.7, 0, 0.6]},
     {"id": "talks", "name": "Пообещать пересмотреть налоги", "text": "Фермеры получат отсрочки и налоговые каникулы. Дорог не перекроют, но и денег будет меньше.", "months": 18, "effects": {"revenue.other": -0.02}, "moods": {"farmers": 2}, "groups": {"agrarians": 3}, "ai": [0.1, 0.4, 0, 0.2], "default": true},
     {"id": "clear", "name": "Разогнать блокаду", "text": "Полиция расчистит трассы. Еда дойдёт до магазинов, но село запомнит.", "months": 24, "effects": {"radicalism": 0.8, "protest_rate": 0.1, "legitimacy": -1.5}, "moods": {"farmers": -6}, "groups": {"agrarians": -8, "security": 2}, "loyalty": {"police": -1}, "popularity": -3, "ai": [0.1, -0.3, 0.1, -0.3]}
    ]
@@ -1157,8 +1157,8 @@
    "when": [{"group": "religious", "max": 35}],
    "options": [
     {"id": "concede", "name": "Принять требования", "text": "Традиционные ценности войдут в школьные программы. Религиозные люди довольны, остальные — нет.", "months": 36, "effects": {"index.civil_liberties": -3, "protest_rate": 0.1}, "moods": {"professionals": -3, "clerks": -1, "pensioners": 2}, "groups": {"religious": 10, "intelligentsia": -6}, "popularity": 1, "ai": [0.0, 0.1, 0, 0.3]},
-    {"id": "dialogue", "name": "Диалог с лидерами разных общин", "text": "Совет общин обсудит каждое предложение. Не всё будет принято, но конфликт остынет.", "months": 24, "effects": {"legitimacy": 0.5}, "groups": {"religious": 3, "intelligentsia": 1}, "popularity": 0, "ai": [0.1, 0.6, 0, 0.3], "default": true},
-    {"id": "refuse", "name": "Отказать — государство светское", "text": "Школа остаётся светской. Верующие обидятся, а либералы будут довольны.", "months": 24, "effects": {"radicalism": 0.5, "protest_rate": 0.1}, "moods": {"professionals": 2, "pensioners": -2}, "groups": {"religious": -8, "intelligentsia": 4}, "popularity": -1, "ai": [0.1, -0.2, 0, -0.1]}
+    {"id": "dialogue", "name": "Диалог с лидерами разных общин", "text": "Совет общин обсудит каждое предложение. Не всё будет принято, но конфликт остынет.", "months": 24, "effects": {"legitimacy": 0.5}, "groups": {"religious": 3, "intelligentsia": 0.5}, "popularity": 0, "ai": [0.1, 0.6, 0, 0.3], "default": true},
+    {"id": "refuse", "name": "Отказать — государство светское", "text": "Школа остаётся светской. Верующие обидятся, а либералы будут довольны.", "months": 24, "effects": {"radicalism": 0.5, "protest_rate": 0.1}, "moods": {"professionals": 2, "pensioners": -2}, "groups": {"religious": -8, "intelligentsia": 1.5}, "popularity": -1, "ai": [0.1, -0.2, 0, -0.1]}
    ]
   },
   {
@@ -1171,7 +1171,7 @@
    "cooldown_months": 48,
    "when": [{"stat": "housing_shortage_pct", "min": 12}, {"stat": "median_age", "max": 40}],
    "options": [
-    {"id": "build", "name": "Построить доступное жильё", "text": "Государство строит и сдаёт по низкой цене. Дорого, но через несколько лет очередь станет короче.", "cost": 0.4, "months": 48, "effects": {"housing_build": 0.15, "fertility": 0.02}, "moods": {"unskilled": 2, "clerks": 2, "professionals": 2}, "groups": {"industrialists": 3}, "popularity": 2, "ai": [0.3, 0.7, 0, 0.7]},
+    {"id": "build", "name": "Построить доступное жильё", "text": "Государство строит и сдаёт по низкой цене. Дорого, но через несколько лет очередь станет короче.", "cost": 0.2, "months": 48, "effects": {"housing_build": 0.15, "fertility": 0.02}, "moods": {"unskilled": 2, "clerks": 2, "professionals": 2}, "groups": {"industrialists": 3}, "popularity": 2, "ai": [0.3, 0.7, 0, 0.7]},
     {"id": "rent", "name": "Ограничить плату за аренду", "text": "Хозяева не смогут поднимать цену. Нынешние жильцы выиграют, а новых квартир станет меньше.", "months": 36, "effects": {"housing_price": -0.1, "housing_build": -0.07}, "moods": {"clerks": 2, "unskilled": 1, "capitalists": -3}, "groups": {"industrialists": -3, "financiers": -2}, "popularity": 1, "ai": [-0.2, 0.3, 0, 0.5], "default": true},
     {"id": "police", "name": "Разобрать лагерь", "text": "Палатки убрать, а о жилье пообещать подумать. Улица затихнет, а проблема останется.", "months": 18, "effects": {"radicalism": 0.8, "protest_rate": 0.1, "legitimacy": -1}, "moods": {"clerks": -3, "unskilled": -2, "professionals": -2}, "groups": {"security": 1}, "popularity": -3, "ai": [0.0, -0.3, 0.1, -0.4]}
    ]
@@ -1186,8 +1186,8 @@
    "cooldown_months": 48,
    "when": [{"stat": "pollution_index", "min": 55}, {"stat": "press_freedom_index", "min": 35}],
    "options": [
-    {"id": "norms", "name": "Ввести жёсткие нормы выбросов", "text": "Заводам придётся ставить фильтры или закрыться. Воздух станет чище, а производство дороже.", "months": 36, "effects": {"pollution": -0.15, "potential_growth": -0.15}, "moods": {"professionals": 3, "clerks": 1}, "groups": {"intelligentsia": 5, "industrialists": -6}, "popularity": 2, "ai": [-0.2, 0.5, 0, 0.5]},
-    {"id": "tax", "name": "Ввести налог на выбросы", "text": "Платить за загрязнение придётся всем, а деньги пойдут на очистку. Мягче, чем запрет.", "months": 36, "effects": {"pollution": -0.08, "revenue.other": 0.04, "potential_growth": -0.05}, "moods": {"professionals": 1}, "groups": {"industrialists": -3, "intelligentsia": 2}, "ai": [0.1, 0.4, 0, 0.2], "default": true},
+    {"id": "norms", "name": "Ввести жёсткие нормы выбросов", "text": "Заводам придётся ставить фильтры или закрыться. Воздух станет чище, а производство дороже.", "months": 36, "effects": {"pollution": -0.15, "potential_growth": -0.15}, "moods": {"professionals": 3, "clerks": 1}, "groups": {"intelligentsia": 2.0, "industrialists": -6}, "popularity": 2, "ai": [-0.2, 0.5, 0, 0.5]},
+    {"id": "tax", "name": "Ввести налог на выбросы", "text": "Платить за загрязнение придётся всем, а деньги пойдут на очистку. Мягче, чем запрет.", "months": 36, "effects": {"pollution": -0.08, "revenue.other": 0.04, "potential_growth": -0.05}, "moods": {"professionals": 1}, "groups": {"industrialists": -3, "intelligentsia": 1.0}, "ai": [0.1, 0.4, 0, 0.2], "default": true},
     {"id": "wait", "name": "Отложить: сначала экономика", "text": "Заводы продолжат работать, а митинги — продолжатся.", "months": 24, "effects": {"protest_rate": 0.15, "radicalism": 0.5, "legitimacy": -1}, "moods": {"professionals": -3, "clerks": -2}, "groups": {"industrialists": 3, "intelligentsia": -4}, "popularity": -2, "ai": [0.2, -0.4, 0.1, -0.3]}
    ]
   },
@@ -1201,8 +1201,8 @@
    "cooldown_months": 60,
    "when": [{"regime": ["democracy", "hybrid"]}, {"stat": "corruption_index", "min": 50}, {"stat": "press_freedom_index", "min": 40}],
    "options": [
-    {"id": "investigate", "name": "Передать дело следователям", "text": "Назначить независимую проверку. Доверие вырастет, если виновных накажут, а союзники по парламенту занервничают.", "months": 24, "effects": {"index.corruption": -2, "legitimacy": 1.5}, "moods": {"professionals": 2}, "groups": {"intelligentsia": 4, "financiers": -2}, "popularity": 1, "ai": [0.1, 0.4, 0, 0.2]},
-    {"id": "reform", "name": "Принять закон о прозрачности", "text": "Деньги на выборах и в парламенте станут видны. Громкий ответ, который многим депутатам не понравится.", "months": 36, "effects": {"index.corruption": -3, "legitimacy": 1}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 3, "industrialists": -2}, "ai": [0.1, 0.5, 0, 0.2], "default": true},
+    {"id": "investigate", "name": "Передать дело следователям", "text": "Назначить независимую проверку. Доверие вырастет, если виновных накажут, а союзники по парламенту занервничают.", "months": 24, "effects": {"index.corruption": -2, "legitimacy": 1.5}, "moods": {"professionals": 2}, "groups": {"intelligentsia": 1.5, "financiers": -2}, "popularity": 1, "ai": [0.1, 0.4, 0, 0.2]},
+    {"id": "reform", "name": "Принять закон о прозрачности", "text": "Деньги на выборах и в парламенте станут видны. Громкий ответ, который многим депутатам не понравится.", "months": 36, "effects": {"index.corruption": -3, "legitimacy": 1}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 1.0, "industrialists": -2}, "ai": [0.1, 0.5, 0, 0.2], "default": true},
     {"id": "deny", "name": "Назвать запись монтажом", "text": "Заявить, что это провокация. Часть людей поверит, но вопросов станет больше.", "months": 24, "effects": {"legitimacy": -2.5, "index.press_freedom": -1}, "moods": {"professionals": -3, "clerks": -1}, "groups": {"intelligentsia": -5}, "popularity": -3, "ai": [0.0, -0.4, 0, -0.4]}
    ]
   },
@@ -1216,7 +1216,7 @@
    "cooldown_months": 72,
    "when": [{"stat": "corruption_index", "min": 55}, {"stat": "press_freedom_index", "min": 40}],
    "options": [
-    {"id": "divest", "name": "Родственникам — выйти из бизнеса", "text": "Их компании продадут или переведут в траст. Репутация пострадает меньше, а родные обидятся.", "months": 24, "effects": {"legitimacy": 1, "index.corruption": -1}, "moods": {"professionals": 1}, "groups": {"intelligentsia": 3, "financiers": -2}, "popularity": -1, "ai": [0.0, 0.4, 0, 0.2]},
+    {"id": "divest", "name": "Родственникам — выйти из бизнеса", "text": "Их компании продадут или переведут в траст. Репутация пострадает меньше, а родные обидятся.", "months": 24, "effects": {"legitimacy": 1, "index.corruption": -1}, "moods": {"professionals": 1}, "groups": {"intelligentsia": 1.0, "financiers": -2}, "popularity": -1, "ai": [0.0, 0.4, 0, 0.2]},
     {"id": "ignore", "name": "Ничего не комментировать", "text": "Новость уйдёт сама. Если нет — повод для нового скандала.", "months": 12, "effects": {"legitimacy": -1}, "moods": {"professionals": -1}, "groups": {"intelligentsia": -2}, "popularity": -1, "ai": [0.0, -0.1, 0, -0.2], "default": true},
     {"id": "attack", "name": "Обвинить журналистов", "text": "Судебные иски и проверки издания. Публикации станут реже, а недовольства больше.", "months": 24, "effects": {"index.press_freedom": -4, "legitimacy": -2.5, "index.corruption": 1}, "moods": {"professionals": -3, "clerks": -2}, "groups": {"intelligentsia": -7, "security": 1}, "popularity": -3, "ai": [0.0, -0.5, 0.1, -0.3]}
    ]
@@ -1231,7 +1231,7 @@
    "cooldown_months": 48,
    "when": [{"world": "oil_price", "min": 1.35}, {"stat": "oil_rents_pct_gdp", "max": 2}],
    "options": [
-    {"id": "subsidy", "name": "Дотировать топливо", "text": "Государство платит часть цены. Протест закончится, а бюджет сократится.", "cost": 0.35, "months": 12, "moods": {"unskilled": 2, "small_business": 2}, "groups": {"industrialists": 2, "resource_lobby": 2}, "popularity": 2, "ai": [0.1, 0.6, 0, 0.6]},
+    {"id": "subsidy", "name": "Дотировать топливо", "text": "Государство платит часть цены. Протест закончится, а бюджет сократится.", "cost": 0.17, "months": 12, "moods": {"unskilled": 2, "small_business": 2}, "groups": {"industrialists": 2, "resource_lobby": 2}, "popularity": 2, "ai": [0.1, 0.6, 0, 0.6]},
     {"id": "wait", "name": "Переждать", "text": "Оставить рыночные цены и обещать разобраться. Блокада закончится сама, но не раньше, чем потеряют деньги все.", "months": 6, "effects": {"potential_growth": -0.2, "food_inflation": 0.08}, "moods": {"small_business": -2, "unskilled": -1}, "popularity": -1, "ai": [-0.1, 0.1, 0, -0.2], "default": true},
     {"id": "clear", "name": "Расчистить дороги силой", "text": "Полиция разгонит заторы. Дороги откроются, а водители не простят.", "months": 12, "effects": {"radicalism": 0.6, "protest_rate": 0.1}, "moods": {"small_business": -3, "unskilled": -2}, "loyalty": {"police": -1}, "popularity": -3, "ai": [0.1, -0.3, 0.1, -0.3]}
    ]
@@ -1248,7 +1248,7 @@
    "options": [
     {"id": "approve", "name": "Одобрить слияние", "text": "Компания станет сильнее и дешевле, но у покупателей выбора не останется.", "months": 36, "effects": {"potential_growth": 0.1, "capitalist_take": 0.03, "small_business": -1}, "moods": {"capitalists": 3, "small_business": -3}, "groups": {"industrialists": 5, "financiers": 3, "unions": -3}, "ai": [0.4, -0.1, 0.3, 0.1]},
     {"id": "conditions", "name": "Одобрить с условиями", "text": "Продать часть активов и не поднимать цены три года. Эффективность меньше, защиты больше.", "months": 36, "effects": {"potential_growth": 0.05, "capitalist_take": 0.01}, "moods": {"capitalists": 1, "small_business": -1}, "groups": {"industrialists": 1}, "ai": [0.2, 0.4, 0, 0.3], "default": true},
-    {"id": "block", "name": "Запретить", "text": "Рынок сохранит конкуренцию. Инвесторы осудят, а покупатели вздохнут с облегчением.", "months": 24, "effects": {"potential_growth": -0.05, "capitalist_take": -0.02, "small_business": 1}, "moods": {"small_business": 3, "capitalists": -2}, "groups": {"industrialists": -5, "financiers": -3, "unions": 2}, "popularity": 1, "ai": [-0.1, 0.3, -0.1, 0.4]}
+    {"id": "block", "name": "Запретить", "text": "Рынок сохранит конкуренцию. Инвесторы осудят, а покупатели вздохнут с облегчением.", "months": 24, "effects": {"potential_growth": -0.05, "capitalist_take": -0.02, "small_business": 1}, "moods": {"small_business": 3, "capitalists": -2}, "groups": {"industrialists": -5, "financiers": -3, "unions": 1.0}, "popularity": 1, "ai": [-0.1, 0.3, -0.1, 0.4]}
    ]
   },
   {
@@ -1261,7 +1261,7 @@
    "cooldown_months": 60,
    "when": [{"stat": "infrastructure_index", "max": 100}, {"stat": "exports_pct_gdp", "min": 20}],
    "options": [
-    {"id": "expand", "name": "Расширить порты за счёт бюджета", "text": "Новые причалы и склады. Узкое место исчезнет, а бюджет потратит деньги.", "cost": 0.6, "months": 36, "effects": {"infra_efficiency": 0.05, "potential_growth": 0.1}, "moods": {"skilled": 2}, "groups": {"industrialists": 4}, "ai": [0.5, 0.4, 0.2, 0.4]},
+    {"id": "expand", "name": "Расширить порты за счёт бюджета", "text": "Новые причалы и склады. Узкое место исчезнет, а бюджет потратит деньги.", "cost": 0.3, "months": 36, "effects": {"infra_efficiency": 0.05, "potential_growth": 0.1}, "moods": {"skilled": 2}, "groups": {"industrialists": 4}, "ai": [0.5, 0.4, 0.2, 0.4]},
     {"id": "concession", "name": "Отдать порты в концессию", "text": "Частная компания построит и будет управлять. Быстрее и дешевле, но с контролем придётся повозиться.", "months": 48, "effects": {"infra_efficiency": 0.03, "potential_growth": 0.06, "revenue.other": 0.02}, "groups": {"industrialists": 3, "financiers": 3, "unions": -3}, "ai": [0.4, 0.2, 0, 0.1], "default": true},
     {"id": "wait", "name": "Подождать: затор рассосётся", "text": "Ничего не делать. Суда простоят, а затор повторится.", "months": 12, "effects": {"potential_growth": -0.15}, "groups": {"industrialists": -3}, "ai": [-0.2, 0.0, 0, -0.1]}
    ]
@@ -1276,7 +1276,7 @@
    "cooldown_months": 72,
    "when": [{"stat": "gini", "min": 40}, {"law": "wealth_tax", "in": ["none"]}],
    "options": [
-    {"id": "levy", "name": "Ввести разовый налог", "text": "Богатые заплатят один раз. Бюджет получит деньги, но капитал может уйти.", "cost": -0.8, "months": 24, "effects": {"capitalist_take": -0.05, "spread": 0.2, "tax_progressivity": 0.2}, "moods": {"capitalists": -5, "pensioners": 1, "unskilled": 2}, "groups": {"financiers": -10, "industrialists": -6, "unions": 5}, "popularity": 2, "ai": [-0.2, 0.2, 0, 0.5]},
+    {"id": "levy", "name": "Ввести разовый налог", "text": "Богатые заплатят один раз. Бюджет получит деньги, но капитал может уйти.", "cost": -0.8, "months": 24, "effects": {"capitalist_take": -0.05, "spread": 0.2, "tax_progressivity": 0.2}, "moods": {"capitalists": -5, "pensioners": 1, "unskilled": 2}, "groups": {"financiers": -10, "industrialists": -6, "unions": 3.0}, "popularity": 2, "ai": [-0.2, 0.2, 0, 0.5]},
     {"id": "luxury", "name": "Налог на роскошь", "text": "Налог на яхты, виллы и дорогие машины. Деньги меньше, а недовольных тоже.", "cost": -0.2, "months": 24, "effects": {"revenue.excise": 0.05}, "moods": {"capitalists": -2}, "groups": {"financiers": -2}, "ai": [0.0, 0.3, 0, 0.3], "default": true},
     {"id": "refuse", "name": "Отказать", "text": "Налогов на богатство не будет. Бизнес спокоен, а профсоюзы нет.", "months": 24, "effects": {"protest_rate": 0.05}, "moods": {"capitalists": 2, "unskilled": -1, "pensioners": -1}, "groups": {"financiers": 3, "industrialists": 3, "unions": -5}, "popularity": -1, "ai": [0.2, -0.1, 0, -0.2]}
    ]
@@ -1291,7 +1291,7 @@
    "cooldown_months": 72,
    "when": [{"law": "pension_system", "in": ["mixed", "funded"]}, {"stat": "gdp_growth_pct", "max": 1}],
    "options": [
-    {"id": "compensate", "name": "Возместить потери из бюджета", "text": "Государство вернёт часть денег. Люди успокоятся, а долг вырастет.", "cost": 0.6, "months": 24, "moods": {"pensioners": 4, "clerks": 3, "professionals": 2}, "groups": {"financiers": -2}, "popularity": 2, "ai": [-0.1, 0.7, 0, 0.7]},
+    {"id": "compensate", "name": "Возместить потери из бюджета", "text": "Государство вернёт часть денег. Люди успокоятся, а долг вырастет.", "cost": 0.3, "months": 24, "moods": {"pensioners": 4, "clerks": 3, "professionals": 2}, "groups": {"financiers": -2}, "popularity": 2, "ai": [-0.1, 0.7, 0, 0.7]},
     {"id": "guarantee", "name": "Ввести минимальную гарантию", "text": "Обещать, что пенсия не упадёт ниже порога. Дешевле, но без возврата потерь.", "months": 36, "effects": {"pension_replacement": 0.03}, "moods": {"pensioners": 2, "clerks": 1}, "groups": {"financiers": -1}, "popularity": 0, "ai": [0.0, 0.5, 0, 0.3], "default": true},
     {"id": "market", "name": "Объяснить, что рынки вернутся", "text": "Попросить подождать. Если рынки восстановятся — правы вы, если нет — виноваты вы.", "months": 12, "effects": {"protest_rate": 0.1, "legitimacy": -1.5}, "moods": {"pensioners": -4, "clerks": -3, "professionals": -2}, "groups": {"financiers": 2}, "popularity": -3, "ai": [0.1, -0.3, 0, -0.4]}
    ]
@@ -1306,9 +1306,9 @@
    "cooldown_months": 60,
    "when": [{"partner": {"neighbor": true, "relations_max": 10}}, {"stat": "power_gas_pct", "min": 20}, {"stat": "energy_import_dependence_pct", "min": 30}],
    "options": [
-    {"id": "reserves", "name": "Закупить резервы по любой цене", "text": "Заполнить хранилища заранее. Зима пройдёт спокойно, а бюджет заплатит.", "cost": 0.5, "months": 12, "effects": {"power_demand": -0.02}, "moods": {"unskilled": 1, "pensioners": 1}, "popularity": 1, "ai": [0.2, 0.7, 0, 0.5]},
+    {"id": "reserves", "name": "Закупить резервы по любой цене", "text": "Заполнить хранилища заранее. Зима пройдёт спокойно, а бюджет заплатит.", "cost": 0.25, "months": 12, "effects": {"power_demand": -0.02}, "moods": {"unskilled": 1, "pensioners": 1}, "popularity": 1, "ai": [0.2, 0.7, 0, 0.5]},
     {"id": "concede", "name": "Согласиться на цены партнёра", "text": "Цена вырастет, зато поставки не прервутся. Отношения потеплеют, но страна ещё сильнее привязана.", "months": 36, "effects": {"fuel_cost": 0.1}, "groups": {"resource_lobby": -2, "security": -3}, "relations": {"with": "partner", "value": 6}, "ai": [0.1, 0.4, -0.3, 0.1], "default": true},
-    {"id": "alternatives", "name": "Искать других поставщиков и сберегать", "text": "Сжиженный газ, ветер и солнце, программы экономии. Дороже и медленнее, но зависимость уменьшится.", "cost": 0.3, "months": 36, "effects": {"power_renewables": 0.1, "power_demand": -0.04, "fuel_cost": 0.05}, "groups": {"security": 3, "intelligentsia": 2}, "relations": {"with": "partner", "value": -5}, "ai": [0.2, 0.3, 0.3, 0.2]}
+    {"id": "alternatives", "name": "Искать других поставщиков и сберегать", "text": "Сжиженный газ, ветер и солнце, программы экономии. Дороже и медленнее, но зависимость уменьшится.", "cost": 0.15, "months": 36, "effects": {"power_renewables": 0.1, "power_demand": -0.04, "fuel_cost": 0.05}, "groups": {"security": 3, "intelligentsia": 1.0}, "relations": {"with": "partner", "value": -5}, "ai": [0.2, 0.3, 0.3, 0.2]}
    ]
   },
   {
@@ -1322,7 +1322,7 @@
    "when": [{"partner": {"neighbor": true, "relations_max": 25}}, {"hazard": "drought"}],
    "options": [
     {"id": "talks", "name": "Предложить договор о делёже воды", "text": "Квоты и совместный контроль. Дольше всего, но надёжнее.", "months": 36, "effects": {"potential_growth": -0.05}, "groups": {"agrarians": 2}, "relations": {"with": "partner", "value": 5}, "ai": [0.2, 0.7, -0.1, 0.3], "default": true},
-    {"id": "dam", "name": "Построить свою плотину", "text": "Вода останется у вас, а у соседей станет меньше. Отношения ухудшатся.", "cost": 0.5, "months": 48, "effects": {"potential_growth": 0.05}, "moods": {"farmers": 3}, "groups": {"agrarians": 5}, "relations": {"with": "partner", "value": -7}, "ai": [0.2, 0.0, 0.3, 0.3]},
+    {"id": "dam", "name": "Построить свою плотину", "text": "Вода останется у вас, а у соседей станет меньше. Отношения ухудшатся.", "cost": 0.25, "months": 48, "effects": {"potential_growth": 0.05}, "moods": {"farmers": 3}, "groups": {"agrarians": 5}, "relations": {"with": "partner", "value": -7}, "ai": [0.2, 0.0, 0.3, 0.3]},
     {"id": "appeal", "name": "Обратиться в международный суд", "text": "Решение придёт через годы. Зато без выстрелов и без обид.", "months": 36, "effects": {"potential_growth": -0.1}, "moods": {"farmers": -1}, "relations": {"with": "partner", "value": -2}, "ai": [0.0, 0.3, 0.1, 0.1]}
    ]
   },
@@ -1336,9 +1336,9 @@
    "cooldown_months": 72,
    "when": [{"partner": {"war": true, "relations_min": 0}}, {"war": false}],
    "options": [
-    {"id": "mediate", "name": "Взять на себя посредничество", "text": "Организовать переговоры и принять делегации. Если выйдет — слава, если нет — упрёки.", "cost": 0.1, "months": 18, "effects": {"legitimacy": 0.5}, "groups": {"intelligentsia": 3}, "popularity": 2, "relations": {"with": "partner", "value": 4}, "ai": [0.1, 0.4, 0.2, 0.4]},
+    {"id": "mediate", "name": "Взять на себя посредничество", "text": "Организовать переговоры и принять делегации. Если выйдет — слава, если нет — упрёки.", "cost": 0.05, "months": 18, "effects": {"legitimacy": 0.5}, "groups": {"intelligentsia": 1.0}, "popularity": 2, "relations": {"with": "partner", "value": 4}, "ai": [0.1, 0.4, 0.2, 0.4]},
     {"id": "decline", "name": "Остаться в стороне", "text": "Это не наша война. Партнёр обидится, но риска не будет.", "months": 12, "relations": {"with": "partner", "value": -2}, "ai": [0.1, 0.3, -0.1, 0.0], "default": true},
-    {"id": "support", "name": "Открыто поддержать партнёра", "text": "Слова и гуманитарная помощь. Одна сторона довольна, другая — нет.", "cost": 0.15, "months": 18, "effects": {"radicalism": 0.2}, "groups": {"security": 2}, "popularity": -1, "relations": {"with": "partner", "value": 6}, "ai": [0.0, -0.2, 0.2, 0.0]}
+    {"id": "support", "name": "Открыто поддержать партнёра", "text": "Слова и гуманитарная помощь. Одна сторона довольна, другая — нет.", "cost": 0.07, "months": 18, "effects": {"radicalism": 0.2}, "groups": {"security": 2}, "popularity": -1, "relations": {"with": "partner", "value": 6}, "ai": [0.0, -0.2, 0.2, 0.0]}
    ]
   },
   {
@@ -1366,9 +1366,9 @@
    "cooldown_months": 48,
    "when": [{"stat": "pollution_index", "min": 65}],
    "options": [
-    {"id": "stop", "name": "Остановить заводы и ограничить машины", "text": "Воздух очистится через несколько дней. Производство потеряет деньги, горожане получат вдох.", "months": 6, "effects": {"potential_growth": -0.3, "pollution": -0.1}, "moods": {"professionals": 2, "clerks": 2}, "groups": {"industrialists": -5, "intelligentsia": 3}, "popularity": 2, "ai": [-0.2, 0.6, 0, 0.5]},
-    {"id": "masks", "name": "Раздать маски и рекомендации", "text": "Власть призовёт сидеть дома и раздаст маски. Дёшево и быстро, но заводы продолжат работать.", "cost": 0.05, "months": 6, "effects": {"disease_burden": 0.05}, "moods": {"clerks": -1, "professionals": -1}, "popularity": -1, "ai": [0.1, 0.1, 0, 0.1], "default": true},
-    {"id": "program", "name": "Начать долгую программу очистки", "text": "Новые фильтры, пересадка машин и озеленение. Дорого и надолго, но смога станет меньше.", "cost": 0.5, "months": 48, "effects": {"pollution": -0.2, "potential_growth": -0.05}, "moods": {"professionals": 3, "clerks": 2}, "groups": {"intelligentsia": 5, "industrialists": -3}, "popularity": 1, "ai": [0.1, 0.7, 0, 0.4]}
+    {"id": "stop", "name": "Остановить заводы и ограничить машины", "text": "Воздух очистится через несколько дней. Производство потеряет деньги, горожане получат вдох.", "months": 6, "effects": {"potential_growth": -0.3, "pollution": -0.1}, "moods": {"professionals": 2, "clerks": 2}, "groups": {"industrialists": -5, "intelligentsia": 1.0}, "popularity": 2, "ai": [-0.2, 0.6, 0, 0.5]},
+    {"id": "masks", "name": "Раздать маски и рекомендации", "text": "Власть призовёт сидеть дома и раздаст маски. Дёшево и быстро, но заводы продолжат работать.", "cost": 0.03, "months": 6, "effects": {"disease_burden": 0.05}, "moods": {"clerks": -1, "professionals": -1}, "popularity": -1, "ai": [0.1, 0.1, 0, 0.1], "default": true},
+    {"id": "program", "name": "Начать долгую программу очистки", "text": "Новые фильтры, пересадка машин и озеленение. Дорого и надолго, но смога станет меньше.", "cost": 0.25, "months": 48, "effects": {"pollution": -0.2, "potential_growth": -0.05}, "moods": {"professionals": 3, "clerks": 2}, "groups": {"intelligentsia": 2.0, "industrialists": -3}, "popularity": 1, "ai": [0.1, 0.7, 0, 0.4]}
    ]
   },
   {
@@ -1381,8 +1381,8 @@
    "cooldown_months": 72,
    "when": [{"stat": "industry_pct_gdp", "min": 25}, {"law": "environmental_standards", "in": ["weak", "medium"]}],
    "options": [
-    {"id": "inspect", "name": "Проверить все опасные заводы", "text": "Инспекторы закроют те, где нарушены правила. Часть производства остановится, зато безопасность вырастет.", "months": 30, "effects": {"potential_growth": -0.15, "pollution": -0.06, "index.rule_of_law": 1}, "moods": {"skilled": 1, "professionals": 2}, "groups": {"industrialists": -5, "intelligentsia": 3}, "popularity": 2, "ai": [-0.2, 0.8, 0, 0.4]},
-    {"id": "compensate", "name": "Возместить ущерб и наказать владельца", "text": "Деньги пострадавшим и суд над руководством. Решит проблему завода, но не отрасли.", "cost": 0.3, "months": 18, "effects": {"legitimacy": 0.5}, "moods": {"unskilled": 1, "skilled": 1}, "groups": {"industrialists": -2}, "popularity": 1, "ai": [0.1, 0.5, 0, 0.5], "default": true},
+    {"id": "inspect", "name": "Проверить все опасные заводы", "text": "Инспекторы закроют те, где нарушены правила. Часть производства остановится, зато безопасность вырастет.", "months": 30, "effects": {"potential_growth": -0.15, "pollution": -0.06, "index.rule_of_law": 1}, "moods": {"skilled": 1, "professionals": 2}, "groups": {"industrialists": -5, "intelligentsia": 1.0}, "popularity": 2, "ai": [-0.2, 0.8, 0, 0.4]},
+    {"id": "compensate", "name": "Возместить ущерб и наказать владельца", "text": "Деньги пострадавшим и суд над руководством. Решит проблему завода, но не отрасли.", "cost": 0.15, "months": 18, "effects": {"legitimacy": 0.5}, "moods": {"unskilled": 1, "skilled": 1}, "groups": {"industrialists": -2}, "popularity": 1, "ai": [0.1, 0.5, 0, 0.5], "default": true},
     {"id": "hush", "name": "Свалить на стихию", "text": "Объявить, что это несчастный случай, и закрыть дело. Люди заметят.", "months": 24, "effects": {"legitimacy": -2.5, "pollution": 0.08, "index.rule_of_law": -1}, "moods": {"unskilled": -3, "professionals": -2}, "groups": {"industrialists": 3, "intelligentsia": -4}, "popularity": -3, "ai": [0.1, -0.4, 0, -0.3]}
    ]
   },
@@ -1396,8 +1396,8 @@
    "cooldown_months": 72,
    "when": [{"stat": "infrastructure_condition_pct", "max": 72}],
    "options": [
-    {"id": "audit", "name": "Проверить и отремонтировать все мосты", "text": "Инженеры обойдут каждый мост страны. Дорого, но следующая катастрофа станет менее вероятной.", "cost": 0.6, "months": 36, "effects": {"spending.transport": 0.15, "infra_efficiency": 0.05}, "moods": {"skilled": 2, "professionals": 2}, "popularity": 2, "ai": [0.3, 0.8, 0, 0.6]},
-    {"id": "compensate", "name": "Выплатить семьям и починить этот мост", "text": "Помощь пострадавшим и новая переправа. Остальные мосты останутся прежними.", "cost": 0.2, "months": 12, "moods": {"unskilled": 1}, "popularity": 0, "ai": [0.1, 0.4, 0, 0.3], "default": true},
+    {"id": "audit", "name": "Проверить и отремонтировать все мосты", "text": "Инженеры обойдут каждый мост страны. Дорого, но следующая катастрофа станет менее вероятной.", "cost": 0.3, "months": 36, "effects": {"spending.transport": 0.15, "infra_efficiency": 0.05}, "moods": {"skilled": 2, "professionals": 2}, "popularity": 2, "ai": [0.3, 0.8, 0, 0.6]},
+    {"id": "compensate", "name": "Выплатить семьям и починить этот мост", "text": "Помощь пострадавшим и новая переправа. Остальные мосты останутся прежними.", "cost": 0.1, "months": 12, "moods": {"unskilled": 1}, "popularity": 0, "ai": [0.1, 0.4, 0, 0.3], "default": true},
     {"id": "blame", "name": "Найти виновных среди подрядчиков", "text": "Арестовать директора и показать на суде. Люди увидят виновных, но не мосты.", "months": 12, "effects": {"index.rule_of_law": -1, "legitimacy": -0.5}, "groups": {"industrialists": -3}, "popularity": 1, "ai": [0.0, 0.1, 0, 0.2]}
    ]
   },
@@ -1412,8 +1412,8 @@
    "when": [{"tech": "gm_crops"}],
    "options": [
     {"id": "allow", "name": "Разрешить выращивание", "text": "Урожаи вырастут, еда подешевеет. Экологи выйдут на улицы, а часть импортёров откажется от покупок.", "months": 48, "effects": {"food_inflation": -0.1, "potential_growth": 0.06}, "moods": {"farmers": 2, "professionals": -1}, "groups": {"agrarians": 3, "intelligentsia": -3}, "ai": [0.4, 0.0, 0.1, 0.2]},
-    {"id": "label", "name": "Разрешить с маркировкой и ограничениями", "text": "Каждая упаковка скажет правду, а поля — под контролем. Выгода меньше, споров тоже.", "months": 48, "effects": {"food_inflation": -0.04}, "moods": {"farmers": 1}, "groups": {"agrarians": 1, "intelligentsia": 1}, "ai": [0.2, 0.4, 0, 0.3], "default": true},
-    {"id": "ban", "name": "Запретить", "text": "Страна останется «чистой». Урожай и экспорт вырастут медленнее, зато экологи будут довольны.", "months": 48, "effects": {"food_inflation": 0.05}, "moods": {"farmers": -1, "professionals": 1}, "groups": {"agrarians": -3, "intelligentsia": 3}, "ai": [-0.2, 0.2, 0, 0.2]}
+    {"id": "label", "name": "Разрешить с маркировкой и ограничениями", "text": "Каждая упаковка скажет правду, а поля — под контролем. Выгода меньше, споров тоже.", "months": 48, "effects": {"food_inflation": -0.04}, "moods": {"farmers": 1}, "groups": {"agrarians": 1, "intelligentsia": 0.5}, "ai": [0.2, 0.4, 0, 0.3], "default": true},
+    {"id": "ban", "name": "Запретить", "text": "Страна останется «чистой». Урожай и экспорт вырастут медленнее, зато экологи будут довольны.", "months": 48, "effects": {"food_inflation": 0.05}, "moods": {"farmers": -1, "professionals": 1}, "groups": {"agrarians": -3, "intelligentsia": 1.0}, "ai": [-0.2, 0.2, 0, 0.2]}
    ]
   },
   {
@@ -1426,9 +1426,459 @@
    "cooldown_months": 60,
    "when": [{"tech": "e_services"}],
    "options": [
-    {"id": "security", "name": "Вложиться в защиту и аудит", "text": "Независимые проверки и новая инфраструктура. Дорого, но следующая утечка станет менее вероятной.", "cost": 0.3, "months": 36, "effects": {"index.corruption": -1}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 3, "security": 2}, "popularity": 1, "ai": [0.2, 0.7, 0.1, 0.4]},
-    {"id": "fine", "name": "Оштрафовать виновных и успокоить людей", "text": "Дело о халатности и бесплатная защита от мошенников. Быстро и недорого, но проблема не решена.", "cost": 0.05, "months": 12, "effects": {"legitimacy": 0.5}, "moods": {"clerks": 1}, "popularity": 0, "ai": [0.1, 0.3, 0, 0.2], "default": true},
+    {"id": "security", "name": "Вложиться в защиту и аудит", "text": "Независимые проверки и новая инфраструктура. Дорого, но следующая утечка станет менее вероятной.", "cost": 0.15, "months": 36, "effects": {"index.corruption": -1}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 1.0, "security": 2}, "popularity": 1, "ai": [0.2, 0.7, 0.1, 0.4]},
+    {"id": "fine", "name": "Оштрафовать виновных и успокоить людей", "text": "Дело о халатности и бесплатная защита от мошенников. Быстро и недорого, но проблема не решена.", "cost": 0.03, "months": 12, "effects": {"legitimacy": 0.5}, "moods": {"clerks": 1}, "popularity": 0, "ai": [0.1, 0.3, 0, 0.2], "default": true},
     {"id": "silence", "name": "Умолчать", "text": "Объявить, что утечки не было. Через неделю появятся скриншоты.", "months": 18, "effects": {"legitimacy": -2, "index.press_freedom": -1}, "moods": {"professionals": -3, "clerks": -2}, "groups": {"intelligentsia": -5}, "popularity": -3, "ai": [0.0, -0.5, 0, -0.4]}
+   ]
+  },
+  {
+   "id": "early_election_demand",
+   "category": "politics",
+   "title": "Требуют досрочных выборов",
+   "text": "Опросы показывают, что большинство хочет сменить власть: оппозиция собирает подписи за досрочные выборы, а часть депутатов правящей партии шепчется о том же. {reporter} предлагает варианты.",
+   "reporter": "chief_of_staff",
+   "weight": 0.3,
+   "cooldown_months": 48,
+   "when": [{"system": ["parliamentary_republic", "constitutional_monarchy", "semi_presidential"]}, {"regime": ["democracy"]}, {"stat": "approval_pct", "max": 52}],
+   "options": [
+    {"id": "call", "name": "Назначить досрочные выборы", "text": "Взять инициативу в свои руки. Риск проиграть, но легитимность вырастет в любом случае.", "months": 12, "effects": {"legitimacy": 2, "protest_rate": -0.15}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 1.5}, "popularity": -1, "ai": [0.0, 0.4, 0, 0.3]},
+    {"id": "refuse", "name": "Отказать — есть сроки", "text": "Выборы будут в своё время. Закон на вашей стороне, а улица — нет.", "months": 12, "effects": {"protest_rate": 0.1, "legitimacy": -1}, "moods": {"professionals": -2}, "groups": {"intelligentsia": -3}, "ai": [0.1, 0.1, 0, 0.1], "default": true},
+    {"id": "reform", "name": "Пообещать реформы и новый кабинет", "text": "Выиграть время: сменить несколько министров и объявить программу. Работает, пока люди верят.", "months": 18, "effects": {"legitimacy": 0.5}, "moods": {"clerks": 1}, "popularity": 0, "ai": [0.1, 0.4, 0, 0.3]}
+   ]
+  },
+  {
+   "id": "separatist_movement",
+   "category": "politics",
+   "title": "Регион требует автономии",
+   "text": "В одном из регионов набирает силу движение за автономию: местные говорят, что столица забирает налоги и ничего не даёт взамен. Появились флаги и первые митинги. {reporter} просит решить, как ответить.",
+   "reporter": "interior",
+   "weight": 0.2,
+   "cooldown_months": 72,
+   "when": [{"stat": "population", "min": 20000000}, {"stat": "approval_pct", "max": 48}, {"stat": "gini", "min": 35}],
+   "options": [
+    {"id": "autonomy", "name": "Дать региону больше самостоятельности", "text": "Часть налогов и полномочий — местной власти. Напряжение спадёт, а у других регионов появятся аппетиты.", "months": 36, "effects": {"legitimacy": 1, "protest_rate": -0.15, "revenue.other": -0.02}, "moods": {"clerks": 1}, "groups": {"intelligentsia": 1.0, "security": -3}, "popularity": 0, "ai": [0.1, 0.5, -0.2, 0.3]},
+    {"id": "talks", "name": "Вести переговоры и обещать инвестиции", "text": "Деньги на дороги и школы региона, а вопрос об автономии — на потом.", "cost": 0.15, "months": 24, "effects": {"infra_efficiency": 0.02}, "moods": {"unskilled": 1}, "popularity": 1, "ai": [0.2, 0.4, 0, 0.3], "default": true},
+    {"id": "repress", "name": "Запретить движение", "text": "Лидеров арестовать, митинги запретить. Спокойствие вернётся — до первого повода.", "months": 36, "effects": {"radicalism": 1.5, "protest_escalation": 0.1, "index.civil_liberties": -4, "legitimacy": -2}, "groups": {"security": 4, "intelligentsia": -5}, "loyalty": {"police": -1, "army": 1}, "popularity": -3, "ai": [0.0, -0.4, 0.3, -0.3]}
+   ]
+  },
+  {
+   "id": "migrant_clashes",
+   "category": "social",
+   "title": "Столкновения с мигрантами",
+   "text": "В рабочем квартале возник конфликт между местными и недавними переселенцами: драка переросла в погром, горят машины. Соцсети кипят, а политики подливают масла. {reporter} просит решить, как действовать.",
+   "reporter": "interior",
+   "weight": 0.25,
+   "cooldown_months": 60,
+   "when": [{"law": "immigration", "in": ["open", "quotas"]}, {"stat": "unemployment_pct", "min": 8}, {"stat": "net_migration_rate", "min": 2}],
+   "options": [
+    {"id": "police", "name": "Навести порядок и наказать всех виновных", "text": "Полиция задержит зачинщиков с обеих сторон. Улицы успокоятся, но обиды останутся.", "months": 12, "effects": {"crime": -0.03, "radicalism": 0.3}, "moods": {"unskilled": -1, "clerks": 1}, "loyalty": {"police": 1}, "popularity": 0, "ai": [0.1, 0.5, 0.1, 0.2], "default": true},
+    {"id": "integration", "name": "Программа интеграции и жильё", "text": "Языковые курсы, работа и социальное жильё. Дорого, но эффект надолго.", "cost": 0.15, "months": 48, "effects": {"radicalism": -0.5, "migration": 0.1}, "moods": {"unskilled": 1, "professionals": 2}, "groups": {"intelligentsia": 1.0, "unions": -2}, "popularity": -1, "ai": [0.2, 0.6, 0, 0.3]},
+    {"id": "quotas", "name": "Ужесточить въезд", "text": "Квоты и проверки. Местные довольны, а работодатели возмущены.", "months": 36, "effects": {"migration": -0.3, "potential_growth": -0.1}, "moods": {"unskilled": 2, "clerks": 1, "capitalists": -1}, "groups": {"industrialists": -3, "intelligentsia": -3, "security": 2}, "popularity": 2, "ai": [-0.2, 0.0, 0.1, 0.4]}
+   ]
+  },
+  {
+   "id": "exam_leak_scandal",
+   "category": "scandal",
+   "title": "Утечка экзаменов",
+   "text": "Ответы выпускного экзамена продавались в соцсетях ещё за неделю до его начала. Родители в ярости, школьники — в слезах: результаты придётся отменять. {reporter} докладывает, кто стоит за утечкой.",
+   "reporter": "education",
+   "weight": 0.25,
+   "cooldown_months": 60,
+   "when": [{"stat": "education_quality", "max": 75}, {"stat": "corruption_index", "min": 35}, {"stat": "press_freedom_index", "min": 35}],
+   "options": [
+    {"id": "retake", "name": "Перенести экзамен и наказать виновных", "text": "Школьники сдадут заново, а министерство найдёт ответственных. Недорого, но больно для выпускников.", "cost": 0.03, "months": 12, "effects": {"legitimacy": 0.5}, "moods": {"professionals": 1}, "groups": {"intelligentsia": 1.0}, "popularity": 0, "ai": [0.1, 0.5, 0, 0.3], "default": true},
+    {"id": "reform", "name": "Реформировать систему экзаменов", "text": "Новые правила, цифровая защита и независимая проверка. Дорого и надолго, зато доверие вернётся.", "cost": 0.07, "months": 36, "effects": {"index.corruption": -1.5}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 1.5}, "popularity": 1, "ai": [0.2, 0.6, 0, 0.4]},
+    {"id": "hush", "name": "Не отменять результаты", "text": "Сделать вид, что ничего не случилось. Школьники получат баллы, а недоверие — вместе с ними.", "months": 24, "effects": {"legitimacy": -2, "index.corruption": 1}, "moods": {"professionals": -3, "clerks": -2}, "groups": {"intelligentsia": -5}, "popularity": -3, "ai": [0.0, -0.4, 0, -0.3]}
+   ]
+  },
+  {
+   "id": "sports_victory",
+   "category": "social",
+   "title": "Национальная победа",
+   "text": "Сборная страны выиграла главный турнир: улицы полны людей с флагами, а в новостях только об этом. Редкий случай, когда настроение страны выше обычного. {reporter} спрашивает, как воспользоваться моментом.",
+   "reporter": "chief_of_staff",
+   "weight": 0.25,
+   "cooldown_months": 72,
+   "when": [{"stat": "gdp_usd", "min": 50000000000.0}],
+   "options": [
+    {"id": "parade", "name": "Устроить праздник и встретить героев", "text": "Парад, награды и выходной день. Страна радуется, а вы — рядом с героями.", "cost": 0.03, "months": 6, "effects": {"legitimacy": 1}, "moods": {"unskilled": 2, "skilled": 2, "clerks": 2, "pensioners": 1}, "popularity": 4, "ai": [0.0, 0.4, 0, 0.7]},
+    {"id": "invest", "name": "Вложить в спортивные школы и стадионы", "text": "Деньги пойдут на детский спорт и площадки по всей стране. Скромнее по эффекту, зато надолго.", "cost": 0.07, "months": 36, "effects": {"spending.culture": 0.1, "disease_burden": -0.03}, "moods": {"professionals": 1, "unskilled": 1}, "popularity": 2, "ai": [0.2, 0.4, 0, 0.4], "default": true},
+    {"id": "quiet", "name": "Ограничиться поздравлением", "text": "Не раздувать. Лавры достанутся игрокам, и это тоже правильно.", "months": 3, "popularity": 0, "ai": [0.1, 0.1, 0, 0.0]}
+   ]
+  },
+  {
+   "id": "military_pensions",
+   "category": "social",
+   "title": "Военные пенсионеры требуют индексации",
+   "text": "Отставные офицеры и ветераны вышли к зданию правительства: цены выросли, а пенсии остались прежними. С ними пришли семьи тех, кто служит и сегодня. {reporter} просит решить до того, как к ним присоединятся другие.",
+   "reporter": "defense",
+   "weight": 0.35,
+   "cooldown_months": 60,
+   "when": [{"stat": "military_pct_gdp", "min": 1.5}, {"stat": "inflation_pct", "min": 5}],
+   "options": [
+    {"id": "pay", "name": "Проиндексировать пенсии и выплатить долги", "text": "Деньги — ветеранам и семьям. Дорого, но по справедливости.", "cost": 0.15, "months": 36, "effects": {"spending.defense": 0.05, "radicalism": -0.5}, "moods": {"unskilled": 1, "pensioners": 2}, "groups": {"security": 5}, "loyalty": {"army": 3}, "popularity": 3, "ai": [0.0, 0.6, 0.1, 0.6]},
+    {"id": "promise", "name": "Пообещать и создать комиссию", "text": "Комиссия, которой поручили разобраться. Пенсионеры уйдут, но вернутся.", "months": 12, "effects": {"legitimacy": -0.5}, "groups": {"security": -1}, "loyalty": {"army": -1}, "popularity": -1, "ai": [0.0, 0.2, 0, 0.1], "default": true},
+    {"id": "disperse", "name": "Разогнать акцию", "text": "Полиция растащит палатки. Ветераны запомнят, а армия — ещё лучше.", "months": 24, "effects": {"radicalism": 1, "legitimacy": -2.5, "protest_rate": 0.1}, "moods": {"unskilled": -2, "pensioners": -2}, "groups": {"security": -6}, "loyalty": {"army": -5, "police": -1}, "popularity": -4, "ai": [0.0, -0.5, 0.1, -0.3]}
+   ]
+  },
+  {
+   "id": "minister_reform_offer",
+   "category": "characters",
+   "title": "{subject_post} предлагает реформу",
+   "text": "{subject_post} {subject} пришёл с толстой папкой: он готов провести в своём ведомстве реформу, о которой много говорили, но боялись начать. Риск и польза — оба высоки. {reporter} просит ваше решение.",
+   "reporter": "chief_of_staff",
+   "weight": 0.3,
+   "cooldown_months": 60,
+   "when": [{"minister": "any", "what": "competence", "min": 80}],
+   "options": [
+    {"id": "support", "name": "Поддержать и дать полномочия", "text": "Министр получит свободу действий и сроки. Если получится — выиграют все, если нет — отвечать вам.", "months": 36, "effects": {"potential_growth": 0.1, "legitimacy": 0.5, "index.corruption": -1}, "moods": {"professionals": 2, "officials": -2}, "groups": {"intelligentsia": 1.0}, "popularity": 1, "subject": "10", "ai": [0.4, 0.1, 0.1, 0.3]},
+    {"id": "pilot", "name": "Начать с одного региона", "text": "Пилотный проект: через год станет ясно, стоит ли идти дальше. Безопаснее, но медленнее.", "months": 24, "effects": {"potential_growth": 0.04}, "moods": {"officials": -1}, "subject": "3", "ai": [0.2, 0.4, 0, 0.3], "default": true},
+    {"id": "shelve", "name": "Отложить", "text": "Сейчас не время. Министр кивнёт, но папка останется в ящике.", "months": 12, "moods": {"officials": 1}, "subject": "-8", "ai": [-0.1, 0.2, 0, -0.1]}
+   ]
+  },
+  {
+   "id": "central_bank_dispute",
+   "category": "economy",
+   "title": "Спор с центробанком",
+   "text": "Инфляция выше цели, и правительство требует снизить ставку: нужны дешёвые кредиты. Глава центробанка {subject} отвечает, что без высокой ставки цены не удержать. Газеты уже пишут о «войне». {reporter} просит решить, чья возьмёт.",
+   "reporter": "economy",
+   "weight": 0.25,
+   "cooldown_months": 60,
+   "when": [{"law": "central_bank", "in": ["independent"]}, {"stat": "inflation_pct", "min": 8}, {"minister": "central_bank", "what": "loyalty", "max": 100}],
+   "options": [
+    {"id": "respect", "name": "Признать независимость центробанка", "text": "Ставка останется высокой. Цены будут расти медленнее, но кредиты — дорогими.", "months": 24, "effects": {"credibility": 0.03, "potential_growth": -0.1}, "moods": {"small_business": -2, "capitalists": 1}, "groups": {"financiers": 3, "industrialists": -3}, "popularity": -1, "ai": [0.0, 0.5, 0, -0.2], "default": true},
+    {"id": "pressure", "name": "Публично надавить на главу центробанка", "text": "Снизят ставку или нет — неизвестно, но вера в независимость пострадает.", "months": 24, "effects": {"credibility": -0.08, "inflation_target": 0.4, "potential_growth": 0.05}, "moods": {"small_business": 2}, "groups": {"financiers": -5, "industrialists": 2}, "popularity": 1, "subject": "-12", "ai": [0.2, -0.3, 0, 0.2]},
+    {"id": "replace", "name": "Заменить главу центробанка", "text": "Новый человек — новая политика. Рынки встревожатся, а контроль вернётся.", "months": 36, "effects": {"credibility": -0.12, "spread": 0.3}, "groups": {"financiers": -8, "industrialists": 3}, "popularity": 0, "subject": "fire", "ai": [0.1, -0.5, 0, 0.1]}
+   ]
+  },
+  {
+   "id": "budget_overrun",
+   "category": "economy",
+   "title": "Дыра в бюджете",
+   "text": "Министерство финансов признало: расходы выше плана, а доходы ниже. До конца года не хватает денег на зарплаты и пенсии. {reporter} просит решить, откуда взять недостающее.",
+   "reporter": "finance",
+   "weight": 0.4,
+   "cooldown_months": 48,
+   "when": [{"stat": "budget_balance_pct_gdp", "max": -5}],
+   "options": [
+    {"id": "cut", "name": "Урезать расходы", "text": "Заморозить стройки и сократить госаппарат. Дыра закроется, а недовольных станет больше.", "months": 18, "effects": {"spending.administration": -0.15, "spending.transport": -0.1, "potential_growth": -0.15}, "moods": {"officials": -4, "skilled": -1}, "groups": {"unions": -5, "financiers": 3}, "popularity": -3, "ai": [-0.1, 0.4, -0.1, -0.5], "default": true},
+    {"id": "borrow", "name": "Занять ещё", "text": "Новые облигации закроют дыру сегодня, но завтра придётся платить проценты.", "cost": 0.35, "months": 12, "effects": {"spread": 0.2}, "groups": {"financiers": 2}, "popularity": 0, "ai": [0.2, 0.1, 0, 0.3]},
+    {"id": "taxes", "name": "Поднять налоги", "text": "Больше денег в бюджете и меньше — у людей. Дыра закроется быстро, но недовольство вырастет.", "months": 24, "effects": {"revenue.vat": 0.05, "revenue.pit": 0.03, "potential_growth": -0.2}, "moods": {"clerks": -3, "small_business": -3, "unskilled": -2}, "groups": {"industrialists": -4, "small_business": -4}, "popularity": -4, "ai": [-0.2, 0.3, 0, -0.4]}
+   ]
+  },
+  {
+   "id": "informal_crackdown",
+   "category": "economy",
+   "title": "Теневая экономика",
+   "text": "Налоговая считает, что треть бизнеса работает без регистрации: ни налогов, ни прав у работников. Предложено начать кампанию против теневых заработков. Мелкие предприниматели нервничают. {reporter} взвешивает последствия.",
+   "reporter": "economy",
+   "weight": 0.25,
+   "cooldown_months": 60,
+   "when": [{"stat": "self_employed_pct", "min": 35}, {"law": "informal_economy", "in": ["tolerated"]}],
+   "options": [
+    {"id": "crackdown", "name": "Начать кампанию проверок", "text": "Налоговая обойдёт рынки и мастерские. Бюджет получит деньги, а теневой сектор — удар.", "months": 24, "effects": {"revenue.other": 0.04, "small_business": -1, "potential_growth": -0.1}, "moods": {"small_business": -4, "unskilled": -2}, "groups": {"small_business": -6, "financiers": 2}, "popularity": -2, "ai": [0.1, 0.0, 0.1, -0.2]},
+    {"id": "amnesty", "name": "Амнистия и простая регистрация", "text": "Легализовать без штрафов и упростить правила. Часть бизнеса выйдет из тени добровольно.", "months": 36, "effects": {"revenue.other": 0.02, "small_business": 1, "unemployment_fear": -0.05}, "moods": {"small_business": 2, "unskilled": 1}, "groups": {"small_business": 4}, "ai": [0.3, 0.4, 0, 0.3], "default": true},
+    {"id": "tolerate", "name": "Всё оставить как есть", "text": "Тень остаётся тенью. Налоги не растут, а недовольства нет.", "months": 12, "moods": {"small_business": 1}, "ai": [0.0, 0.3, 0, 0.2]}
+   ]
+  },
+  {
+   "id": "export_boom",
+   "category": "economy",
+   "title": "Рекордный экспорт",
+   "text": "Заказы из-за границы бьют рекорды: порты загружены, заводы работают в три смены, валюта течёт рекой. Предприниматели просят не мешать, а профсоюзы — делиться. {reporter} спрашивает, как распорядиться удачей.",
+   "reporter": "industry",
+   "weight": 0.3,
+   "cooldown_months": 60,
+   "when": [{"stat": "exports_pct_gdp", "min": 30}, {"stat": "gdp_growth_pct", "min": 3}],
+   "options": [
+    {"id": "invest", "name": "Вложить в расширение производства", "text": "Налоговые льготы на новые линии и порты. Удача закрепится, а бюджет заплатит.", "cost": 0.1, "months": 36, "effects": {"potential_growth": 0.15, "infra_efficiency": 0.03}, "moods": {"skilled": 2, "capitalists": 2}, "groups": {"industrialists": 5}, "ai": [0.5, 0.2, 0.2, 0.3]},
+    {"id": "save", "name": "Отложить в запас", "text": "Погасить часть долга и накопить на чёрный день. Скучно, но надёжно.", "cost": -0.5, "months": 24, "effects": {"spread": -0.1}, "groups": {"financiers": 3, "unions": -2}, "ai": [0.1, 0.7, 0, -0.1], "default": true},
+    {"id": "share", "name": "Поднять зарплаты и пособия", "text": "Рабочие получат прибавку, а предприниматели недовольно вздохнут. Популярное решение.", "months": 24, "effects": {"unskilled_wage": 0.04, "spending.social": 0.1}, "moods": {"skilled": 3, "unskilled": 3, "pensioners": 1}, "groups": {"unions": 3.0, "industrialists": -3}, "popularity": 3, "ai": [0.0, 0.4, 0, 0.7]}
+   ]
+  },
+  {
+   "id": "labor_shortage",
+   "category": "economy",
+   "title": "Не хватает рабочих рук",
+   "text": "Безработица на минимуме: предприятия не могут найти людей, а вакансии висят месяцами. Зарплаты растут быстрее производительности. {reporter} предлагает, откуда взять рабочих.",
+   "reporter": "labor",
+   "weight": 0.3,
+   "cooldown_months": 60,
+   "when": [{"stat": "unemployment_pct", "max": 4.5}, {"stat": "gdp_growth_pct", "min": 1}],
+   "options": [
+    {"id": "migrants", "name": "Открыть въезд для рабочих", "text": "Квоты и упрощённые визы. Рынок труда успокоится, а у местных будут вопросы.", "months": 36, "effects": {"migration": 0.3, "potential_growth": 0.1}, "moods": {"unskilled": -2, "capitalists": 2}, "groups": {"industrialists": 4, "unions": -3, "security": -1}, "popularity": -1, "ai": [0.4, 0.0, 0.1, 0.0]},
+    {"id": "wages", "name": "Поднять пособия и зарплаты", "text": "Привлечь людей на рынок труда: пенсионеров, студентов, женщин с детьми. Дороже для бизнеса.", "months": 36, "effects": {"older_participation": 0.05, "unskilled_wage": 0.03, "natural_unemployment": -0.1}, "moods": {"unskilled": 2, "pensioners": 1}, "groups": {"unions": 2.0, "industrialists": -3}, "ai": [0.1, 0.4, 0, 0.5], "default": true},
+    {"id": "automate", "name": "Стимулировать автоматизацию", "text": "Налоговые льготы на роботов и программы переобучения. Дороже сначала, но проблема исчезнет.", "cost": 0.1, "months": 48, "effects": {"potential_growth": 0.08, "unemployment_fear": 0.05}, "moods": {"skilled": -1, "professionals": 2}, "groups": {"industrialists": 3, "unions": -3}, "ai": [0.3, 0.2, 0.2, 0.2]}
+   ]
+  },
+  {
+   "id": "crypto_regulation",
+   "category": "economy",
+   "title": "Криптовалюты: что делать?",
+   "text": "Миллионы людей торгуют цифровыми деньгами, а государство не знает, как это облагать налогами и можно ли доверять. Центробанк боится, что деньги уйдут из банков. {reporter} просит определить позицию.",
+   "reporter": "central_bank",
+   "weight": 0.2,
+   "cooldown_months": 96,
+   "when": [{"tech": "internet"}, {"stat": "gdp_per_capita_usd", "min": 3000}],
+   "options": [
+    {"id": "regulate", "name": "Принять закон и обложить налогом", "text": "Правила, лицензии и налоги. Рынок станет понятнее, а бюджет получит доход.", "months": 36, "effects": {"revenue.other": 0.03, "credibility": 0.02}, "groups": {"financiers": 2, "intelligentsia": 0.5}, "ai": [0.2, 0.5, 0, 0.3]},
+    {"id": "ban", "name": "Запретить", "text": "Банки спокойны, а трейдеры уходят в тень. Запрет работает до первого обхода.", "months": 36, "effects": {"index.civil_liberties": -1, "revenue.other": -0.01}, "moods": {"small_business": -1, "professionals": -2}, "groups": {"financiers": 2, "intelligentsia": -2}, "ai": [-0.1, 0.2, 0.1, -0.1], "default": true},
+    {"id": "embrace", "name": "Поддержать как отрасль", "text": "Льготы разработчикам и биржам. Рисковая ставка: или новые рабочие места, или большие убытки.", "months": 36, "effects": {"potential_growth": 0.06, "exchange_volatility": 0.2}, "moods": {"professionals": 3, "small_business": 1}, "groups": {"financiers": -2, "intelligentsia": 1.0}, "ai": [0.4, -0.2, 0.1, 0.2]}
+   ]
+  },
+  {
+   "id": "foreign_land_purchase",
+   "category": "economy",
+   "title": "Иностранцы скупают землю",
+   "text": "Иностранные фонды и компании скупают сельскохозяйственную землю: цена на неё растёт, а местные фермеры не могут конкурировать. В деревне ропщут, а аграрные лоббисты требуют закона. {reporter} просит решить.",
+   "reporter": "agriculture",
+   "weight": 0.2,
+   "cooldown_months": 72,
+   "when": [{"law": "foreign_investment", "in": ["open"]}, {"stat": "agriculture_pct_gdp", "min": 6}],
+   "options": [
+    {"id": "ban", "name": "Запретить продажу земли иностранцам", "text": "Земля — национальное достояние. Инвесторы возмутятся, а фермеры вздохнут свободно.", "months": 48, "effects": {"foreign_profit": -0.03, "potential_growth": -0.05}, "moods": {"farmers": 4, "capitalists": -1}, "groups": {"agrarians": 7, "financiers": -3}, "ai": [-0.2, 0.3, 0.1, 0.4]},
+    {"id": "limit", "name": "Ограничить доли и участки", "text": "Не более определённой доли в регионе. Компромисс, который не устроит ни тех, ни других.", "months": 36, "effects": {"foreign_profit": -0.01}, "moods": {"farmers": 2}, "groups": {"agrarians": 2, "financiers": -1}, "ai": [0.1, 0.4, 0, 0.2], "default": true},
+    {"id": "allow", "name": "Оставить как есть", "text": "Рынок решит. Деньги придут, а земля уйдёт.", "months": 36, "effects": {"potential_growth": 0.05, "foreign_profit": 0.02}, "moods": {"farmers": -4}, "groups": {"agrarians": -6, "financiers": 3}, "popularity": -1, "ai": [0.3, -0.2, -0.1, -0.2]}
+   ]
+  },
+  {
+   "id": "autonomous_trucks",
+   "category": "technology",
+   "title": "Беспилотные грузовики",
+   "text": "Беспилотные грузовики выходят на трассы: перевозки дешевеют, а водители пугаются за работу. Профсоюзы требуют запрета, компании — разрешения. {reporter} приносит расчёты.",
+   "reporter": "transport",
+   "weight": 0.2,
+   "cooldown_months": 96,
+   "when": [{"tech": "autonomous_trucks"}],
+   "options": [
+    {"id": "allow", "name": "Разрешить повсеместно", "text": "Логистика станет дешевле и быстрее, а тысячи водителей потеряют работу.", "months": 36, "effects": {"potential_growth": 0.1, "natural_unemployment": 0.2, "unemployment_fear": 0.1}, "moods": {"unskilled": -3, "small_business": 1}, "groups": {"industrialists": 4, "unions": -6}, "ai": [0.5, -0.2, 0.2, 0.0]},
+    {"id": "phase", "name": "Допустить на отдельных трассах", "text": "Пилотные коридоры и переобучение водителей. Переход мягче, эффект скромнее.", "cost": 0.05, "months": 48, "effects": {"potential_growth": 0.05, "natural_unemployment": 0.05}, "moods": {"unskilled": -1}, "groups": {"unions": -2, "industrialists": 2}, "ai": [0.3, 0.4, 0, 0.3], "default": true},
+    {"id": "ban", "name": "Запретить", "text": "Рабочие места сохранены, технологии — нет. Страна рискует отстать.", "months": 36, "effects": {"potential_growth": -0.05}, "moods": {"unskilled": 2}, "groups": {"unions": 3.0, "industrialists": -4}, "ai": [-0.3, 0.2, -0.1, 0.2]}
+   ]
+  },
+  {
+   "id": "gene_therapy_access",
+   "category": "technology",
+   "title": "Генная терапия: кому она достанется?",
+   "text": "Врачи лечат ранее неизлечимые болезни, но курс стоит дороже квартиры. Пациенты просят помощи государства, а страховщики — ограничений. {reporter} просит определить, кто будет лечиться.",
+   "reporter": "health",
+   "weight": 0.15,
+   "cooldown_months": 96,
+   "when": [{"tech": "gene_therapy"}],
+   "options": [
+    {"id": "cover", "name": "Оплачивать лечение из бюджета", "text": "Лечение — всем, кому нужно. Дорого, но по справедливости.", "cost": 0.2, "months": 48, "effects": {"life_expectancy": 0.15, "spending.health": 0.15}, "moods": {"pensioners": 3, "professionals": 1}, "groups": {"intelligentsia": 1.0}, "popularity": 2, "ai": [0.1, 0.5, 0, 0.6]},
+    {"id": "insurance", "name": "Включить в страховые программы", "text": "Курс оплатят страховщики, но с ограничениями. Дешевле для бюджета, но не для всех.", "months": 48, "effects": {"life_expectancy": 0.07}, "moods": {"pensioners": 1}, "ai": [0.1, 0.4, 0, 0.2], "default": true},
+    {"id": "market", "name": "Оставить рынку", "text": "Платить будут те, кто может. Рост неравенства неизбежен.", "months": 48, "effects": {"life_expectancy": 0.02, "potential_growth": 0.03}, "moods": {"pensioners": -3, "unskilled": -2, "capitalists": 1}, "popularity": -2, "ai": [0.2, -0.3, 0, -0.3]}
+   ]
+  },
+  {
+   "id": "space_program",
+   "category": "technology",
+   "title": "Космическая программа",
+   "text": "Учёные и промышленники предлагают запустить национальную космическую программу: спутники связи, станцию на орбите, а потом — научную миссию. Это дорого, но престиж и технологии окупаются годами. {reporter} просит ваше решение.",
+   "reporter": "science",
+   "weight": 0.12,
+   "cooldown_months": 180,
+   "when": [{"stat": "technology_level_pct", "min": 60}, {"stat": "gdp_usd", "min": 300000000000.0}, {"stat": "budget_balance_pct_gdp", "min": -6}],
+   "options": [
+    {"id": "fund", "name": "Запустить программу", "text": "Большие деньги на десятилетие. Страна войдёт в клуб космических держав.", "cost": 0.5, "months": 60, "effects": {"research": 0.1, "military_power": 0.03, "potential_growth": 0.1}, "moods": {"professionals": 3, "skilled": 2}, "groups": {"intelligentsia": 2.0, "industrialists": 3, "security": 2}, "popularity": 2, "ai": [0.3, 0.0, 0.6, 0.3]},
+    {"id": "partner", "name": "Присоединиться к чужой программе", "text": "Участвовать как партнёр: дешевле и быстрее, но самостоятельности меньше.", "cost": 0.15, "months": 48, "effects": {"research": 0.04}, "groups": {"intelligentsia": 1.0}, "relations": {"with": "powers", "value": 3}, "ai": [0.2, 0.3, 0.2, 0.2], "default": true},
+    {"id": "skip", "name": "Отказаться", "text": "Есть задачи важнее. Учёные уедут туда, где ракеты строят.", "months": 24, "effects": {"research": -0.03}, "moods": {"professionals": -2}, "groups": {"intelligentsia": -3}, "ai": [0.1, 0.2, -0.2, 0.0]}
+   ]
+  },
+  {
+   "id": "diplomatic_expulsion",
+   "category": "international",
+   "title": "{partner} высылает наших дипломатов",
+   "text": "{partner} объявила персонами нон грата несколько наших дипломатов, обвинив их в шпионаже. Отношения давно испорчены, и теперь это официально. {reporter} предлагает ответ.",
+   "reporter": "foreign",
+   "weight": 0.3,
+   "cooldown_months": 48,
+   "when": [{"partner": {"relations_max": -10, "rank_max": 40}}],
+   "options": [
+    {"id": "mirror", "name": "Выслать их дипломатов в ответ", "text": "Зеркальный ответ. Отношения ещё ухудшатся, зато лицо сохранено.", "months": 18, "groups": {"security": 2}, "popularity": 2, "relations": {"with": "partner", "value": -6}, "ai": [0.0, -0.2, 0.3, 0.3]},
+    {"id": "protest", "name": "Заявить протест и не отвечать", "text": "Нота и заявление. Достаточно, чтобы не выглядеть слабым.", "months": 12, "relations": {"with": "partner", "value": -1}, "ai": [0.1, 0.3, 0, 0.1], "default": true},
+    {"id": "talks", "name": "Предложить переговоры", "text": "Вернуть дипломатов и обсудить обвинения. Если получится — отношения потеплеют.", "months": 18, "groups": {"security": -2}, "relations": {"with": "partner", "value": 5}, "ai": [0.2, 0.5, -0.1, 0.1]}
+   ]
+  },
+  {
+   "id": "summit_invitation",
+   "category": "international",
+   "title": "{partner} приглашает на саммит",
+   "text": "Ведущая держава ({partner}) приглашает вас на закрытый саммит нескольких стран: обсуждают торговлю, безопасность и общие правила. Приглашение — признание, но и обязательство. {reporter} взвешивает.",
+   "reporter": "foreign",
+   "weight": 0.25,
+   "cooldown_months": 60,
+   "when": [{"partner": {"rank_max": 8, "relations_min": 10}}],
+   "options": [
+    {"id": "attend", "name": "Принять участие", "text": "Выступить, познакомиться и подписать общую декларацию. Влияние вырастет, а обязательства — тоже.", "cost": 0.03, "months": 24, "effects": {"legitimacy": 0.5}, "groups": {"intelligentsia": 1.0}, "popularity": 1, "relations": {"with": "powers", "value": 3}, "ai": [0.2, 0.3, 0.4, 0.3]},
+    {"id": "send", "name": "Отправить министра", "text": "Присутствие без обязательств. Партнёры заметят, что вы не пришли сами.", "months": 12, "relations": {"with": "partner", "value": 1}, "ai": [0.1, 0.3, 0, 0.1], "default": true},
+    {"id": "decline", "name": "Отказаться", "text": "Свой путь. Отношения охладеют, но независимость сохранится.", "months": 12, "groups": {"security": 1}, "relations": {"with": "partner", "value": -3}, "ai": [0.0, 0.1, -0.1, 0.0]}
+   ]
+  },
+  {
+   "id": "border_trade_zone",
+   "category": "international",
+   "title": "{partner}: приграничная торговая зона",
+   "text": "Соседняя страна ({partner}) предлагает открыть вдоль общей границы зону без пошлин: рынки, склады и производства с двух сторон. Местные предприниматели в восторге, а таможенники — не очень. {reporter} просит решить.",
+   "reporter": "foreign",
+   "weight": 0.25,
+   "cooldown_months": 72,
+   "when": [{"partner": {"neighbor": true, "relations_min": 20, "trade_min": 1}}],
+   "options": [
+    {"id": "open", "name": "Открыть зону", "text": "Торговля на границе вырастет, а вместе с ней — доходы приграничных городов.", "months": 36, "effects": {"potential_growth": 0.08, "revenue.customs": -0.03}, "moods": {"small_business": 2, "unskilled": 1}, "groups": {"industrialists": 2}, "relations": {"with": "partner", "value": 4}, "ai": [0.4, 0.3, 0.1, 0.3]},
+    {"id": "pilot", "name": "Начать с пилотного участка", "text": "Один переход и несколько складов. Если получится — расширим.", "months": 24, "effects": {"potential_growth": 0.03}, "relations": {"with": "partner", "value": 2}, "ai": [0.2, 0.4, 0, 0.2], "default": true},
+    {"id": "decline", "name": "Отказаться", "text": "Граница — это граница. Контрабандисты вздохнут с облегчением.", "months": 12, "groups": {"security": 1}, "relations": {"with": "partner", "value": -2}, "ai": [-0.1, 0.2, 0.1, 0.0]}
+   ]
+  },
+  {
+   "id": "arms_deal",
+   "category": "international",
+   "title": "{partner} предлагает контракт на вооружение",
+   "text": "Одна из ведущих держав ({partner}) предлагает современные системы вооружения на льготных условиях — вместе с обучением и сервисом. Взамен — долгосрочные обязательства и ограничения на других поставщиков. {reporter} оценивает сделку.",
+   "reporter": "defense",
+   "weight": 0.2,
+   "cooldown_months": 72,
+   "when": [{"partner": {"rank_max": 8, "relations_min": 15}}, {"stat": "military_pct_gdp", "min": 0.8}],
+   "options": [
+    {"id": "buy", "name": "Подписать контракт", "text": "Армия получит современное оружие, а страна — зависимость от поставщика.", "cost": 0.25, "months": 48, "effects": {"military_power": 0.06, "spending.defense": 0.1}, "groups": {"security": 6, "industrialists": -2}, "loyalty": {"army": 3}, "relations": {"with": "partner", "value": 5}, "ai": [0.0, 0.2, 0.6, 0.1]},
+    {"id": "own", "name": "Развивать своё производство", "text": "Дольше и дороже, но независимо. Через десять лет страна будет сама делать то, что сегодня покупает.", "cost": 0.15, "months": 60, "effects": {"military_power": 0.03, "research": 0.03}, "groups": {"industrialists": 3, "security": 2}, "relations": {"with": "partner", "value": -1}, "ai": [0.2, 0.2, 0.3, 0.1], "default": true},
+    {"id": "decline", "name": "Отказаться", "text": "Лишние траты. Партнёр обидится, а армия — тоже.", "months": 12, "groups": {"security": -3}, "loyalty": {"army": -2}, "relations": {"with": "partner", "value": -3}, "ai": [0.1, 0.1, -0.3, 0.0]}
+   ]
+  },
+  {
+   "id": "tsunami",
+   "category": "disaster",
+   "title": "Цунами",
+   "text": "После подводного землетрясения к побережью пошла огромная волна: порты разрушены, прибрежные города затоплены, дороги размыты. Люди бегут в горы. {reporter} просит срочных решений.",
+   "reporter": "interior",
+   "weight": 0.06,
+   "cooldown_months": 240,
+   "when": [{"hazard": "earthquake"}],
+   "options": [
+    {"id": "rebuild", "name": "Восстановить побережье за счёт бюджета", "text": "Большая стройка: порты, дома и защитные стены. Дорого, зато надёжно.", "cost": 0.6, "months": 36, "effects": {"potential_growth": -0.2, "infra_efficiency": 0.04}, "moods": {"unskilled": 2, "small_business": 2}, "popularity": 2, "ai": [0.4, 0.8, 0, 0.6], "default": true},
+    {"id": "aid", "name": "Попросить международную помощь", "text": "Спасатели и деньги от других стран. Быстрее и дешевле, но придётся признать беду публично.", "cost": 0.25, "months": 24, "effects": {"potential_growth": -0.3}, "popularity": 0, "relations": {"with": "powers", "value": 4}, "ai": [0.2, 0.6, -0.2, 0.2]},
+    {"id": "relocate", "name": "Переселить жителей вглубь страны", "text": "Побережье не восстанавливается. Люди получат новые дома, а страна — потерю портов.", "cost": 0.4, "months": 48, "effects": {"potential_growth": -0.35, "housing_build": 0.1}, "moods": {"small_business": -3, "unskilled": -1}, "popularity": -1, "ai": [-0.2, 0.5, 0, 0.1]}
+   ]
+  },
+  {
+   "id": "locust_swarm",
+   "category": "disaster",
+   "title": "Нашествие саранчи",
+   "text": "Тучи саранчи пошли на поля: за сутки гибнут десятки тысяч гектаров посевов. Фермеры в панике, а цены на зерно подпрыгнули. {reporter} просит срочных мер.",
+   "reporter": "agriculture",
+   "weight": 0.15,
+   "cooldown_months": 96,
+   "when": [{"hazard": "drought"}, {"stat": "agriculture_pct_gdp", "min": 8}],
+   "options": [
+    {"id": "spray", "name": "Опрыскивать с самолётов", "text": "Дорого и вредно для природы, но спасёт часть урожая.", "cost": 0.12, "months": 12, "effects": {"pollution": 0.04, "food_inflation": 0.08}, "moods": {"farmers": 2}, "groups": {"agrarians": 3, "intelligentsia": -2}, "ai": [0.3, 0.6, 0, 0.5]},
+    {"id": "compensate", "name": "Компенсировать потери фермерам", "text": "Выплаты и отсрочки по кредитам. Фермеры не разорятся, а бюджет заплатит.", "cost": 0.15, "months": 24, "effects": {"food_inflation": 0.1}, "moods": {"farmers": 4}, "groups": {"agrarians": 6}, "popularity": 2, "ai": [0.0, 0.7, 0, 0.6], "default": true},
+    {"id": "import", "name": "Закупить зерно за границей", "text": "Цены вырастут меньше, но поля останутся пустыми. Помощь придёт позже.", "cost": 0.1, "months": 12, "effects": {"food_inflation": 0.04}, "moods": {"farmers": -2, "unskilled": 1}, "groups": {"agrarians": -3}, "ai": [0.1, 0.4, -0.1, 0.2]}
+   ]
+  },
+  {
+   "id": "winter_cold_snap",
+   "category": "disaster",
+   "title": "Аномальные морозы",
+   "text": "Столбики термометров упали на тридцать градусов ниже обычного: ломаются трубы, останавливаются станции, в домах холодно. Люди греются у костров. {reporter} просит решить, как пережить зиму.",
+   "reporter": "energy",
+   "weight": 0.25,
+   "cooldown_months": 60,
+   "when": [{"stat": "power_reserve_pct", "max": 15}, {"stat": "urban_pct", "min": 40}],
+   "options": [
+    {"id": "emergency", "name": "Развернуть пункты обогрева и ремонт сетей", "text": "Тёплые пункты, аварийные бригады и топливо. Дорого, но жертв будет меньше.", "cost": 0.17, "months": 4, "effects": {"life_expectancy": -0.02}, "moods": {"pensioners": 3, "unskilled": 1}, "popularity": 2, "ai": [0.2, 0.8, 0, 0.7]},
+    {"id": "rolling", "name": "Ввести веерные отключения", "text": "Свет и тепло — по очереди. Сеть выстоит, а недовольство вырастет.", "months": 4, "effects": {"potential_growth": -0.3, "radicalism": 0.5}, "moods": {"unskilled": -2, "pensioners": -3, "small_business": -2}, "ai": [-0.3, 0.3, 0, -0.5], "default": true},
+    {"id": "import", "name": "Купить электричество и топливо за любую цену", "text": "Ценой бюджета и отношений с поставщиками. Холод отступит быстро.", "cost": 0.25, "months": 4, "effects": {"fuel_cost": 0.05}, "moods": {"pensioners": 2}, "popularity": 1, "relations": {"with": "neighbors", "value": 2}, "ai": [0.2, 0.6, -0.1, 0.4]}
+   ]
+  },
+  {
+   "id": "animal_disease",
+   "category": "epidemic",
+   "title": "Эпизоотия",
+   "text": "На фермах вспыхнула болезнь скота: сотни тысяч голов под угрозой, а соседи уже закрыли границы для нашего мяса и молока. {reporter} просит решить, как остановить болезнь.",
+   "reporter": "agriculture",
+   "weight": 0.2,
+   "cooldown_months": 72,
+   "when": [{"stat": "agriculture_pct_gdp", "min": 5}],
+   "options": [
+    {"id": "cull", "name": "Уничтожить заражённые стада", "text": "Жёсткая мера: болезнь остановится, а фермеры получат компенсации.", "cost": 0.15, "months": 12, "effects": {"food_inflation": 0.06, "potential_growth": -0.05}, "moods": {"farmers": -2}, "groups": {"agrarians": -3}, "popularity": -1, "ai": [0.1, 0.7, 0, 0.2]},
+    {"id": "vaccinate", "name": "Привить скот и ограничить перевозки", "text": "Болезнь удержится, но зарубежные рынки вернутся не сразу.", "cost": 0.07, "months": 18, "effects": {"food_inflation": 0.03}, "moods": {"farmers": 1}, "groups": {"agrarians": 2}, "ai": [0.2, 0.5, 0, 0.3], "default": true},
+    {"id": "wait", "name": "Предоставить фермерам решать самим", "text": "Дёшево и опасно: болезнь может расползтись, а экспорт — упасть надолго.", "months": 18, "effects": {"food_inflation": 0.1, "potential_growth": -0.12}, "moods": {"farmers": -4}, "groups": {"agrarians": -6}, "popularity": -2, "ai": [-0.2, -0.5, 0, -0.3]}
+   ]
+  },
+  {
+   "id": "teen_mental_health",
+   "category": "social",
+   "title": "Подростки: рост тревожности",
+   "text": "Школьные психологи и врачи бьют тревогу: подростки стали чаще жаловаться на депрессию и тревогу, всё больше времени проводят в сети. Родители требуют вмешательства. {reporter} предлагает меры.",
+   "reporter": "education",
+   "weight": 0.2,
+   "cooldown_months": 72,
+   "when": [{"stat": "urban_pct", "min": 60}, {"stat": "gdp_per_capita_usd", "min": 8000}],
+   "options": [
+    {"id": "psychologists", "name": "Психологи в каждой школе", "text": "Деньги на специалистов и обучение учителей. Эффект будет заметен через несколько лет.", "cost": 0.07, "months": 48, "effects": {"disease_burden": -0.04, "spending.education": 0.05}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 1.0}, "popularity": 2, "ai": [0.1, 0.6, 0, 0.5]},
+    {"id": "screens", "name": "Ограничить соцсети для детей", "text": "Запреты и проверки возраста. Родители довольны, а подростки находят обходы.", "months": 24, "effects": {"index.civil_liberties": -2, "disease_burden": -0.02}, "moods": {"professionals": -1, "clerks": 1}, "groups": {"intelligentsia": -3, "religious": 3}, "ai": [0.0, 0.2, 0.1, 0.3], "default": true},
+    {"id": "wait", "name": "Оставить школам и семьям", "text": "Каждый решает сам. Государство экономит, а проблемы растут.", "months": 24, "effects": {"disease_burden": 0.03}, "moods": {"clerks": -2, "professionals": -1}, "popularity": -1, "ai": [0.1, -0.2, 0, -0.1]}
+   ]
+  },
+  {
+   "id": "elderly_care_crisis",
+   "category": "social",
+   "title": "Дома престарелых переполнены",
+   "text": "Население стареет, а мест в домах престарелых не хватает: очереди тянутся годами, персонал уходит за границу. Дети пожилых людей выходят с плакатами. {reporter} просит решения.",
+   "reporter": "labor",
+   "weight": 0.3,
+   "cooldown_months": 60,
+   "when": [{"stat": "age_65_plus_pct", "min": 17}],
+   "options": [
+    {"id": "build", "name": "Построить дома и оплатить уход", "text": "Государственные дома и субсидии семьям. Дорого, но по справедливости.", "cost": 0.2, "months": 48, "effects": {"spending.social": 0.15, "older_participation": 0.02}, "moods": {"pensioners": 5, "clerks": 2}, "groups": {"unions": 1.0}, "popularity": 3, "ai": [0.1, 0.6, 0, 0.7]},
+    {"id": "insurance", "name": "Ввести страховку по уходу", "text": "Работающие платят взносы, а пожилые получают уход. Дешевле для бюджета, дороже для работающих.", "months": 48, "effects": {"revenue.social": 0.04}, "moods": {"pensioners": 2, "clerks": -2, "skilled": -1}, "groups": {"industrialists": -2}, "ai": [0.1, 0.4, 0, 0.2], "default": true},
+    {"id": "private", "name": "Оставить рынку и семье", "text": "Кто может — платит частным домам. Остальные справляются сами.", "months": 36, "effects": {"fertility": -0.02}, "moods": {"pensioners": -4, "clerks": -3}, "popularity": -3, "ai": [0.2, -0.3, 0, -0.4]}
+   ]
+  },
+  {
+   "id": "unemployed_youth",
+   "category": "social",
+   "title": "Безработная молодёжь",
+   "text": "Молодёжь, не найдя работу, собирается на улицах: каждый четвёртый до тридцати лет сидит без дела, а предложения у работодателей — для опытных. {reporter} предлагает, как занять молодых.",
+   "reporter": "labor",
+   "weight": 0.3,
+   "cooldown_months": 48,
+   "when": [{"stat": "unemployment_pct", "min": 9}, {"stat": "median_age", "max": 33}],
+   "options": [
+    {"id": "jobs", "name": "Программа первой работы", "text": "Государство доплачивает работодателям за найм молодых. Дорого, но ценный опыт.", "cost": 0.12, "months": 36, "effects": {"natural_unemployment": -0.2, "vocational": 0.03}, "moods": {"unemployed": 4, "unskilled": 1}, "groups": {"industrialists": 2, "unions": -1}, "popularity": 2, "ai": [0.3, 0.6, 0, 0.6]},
+    {"id": "training", "name": "Колледжи и переподготовка", "text": "Новые профессии за счёт бюджета. Эффект придёт позже, зато устойчивый.", "cost": 0.07, "months": 48, "effects": {"vocational": 0.05, "tertiary": 0.02}, "moods": {"unemployed": 2, "unskilled": 1}, "groups": {"industrialists": 2, "intelligentsia": 1.0}, "ai": [0.2, 0.5, 0, 0.3], "default": true},
+    {"id": "army", "name": "Призыв и стройки", "text": "Занять молодых службой и общественными работами. Дёшево, зато принудительно.", "months": 24, "effects": {"military_power": 0.03, "index.civil_liberties": -2, "protest_rate": -0.05}, "moods": {"unemployed": -2}, "groups": {"security": 3, "intelligentsia": -3}, "loyalty": {"army": 1}, "popularity": -1, "ai": [0.0, 0.1, 0.3, -0.2]}
+   ]
+  },
+  {
+   "id": "corruption_trial",
+   "category": "scandal",
+   "title": "Громкий суд над бывшим чиновником",
+   "text": "В суд передано дело о многомиллионных хищениях: на скамье подсудимых — бывший министр. Страна следит за каждым заседанием. Многие ждут приговора, который покажет, равен ли закон для всех. {reporter} просит ваших указаний.",
+   "reporter": "justice",
+   "weight": 0.2,
+   "cooldown_months": 60,
+   "when": [{"stat": "corruption_index", "min": 40}, {"stat": "judicial_independence_index", "min": 45}],
+   "options": [
+    {"id": "independent", "name": "Не вмешиваться в суд", "text": "Пусть решают судьи. Приговор может быть любым, но суды укрепятся.", "months": 24, "effects": {"index.judicial_independence": 2, "legitimacy": 1}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 1.5}, "popularity": 1, "ai": [0.1, 0.5, 0, 0.2], "default": true},
+    {"id": "severe", "name": "Потребовать самого строгого наказания", "text": "Показательный приговор. Люди довольны, но суды получили сигнал.", "months": 24, "effects": {"index.judicial_independence": -3, "index.corruption": -1}, "moods": {"unskilled": 2, "clerks": 1}, "groups": {"intelligentsia": -4, "security": 2}, "popularity": 3, "ai": [0.0, 0.0, 0.1, 0.5]},
+    {"id": "quiet", "name": "Тихо закрыть дело", "text": "Дело развалится само: ни приговора, ни скандала. Люди заметят.", "months": 24, "effects": {"index.corruption": 2, "legitimacy": -3, "index.rule_of_law": -2}, "moods": {"professionals": -3, "unskilled": -2}, "groups": {"intelligentsia": -6}, "popularity": -4, "ai": [0.0, -0.3, 0, -0.3]}
+   ]
+  },
+  {
+   "id": "election_fraud_claims",
+   "category": "politics",
+   "title": "Обвинения в фальсификации выборов",
+   "text": "Наблюдатели и оппозиция говорят о массовых нарушениях на последних выборах: «карусели», вбросы, давление на избирателей. Люди выходят на улицы с требованием пересчёта. {reporter} просит определить позицию.",
+   "reporter": "chief_of_staff",
+   "weight": 0.2,
+   "cooldown_months": 72,
+   "when": [{"regime": ["democracy", "hybrid"]}, {"stat": "democracy_index", "max": 65}, {"stat": "ruling_poll_pct", "min": 52}],
+   "options": [
+    {"id": "recount", "name": "Согласиться на пересчёт и проверку", "text": "Независимая комиссия проверит протоколы. Если выводы будут плохими — вы потеряете, если хорошими — приобретёте.", "months": 18, "effects": {"legitimacy": 1.5, "index.democracy": 2, "protest_rate": -0.1}, "moods": {"professionals": 2, "clerks": 1}, "groups": {"intelligentsia": 2.0}, "popularity": -1, "ai": [0.0, 0.5, 0, 0.2]},
+    {"id": "deny", "name": "Отвергнуть обвинения", "text": "Заявить, что выборы прошли честно. Спокойствие вернётся не у всех.", "months": 24, "effects": {"protest_rate": 0.15, "legitimacy": -1.5}, "moods": {"professionals": -3}, "groups": {"intelligentsia": -5, "security": 1}, "ai": [0.1, -0.2, 0.1, 0.2], "default": true},
+    {"id": "crack", "name": "Разогнать протесты и арестовать организаторов", "text": "Сильные меры. Улица замолчит, но мир это запомнит.", "months": 36, "effects": {"index.democracy": -5, "index.civil_liberties": -5, "radicalism": 1.5, "legitimacy": -3}, "moods": {"professionals": -4, "clerks": -2}, "groups": {"intelligentsia": -8, "security": 4}, "loyalty": {"police": -1}, "popularity": -3, "relations": {"with": "powers", "value": -3}, "ai": [0.0, -0.5, 0.2, -0.2]}
    ]
   }
  ]

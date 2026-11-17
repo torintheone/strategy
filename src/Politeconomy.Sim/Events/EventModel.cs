@@ -59,6 +59,26 @@ public static class EventModel
             return;
         var match = new EventConditions.Match();
         var candidates = new List<(EventRecord Event, double Chance)>();
+        // Договоры ИИ по событиям пересчитывают мир один раз за день, а не после каждого договора.
+        if (world.Diplomacy is { } diplomacy)
+            diplomacy.Batch = true;
+        try
+        {
+            DayCountries(world, events, player, first, eventDay, match, candidates);
+        }
+        finally
+        {
+            if (world.Diplomacy is { } done)
+            {
+                done.Batch = false;
+                DiplomacyModel.Flush(world);
+            }
+        }
+    }
+
+    static void DayCountries(World world, WorldEvents events, string? player, bool first, bool eventDay, EventConditions.Match match,
+        List<(EventRecord Event, double Chance)> candidates)
+    {
         foreach (var country in world.Countries)
         {
             var ce = events[country.Id];
@@ -84,6 +104,9 @@ public static class EventModel
         return weight;
     }
 
+    /// <summary>Перезарядка события в месяцах с учётом общего множителя (не меньше полугода).</summary>
+    public static int Cooldown(EventsBalance b, EventRecord e) => Math.Max(6, (int)Math.Round(e.CooldownMonths * b.CooldownScale));
+
     /// <summary>
     /// Случится ли событие сегодня: шанс каждого подходящего события — Rate × вес / (12 × число дней событий в месяце);
     /// шанс, что случится хоть одно, — 1 − e^(−сумма); какое именно — пропорционально шансам.
@@ -101,7 +124,7 @@ public static class EventModel
         {
             if (e.Chain || e.Weight <= 0)
                 continue;
-            if (ce.Last.TryGetValue(e.Id, out var when) && when.AddMonths(e.CooldownMonths) > world.Date)
+            if (ce.Last.TryGetValue(e.Id, out var when) && when.AddMonths(Cooldown(b, e)) > world.Date)
                 continue;
             (match.Subject, match.Partner, match.Hazard) = (null, null, 1);
             if (!EventConditions.Holds(world, country, e.When, match))

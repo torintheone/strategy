@@ -66,6 +66,11 @@ public sealed class WorldDiplomacy
     [JsonIgnore] public string? Actor { get; set; }
     [JsonIgnore] public Action<string>? OnNote { get; set; }
     [JsonIgnore] public bool Dirty { get; set; }
+    /// <summary>
+    /// Идёт день событий: договоры ИИ, подписанные по событиям, пересчитывают мир не каждый, а один раз в конце дня
+    /// (без этого каждый подписанный договор стоил полного пересчёта торговли и отношений).
+    /// </summary>
+    [JsonIgnore] public bool Batch { get; set; }
 
     public CountryDiplomacy this[string country] => Countries[country];
 

@@ -83,7 +83,7 @@ public static partial class DataValidator
         ["housing_shortage_pct"] = (0, 100),
         ["crime_index"] = (0, 100),
         ["pollution_index"] = (0, 100),
-        ["electricity_kwh_per_capita"] = (0, 60000),
+        ["electricity_kwh_per_capita"] = (0, 75000),
         ["power_shortage_pct"] = (0, 100),
         ["power_reserve_pct"] = (-100, 1000),
         ["power_imports_pct"] = (-400, 100),
