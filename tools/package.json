@@ -1,0 +1,8 @@
+{
+  "name": "politeconomy-tools",
+  "private": true,
+  "description": "Инструменты сборки данных Politeconomy: mapshaper упрощает границы регионов",
+  "dependencies": {
+    "mapshaper": "0.7.100"
+  }
+}

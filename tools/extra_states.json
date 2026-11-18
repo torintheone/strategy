@@ -1,0 +1,28 @@
+{
+ "_comment": "Государства вне ООН, за которые можно играть. ne — код Natural Earth, ref — код в справочнике mledoze/countries, wb и imf — коды Всемирного банка и МВФ. ne_stats — какие показатели взять из Natural Earth (POP_EST, GDP_MD), если в других источниках их нет. capital_en — название столицы в GeoNames; capital_city — столица, которой нет в GeoNames (координаты и население по переписи 2011 года).",
+ "states": [
+  {"id": "TWN", "ne": "TWN", "ref": "TWN", "wb": null, "imf": "TWN", "iso2": "TW",
+   "name": "Тайвань", "official_name": "Китайская Республика (Тайвань)", "capital": "Тайбэй", "capital_en": "Taipei",
+   "region": "Азия", "subregion": "Восточная Азия", "system": "semi_presidential",
+   "note": "Признан небольшим числом государств; КНР считает Тайвань своей провинцией"},
+  {"id": "XKX", "ne": "KOS", "ref": "UNK", "wb": "XKX", "imf": "UVK", "iso2": "XK",
+   "name": "Косово", "official_name": "Республика Косово", "capital": "Приштина", "capital_en": "Pristina",
+   "region": "Европа", "subregion": "Юго-Восточная Европа", "system": "parliamentary_republic",
+   "note": "Частично признанное государство; Сербия считает Косово своей частью"},
+  {"id": "PSE", "ne": "PSX", "ref": "PSE", "wb": "PSE", "imf": "WBG", "iso2": "PS",
+   "name": "Палестина", "official_name": "Государство Палестина", "capital": "Рамалла", "capital_en": "Ramallah",
+   "region": "Азия", "subregion": "Западная Азия", "system": "semi_presidential",
+   "note": "Государство-наблюдатель ООН; выборов не было с 2006 года, Газа и Западный берег разделены"},
+  {"id": "SOL", "ne": "SOL", "ref": null, "wb": null, "imf": null, "iso2": "",
+   "name": "Сомалиленд", "official_name": "Республика Сомалиленд", "capital": "Харгейса", "capital_en": "Hargeysa",
+   "region": "Африка", "subregion": "Восточная Африка", "system": "presidential_republic", "area_km2": 177000,
+   "ne_stats": ["population"],
+   "note": "Непризнанное государство; Сомали считает Сомалиленд своей частью"},
+  {"id": "CYN", "ne": "CYN", "ref": null, "wb": null, "imf": null, "iso2": "",
+   "name": "Северный Кипр", "official_name": "Турецкая Республика Северного Кипра", "capital": "Северная Никосия", "capital_en": "North Nicosia",
+   "capital_city": {"name_en": "North Nicosia", "lat": 35.185, "lon": 33.362, "pop": 61000},
+   "region": "Европа", "subregion": "Южная Европа", "system": "semi_presidential", "area_km2": 3355,
+   "ne_stats": ["population", "gdp_usd"],
+   "note": "Признан только Турцией; Республика Кипр считает эту территорию своей"}
+ ]
+}

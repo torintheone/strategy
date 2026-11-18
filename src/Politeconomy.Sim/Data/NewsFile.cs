@@ -1,0 +1,170 @@
+namespace Politeconomy.Sim.Data;
+
+// Новости. Поля описаны в data/README.md, смысл — в MODEL.md, «Новости».
+
+/// <summary>
+/// data/news.json: рубрики, новости о показателях (шаблоны по изменению показателя), новости о мировых ценах,
+/// источники (какие записи журнала и решения стран становятся новостями и насколько они важны) и события по категориям.
+/// </summary>
+public sealed record NewsFile(
+    IReadOnlyList<NewsTopicRecord> Topics,
+    IReadOnlyList<NewsIndicatorRecord> Indicators,
+    IReadOnlyList<NewsPriceRecord> Prices,
+    IReadOnlyDictionary<string, NewsSourceRecord> Sources,
+    IReadOnlyDictionary<string, NewsSourceRecord> Events,
+    NewsBroadcastRecord? Broadcast = null,
+    NewspaperRecord? Newspaper = null)
+{
+    public NewsTopicRecord? Topic(string id) => Topics.FirstOrDefault(t => t.Id == id);
+}
+
+/// <summary>Рубрика: название и цвет метки в ленте.</summary>
+public sealed record NewsTopicRecord(string Id, string Name, string Color);
+
+/// <summary>
+/// Новость о показателе. Модель помнит значение, о котором сообщала в последний раз; когда показатель уходит от него
+/// на Step (или на долю Relative от него, если это больше) вверх или вниз — выходит новость и запоминается новое
+/// значение. Round — сравнивать округлённые значения (рейтинг, место). Up и Down — формулировки для роста и падения:
+/// берётся первая, чьи Min/Max подходят новому значению; если не подошла ни одна, новость не выходит.
+/// </summary>
+public sealed record NewsIndicatorRecord(
+    string Stat,
+    double Step,
+    string Topic,
+    int Weight,
+    IReadOnlyList<NewsPhraseRecord>? Up = null,
+    IReadOnlyList<NewsPhraseRecord>? Down = null,
+    double Relative = 0,
+    bool Round = false);
+
+/// <summary>
+/// Формулировка: текст с подстановками {value} (новое значение), {was} (прежнее), {change} (на сколько изменилось),
+/// тон (good, bad, neutral), при каких значениях годится (Min/Max), своя важность (иначе — важность показателя).
+/// </summary>
+public sealed record NewsPhraseRecord(string Text, string Tone = "neutral", double? Min = null, double? Max = null, int? Weight = null);
+
+/// <summary>
+/// Новость о мировой цене (oil_price, ores_price, food_price): выходит, когда цена изменилась на долю Step с прошлого
+/// сообщения. В тексте {change} — на сколько процентов.
+/// </summary>
+public sealed record NewsPriceRecord(string Price, double Step, string Topic, int Weight, NewsPhraseRecord Up, NewsPhraseRecord Down);
+
+/// <summary>Источник новости: рубрика, важность (0–100), тон; Sentences — сколько первых предложений записи взять в новость (0 — весь текст).</summary>
+public sealed record NewsSourceRecord(string Topic, int Weight, string Tone = "neutral", int Sentences = 0);
+
+/// <summary>
+/// Тексты телевыпуска: название передачи, приветствия ({show} — передача, {anchor} — ведущий; берутся по очереди),
+/// фраза нового ведущего, вступления перед своими сюжетами (Home) и перед мировыми (World), фраза, если в стране за
+/// неделю ничего не случилось (HomeQuiet); Markets — вместо названия страны у новостей мировых рынков; Figures —
+/// сюжет «главные цифры страны», когда новостей не хватило; прощания (по очереди). Всё пишется для чтения вслух:
+/// без сокращений и знаков.
+/// </summary>
+public sealed record NewsBroadcastRecord(
+    string Show,
+    IReadOnlyList<string> Openings,
+    string Debut,
+    string Home,
+    string World,
+    string HomeQuiet,
+    string Markets,
+    NewsFiguresRecord Figures,
+    IReadOnlyList<string> Closings);
+
+/// <summary>Сюжет «главные цифры страны»: вступление ведущего, заголовок и показатели с подписями («безработица 5,6%»).</summary>
+public sealed record NewsFiguresRecord(string Lead, string Title, IReadOnlyList<NewsFigureRecord> Stats);
+
+public sealed record NewsFigureRecord(string Stat, string Label);
+
+/// <summary>
+/// Тексты газеты: издание каждого тона (Free — независимое, Loyal — близкое к власти, State — государственное),
+/// хвалебные заголовки государственной газеты и текст под ними, заголовок месяца без новостей, разоблачение
+/// приукрашенного доклада. MODEL.md, «Газета».
+/// </summary>
+public sealed record NewspaperRecord(
+    NewspaperPressRecord Free,
+    NewspaperPressRecord Loyal,
+    NewspaperPressRecord State,
+    IReadOnlyList<string> Praise,
+    string PraiseBody,
+    string Quiet,
+    string QuietBody,
+    string Expose,
+    string ExposeBody)
+{
+    public NewspaperPressRecord Press(string press) => press switch { "free" => Free, "loyal" => Loyal, _ => State };
+}
+
+/// <summary>Издание: название, девиз и абзацы под хорошими, плохими, нейтральными своими новостями и под мировыми.</summary>
+public sealed record NewspaperPressRecord(
+    string Name,
+    string Motto,
+    IReadOnlyList<string> Good,
+    IReadOnlyList<string> Bad,
+    IReadOnlyList<string> Neutral,
+    IReadOnlyList<string> World);
+
+// Коэффициенты новостей из data/balance.json (раздел news).
+
+public sealed class NewsBalance
+{
+    /// <summary>Сколько новостей о своей стране и сколько остальных хранить (старые удаляются).</summary>
+    public int HomeKeep { get; init; } = 150;
+    public int WorldKeep { get; init; } = 250;
+    /// <summary>Чужая новость попадает в ленту, если её важность с поправками не ниже WorldMin.</summary>
+    public int WorldMin { get; init; } = 60;
+    /// <summary>Новость о своей стране важнее на HomeBonus.</summary>
+    public int HomeBonus { get; init; } = 25;
+    /// <summary>Державы: первая по мощи получает RankBonus, дальше поправка убывает до нуля к месту RankSpan.</summary>
+    public double RankBonus { get; init; } = 30;
+    public double RankSpan { get; init; } = 40;
+    /// <summary>Близость к стране игрока: сосед, союзник, противник в войне, крупный торговый партнёр (доля от TradeShare, %). Берётся наибольшая.</summary>
+    public double NeighborBonus { get; init; } = 15;
+    public double AllyBonus { get; init; } = 10;
+    public double EnemyBonus { get; init; } = 20;
+    public double TradeBonus { get; init; } = 10;
+    public double TradeShare { get; init; } = 5;
+}
+
+/// <summary>Коэффициенты телевыпуска из data/balance.json (раздел broadcast). MODEL.md, «Телевыпуск».</summary>
+public sealed class BroadcastBalance
+{
+    /// <summary>Сколько сюжетов в выпуске: не меньше StoriesMin (если столько новостей есть), не больше StoriesMax.</summary>
+    public int StoriesMin { get; init; } = 3;
+    public int StoriesMax { get; init; } = 5;
+    /// <summary>Сюжеты сверх StoriesMin — только если их важность не ниже ExtraMin.</summary>
+    public int ExtraMin { get; init; } = 75;
+    /// <summary>Из новостей за сколько последних дней выбираются сюжеты; новость старше недели теряет Stale важности за день.</summary>
+    public int WindowDays { get; init; } = 14;
+    public double Stale { get; init; } = 2;
+    /// <summary>Сколько мировых сюжетов об одной стране может быть в выпуске.</summary>
+    public int PerCountry { get; init; } = 1;
+    /// <summary>Сколько последних выпусков хранить.</summary>
+    public int Keep { get; init; } = 12;
+    /// <summary>Ведущий: возраст на старте «от, до», доля женщин, сколько лет ведёт «от, до», возраст, в котором уходит.</summary>
+    public IReadOnlyList<int> AnchorAge { get; init; } = [30, 50];
+    public double AnchorFemaleShare { get; init; } = 0.5;
+    public IReadOnlyList<int> AnchorYears { get; init; } = [6, 12];
+    public int AnchorRetireAge { get; init; } = 67;
+}
+
+/// <summary>
+/// Коэффициенты газеты из data/balance.json (раздел newspaper). Тон издания — по свободе прессы: от FreeMin —
+/// независимое, от LoyalMin — близкое к власти (молчит о плохих домашних новостях важностью ниже HideMax), ниже —
+/// государственное (молчит обо всём плохом дома и хвалит власть). На первой полосе — заголовок месяца и Stories
+/// материалов; хранится Keep номеров. Независимая газета разоблачает министра, который приукрасил доклад хотя бы на
+/// ExposeSpin, если цифра в докладе отличается от настоящей больше чем на долю ExposeGap; важность разоблачения —
+/// ExposeWeight, одного министра — не чаще раза в ExposeMonths месяцев, а в стране — раза в ExposeEvery. MODEL.md, «Газета».
+/// </summary>
+public sealed class NewspaperBalance
+{
+    public double FreeMin { get; init; } = 60;
+    public double LoyalMin { get; init; } = 30;
+    public int HideMax { get; init; } = 100;
+    public int Stories { get; init; } = 3;
+    public int Keep { get; init; } = 12;
+    public double ExposeSpin { get; init; } = 0.15;
+    public double ExposeGap { get; init; } = 0.05;
+    public int ExposeWeight { get; init; } = 85;
+    public int ExposeMonths { get; init; } = 12;
+    public int ExposeEvery { get; init; } = 4;
+}

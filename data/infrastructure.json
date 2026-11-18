@@ -1,0 +1,30 @@
+{
+ "_comment": "Инфраструктура и стройки (MODEL.md, «Инфраструктура и стройки»). Поля описаны в data/README.md.",
+ "types": [
+  {"id": "roads", "name": "Автодороги", "post": "transport", "budget": "transport", "stock": 35, "wear": 0.04, "build_years": 3, "households": 0.3, "default": 1, "weights": {}},
+  {"id": "rail", "name": "Железные дороги", "post": "transport", "budget": "transport", "stock": 8, "wear": 0.03, "build_years": 4, "households": 0.15, "default": 0.2, "weights": {"coal_ores": 3, "metallurgy": 2.5, "oil_gas": 1.5, "chemicals": 1.5, "agriculture": 1, "machinery": 1, "construction": 1}},
+  {"id": "ports", "name": "Морские порты", "post": "transport", "budget": "transport", "stock": 3, "wear": 0.03, "build_years": 4, "households": 0, "default": 0.3, "driver": "trade", "coast": true, "weights": {"oil_gas": 2, "coal_ores": 2, "metallurgy": 1.5, "chemicals": 1.5, "machinery": 1.5, "electronics": 1.5, "light": 1.5, "agriculture": 1, "food": 1, "transport": 1}},
+  {"id": "airports", "name": "Аэропорты", "post": "transport", "budget": "transport", "stock": 2, "wear": 0.04, "build_years": 3, "households": 0.4, "default": 0.1, "weights": {"tourism": 4, "finance": 1, "it_comm": 0.5, "transport": 0.5}},
+  {"id": "pipelines", "name": "Трубопроводы", "post": "energy", "budget": "energy", "stock": 3, "wear": 0.025, "build_years": 3, "households": 0.1, "default": 0, "weights": {"oil_gas": 5, "chemicals": 1}},
+  {"id": "grid", "name": "Электросети", "post": "energy", "budget": "energy", "stock": 8, "wear": 0.03, "build_years": 2, "households": 0, "default": 1, "driver": "power", "weights": {"metallurgy": 2, "chemicals": 2, "coal_ores": 1.5}},
+  {"id": "telecom", "name": "Связь и интернет", "post": "transport", "budget": null, "stock": 5, "wear": 0.08, "build_years": 1.5, "households": 0.4, "default": 0.3, "weights": {"it_comm": 4, "finance": 2, "trade": 1, "education": 1}},
+  {"id": "water", "name": "Водопровод и канализация", "post": "transport", "budget": "transport", "stock": 10, "wear": 0.03, "build_years": 4, "households": 0.6, "default": 0.1, "weights": {"food": 2, "agriculture": 1, "chemicals": 1, "health": 1}}
+ ],
+ "projects": [
+  {"id": "highways", "type": "roads", "name": "Автомагистрали", "description": "Скоростные дороги между крупными городами.", "gain": 0.08, "months": 36},
+  {"id": "road_repair", "type": "roads", "name": "Ремонт дорог и мостов", "description": "Капитальный ремонт дорог, мостов и развязок.", "kind": "repair", "gain": 0.15, "months": 18},
+  {"id": "railway", "type": "rail", "name": "Железная дорога", "description": "Новые линии и вторые пути для грузовых поездов.", "gain": 0.15, "months": 48},
+  {"id": "seaport", "type": "ports", "name": "Морской порт", "description": "Глубоководный порт с контейнерным терминалом.", "gain": 0.25, "months": 36},
+  {"id": "airport", "type": "airports", "name": "Аэропорт", "description": "Новый терминал и взлётная полоса для дальних рейсов.", "gain": 0.25, "months": 30},
+  {"id": "pipeline", "type": "pipelines", "name": "Трубопровод", "description": "Магистральный нефте- и газопровод.", "gain": 0.3, "months": 36},
+  {"id": "power_lines", "type": "grid", "name": "ЛЭП и подстанции", "description": "Линии электропередачи и подстанции: электричество доходит до заводов и домов.", "gain": 0.15, "months": 24},
+  {"id": "broadband", "type": "telecom", "name": "Оптоволокно и мобильная связь", "description": "Быстрый интернет по всей стране.", "gain": 0.2, "months": 18},
+  {"id": "waterworks", "type": "water", "name": "Водопровод и очистные", "description": "Чистая вода и канализация в городах и посёлках.", "gain": 0.15, "months": 36},
+  {"id": "coal_plant", "plant": "coal", "name": "Угольная электростанция", "description": "Дёшево и надёжно, но грязно.", "gain": 0.05},
+  {"id": "gas_plant", "plant": "gas", "name": "Газовая электростанция", "description": "Строится быстро; электричество дорожает вместе с газом.", "gain": 0.05},
+  {"id": "nuclear_plant", "plant": "nuclear", "name": "Атомная электростанция", "description": "Долго и дорого, зато потом дешёвая и чистая энергия.", "gain": 0.08, "min_income": 2},
+  {"id": "hydro_plant", "plant": "hydro", "name": "Гидроэлектростанция", "description": "Очень дешёвая энергия, если есть подходящие реки.", "gain": 0.05},
+  {"id": "renewable_park", "plant": "renewables", "name": "Ветряки и солнечные станции", "description": "Без топлива и выбросов, но выработка зависит от погоды.", "gain": 0.05}
+ ],
+ "lenders": ["CHN", "USA", "DEU", "JPN"]
+}

@@ -1,0 +1,19 @@
+# Godot
+.godot/
+*.translation
+export_credentials.cfg
+
+# .NET
+bin/
+obj/
+*.user
+.vs/
+.idea/
+TestResults/
+
+# Сборки и кэш загрузок
+build/
+tools/.cache/
+tools/node_modules/
+__pycache__/
+*.tmp

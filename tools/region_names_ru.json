@@ -1,0 +1,91 @@
+{
+ "_comment": "Русские названия крупных регионов Natural Earth (поле region), по которым объединяются мелкие единицы. Ключ: код страны Natural Earth, затем название региона.",
+ "GBR": {
+  "Northern Ireland": "Северная Ирландия", "West Wales and the Valleys": "Западный Уэльс и Долины", "East Wales": "Восточный Уэльс",
+  "North West": "Северо-Западная Англия", "North East": "Северо-Восточная Англия", "Yorkshire and the Humber": "Йоркшир и Хамбер",
+  "West Midlands": "Уэст-Мидлендс", "East Midlands": "Ист-Мидлендс", "East": "Восточная Англия", "Greater London": "Большой Лондон",
+  "South East": "Юго-Восточная Англия", "South West": "Юго-Западная Англия", "Eastern": "Восточная Шотландия",
+  "North Eastern": "Северо-Восточная Шотландия", "South Western": "Юго-Западная Шотландия", "Highlands and Islands": "Хайленд и острова"
+ },
+ "LVA": {"Vidzeme": "Видземе", "Riga": "Рига", "Latgale": "Латгалия", "Zemgale": "Земгале", "Kurzeme": "Курземе"},
+ "SVN": {
+  "Obalno-kraška": "Обално-Крашский регион", "Pomurska": "Помурский регион", "Gorenjska": "Гореньска", "Goriška": "Горишка",
+  "Podravska": "Подравский регион", "Koroška": "Корошка", "Savinjska": "Савиньский регион", "Spodnjeposavska": "Посавский регион",
+  "Jugovzhodna Slovenija": "Юго-Восточная Словения", "Notranjsko-kraška": "Нотраньско-Крашский регион",
+  "Osrednjeslovenska": "Осреднесловенский регион", "Zasavska": "Засавский регион"
+ },
+ "PHL": {
+  "Autonomous Region in Muslim Mindanao (ARMM)": "Мусульманский Минданао", "Davao (Region XI)": "Давао",
+  "Zamboanga Peninsula (Region IX)": "Полуостров Замбоанга", "MIMAROPA (Region IV-B)": "Мимаропа", "Dinagat Islands (Region XIII)": "Карага",
+  "Northern Mindanao (Region X)": "Северный Минданао", "SOCCSKSARGEN (Region XII)": "Соккссарген", "Eastern Visayas (Region VIII)": "Восточные Висайи",
+  "Central Luzon (Region III)": "Центральный Лусон", "CALABARZON (Region IV-A)": "Калабарсон", "Bicol (Region V)": "Бикол",
+  "National Capital Region": "Метро Манила", "Ilocos (Region I)": "Илокос", "Cagayan Valley (Region II)": "Долина Кагаян",
+  "Central Visayas (Region VII)": "Центральные Висайи", "Western Visayas (Region VI)": "Западные Висайи",
+  "Cordillera Administrative Region (CAR)": "Кордильеры"
+ },
+ "ITA": {
+  "Valle d'Aosta": "Валле-д’Аоста", "Piemonte": "Пьемонт", "Lombardia": "Ломбардия", "Trentino-Alto Adige": "Трентино — Альто-Адидже",
+  "Liguria": "Лигурия", "Emilia-Romagna": "Эмилия-Романья", "Marche": "Марке", "Veneto": "Венеция", "Friuli-Venezia Giulia": "Фриули — Венеция-Джулия",
+  "Abruzzo": "Абруццо", "Molise": "Молизе", "Apulia": "Апулия", "Basilicata": "Базиликата", "Calabria": "Калабрия", "Campania": "Кампания",
+  "Lazio": "Лацио", "Toscana": "Тоскана", "Sicily": "Сицилия", "Sardegna": "Сардиния", "Umbria": "Умбрия"
+ },
+ "FRA": {
+  "Guyane française": "Французская Гвиана", "Hauts-de-France": "О-де-Франс", "Grand Est": "Гранд-Эст",
+  "Provence-Alpes-Côte-d'Azur": "Прованс — Альпы — Лазурный Берег", "Auvergne-Rhône-Alpes": "Овернь — Рона — Альпы",
+  "Nouvelle-Aquitaine": "Новая Аквитания", "Occitanie": "Окситания", "Bourgogne-Franche-Comté": "Бургундия — Франш-Конте",
+  "Pays de la Loire": "Земли Луары", "Bretagne": "Бретань", "Normandie": "Нормандия", "Martinique": "Мартиника", "Guadeloupe": "Гваделупа",
+  "Réunion": "Реюньон", "Mayotte": "Майотта", "Corse": "Корсика", "Centre-Val de Loire": "Центр — Долина Луары", "Île-de-France": "Иль-де-Франс"
+ },
+ "ESP": {
+  "Ceuta": "Сеута", "Melilla": "Мелилья", "Foral de Navarra": "Наварра", "País Vasco": "Страна Басков", "Aragón": "Арагон",
+  "Cataluña": "Каталония", "Extremadura": "Эстремадура", "Andalucía": "Андалусия", "Galicia": "Галисия", "Castilla y León": "Кастилия и Леон",
+  "Valenciana": "Валенсия", "Murcia": "Мурсия", "Asturias": "Астурия", "Cantabria": "Кантабрия", "Canary Is.": "Канарские острова",
+  "Islas Baleares": "Балеарские острова", "La Rioja": "Риоха", "Castilla-La Mancha": "Кастилия — Ла-Манча", "Madrid": "Мадрид"
+ },
+ "MKD": {
+  "Southwestern": "Юго-Западный регион", "Polog": "Полог", "Southeastern": "Юго-Восточный регион", "Vardar": "Вардар",
+  "Pelagonia": "Пелагония", "Skopje": "Скопье", "Greater Skopje": "Скопье", "Northeastern": "Северо-Восточный регион", "Eastern": "Восточный регион"
+ },
+ "AZE": {
+  "Ganja-Gazakh Economic Region": "Гянджа-Газах", "Kalbajar-Lachin Economic Region": "Кельбаджар-Лачин", "Naxçıvan Autonomous Republic": "Нахичевань",
+  "Shaki-Zaqatala Economic Region": "Шеки-Закаталы", "Guba-Khachmaz Economic Region": "Губа-Хачмаз", "Aran Economic Region": "Аран",
+  "Lankaran Economic Region": "Ленкорань", "Yukhari Garabakh Economic Region": "Верхний Карабах", "Absheron Economic Region": "Апшерон",
+  "Daghlig Shirvan Economic Region": "Нагорный Ширван"
+ },
+ "MLT": {"Malta Xlokk": "Юго-Восточная Мальта", "Malta Majjistral": "Северо-Западная Мальта", "Gozo": "Гоцо"},
+ "VNM": {
+  "Nam Trung Bộ": "Южное центральное побережье", "Tây Nguyên": "Центральное нагорье", "Đông Nam Bộ": "Юго-Восток",
+  "đồng bằng sông Cửu Long": "Дельта Меконга", "Tây Bắc": "Северо-Запад", "Bắc Trung Bộ": "Северное центральное побережье",
+  "Đông Bắc": "Северо-Восток", "Ðông B?c": "Северо-Восток", "Đồng Bằng Sông Hồng": "Дельта Красной реки"
+ },
+ "BFA": {
+  "Est": "Восточная область", "Cascades": "Каскады", "Sud-Ouest": "Юго-Западная область", "Sahel": "Сахель", "Nord": "Северная область",
+  "Boucle du Mouhoun": "Букле-дю-Мухун", "Hauts-Bassins": "О-Бассен", "Centre-Est": "Центрально-Восточная область",
+  "Centre-Sud": "Центрально-Южная область", "Centre-Ouest": "Центрально-Западная область", "Plateau-Central": "Центральное плато",
+  "Centre": "Центральная область", "Centre-Nord": "Центрально-Северная область"
+ },
+ "HUN": {
+  "Northern Great Plain": "Северный Альфёльд", "Great Southern Plain": "Южный Альфёльд", "Western Transdanubia": "Западное Задунайье",
+  "Southern Transdanubia": "Южное Задунайье", "Northern Hungary": "Северная Венгрия", "Central Transdanubia": "Центральное Задунайье",
+  "Central Hungary": "Центральная Венгрия"
+ },
+ "IRL": {
+  "Border": "Пограничье", "Dublin": "Дублин", "Mid-East": "Средний Восток", "South-East": "Юго-Восток", "South-West": "Юго-Запад",
+  "Mid-West": "Средний Запад", "West": "Запад", "Midlands": "Мидлендс"
+ },
+ "GIN": {"Faranah": "Фарана", "Kindia": "Киндия", "Mamou": "Мамоу", "Nzérékoré": "Нзерекоре", "Kankan": "Канкан", "Boke": "Боке", "Labé": "Лабе", "Conakry": "Конакри"},
+ "KOS": {"Đakovica": "Джяковица", "Prizren": "Призрен", "Gnjilane": "Гнилане", "Uroševac": "Урошевац", "Kosovska Mitrovica": "Косовска-Митровица", "Pristina": "Приштина", "Peć": "Печ"},
+ "BEL": {"Flemish": "Фландрия", "Walloon": "Валлония", "Capital Region": "Брюссель"},
+ "BTN": {"Western": "Западный Бутан", "Southern": "Южный Бутан", "Eastern": "Восточный Бутан", "Central": "Центральный Бутан"},
+ "CPV": {"Ilhas de Sotavento": "Подветренные острова", "Ilhas de Barlavento": "Наветренные острова"},
+ "GNB": {"Bissau": "Бисау", "Sul": "Южная провинция", "Norte": "Северная провинция", "Leste": "Восточная провинция"},
+ "KNA": {"Saint Kitts": "Сент-Китс", "Nevis": "Невис"},
+ "MDV": {"Upper North": "Верхний Север", "North": "Север", "North Central": "Северо-Центральная провинция", "Male": "Мале",
+  "Central": "Центральная провинция", "Upper South": "Верхний Юг", "South Central": "Южно-Центральная провинция", "South": "Юг"},
+ "PRT": {"Algarve": "Алгарви", "Norte, Centro": "Север и Центр", "Alentejo": "Алентежу", "Lisbon": "Лиссабон", "Centro": "Центральный регион", "Norte": "Северный регион"},
+ "LKA": {"Madhyama paḷāta": "Центральная провинция", "Næ̆gĕnahira paḷāta": "Восточная провинция", "Uturumæ̆da paḷāta": "Северо-Центральная провинция",
+  "Uturu paḷāta": "Северная провинция", "Vayamba paḷāta": "Северо-Западная провинция", "Sabaragamuva paḷāta": "Сабарагамува",
+  "Dakuṇu paḷāta": "Южная провинция", "Ūva paḷāta": "Ува", "Basnāhira paḷāta": "Западная провинция"},
+ "MDG": {"Androy": "Андруй"},
+ "JPN": {"Kyushu": "Кюсю", "Shikoku": "Сикоку", "Chugoku": "Тюгоку", "Kinki": "Кансай", "Chubu": "Тюбу", "Tohoku": "Тохоку", "Kanto": "Канто", "Hokkaido": "Хоккайдо", "Okinawa": "Окинава"}
+}

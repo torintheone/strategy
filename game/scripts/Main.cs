@@ -1,0 +1,1970 @@
+using Godot;
+using Politeconomy.Game.Map;
+using Politeconomy.Game.UI;
+using Politeconomy.Sim;
+using Politeconomy.Sim.Data;
+using Politeconomy.Sim.Engine;
+using Politeconomy.Sim.Geo;
+using Politeconomy.Sim.Model;
+using Politeconomy.Sim.Text;
+using Politeconomy.Sim.Views;
+
+namespace Politeconomy.Game;
+
+/// <summary>
+/// Корневой узел игры: загружает данные, запускает симуляцию в фоне, строит карту и интерфейс,
+/// раздаёт им свежие снимки мира и обрабатывает ввод на карте.
+/// </summary>
+public partial class Main : Node
+{
+    const float ClickSlop = 5f;
+
+    GameData _data = null!;
+    WorldMap _map = null!;
+    SimulationHost? _host;
+    Dictionary<string, RegionRecord> _regionInfo = null!;
+    Dictionary<string, string> _countryNames = null!;
+
+    MapView _mapView = null!;
+    MapCamera _camera = null!;
+    MapOverlay _overlay = null!;
+    TopBar _topBar = null!;
+    ModePanel _modePanel = null!;
+    CountryPanel _countryPanel = null!;
+    HoverCard _hoverCard = null!;
+    ScreenRail _rail = null!;
+    GovernmentScreen _government = null!;
+    MinistryScreen _ministries = null!;
+    PoliticsScreen _politicsScreen = null!;
+    SocietyScreen _society = null!;
+    ElectionResultsDialog _resultsDialog = null!;
+    CoalitionDialog _coalitionDialog = null!;
+    DefeatDialog _defeatDialog = null!;
+    ReignSummaryDialog _summaryDialog = null!;
+    ConfirmDialog _confirmDialog = null!;
+    DebateDialog _debateDialog = null!;
+    ProtestDialog _protestDialog = null!;
+    EventDialog _eventDialog = null!;
+    EventsTray _eventsTray = null!;
+    NewsTicker _newsTicker = null!;
+    NewsPanel _newsPanel = null!;
+    BroadcastDialog _broadcastDialog = null!;
+    NewspaperDialog _newspaper = null!;
+    // Последний номер газеты, который игрок открыл.
+    int _readPaper;
+    // Последний телевыпуск, о котором игрок уже знает (окном или строкой в ленте).
+    int _seenBroadcast;
+    DiplomacyScreen _diplomacy = null!;
+    ScienceScreen _science = null!;
+    ProjectDialog _projectDialog = null!;
+    readonly HashSet<string> _seenProtests = new();
+    string? _seenCampaign;
+    readonly HashSet<string> _seenPeace = [];
+    readonly HashSet<string> _seenEvents = [];
+    string? _seenDebate;
+    bool _dialogWasOpen;
+    // Какие выборы, переговоры, поражения и итоги игрок уже видел (окна показываются один раз).
+    readonly HashSet<string> _seenElections = new();
+    string? _seenFor;
+    string? _seenTalks;
+    Politeconomy.Sim.Politics.Defeat? _seenDefeat;
+    Politeconomy.Sim.Politics.ReignSummary? _seenSummary;
+    bool _dialogsPrimed;
+    LawsScreen _laws = null!;
+    BudgetScreen _budget = null!;
+    bool _dossierBeforeScreen;
+    Toasts _toasts = null!;
+    Control _uiRoot = null!;
+
+    MapModeView _mode = null!;
+    readonly Dictionary<string, Color> _regionColors = new(StringComparer.Ordinal);
+    readonly Dictionary<string, Color> _countryColors = new(StringComparer.Ordinal);
+    MapRegion? _hoveredRegion;
+    MapCountry? _hoveredCountry;
+    MapRegion? _selectedRegion;
+    MapCountry? _selectedCountry;
+    long _shownVersion = -1;
+    bool _dragging;
+    bool _dragMoved;
+    Vector2 _dragStart;
+    Vector2 _mouse;
+
+    // Скриншоты для CI: «-- --screenshots <папка>» снимает несколько видов карты и интерфейса и выходит.
+    string? _shotsDir;
+    int _shotStep;
+    int _shotFrames;
+    // Скриншоты ленты новостей: ждём, пока мир проживёт несколько месяцев, и закрываем окна, которые при этом открылись.
+    DateOnly? _shotUntil;
+    bool _shotDrain;
+
+    // Дымовой тест для CI: запуск с аргументом «-- --smoke» проходит по всем режимам карты и выходит.
+    bool _smoke;
+    double _smokeTime;
+    int _smokeStep;
+    string? _smokeOccupied;
+    string? _smokeAnnexed;
+    int _smokeEvent;
+    bool _smokeEventShown;
+    bool _smokeBroadcast;
+    string? _smokeTreaty;
+    // В снимке только последние записи журнала, поэтому смоук-тест копит всё, что успел увидеть.
+    readonly HashSet<(string Country, string Kind)> _smokeJournal = [];
+
+    public override void _Ready()
+    {
+        var userArgs = OS.GetCmdlineUserArgs();
+        _smoke = userArgs.Contains("--smoke");
+        var shots = Array.IndexOf(userArgs, "--screenshots");
+        if (shots >= 0 && shots + 1 < userArgs.Length)
+            _shotsDir = userArgs[shots + 1];
+        var window = GetWindow();
+        window.Title = "Politeconomy";
+        window.MinSize = new Vector2I(1280, 720);
+
+        var theme = UiTheme.Build();
+        ThemeDB.GetDefaultTheme().MergeWith(theme);
+        var dir = DataDirectory.Find(OS.GetExecutablePath().GetBaseDir(), ProjectSettings.GlobalizePath("res://"));
+        if (dir == null)
+        {
+            ShowFatal("Не найдена папка data рядом с игрой. Распакуйте архив целиком и запустите Politeconomy.exe из распакованной папки.", theme);
+            return;
+        }
+        try
+        {
+            _data = GameData.Load(dir);
+        }
+        catch (DataException e)
+        {
+            ShowFatal("Не удалось прочитать данные игры.\n" + e.Message, theme);
+            return;
+        }
+
+        _map = WorldMap.From(_data.Map);
+        _regionInfo = _data.Regions.Regions.ToDictionary(r => r.Id, StringComparer.Ordinal);
+        _countryNames = _data.Countries.Countries.ToDictionary(c => c.Id, c => c.Name, StringComparer.Ordinal);
+        // Новая партия: мир, экономика по данным и разогрев модели (меньше секунды).
+        var start = GameSetup.NewGame(_data);
+        _host = new SimulationHost(start.Simulation, _data.Balance.Time.DaysPerSecond);
+
+        BuildMap();
+        BuildInterface(theme);
+        SetMode(_data.MapModes.Modes[0]);
+        _host.Start();
+    }
+
+    void BuildMap()
+    {
+        // Фон за пределами карты мира — экранный, с виньеткой.
+        var backdrop = new CanvasLayer { Layer = -10, Name = "Backdrop" };
+        AddChild(backdrop);
+        var back = new ColorRect { MouseFilter = Control.MouseFilterEnum.Ignore };
+        back.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        back.Material = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/backdrop.gdshader") };
+        backdrop.AddChild(back);
+
+        _mapView = new MapView { Name = "Map" };
+        AddChild(_mapView);
+        _mapView.Build(_map);
+
+        _camera = new MapCamera { Name = "Camera" };
+        AddChild(_camera);
+        _camera.MakeCurrent();
+        _camera.Setup(new Rect2(_map.MinX, _map.MinY, _map.Width, _map.Height));
+        _camera.Changed += OnCameraChanged;
+
+        var overlayLayer = new CanvasLayer { Layer = 1, Name = "MapLabels" };
+        AddChild(overlayLayer);
+        _overlay = new MapOverlay();
+        overlayLayer.AddChild(_overlay);
+        _overlay.Setup(_map, _data);
+        _mapView.SetZoom(_camera.ZoomLevel);
+        _overlay.Zoom = _camera.ZoomLevel;
+    }
+
+    void BuildInterface(Theme theme)
+    {
+        var layer = new CanvasLayer { Layer = 10, Name = "Interface" };
+        AddChild(layer);
+        _uiRoot = new Control { Theme = theme, MouseFilter = Control.MouseFilterEnum.Ignore };
+        _uiRoot.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        layer.AddChild(_uiRoot);
+
+        _topBar = new TopBar();
+        _uiRoot.AddChild(_topBar);
+        _topBar.Setup(_data);
+        _topBar.PauseToggled += () => _host!.TogglePause();
+        _topBar.SpeedChosen += speed => _host!.SetSpeed(speed);
+        _topBar.PlayerClicked += () =>
+        {
+            if (_host!.Snapshot.PlayerCountry is { } id)
+                SelectCountry(_map.Country(id), center: true);
+        };
+
+        _modePanel = new ModePanel();
+        _uiRoot.AddChild(_modePanel);
+        _modePanel.Setup(_data);
+        _modePanel.ModeChosen += SetMode;
+
+        _newsTicker = new NewsTicker();
+        _uiRoot.AddChild(_newsTicker);
+        _newsTicker.Setup(_data);
+        _newsTicker.Toggled += ToggleNews;
+        _newsTicker.BroadcastRequested += ShowBroadcast;
+        _newsTicker.PaperRequested += () => ShowNewspaper();
+        _newsPanel = new NewsPanel { Visible = false };
+        _uiRoot.AddChild(_newsPanel);
+        _newsPanel.Setup(_data);
+        _newsPanel.Closed += ToggleNews;
+        _newsPanel.CountryChosen += id =>
+        {
+            if (_map.Country(id) is { } country)
+                SelectCountry(country, center: true);
+        };
+        _newsPanel.SetBroadcastWindow(GameSettings.BroadcastWindow);
+        _newsPanel.BroadcastWindowToggled += on => GameSettings.BroadcastWindow = on;
+        _newsPanel.BroadcastChosen += ShowBroadcast;
+
+        _countryPanel = new CountryPanel { Visible = false };
+        _uiRoot.AddChild(_countryPanel);
+        _countryPanel.Setup(_data);
+        _countryPanel.Closed += () => SelectRegion(null);
+        _countryPanel.PlayAs += id => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.PlayAs(w, id));
+        _countryPanel.RegionChosen += id => SelectRegion(_map.Region(id), center: true);
+
+        _countryPanel.GovernmentRequested += id => OpenGovernment(id);
+        _countryPanel.PoliticsRequested += id => OpenPolitics(id);
+
+        _rail = new ScreenRail();
+        _uiRoot.AddChild(_rail);
+        _rail.Setup([("government", "government", "Правительство и парламент (G)"), ("ministries", "ministries", "Ведомства и доклады министров (M)"),
+            ("politics", "politics", "Партии и опросы (P)"), ("society", "society", "Общество и группы интересов (O)"), ("laws", "laws", "Законы (L)"),
+            ("budget", "budget", "Бюджет и налоги (B)"), ("science", "science", "Наука и технологии (N)"),
+            ("diplomacy", "diplomacy", "Дипломатия (I)")]);
+        _rail.ScreenChosen += ToggleScreen;
+
+        _government = new GovernmentScreen { Visible = false };
+        _uiRoot.AddChild(_government);
+        _government.Setup(_data);
+        _government.Closed += CloseScreens;
+        _government.CandidatesRequested += (country, post) =>
+            _host!.Post(w => Politeconomy.Sim.Government.GovernmentActions.RequestCandidates(w, country, post));
+        _government.Appointed += (country, post, index) =>
+            _host!.Post(w => Politeconomy.Sim.Government.GovernmentActions.Appoint(w, country, post, index));
+
+        _diplomacy = new DiplomacyScreen { Visible = false };
+        _uiRoot.AddChild(_diplomacy);
+        _diplomacy.Setup(_data);
+        _diplomacy.Closed += CloseScreens;
+        _diplomacy.ActionChosen += (partner, action) =>
+        {
+            if (action == "declare")
+            {
+                _confirmDialog.Show($"Объявить войну стране «{CountryName(partner)}»?",
+                    "Война начнётся сразу. За неё вступятся союзники; отношения со всеми ухудшатся. Армия мобилизуется, расходы на оборону вырастут, " +
+                    "экономика замедлится; сначала народ сплотится, потом устанет. Закончить войну можно перемирием по линии фронта или мирным договором — если противник согласится.",
+                    "Объявить войну", () => PostDiplomacy(partner, action));
+                return;
+            }
+            PostDiplomacy(partner, action);
+        };
+
+        _science = new ScienceScreen { Visible = false };
+        _uiRoot.AddChild(_science);
+        _science.Setup(_data);
+        _science.Closed += CloseScreens;
+        _science.AllocationChanged += (country, branch, delta) =>
+            _host!.Post(w => Politeconomy.Sim.Science.ScienceModel.Allocate(w, country, branch, delta));
+        _science.PriorityChosen += (country, tech) => _host!.Post(w => Politeconomy.Sim.Science.ScienceModel.Prioritize(w, country, tech));
+
+        _ministries = new MinistryScreen { Visible = false };
+        _uiRoot.AddChild(_ministries);
+        _ministries.Setup(_data);
+        _ministries.Closed += CloseScreens;
+        _ministries.ReplaceRequested += (country, post) =>
+        {
+            OpenGovernment(country);
+            _government.ChooseReplacement(post);
+        };
+        _ministries.LawRequested += (country, law) =>
+        {
+            OpenLaws(country);
+            _laws.SelectLaw(law);
+        };
+        _ministries.BudgetRequested += OpenBudget;
+        _ministries.ProgramToggled += (country, program) => _host!.Post(w => Politeconomy.Sim.Health.ProgramModel.Toggle(w, country, program));
+        _ministries.ProjectRequested += ShowProject;
+
+        _politicsScreen = new PoliticsScreen { Visible = false };
+        _uiRoot.AddChild(_politicsScreen);
+        _politicsScreen.Setup(_data);
+        _politicsScreen.Closed += CloseScreens;
+        _politicsScreen.ResultsRequested += id => ShowLastElection(id);
+        _politicsScreen.TalksRequested += id =>
+        {
+            if (_host?.Snapshot.Countries.GetValueOrDefault(id) is { } c)
+                _coalitionDialog.Show(id, CountryName(id), c);
+        };
+        var campaign = _politicsScreen.Campaign;
+        campaign.TripRequested += (id, k) => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.CampaignTrip(w, id, k));
+        campaign.MediaRequested += id => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.CampaignMedia(w, id));
+        campaign.PledgeRequested += (id, law, variant) => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.Pledge(w, id, law, variant));
+        campaign.FraudChosen += (id, level) => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.SetFraud(w, id, level));
+        campaign.DebateRequested += ShowDebate;
+        _politicsScreen.EarlyElectionRequested += id => _confirmDialog.Show("Распустить парламент?",
+            "Досрочные выборы пройдут через два месяца. Если ваша партия проиграет, власть перейдёт к другим, и вам придётся решать — " +
+            "продолжать за новое правительство или закончить партию.", "Распустить",
+            () => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.CallEarlyElection(w, id)));
+
+        _society = new SocietyScreen { Visible = false };
+        _uiRoot.AddChild(_society);
+        _society.Setup(_data);
+        _society.Closed += CloseScreens;
+        _society.LawRequested += (country, law, variant) =>
+        {
+            OpenLaws(country);
+            _laws.SelectLaw(law, variant);
+        };
+        _society.BudgetRequested += _ => OpenBudget();
+        _society.ProtestRequested += ShowProtest;
+        _society.ArrestRequested += id =>
+        {
+            var p = _host?.Snapshot.Countries.GetValueOrDefault(id)?.Politics;
+            var target = p?.Party(p.Security?.ArrestTarget);
+            _confirmDialog.Show("Арестовать лидеров оппозиции?",
+                $"Будут задержаны лидер и активисты партии «{target?.Name}». Партия ослабнет и потеряет часть сторонников. Цена: свобод станет меньше, " +
+                "легитимность упадёт, радикализм вырастет, сторонники партии выйдут на улицы, интеллигенция и профсоюзы будут недовольны, " +
+                "а при свободной прессе случится скандал. Повторить можно не раньше чем через год.",
+                "Арестовать", () => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.ArrestOpposition(w, id)));
+        };
+
+        _laws = new LawsScreen { Visible = false };
+        _uiRoot.AddChild(_laws);
+        _laws.Setup(_data);
+        _laws.Closed += CloseScreens;
+        _laws.Proposed += (country, law, variant) =>
+            _host!.Post(w => Politeconomy.Sim.Laws.LawActions.Propose(w, country, law, variant));
+        _laws.Withdrawn += (country, law) =>
+            _host!.Post(w => Politeconomy.Sim.Laws.LawActions.Withdraw(w, country, law));
+
+        _budget = new BudgetScreen { Visible = false };
+        _uiRoot.AddChild(_budget);
+        _budget.Setup(_data);
+        _budget.Closed += CloseScreens;
+        _budget.Edited += (country, spending, taxes) =>
+            _host!.Post(w => Politeconomy.Sim.Budget.BudgetActions.Edit(w, country, spending, taxes));
+        _budget.AmendmentSubmitted += country => _host!.Post(w => Politeconomy.Sim.Budget.BudgetActions.SubmitAmendment(w, country));
+        _budget.AmendmentDiscarded += country => _host!.Post(w => Politeconomy.Sim.Budget.BudgetActions.DiscardAmendment(w, country));
+        _budget.RateChosen += (country, rate) => _host!.Post(w => Politeconomy.Sim.Budget.BudgetActions.SetRate(w, country, rate));
+
+        _resultsDialog = new ElectionResultsDialog();
+        _uiRoot.AddChild(_resultsDialog);
+        _resultsDialog.Setup();
+        _resultsDialog.MapRequested += ShowElectionMap;
+        _coalitionDialog = new CoalitionDialog();
+        _uiRoot.AddChild(_coalitionDialog);
+        _coalitionDialog.Setup(_data);
+        _coalitionDialog.Formed += (country, partners) =>
+            _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.FormCoalition(w, country, partners));
+        _defeatDialog = new DefeatDialog();
+        _uiRoot.AddChild(_defeatDialog);
+        _defeatDialog.Setup();
+        _defeatDialog.ContinueChosen += () => _host!.Post(Politeconomy.Sim.Politics.PoliticsActions.ContinueAfterDefeat);
+        _defeatDialog.EndChosen += () =>
+        {
+            CloseScreens();
+            _host!.Post(Politeconomy.Sim.Politics.PoliticsActions.EndReign);
+        };
+        _summaryDialog = new ReignSummaryDialog();
+        _uiRoot.AddChild(_summaryDialog);
+        _summaryDialog.Setup(_data);
+        _confirmDialog = new ConfirmDialog();
+        _uiRoot.AddChild(_confirmDialog);
+        _confirmDialog.Setup();
+        _debateDialog = new DebateDialog();
+        _uiRoot.AddChild(_debateDialog);
+        _debateDialog.Setup();
+        _debateDialog.Answered += (id, answer) => _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.AnswerDebate(w, id, answer));
+        _protestDialog = new ProtestDialog();
+        _uiRoot.AddChild(_protestDialog);
+        _protestDialog.Setup(_data);
+        _protestDialog.Answered += (id, protest, response) =>
+            _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.RespondToProtest(w, id, protest, response));
+        _projectDialog = new ProjectDialog();
+        _uiRoot.AddChild(_projectDialog);
+        _projectDialog.Setup(_data);
+        _projectDialog.Chosen += (id, project, financing, lender) =>
+            _host!.Post(w => Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, id, project, financing, lender));
+
+        _eventDialog = new EventDialog();
+        _uiRoot.AddChild(_eventDialog);
+        _eventDialog.Setup();
+        _eventDialog.Decided += (id, option) => _host!.Post(w =>
+        {
+            if (w.PlayerCountry is { } me)
+                Politeconomy.Sim.Events.EventModel.Decide(w, me, id, option);
+        });
+        _broadcastDialog = new BroadcastDialog();
+        _uiRoot.AddChild(_broadcastDialog);
+        _broadcastDialog.Setup(_data);
+        _broadcastDialog.CountryChosen += id =>
+        {
+            if (_map.Country(id) is { } country)
+                SelectCountry(country, center: true);
+        };
+        _newspaper = new NewspaperDialog();
+        _uiRoot.AddChild(_newspaper);
+        _newspaper.Setup(_data);
+        _eventsTray = new EventsTray();
+        _uiRoot.AddChild(_eventsTray);
+        _eventsTray.Setup();
+        _eventsTray.Chosen += id =>
+        {
+            if (!DialogOpen && _host?.Snapshot.Events?.Pending.FirstOrDefault(p => p.Id == id) is { } pending)
+            {
+                _eventDialog.Show(pending);
+                PauseForDialog();
+            }
+        };
+
+        _toasts = new Toasts();
+        _uiRoot.AddChild(_toasts);
+        _toasts.Setup();
+
+        _hoverCard = new HoverCard();
+        _uiRoot.AddChild(_hoverCard);
+        _hoverCard.Setup();
+
+        // Когда курсор уходит на панель, карта не должна подсвечивать регион под ней.
+        foreach (var panel in new Control[] { _topBar, _modePanel, _countryPanel, _rail, _government, _ministries, _politicsScreen, _laws, _budget, _newsTicker, _newsPanel })
+            panel.MouseEntered += () => SetHovered(null, null);
+    }
+
+    public override void _Process(double delta)
+    {
+        if (_smoke && _host != null)
+            SmokeStep(delta);
+        if (_shotsDir != null && _host != null)
+            ScreenshotStep();
+        if (_host == null)
+            return;
+        if (_host.Error is { } error)
+        {
+            GD.PushError(error.ToString());
+            ShowFatal("Ошибка в симуляции:\n" + error.Message, _uiRoot.Theme);
+            _host.Dispose();
+            _host = null;
+            return;
+        }
+        var snapshot = _host.Snapshot;
+        LayoutNews();
+        // Окно закрыли — следующее (например, дебаты после начала кампании) показываем сразу: на паузе нового снимка не будет.
+        if (_dialogWasOpen && !DialogOpen)
+            CheckDialogs(snapshot);
+        _dialogWasOpen = DialogOpen;
+        _dialogWasOpen = DialogOpen;
+        if (snapshot.Version == _shownVersion)
+            return;
+        _toasts.Feed(snapshot.Journal, snapshot.PlayerCountry, silent: _shownVersion < 0);
+        if (_smoke)
+            foreach (var entry in snapshot.Journal)
+                _smokeJournal.Add((entry.Country, entry.Kind));
+        _shownVersion = snapshot.Version;
+        _topBar.Show(snapshot);
+        if (_government.Visible)
+            _government.Refresh(snapshot);
+        if (_ministries.Visible)
+            _ministries.Refresh(snapshot);
+        if (_politicsScreen.Visible)
+            _politicsScreen.Refresh(snapshot);
+        if (_society.Visible)
+            _society.Refresh(snapshot);
+        if (_laws.Visible)
+            _laws.Refresh(snapshot);
+        if (_budget.Visible)
+            _budget.Refresh(snapshot);
+        if (_science.Visible)
+            _science.Refresh(snapshot);
+        if (_diplomacy.Visible)
+            _diplomacy.Refresh(snapshot);
+        _eventsTray.Show(snapshot.Events?.Pending);
+        _newsTicker.Show(snapshot.News, snapshot.PlayerCountry);
+        _newsTicker.SetLatest(snapshot.News.LastBroadcast(snapshot.PlayerCountry));
+        var papers = snapshot.News.PapersOf(snapshot.PlayerCountry);
+        _newsTicker.SetPaper(papers.Count > 0, papers.Count > 0 && papers[^1].Id > _readPaper);
+        if (_newsPanel.Visible)
+            _newsPanel.Refresh(snapshot.News, snapshot.PlayerCountry);
+        Recolor(snapshot);
+        CheckDialogs(snapshot);
+        _dialogWasOpen = DialogOpen;
+        if (_countryPanel.Visible)
+            _countryPanel.Refresh(snapshot);
+    }
+
+    void SetMode(MapModeDef mode)
+    {
+        _mode = new MapModeView(_data, _map, mode);
+        _modePanel.Show(_mode);
+        if (_host != null)
+            Recolor(_host.Snapshot);
+        UpdateHoverCard();
+    }
+
+    /// <summary>Перекрашивает только те регионы, у которых цвет действительно изменился.</summary>
+    void Recolor(WorldSnapshot snapshot)
+    {
+        var changed = false;
+        foreach (var region in _map.Regions)
+        {
+            var color = UiTheme.Hex(_mode.ColorOf(region, snapshot));
+            if (_regionColors.TryGetValue(region.Id, out var old) && old == color)
+                continue;
+            _regionColors[region.Id] = color;
+            _mapView.SetColor(region.Id, color);
+            changed = true;
+        }
+        if (!changed)
+            return;
+        // Метка мелкой страны берёт цвет её самого большого региона.
+        foreach (var country in _map.Countries)
+            _countryColors[country.Id] = _regionColors[country.Regions.MaxBy(r => r.Area)!.Id];
+        _overlay.CountryColors = _countryColors;
+        _overlay.QueueRedraw();
+    }
+
+    void OnCameraChanged()
+    {
+        _overlay.Zoom = _camera.ZoomLevel;
+        _overlay.QueueRedraw();
+        _mapView.SetZoom(_camera.ZoomLevel);
+    }
+
+    void UpdateHighlight() =>
+        _mapView.SetHighlight(_hoveredRegion, _hoveredCountry, _selectedRegion, _selectedCountry);
+
+    public override void _UnhandledInput(InputEvent e)
+    {
+        if (_host == null)
+            return;
+        switch (e)
+        {
+            case InputEventMouseButton { ButtonIndex: MouseButton.WheelUp, Pressed: true } wheel:
+                _camera.ZoomAt(wheel.Position, 1.15f);
+                break;
+            case InputEventMouseButton { ButtonIndex: MouseButton.WheelDown, Pressed: true } wheel:
+                _camera.ZoomAt(wheel.Position, 1 / 1.15f);
+                break;
+            case InputEventMouseButton { ButtonIndex: MouseButton.Left or MouseButton.Middle or MouseButton.Right } button:
+                if (button.Pressed)
+                {
+                    _dragging = true;
+                    _dragMoved = false;
+                    _dragStart = button.Position;
+                    _camera.StartDrag();
+                }
+                else
+                {
+                    if (!_dragMoved && button.ButtonIndex == MouseButton.Left)
+                        ClickAt(button.Position);
+                    else if (_dragMoved)
+                        _camera.ReleaseDrag();
+                    _dragging = false;
+                }
+                break;
+            case InputEventMouseMotion motion:
+                _mouse = motion.Position;
+                if (_dragging)
+                {
+                    if (!_dragMoved && (motion.Position - _dragStart).Length() > ClickSlop)
+                        _dragMoved = true;
+                    if (_dragMoved)
+                        _camera.PanByScreen(motion.Relative);
+                }
+                var (region, country) = Pick(motion.Position);
+                SetHovered(region, country);
+                break;
+            case InputEventKey { Pressed: true, Echo: false } key:
+                HandleKey(key.Keycode, key.PhysicalKeycode);
+                break;
+        }
+    }
+
+    /// <summary>Клавиши; буквенные — по физическому положению, чтобы работали и в русской раскладке.</summary>
+    void HandleKey(Key key, Key physical)
+    {
+        // Пока открыто окно, клавиши его не обходят; Esc закрывает его (кроме окна поражения — там нужно решить).
+        if (DialogOpen)
+        {
+            if (key == Key.Escape && !_defeatDialog.Visible)
+                CloseDialogs();
+            // Телевыпуск листается с клавиатуры.
+            else if (_broadcastDialog.Visible && key is Key.Enter or Key.KpEnter or Key.Space or Key.Right)
+                _broadcastDialog.Next();
+            else if (_broadcastDialog.Visible && key == Key.Left)
+                _broadcastDialog.Previous();
+            else if (_newspaper.Visible && key is Key.Left or Key.Right)
+                _newspaper.Turn(key == Key.Left ? -1 : 1);
+            else if (_newspaper.Visible && physical == Key.K)
+                _newspaper.Visible = false;
+            return;
+        }
+        if (physical == Key.K)
+        {
+            ShowNewspaper();
+            return;
+        }
+        if (physical is Key.G or Key.M or Key.P or Key.O or Key.L or Key.B or Key.N or Key.I)
+        {
+            ToggleScreen(physical switch
+            {
+                Key.G => "government", Key.M => "ministries", Key.P => "politics", Key.O => "society", Key.L => "laws", Key.N => "science", Key.I => "diplomacy", _ => "budget",
+            });
+            return;
+        }
+        if (physical == Key.J)
+        {
+            ToggleNews();
+            return;
+        }
+        switch (key)
+        {
+            case Key.Space:
+                _host!.TogglePause();
+                return;
+            case >= Key.Key1 and <= Key.Key5:
+                _host!.SetSpeed((int)(key - Key.Key1) + 1);
+                return;
+            case Key.Escape:
+                if (ScreenOpen)
+                    CloseScreens();
+                else if (_newsPanel.Visible)
+                    ToggleNews();
+                else
+                    SelectRegion(null);
+                return;
+            case Key.Equal or Key.KpAdd:
+                _camera.ZoomAt(_camera.GetViewportRect().Size / 2, 1.3f);
+                return;
+            case Key.Minus or Key.KpSubtract:
+                _camera.ZoomAt(_camera.GetViewportRect().Size / 2, 1 / 1.3f);
+                return;
+            case Key.Home:
+                _camera.FitWorld();
+                return;
+        }
+        foreach (var mode in _data.MapModes.Modes)
+            if (mode.Hotkey != null && Enum.TryParse<Key>(mode.Hotkey, out var hotkey) && hotkey == key)
+                SetMode(mode);
+    }
+
+    /// <summary>Регион под курсором; если его нет — мелкая страна, нарисованная кружком.</summary>
+    (MapRegion? Region, MapCountry? Country) Pick(Vector2 screen)
+    {
+        var world = _camera.ScreenToWorld(screen);
+        var radius = (MapOverlay.MarkerRadius + 3) / _camera.ZoomLevel;
+        var marker = _map.FindMarkerAt(world.X, world.Y, radius, _overlay.IsMarker);
+        if (marker != null)
+            return (null, marker);
+        var region = _map.FindRegionAt(world.X, world.Y);
+        return (region, region?.Country is { } c ? _map.Country(OwnerOf(region, c)) : null);
+    }
+
+    /// <summary>Владелец региона сейчас: страна из данных карты или новый владелец по мирному договору.</summary>
+    string OwnerOf(MapRegion region, string mapCountry) => _host?.Snapshot.OwnerOf(region.Id, mapCountry) ?? mapCountry;
+
+    void ClickAt(Vector2 screen)
+    {
+        var (region, country) = Pick(screen);
+        if (region != null)
+            SelectRegion(region.IsNeutral ? null : region);
+        else
+            SelectCountry(country);
+    }
+
+    void SetHovered(MapRegion? region, MapCountry? country)
+    {
+        if (region == _hoveredRegion && country == _hoveredCountry)
+        {
+            UpdateHoverCard();
+            return;
+        }
+        _hoveredRegion = region;
+        _hoveredCountry = country;
+        _overlay.Hovered = country?.Id;
+        _overlay.QueueRedraw();
+        UpdateHighlight();
+        UpdateHoverCard();
+    }
+
+    void UpdateHoverCard()
+    {
+        if (_hoverCard == null)
+            return;
+        if (_host == null || (_hoveredRegion == null && _hoveredCountry == null))
+        {
+            _hoverCard.Visible = false;
+            return;
+        }
+        var snapshot = _host.Snapshot;
+        if (_hoveredRegion is { IsNeutral: true } neutral)
+        {
+            var t = _map.Territory(neutral.Territory!);
+            _hoverCard.ShowAt(_mouse, t?.Name ?? neutral.Id, t?.Note ?? "");
+            return;
+        }
+        var region = _hoveredRegion ?? _hoveredCountry!.Regions.MaxBy(r => r.Area)!;
+        var owner = snapshot.OwnerOf(region.Id, region.Country!);
+        var countryName = _countryNames[owner];
+        var lines = new List<string>();
+        var title = countryName;
+        if (_hoveredRegion != null && _regionInfo.TryGetValue(region.Id, out var info))
+        {
+            title = info.Name;
+            lines.Add(countryName);
+        }
+        var controller = snapshot.ControllerOf(region.Id, region.Country!);
+        if (controller != owner)
+            lines.Add("Под контролем: " + _countryNames[controller]);
+        var value = _mode.ValueText(region, snapshot);
+        if (value.Length > 0)
+            lines.Add(value);
+        _hoverCard.ShowAt(_mouse, title, string.Join('\n', lines));
+    }
+
+    void SelectRegion(MapRegion? region, bool center = false)
+    {
+        _selectedRegion = region;
+        _selectedCountry = region?.Country is { } c ? _map.Country(OwnerOf(region, c)) : null;
+        ApplySelection(center ? region is null ? null : new Vector2(region.LabelX, region.LabelY) : null);
+    }
+
+    void SelectCountry(MapCountry? country, bool center = false)
+    {
+        _selectedRegion = null;
+        _selectedCountry = country;
+        ApplySelection(center && country != null ? new Vector2(country.LabelX, country.LabelY) : null);
+    }
+
+    void ApplySelection(Vector2? centerOn)
+    {
+        _overlay.Selected = _selectedCountry?.Id;
+        _overlay.QueueRedraw();
+        UpdateHighlight();
+        if (_selectedCountry == null || _host == null)
+        {
+            _countryPanel.Visible = false;
+            return;
+        }
+        _countryPanel.ShowCountry(_selectedCountry.Id, _selectedRegion?.Id, _host.Snapshot);
+        if (centerOn is { } point)
+            _camera.CenterOn(point);
+    }
+
+    void SmokeStep(double delta)
+    {
+        _smokeTime += delta;
+        // Событие: окно открывается, решение уходит в модель.
+        if (!_smokeEventShown && _smokeEvent != 0 && _host!.Snapshot.Events?.Pending.FirstOrDefault(p => p.Id == _smokeEvent) is { } smokePending)
+        {
+            _eventDialog.Show(smokePending);
+            _smokeEventShown = _eventDialog.Visible;
+            _eventDialog.Visible = false;
+            var eventId = _smokeEvent;
+            _host.Post(w => Politeconomy.Sim.Events.EventModel.Decide(w, "RUS", eventId, "export"));
+        }
+        switch (_smokeStep)
+        {
+            case 0 when _smokeTime > 0.3:
+                _host!.SetSpeed(SimulationHost.MaxSpeed);
+                SelectCountry(_map.Country("RUS"), center: true);
+                _host.Post(w => Politeconomy.Sim.Politics.PoliticsActions.PlayAs(w, "RUS"));
+                // Захват региона: проверяем, что перекраска и досье переживают смену контроля.
+                _smokeOccupied = _map.Country("FRA")!.Regions[0].Id;
+                var occupied = _smokeOccupied;
+                _host.Post(w => w.TransferControl(occupied, "DEU"));
+                _smokeStep++;
+                break;
+            case 1:
+                foreach (var mode in _data.MapModes.Modes)
+                    SetMode(mode);
+                foreach (var factor in new[] { 2f, 4f, 8f, 0.1f })
+                {
+                    _camera.ZoomAt(_camera.GetViewportRect().Size / 2, factor);
+                    _overlay.QueueRedraw();
+                }
+                foreach (var region in _map.Regions)
+                    SetHovered(region, region.Country is { } c ? _map.Country(c) : null);
+                SelectCountry(_map.Country("TUV"));
+                SelectRegion(_map.Region(_smokeOccupied!));
+                // Правительство: экран открывается, министр меняется, в журнале появляется запись.
+                OpenGovernment("RUS");
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Government.GovernmentActions.RequestCandidates(w, "RUS", "health");
+                    Politeconomy.Sim.Government.GovernmentActions.Appoint(w, "RUS", "health", 0);
+                    Politeconomy.Sim.Laws.LawActions.Propose(w, "RUS", "vat_reduced", "no");
+                    var e = w.Economy!["RUS"];
+                    var spending = e.SpendingPlan.ToArray();
+                    spending[0] *= 1.05;
+                    Politeconomy.Sim.Budget.BudgetActions.Edit(w, "RUS", spending, e.TaxPolicy.ToArray());
+                    Politeconomy.Sim.Budget.BudgetActions.SubmitAmendment(w, "RUS");
+                });
+                OpenMinistries("RUS");
+                foreach (var post in _data.Government.Posts)
+                    _ministries.SelectPost(post.Id);
+                OpenPolitics("DEU");
+                OpenPolitics("SAU");
+                OpenPolitics("RUS");
+                OpenSociety("RUS");
+                OpenSociety("BRA");
+                OpenSociety("SEN");
+                OpenPolitics("SAU");
+                // Выборы: в стране игрока (окно итогов покажется само) и президентские в Бразилии; окна поражения и итогов.
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Politics.Elections.HoldPresident(w, w["BRA"]);
+                    Politeconomy.Sim.Politics.Elections.HoldParliament(w, w["RUS"]);
+                    // Кампания: выборы в России через два месяца — штаб и дебаты появятся в первый же месяц.
+                    w.Politics!["RUS"].NextElection = w.Date.AddMonths(2);
+                    // Протест в России: митинги специалистов; ответ — разгон.
+                    var protest = Politeconomy.Sim.Politics.ProtestModel.Start(w, w["RUS"], w.Politics!["RUS"], Politeconomy.Sim.Society.ClassIds.Professionals, "mood", 1);
+                    Politeconomy.Sim.Politics.PoliticsActions.RespondToProtest(w, "RUS", protest.Id, "disperse");
+                    // Программы ведомств: скрининги и льготная ипотека в России (на старте их нет).
+                    Politeconomy.Sim.Health.ProgramModel.Toggle(w, "RUS", "screening");
+                    Politeconomy.Sim.Health.ProgramModel.Toggle(w, "RUS", "mortgage_subsidy");
+                    // Стройка: автомагистрали из бюджета.
+                    Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, "RUS", "highways", "budget");
+                    // Дипломатия: визит в Китай и свободная торговля с Белоруссией.
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Visit(w, "RUS", "CHN");
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Propose(w, "RUS", "BLR", "science");
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Impose(w, "RUS", "GEO", "partial");
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.ProposeResolution(w, "RUS", "aid", "AFG");
+                    // Наука: больше очков энергетике, приоритет — ближайшая технология ИТ.
+                    Politeconomy.Sim.Science.ScienceModel.Allocate(w, "RUS", "energy", 0.2);
+                    if (Politeconomy.Sim.Science.ScienceModel.Target(w.Data, w.Science!["RUS"], "it") is { } it)
+                        Politeconomy.Sim.Science.ScienceModel.Prioritize(w, "RUS", it.Id);
+                    // Смена власти без выборов в чужих странах: переворот, дворцовый переворот, революция.
+                    Politeconomy.Sim.Politics.PowerModel.MilitaryCoup(w, w["SEN"], w.Politics!["SEN"]);
+                    Politeconomy.Sim.Politics.PowerModel.PalaceCoup(w, w["PRK"], w.Politics!["PRK"]);
+                    Politeconomy.Sim.Politics.PowerModel.Revolution(w, w["SAU"], w.Politics!["SAU"], Politeconomy.Sim.Society.ClassIds.Professionals);
+                    // Событие: рекордный урожай в России (условия событий здесь не проверяются — только окно и решение).
+                    var smokeEvent = w.Data.Events.Event("record_harvest")!;
+                    if (Politeconomy.Sim.Events.EventModel.Fire(w, w["RUS"], smokeEvent with { When = [] }) is { } fired)
+                        _smokeEvent = fired.Id;
+                    // Предложение договора: партнёр предлагает защиту инвестиций, Россия подписывает (условия — смягчены).
+                    var offer = w.Data.Events.Event("investment_treaty_offer")! with
+                    {
+                        When = [new Politeconomy.Sim.Data.EventCondition(Partner: new Politeconomy.Sim.Data.EventPartner(RelationsMin: 12, CanSign: "investment"))],
+                    };
+                    if (Politeconomy.Sim.Events.EventModel.Fire(w, w["RUS"], offer) is { Partner: { } offered } offerInstance
+                        && Politeconomy.Sim.Events.EventModel.Decide(w, "RUS", offerInstance.Id, "sign"))
+                        _smokeTreaty = offered;
+                    // Война: Россия нарушает перемирие с Украиной.
+                    Politeconomy.Sim.Military.WarModel.DeclareByPlayer(w, "RUS", "UKR");
+                    // Мир: Россия занимает регион Грузии и подписывает мир с уставшей Грузией — регион переходит России.
+                    Politeconomy.Sim.Military.WarModel.DeclareByPlayer(w, "RUS", "GEO");
+                    var georgia = w.Regions.Where(r => r.Owner == "GEO" && r.Id != w.War!.Map.Capitals.GetValueOrDefault("GEO")).MaxBy(r => r.Info.Population)!.Id;
+                    w.TransferControl(georgia, "RUS");
+                    w.War!.Armies["GEO"].Exhaustion = 80;
+                    if (Politeconomy.Sim.Military.PeaceModel.ProposeByPlayer(w, "RUS", "GEO", new Politeconomy.Sim.Military.PeaceTerms([georgia], 0, false, false)))
+                        _smokeAnnexed = georgia;
+                });
+                _defeatDialog.Show(new Politeconomy.Sim.Politics.Defeat(_data.Scenario.StartDate, "RUS", "А", "Б", "В"), "Россия");
+                _summaryDialog.Show(new Politeconomy.Sim.Politics.ReignSummary("RUS", _data.Scenario.StartDate, _data.Scenario.StartDate.AddYears(3),
+                    new Dictionary<string, double> { ["gdp_per_capita_usd"] = 10000 }, new Dictionary<string, double> { ["gdp_per_capita_usd"] = 12000 }, 1, 0, 3),
+                    "Россия");
+                CloseDialogs();
+                OpenLaws("RUS");
+                OpenBudget();
+                _smokeStep++;
+                break;
+            case 2 when _smokeTime > 3 && (_host!.Snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) || _smokeTime > 20):
+                // Экономика должна прожить хотя бы два месяца: показатели пересчитаны моделью и с разбором «почему».
+                var snapshot = _host!.Snapshot;
+                OpenDiplomacy("UKR");
+                OpenDiplomacy(null, "wars");
+                CloseScreens();
+                var inflation = snapshot.Countries["RUS"].Stat("inflation_pct");
+                var classes = snapshot.Countries["RUS"].Classes;
+                var rus = snapshot.Countries["RUS"];
+                // Каждая проверка с именем: при провале в журнале CI видно, какая именно не прошла.
+                var checks = new (string Name, bool Ok)[]
+                {
+                    ("назначение", _smokeJournal.Contains(("RUS", "appointment")) && rus.Government is { Ministers.Count: 18 }),
+                    ("законопроект", rus.Laws is { } rusLaws && (rusLaws.BillFor("vat_reduced") != null || rusLaws.Current["vat_reduced"] == "no")),
+                    ("бюджет", _smokeJournal.Contains(("RUS", "budget"))),
+                    ("история", rus.History?.Series("gdp_growth_pct").Count >= 5),
+                    ("партии", snapshot.Countries["DEU"].Politics is { Parties.Count: >= 3, Polls.Count: >= 2 }
+                               && snapshot.Countries["DEU"].Stat("ruling_poll_pct") is { } ruling && double.IsFinite(ruling.Value)),
+                    ("выборы", rus.Politics?.Elections?.Count >= 2 && snapshot.Countries["BRA"].Politics?.LastElection?.Kind == "president"),
+                    ("кампания", _smokeJournal.Contains(("RUS", "campaign"))),
+                    ("протест", _smokeJournal.Contains(("RUS", "protest"))),
+                    ("программы", _smokeJournal.Contains(("RUS", "program")) && rus.Programs?.Contains("mortgage_subsidy") == true),
+                    ("жизнь", rus.Stat("crime_index") is { Factors.Count: > 0 } && rus.Stat("pollution_index") is { } pollution && double.IsFinite(pollution.Value)),
+                    ("энергетика", rus.Energy is { Plants.Count: 6, Demand: > 0 } && rus.Stat("power_shortage_pct") is { Factors.Count: 3 }),
+                    ("инфраструктура", rus.Infrastructure is { Projects.Count: 1, Offers.Count: > 0 } && _smokeJournal.Contains(("RUS", "project"))),
+                    ("наука", rus.Science is { Researched.Count: > 20, Priority: not null, Progress.Count: > 0 } && snapshot.Adoption.Count > 0),
+                    ("дипломатия", snapshot.Diplomacy is { Partners.Count: > 190 } dip && dip.Partners.Any(p => p.Id == "BLR" && p.Treaties.Contains("science"))
+                                   && snapshot.Countries["CHN"].Stat("relations_player") is { Factors.Count: > 2 }),
+                    ("организации", snapshot.Diplomacy is { Blocs.Count: 14 } org && org.Council.Resolutions.Any(r => r.Proposer == "RUS")
+                                    && org.Partners.Any(p => p.Id == "GEO" && p.OurSanction == "partial" && p.TheirSanction == "partial")
+                                    && snapshot.Countries["DEU"].Blocs?.Contains("european") == true
+                                    && snapshot.Countries["USA"].Stat("power_index") is { Value: > 99, Factors.Count: 4 }
+                                    && snapshot.Countries["PRK"].Stat("sanctions_against") is { Value: > 150 }),
+                    ("перевороты", snapshot.Countries["SEN"].System == PoliticalSystem.MilitaryRegime && snapshot.Countries["SAU"].Politics is { Parties.Count: > 0 }),
+                    ("события", _smokeEventShown && _smokeJournal.Contains(("RUS", "event")) && snapshot.Events is { } ev
+                               && ev.History.Any(h => h.Event == "record_harvest" && h.Option == "export") && ev.Active.Count > 0
+                               && snapshot.Countries.Values.Count(c => c.Ai is { } a && a.Decisions.Any(d => d.Kind == "event")) > 5),
+                    ("события 35–95", _data.Events.Events.Count(e => !e.Chain) >= 90 && _smokeTreaty != null
+                                      && snapshot.Diplomacy!.Partners.Any(p => p.Id == _smokeTreaty && p.Treaties.Contains("investment"))
+                                      && _data.Events.Events.Any(e => e.Options.Any(o => o.Fund))),
+                    ("новости", snapshot.News.Items.Any(n => n.Home && n.Source.StartsWith("event:")) && snapshot.News.Items.Any(n => !n.Home)
+                                && snapshot.News.Items.All(n => _data.News.Topic(n.Topic) != null) && _newsTicker.Current != null),
+                    ("телевыпуск", SmokeBroadcast(snapshot)),
+                    ("газета", SmokeNewspaper(snapshot)),
+                    ("ИИ", snapshot.Countries.Values.Count(c => c.Ai is { Decisions.Count: > 0 }) > 50 && rus.Ai == null
+                           && snapshot.Countries["DEU"].Ai is { Priorities.Count: 4 }),
+                    ("мир", _smokeAnnexed != null && snapshot.Owners.GetValueOrDefault(_smokeAnnexed) == "RUS" && _smokeJournal.Contains(("RUS", "peace"))
+                           && snapshot.Wars.Treaties.Any(t => t.Loser == "GEO") && !snapshot.Wars.Active.Any(x => x.Side("GEO") != 0)),
+                    ("война", snapshot.Wars.Active.Any(x => x.Side("RUS") == 1 && x.Side("UKR") == 2) && _smokeJournal.Contains(("RUS", "war"))
+                              && rus.Stat("military_strength") is { Value: > 0 } && snapshot.Diplomacy?.Partners.FirstOrDefault(p => p.Id == "UKR")?.War?.WarId != null),
+                };
+                var failed = checks.Where(c => !c.Ok).Select(c => c.Name).ToList();
+                var appointed = failed.Count == 0;
+                var ok = snapshot.Date >= _data.Scenario.StartDate.AddMonths(2) && snapshot.PlayerCountry == "RUS" && _host.Error == null
+                    && snapshot.Occupied.GetValueOrDefault(_smokeOccupied!) == "DEU"
+                    && inflation is { Source: StatSources.Model, Factors.Count: > 0 } && double.IsFinite(inflation.Value)
+                    && classes is { Count: 10 } && classes.All(c => double.IsFinite(c.Satisfaction)) && appointed;
+                if (_host.Error != null)
+                    GD.PrintErr(_host.Error.ToString());
+                GD.Print($"SMOKE {(ok ? "OK" : "FAIL")}: дата {snapshot.Date:yyyy-MM-dd}, стран {snapshot.Countries.Count}, " +
+                         $"регионов {_map.Regions.Count}, занято {snapshot.Occupied.Count}, инфляция в России {inflation?.Value:F2}%, " +
+                         $"удовлетворённость {snapshot.Countries["RUS"].Stat("satisfaction")?.Value:F0}, проверки {(appointed ? "все прошли" : "не прошли: " + string.Join(", ", failed))}, " +
+                         $"шаг {_host.LastStepMs:F2} мс");
+                GetTree().Quit(ok ? 0 : 1);
+                _smokeStep++;
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Телевыпуск в дымовом тесте: за два месяца для России вышли выпуски по понедельникам, окно открылось само
+    /// (или откроется сейчас), листается до конца и закрывается; в ленте есть кнопка «Выпуск».
+    /// </summary>
+    bool SmokeBroadcast(WorldSnapshot snapshot)
+    {
+        if (snapshot.News.LastBroadcast("RUS") is not { Stories.Count: > 0 } show || snapshot.News.Broadcasts!.Any(b => b.Date.DayOfWeek != DayOfWeek.Monday))
+            return false;
+        CloseDialogs();
+        _broadcastDialog.Show(show);
+        var pages = 0;
+        while (_broadcastDialog.Visible && pages < 20)
+        {
+            _broadcastDialog.Next();
+            pages++;
+        }
+        _newsTicker.Announce(show);
+        return pages == show.Stories.Count + 2 && !_broadcastDialog.Visible && _newsTicker.Announced == show
+               && show.Script().All(line => line.IndexOfAny(['%', '$', Fmt.Minus, Fmt.Nbsp]) < 0) && (_smokeBroadcast || snapshot.News.Broadcasts!.Count > 0);
+    }
+
+    /// <summary>
+    /// Газета в дымовом тесте: за два месяца для России вышли номера 1-го числа, газета открывается кнопкой на
+    /// последнем номере, листается назад и закрывается; доклад министра с советом строится.
+    /// </summary>
+    bool SmokeNewspaper(WorldSnapshot snapshot)
+    {
+        var papers = snapshot.News.PapersOf("RUS");
+        if (papers.Count < 2 || papers.Any(p => p.Date.Day != 1))
+            return false;
+        CloseDialogs();
+        ShowNewspaper();
+        var last = _newspaper.ShownId;
+        _newspaper.Turn(-1);
+        var turned = _newspaper.ShownId;
+        CloseDialogs();
+        var post = _data.Government.Posts.First(p => p.Id == "finance");
+        var report = MinistryReport.Lines(_data, post, snapshot.Countries["RUS"], snapshot, snapshot.Countries["RUS"].Government?.Minister("finance"));
+        return last == papers[^1].Id && turned == papers[^2].Id && !_newspaper.Visible && report.Any(l => l.StartsWith("Совет министра: "));
+    }
+
+    /// <summary>
+    /// Обход для скриншотов: выставить вид, подождать, пока кадр отрисуется, сохранить PNG.
+    /// Время стоит на паузе, поэтому кадры каждый раз одинаковые.
+    /// </summary>
+    void ScreenshotStep()
+    {
+        _shotFrames++;
+        if (_shotUntil is { } until)
+        {
+            // Мир ещё считает месяцы — ждём; досчитал — даём окнам открыться и закрываем их.
+            if (_host!.Snapshot.Date >= until)
+                _shotUntil = null;
+            _shotFrames = 0;
+            return;
+        }
+        if (_shotDrain && DialogOpen)
+        {
+            CloseDialogs();
+            _shotFrames = 0;
+            return;
+        }
+        if (_shotFrames < 45)
+            return;
+        var views = new (string Name, Action Setup)[]
+        {
+            ("01_world", () => { SelectRegion(null); SetMode(_data.MapModes.Modes[0]); _camera.FitWorld(instant: true); }),
+            ("02_gdp_per_capita", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "gdp_per_capita"))),
+            ("03_europe", () => { SetMode(_data.MapModes.Modes[0]); ShowAt("DEU", 4.5f); }),
+            ("04_dossier", () => { SelectCountry(_map.Country("RUS")); ShowAt("RUS", 2.2f); }),
+            ("05_hover", () =>
+            {
+                SelectRegion(null);
+                ShowAt("FRA", 7f);
+                _mouse = _camera.GetViewportRect().Size / 2;
+                var (region, country) = Pick(_mouse);
+                SetHovered(region, country);
+            }),
+            ("06_closeup", () => { SetHovered(null, null); ShowAt("NLD", 16f); }),
+            ("07_inflation", () => { SetMode(_data.MapModes.Modes.First(m => m.Id == "inflation")); _camera.FitWorld(instant: true); }),
+            ("08_population", () =>
+            {
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "median_age"));
+                SelectCountry(_map.Country("JPN"));
+                _camera.FitWorld(instant: true);
+                _countryPanel.ScrollToSection("Население");
+            }),
+            ("09_classes", () =>
+            {
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "living"));
+                SelectCountry(_map.Country("BRA"));
+                _camera.FitWorld(instant: true);
+                _countryPanel.ScrollToSection("Классы");
+            }),
+            ("10_satisfaction", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "satisfaction"))),
+            ("11_government", () =>
+            {
+                _host!.Post(w => Politeconomy.Sim.Politics.PoliticsActions.PlayAs(w, "BRA"));
+                SetMode(_data.MapModes.Modes[0]);
+                OpenGovernment("BRA");
+            }),
+            ("12_candidates", () => _government.ChooseReplacement("finance")),
+            ("13_parliament_china", () => OpenGovernment("CHN")),
+            ("14_laws", () =>
+            {
+                _host!.Post(w => Politeconomy.Sim.Laws.LawActions.Propose(w, "BRA", "child_benefits", "generous"));
+                OpenLaws("BRA");
+                _laws.SelectLaw("minimum_wage", "high");
+            }),
+            ("15_budget", () =>
+            {
+                _host!.Post(w =>
+                {
+                    var e = w.Economy!["BRA"];
+                    var spending = e.SpendingPlan.ToArray();
+                    spending[0] *= 1.2;
+                    var taxes = e.TaxPolicy.ToArray();
+                    taxes[0] = 1.15;
+                    Politeconomy.Sim.Budget.BudgetActions.Edit(w, "BRA", spending, taxes);
+                });
+                OpenBudget();
+            }),
+            ("16_ministry_health", () =>
+            {
+                OpenMinistries("BRA");
+                _ministries.SelectPost("health");
+            }),
+            ("17_ministry_finance", () => _ministries.SelectPost("finance")),
+            ("18_politics", () => OpenPolitics("BRA")),
+            ("19_politics_germany", () => OpenPolitics("DEU")),
+            ("20_map_parties", () =>
+            {
+                CloseScreens();
+                SelectRegion(null);
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "parties"));
+                _camera.FitWorld(instant: true);
+            }),
+            // Выборы в стране игрока: окно итогов открывается само, когда появляется новый итог.
+            ("21_election_president", () => _host!.Post(w => Politeconomy.Sim.Politics.Elections.HoldPresident(w, w["BRA"]))),
+            ("22_election_parliament", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w => Politeconomy.Sim.Politics.Elections.HoldParliament(w, w["BRA"]));
+            }),
+            ("23_election_map", () =>
+            {
+                CloseDialogs();
+                _seenDefeat = _host!.Snapshot.Defeat;
+                _host.Post(Politeconomy.Sim.Politics.PoliticsActions.ContinueAfterDefeat);
+                ShowElectionMap();
+            }),
+            ("24_coalition", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Politics.PoliticsActions.PlayAs(w, "NLD");
+                    var p = w.Politics!["NLD"];
+                    var seats = p.Parties.Select(x => w.Government!["NLD"].Parliament.Factions.FirstOrDefault(f => f.Party == x.Id)?.Seats ?? 0).ToArray();
+                    Politeconomy.Sim.Politics.CoalitionTalksModel.Start(w, w["NLD"], Politeconomy.Sim.Politics.PoliticsModel.HeadParty(w, "NLD")!, seats);
+                });
+            }),
+            ("25_defeat", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w =>
+                {
+                    var p = w.Politics!["NLD"];
+                    var rival = p.Parties.Where(x => !x.Ruling && x.Leader != null).OrderByDescending(x => x.Poll).First();
+                    w.Defeat = new Politeconomy.Sim.Politics.Defeat(w.Date, "NLD", w.Government!["NLD"].Leader.Name, rival.Leader!.Name, rival.Name);
+                });
+            }),
+            ("26_summary", () =>
+            {
+                CloseDialogs();
+                _host!.Post(Politeconomy.Sim.Politics.PoliticsActions.EndReign);
+            }),
+            // Кампания в Бразилии: выборы переносим на месяц вперёд — сразу и штаб, и дебаты.
+            ("27_campaign_start", () =>
+            {
+                CloseDialogs();
+                OpenPolitics("BRA");
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Politics.PoliticsActions.PlayAs(w, "BRA");
+                    var p = w.Politics!["BRA"];
+                    p.NextElection = p.NextPresident = w.Date.AddMonths(1);
+                    Politeconomy.Sim.Politics.CampaignModel.Update(w, w["BRA"], p);
+                    Politeconomy.Sim.Politics.PoliticsActions.CampaignTrip(w, "BRA", 1);
+                    if (Politeconomy.Sim.Politics.CampaignModel.Estimate(w, w["BRA"]) is { Options.Count: > 0 } o)
+                        Politeconomy.Sim.Politics.PoliticsActions.Pledge(w, "BRA", o.Options[0].Law, o.Options[0].Variant);
+                    Politeconomy.Sim.Politics.PoliticsActions.SetFraud(w, "BRA", 1);
+                });
+            }),
+            ("28_debate", CloseDialogs),
+            ("29_campaign", () =>
+            {
+                CloseDialogs();
+                _politicsScreen.FocusCampaign();
+            }),
+            ("30_society", () =>
+            {
+                CloseDialogs();
+                OpenSociety("BRA");
+            }),
+            ("31_society_saudi", () => OpenSociety("SAU")),
+            // Протест в Бразилии: окно ответа открывается само.
+            ("32_protest", () =>
+            {
+                OpenSociety("BRA");
+                _host!.Post(w =>
+                {
+                    var p = w.Politics!["BRA"];
+                    Politeconomy.Sim.Politics.ProtestModel.Start(w, w["BRA"], p, Politeconomy.Sim.Society.ClassIds.Skilled, "mood", 0);
+                    var law = w.Data.Law("retirement_age");
+                    Politeconomy.Sim.Politics.ProtestModel.Start(w, w["BRA"], p, Politeconomy.Sim.Society.ClassIds.Pensioners, "law", 2, law.Id, w.Laws!["BRA"].Current[law.Id]);
+                });
+            }),
+            ("33_society_protests", () =>
+            {
+                CloseDialogs();
+                OpenSociety("BRA");
+            }),
+            ("34_map_unrest", () =>
+            {
+                CloseScreens();
+                _host!.Post(w =>
+                {
+                    foreach (var id in new[] { "FRA", "IRN", "VEN", "NGA", "ARG" })
+                        Politeconomy.Sim.Politics.ProtestModel.Start(w, w[id], w.Politics![id], Politeconomy.Sim.Society.ClassIds.Unskilled, "mood", id == "VEN" ? 3 : 2);
+                });
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "unrest"));
+                _camera.FitWorld(instant: true);
+            }),
+            // Военный переворот в стране игрока: окно потери власти открывается само.
+            ("35_coup", () =>
+            {
+                SetMode(_data.MapModes.Modes[0]);
+                _host!.Post(w => Politeconomy.Sim.Politics.PowerModel.MilitaryCoup(w, w["BRA"], w.Politics!["BRA"]));
+            }),
+            ("36_junta", () =>
+            {
+                CloseDialogs();
+                _seenDefeat = _host!.Snapshot.Defeat;
+                _host.Post(Politeconomy.Sim.Politics.PoliticsActions.ContinueAfterDefeat);
+                OpenSociety("BRA");
+            }),
+            ("37_ministry_education", () =>
+            {
+                OpenMinistries("DEU");
+                _ministries.SelectPost("education");
+            }),
+            ("38_ministry_health", () =>
+            {
+                _host!.Post(w => Politeconomy.Sim.Health.ProgramModel.Toggle(w, "BRA", "rural_medicine"));
+                OpenMinistries("BRA");
+                _ministries.SelectPost("health");
+            }),
+            ("39_map_pollution", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "pollution"));
+                _camera.FitWorld(instant: true);
+            }),
+            ("40_ministry_labor", () =>
+            {
+                _host!.Post(w => Politeconomy.Sim.Health.ProgramModel.Toggle(w, "BRA", "social_housing"));
+                OpenMinistries("BRA");
+                _ministries.SelectPost("labor");
+            }),
+            ("41_ministry_interior", () => _ministries.SelectPost("interior")),
+            ("42_ministry_energy", () => _ministries.SelectPost("energy")),
+            // Авария: половина станций Бразилии выходит из строя — веерные отключения.
+            ("43_energy_blackout", () => _host!.Post(w =>
+            {
+                var energy = w.Energy!["BRA"];
+                for (var t = 0; t < energy.Capacity.Length; t++)
+                    energy.Capacity[t] *= 0.5;
+                Politeconomy.Sim.Energy.EnergyModel.Update(w, w["BRA"], energy);
+            })),
+            ("44_map_low_carbon", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "low_carbon"));
+                _camera.FitWorld(instant: true);
+            }),
+            ("45_ministry_transport", () =>
+            {
+                OpenMinistries("BRA");
+                _ministries.SelectPost("transport");
+            }),
+            ("46_project_dialog", () => ShowProject("BRA", "railway")),
+            // Стройки: железная дорога в кредит у Китая и автомагистрали из бюджета.
+            ("47_projects", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, "BRA", "railway", "loan", "CHN");
+                    Politeconomy.Sim.Infrastructure.InfrastructureModel.Start(w, "BRA", "highways", "budget");
+                });
+                _ministries.ScrollToInfrastructure();
+            }),
+            ("48_science", () => OpenScience("BRA")),
+            // Наука: больше очков медицине и приоритет — ближайшая технология ИТ.
+            ("49_science_priority", () => _host!.Post(w =>
+            {
+                Politeconomy.Sim.Science.ScienceModel.Allocate(w, "BRA", "medicine", 0.3);
+                if (Politeconomy.Sim.Science.ScienceModel.Target(w.Data, w.Science!["BRA"], "it") is { } it)
+                    Politeconomy.Sim.Science.ScienceModel.Prioritize(w, "BRA", it.Id);
+            })),
+            ("50_map_technology", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "technology"));
+                _camera.FitWorld(instant: true);
+            }),
+            ("51_diplomacy", () => OpenDiplomacy("USA")),
+            // Дипломатия: визит в США и соглашение о свободной торговле с Аргентиной.
+            ("52_diplomacy_treaty", () =>
+            {
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Visit(w, "BRA", "USA");
+                    Politeconomy.Sim.Diplomacy.DiplomacyModel.Propose(w, "BRA", "ARG", "free_trade");
+                });
+                OpenDiplomacy("ARG");
+            }),
+            ("53_map_relations", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "relations"));
+                _camera.FitWorld(instant: true);
+            }),
+            ("54_diplomacy_blocs", () => OpenDiplomacy(null, "blocs")),
+            // Совет Наций: Бразилия выносит резолюцию о гуманитарной помощи Гаити — смотрим состав Совета и итог голосования.
+            ("55_diplomacy_council", () =>
+            {
+                _host!.Post(w => Politeconomy.Sim.Diplomacy.DiplomacyModel.ProposeResolution(w, "BRA", "aid", "HTI"));
+                OpenDiplomacy(null, "council");
+            }),
+            ("56_diplomacy_fund", () => OpenDiplomacy(null, "fund")),
+            ("57_map_blocs", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "blocs"));
+                _camera.FitWorld(instant: true);
+            }),
+            ("58_map_alliances", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "alliances"))),
+            ("59_map_might", () => SetMode(_data.MapModes.Modes.First(m => m.Id == "might"))),
+            // ИИ стран: один ход «все решают сразу» (сроки сброшены), досье Франции — приоритеты и решения с причинами.
+            ("60_ai_decisions", () =>
+            {
+                _host!.Post(w =>
+                {
+                    foreach (var ai in w.Ai!.Countries.Values)
+                        ai.Last.Clear();
+                    Politeconomy.Sim.Ai.AiModel.Month(w);
+                });
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "political"));
+                SelectCountry(_map.Country("FRA"));
+                _countryPanel.ScrollToSection("Решения правительства");
+            }),
+            // Войны: Россия нарушает перемирие с Украиной, Венесуэла нападает на Гайану; восемь месяцев боёв сразу.
+            ("61_map_war", () =>
+            {
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Military.WarModel.Declare(w, "RUS", "UKR");
+                    Politeconomy.Sim.Military.WarModel.Declare(w, "VEN", "GUY");
+                    var system = new Politeconomy.Sim.Military.Systems.WarSystem();
+                    for (var i = 0; i < 8; i++)
+                        system.Run(w);
+                });
+                SelectRegion(null);
+                SetMode(_data.MapModes.Modes.First(m => m.Kind == "war"));
+                ShowAt("UKR", 4f);
+            }),
+            ("62_diplomacy_wars", () => OpenDiplomacy(null, "wars")),
+            ("63_diplomacy_declare", () => OpenDiplomacy("VEN")),
+            ("64_army", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Id == "army"));
+                _camera.FitWorld(instant: true);
+                SelectCountry(_map.Country("UKR"));
+                _countryPanel.ScrollToSection("Армия");
+            }),
+            // Мир: Гайана капитулировала и по договору отдала Венесуэле спорные регионы — политическая карта.
+            ("65_map_peace", () =>
+            {
+                SelectRegion(null);
+                SetMode(_data.MapModes.Modes.First(m => m.Kind == "political"));
+                ShowAt("GUY", 8f);
+            }),
+            // Условия мира: Бразилия воюет с Суринамом три месяца — что можно потребовать, цена и прогноз.
+            ("66_peace_terms", () =>
+            {
+                _host!.Post(w =>
+                {
+                    Politeconomy.Sim.Military.WarModel.Declare(w, "BRA", "SUR");
+                    var system = new Politeconomy.Sim.Military.Systems.WarSystem();
+                    for (var i = 0; i < 3; i++)
+                        system.Run(w);
+                });
+                OpenDiplomacy(null, "wars");
+            }),
+            // Событие: забастовка врачей в Бразилии — окно с докладчиком, причинами и вариантами.
+            ("67_event", () =>
+            {
+                CloseScreens();
+                SetMode(_data.MapModes.Modes.First(m => m.Kind == "political"));
+                _camera.FitWorld(instant: true);
+                _host!.Post(w =>
+                {
+                    w.Politics!["BRA"].StartSpending[w.Data.Budget.Spending.ToList().FindIndex(s => s.Id == "health")] *= 1.2;
+                    Politeconomy.Sim.Events.EventModel.Fire(w, w["BRA"], w.Data.Events.Event("doctors_strike")!);
+                    Politeconomy.Sim.Events.EventModel.Fire(w, w["BRA"], w.Data.Events.Event("new_infection")!);
+                });
+            }),
+            // Отложенные события ждут под верхней панелью слева.
+            ("68_event_tray", () =>
+            {
+                foreach (var pending in _host!.Snapshot.Events?.Pending ?? [])
+                    _seenEvents.Add($"BRA/{pending.Id}");
+                CloseDialogs();
+            }),
+            ("69_event_decided", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w =>
+                {
+                    foreach (var pending in w.Events!["BRA"].Pending.ToList())
+                        Politeconomy.Sim.Events.EventModel.Decide(w, "BRA", pending.Id, w.Data.Events.Event(pending.Event)!.Options[0].Id);
+                });
+                SelectCountry(_map.Country("BRA"));
+                _countryPanel.ScrollToSection("Решения правительства");
+            }),
+            // Лента новостей: мир проживает восемь месяцев (события игрока решает «аппарат»), окна по дороге закрываются.
+            ("70_news_ticker", () =>
+            {
+                SelectRegion(null);
+                SetMode(_data.MapModes.Modes[0]);
+                ShowAt("BRA", 2.4f);
+                var until = _host!.Snapshot.Date.AddMonths(8);
+                _shotUntil = until;
+                _shotDrain = true;
+                _host.Post(w =>
+                {
+                    var sim = new Politeconomy.Sim.Engine.Simulation(w, GameSetup.Systems());
+                    while (w.Date < until)
+                    {
+                        sim.StepDay();
+                        if (w.PlayerCountry is { } me && w.Events?.Countries.GetValueOrDefault(me) is { } mine)
+                            foreach (var pending in mine.Pending.ToList())
+                                Politeconomy.Sim.Events.EventModel.Decide(w, me, pending.Id,
+                                    Politeconomy.Sim.Events.EventModel.DefaultOption(w, w[me], w.Data.Events.Event(pending.Event)!).Id);
+                    }
+                });
+            }),
+            ("71_news_panel", () =>
+            {
+                if (!_newsPanel.Visible)
+                    ToggleNews();
+            }),
+            ("72_news_home", () =>
+            {
+                _newsPanel.SetFilter("home");
+                SelectCountry(_map.Country("BRA"));
+            }),
+            // Телевыпуск: последний выпуск «Недели» для Бразилии — приветствие ведущего и сюжет.
+            ("73_broadcast", () =>
+            {
+                _shotDrain = false;
+                if (_newsPanel.Visible)
+                    ToggleNews();
+                SelectRegion(null);
+                if (_host!.Snapshot.News.LastBroadcast(_host.Snapshot.PlayerCountry) is { } show)
+                    ShowBroadcast(show.Id);
+            }),
+            ("74_broadcast_story", () => _broadcastDialog.Next()),
+            ("75_news_broadcasts", () =>
+            {
+                CloseDialogs();
+                if (!_newsPanel.Visible)
+                    ToggleNews();
+                _newsPanel.SetFilter("tv");
+            }),
+            // Газета: последний номер для Бразилии; затем доклад министра финансов с советом.
+            ("76_newspaper", () =>
+            {
+                if (_newsPanel.Visible)
+                    ToggleNews();
+                ShowNewspaper();
+            }),
+            ("77_ministry_report", () =>
+            {
+                CloseDialogs();
+                OpenMinistries("BRA");
+                _ministries.SelectPost("finance");
+            }),
+            // Предложение договора от другой страны: окно события с вариантом «Подписать договор».
+            ("78_event_treaty_offer", () =>
+            {
+                CloseScreens();
+                CloseDialogs();
+                SetMode(_data.MapModes.Modes.First(m => m.Kind == "political"));
+                _host!.Post(w =>
+                {
+                    var offer = w.Data.Events.Event("free_trade_offer")! with
+                    {
+                        When = [new Politeconomy.Sim.Data.EventCondition(Partner: new Politeconomy.Sim.Data.EventPartner(RelationsMin: 0, TradeMin: 1, CanSign: "free_trade"))],
+                    };
+                    Politeconomy.Sim.Events.EventModel.Fire(w, w["BRA"], offer);
+                });
+            }),
+            // Политическое событие: митинг оппозиции — окно с причинами и вариантами (условия смягчены для кадра).
+            ("79_event_politics", () =>
+            {
+                CloseDialogs();
+                _host!.Post(w =>
+                {
+                    foreach (var pending in w.Events!["BRA"].Pending.ToList())
+                        Politeconomy.Sim.Events.EventModel.Decide(w, "BRA", pending.Id, w.Data.Events.Event(pending.Event)!.Options.First(o => o.Default).Id);
+                    Politeconomy.Sim.Events.EventModel.Fire(w, w["BRA"], w.Data.Events.Event("opposition_rally")! with { When = [] });
+                });
+            }),
+        };
+        if (_shotStep > 0)
+        {
+            var image = GetViewport().GetTexture().GetImage();
+            var path = System.IO.Path.Combine(_shotsDir!, views[_shotStep - 1].Name + ".png");
+            image.SavePng(path);
+            GD.Print("SCREENSHOT " + path);
+        }
+        if (_shotStep == views.Length)
+        {
+            GetTree().Quit();
+            _shotsDir = null;
+            return;
+        }
+        views[_shotStep].Setup();
+        _shotStep++;
+        _shotFrames = 0;
+    }
+
+    /// <summary>Открыть или закрыть экран: страны игрока, а если игрок ещё не выбрал страну — выбранной на карте.</summary>
+    bool ScreenOpen => _government.Visible || _ministries.Visible || _politicsScreen.Visible || _society.Visible || _laws.Visible || _budget.Visible
+                       || _science.Visible || _diplomacy.Visible;
+
+    void ToggleScreen(string screen)
+    {
+        var open = screen switch
+        {
+            "government" => _government.Visible,
+            "ministries" => _ministries.Visible,
+            "politics" => _politicsScreen.Visible,
+            "society" => _society.Visible,
+            "laws" => _laws.Visible,
+            "science" => _science.Visible,
+            "diplomacy" => _diplomacy.Visible,
+            _ => _budget.Visible,
+        };
+        if (open)
+        {
+            CloseScreens();
+            return;
+        }
+        if (screen == "budget")
+        {
+            OpenBudget();
+            return;
+        }
+        if (screen == "diplomacy")
+        {
+            OpenDiplomacy(_selectedCountry?.Id);
+            return;
+        }
+        var id = _host?.Snapshot.PlayerCountry ?? _selectedCountry?.Id;
+        if (id == null)
+        {
+            _toasts.Push("Выберите страну на карте или начните игру за неё — тогда откроется её " +
+                         (screen switch
+                         {
+                             "government" => "правительство.", "ministries" => "ведомства.", "politics" => "партии.", "society" => "общество.",
+                             "science" => "наука.", _ => "законодательство.",
+                         }));
+            _rail.SetActive(null);
+            return;
+        }
+        if (screen == "government")
+            OpenGovernment(id);
+        else if (screen == "ministries")
+            OpenMinistries(id);
+        else if (screen == "politics")
+            OpenPolitics(id);
+        else if (screen == "society")
+            OpenSociety(id);
+        else if (screen == "science")
+            OpenScience(id);
+        else
+            OpenLaws(id);
+    }
+
+    /// <summary>Раскрыть или свернуть список новостей над лентой (клавиша J, щелчок по ленте).</summary>
+    void ToggleNews()
+    {
+        if (ScreenOpen)
+            CloseScreens();
+        _newsPanel.Visible = !_newsPanel.Visible;
+        _newsTicker.SetOpen(_newsPanel.Visible);
+        if (_newsPanel.Visible && _host != null)
+            _newsPanel.Refresh(_host.Snapshot.News, _host.Snapshot.PlayerCountry);
+    }
+
+    /// <summary>
+    /// Лента занимает низ экрана между легендой карты и досье; под открытым экраном (правительство, бюджет…) её не видно.
+    /// </summary>
+    void LayoutNews()
+    {
+        var screen = ScreenOpen;
+        if (screen && _newsPanel.Visible)
+        {
+            _newsPanel.Visible = false;
+            _newsTicker.SetOpen(false);
+        }
+        _newsTicker.Visible = !screen;
+        var right = _countryPanel.Visible ? -444 : -12;
+        if (_newsTicker.OffsetRight != right)
+        {
+            _newsTicker.OffsetRight = right;
+            _newsPanel.OffsetRight = right;
+        }
+    }
+
+    /// <summary>Перед открытием экрана прячем досье и легенду карты: экран закрывает их, а сквозь стекло они бы просвечивали.</summary>
+    void HideUnderScreens()
+    {
+        if (!ScreenOpen)
+            _dossierBeforeScreen = _countryPanel.Visible;
+        _countryPanel.Visible = false;
+        _modePanel.Visible = false;
+        _government.Visible = false;
+        _ministries.Visible = false;
+        _politicsScreen.Visible = false;
+        _society.Visible = false;
+        _laws.Visible = false;
+        _budget.Visible = false;
+        _science.Visible = false;
+        _diplomacy.Visible = false;
+    }
+
+    void OpenBudget()
+    {
+        if (_host == null)
+            return;
+        HideUnderScreens();
+        _budget.Open(_host.Snapshot);
+        _rail.SetActive("budget");
+        SetHovered(null, null);
+    }
+
+    void OpenGovernment(string countryId)
+    {
+        if (_host == null)
+            return;
+        HideUnderScreens();
+        _government.ShowCountry(countryId, _host.Snapshot);
+        _rail.SetActive("government");
+        SetHovered(null, null);
+    }
+
+    void OpenMinistries(string countryId)
+    {
+        if (_host == null)
+            return;
+        HideUnderScreens();
+        _ministries.ShowCountry(countryId, _host.Snapshot);
+        _rail.SetActive("ministries");
+        SetHovered(null, null);
+    }
+
+    void OpenPolitics(string countryId)
+    {
+        if (_host == null)
+            return;
+        HideUnderScreens();
+        _politicsScreen.ShowCountry(countryId, _host.Snapshot);
+        _rail.SetActive("politics");
+        SetHovered(null, null);
+    }
+
+    void OpenSociety(string countryId)
+    {
+        if (_host == null)
+            return;
+        HideUnderScreens();
+        _society.ShowCountry(countryId, _host.Snapshot);
+        _rail.SetActive("society");
+        SetHovered(null, null);
+    }
+
+    /// <summary>Дипломатия страны игрока; partner — кого показать сразу.</summary>
+    void OpenDiplomacy(string? partner, string? tab = null)
+    {
+        if (_host?.Snapshot is not { Diplomacy: not null } snapshot)
+        {
+            _toasts.Push("Начните игру за страну — тогда откроется её дипломатия.");
+            _rail.SetActive(null);
+            return;
+        }
+        HideUnderScreens();
+        _diplomacy.Open(snapshot, partner, tab);
+        _rail.SetActive("diplomacy");
+        SetHovered(null, null);
+    }
+
+    void OpenScience(string countryId)
+    {
+        if (_host == null)
+            return;
+        HideUnderScreens();
+        _science.ShowCountry(countryId, _host.Snapshot);
+        _rail.SetActive("science");
+        SetHovered(null, null);
+    }
+
+    void OpenLaws(string countryId)
+    {
+        if (_host == null)
+            return;
+        HideUnderScreens();
+        _laws.ShowCountry(countryId, _host.Snapshot);
+        _rail.SetActive("laws");
+        SetHovered(null, null);
+    }
+
+    bool DialogOpen => _resultsDialog.Visible || _coalitionDialog.Visible || _defeatDialog.Visible || _summaryDialog.Visible || _confirmDialog.Visible
+                       || _debateDialog.Visible || _protestDialog.Visible || _projectDialog.Visible || _eventDialog.Visible || _broadcastDialog.Visible || _newspaper.Visible;
+
+    /// <summary>Дипломатическое действие игрока: выполняется в потоке модели.</summary>
+    void PostDiplomacy(string partner, string action) => _host!.Post(w =>
+    {
+        if (w.PlayerCountry is not { } me)
+            return;
+        var parts = action.Split(':');
+        _ = parts[0] switch
+        {
+            "visit" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Visit(w, me, partner),
+            "aid" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Aid(w, me, partner),
+            "expel" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Expel(w, me, partner),
+            "propose" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Propose(w, me, partner, parts[1]),
+            "cancel" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Cancel(w, me, partner, parts[1]),
+            "sanction" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Impose(w, me, partner, parts[1]),
+            "lift" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Lift(w, me, partner),
+            "resolution" => Politeconomy.Sim.Diplomacy.DiplomacyModel.ProposeResolution(w, me, parts[1], partner),
+            "join" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Join(w, me, partner),
+            "leave" => Politeconomy.Sim.Diplomacy.DiplomacyModel.Leave(w, me, partner),
+            "loan" => Politeconomy.Sim.Diplomacy.DiplomacyModel.RequestLoan(w, me),
+            "declare" => Politeconomy.Sim.Military.WarModel.DeclareByPlayer(w, me, partner),
+            "ceasefire" => Politeconomy.Sim.Military.WarModel.ProposeCeasefire(w, me, int.Parse(parts[1])),
+            "peace" => Politeconomy.Sim.Military.PeaceModel.ProposeByPlayer(w, me, partner, ParseTerms(parts[1])),
+            "peace_accept" => Politeconomy.Sim.Military.PeaceModel.AcceptOffer(w, me, partner),
+            "peace_reject" => Politeconomy.Sim.Military.PeaceModel.RejectOffer(w, me, partner),
+            _ => false,
+        };
+    });
+
+    string CountryName(string id) => _data.Countries.Countries.First(c => c.Id == id).Name;
+
+    /// <summary>Условия мира с экрана: «регионы через запятую;репарации;торговля 0/1;нейтралитет 0/1».</summary>
+    static Politeconomy.Sim.Military.PeaceTerms ParseTerms(string payload)
+    {
+        var p = payload.Split(';');
+        var regions = p[0].Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+        var reparations = p.Length > 1 ? double.Parse(p[1], System.Globalization.CultureInfo.InvariantCulture) : 0;
+        return new Politeconomy.Sim.Military.PeaceTerms(regions, reparations, p.Length > 2 && p[2] == "1", p.Length > 3 && p[3] == "1");
+    }
+
+    static string ElectionKey(string country, ElectionSnapshot e) => $"{country}/{e.Date}/{e.Kind}";
+
+    /// <summary>
+    /// Запомнить прошлые выборы страны игрока как просмотренные (на старте и при смене страны); итоги правления —
+    /// только на старте, иначе окно итогов не покажется после «Закончить партию» (тогда страна игрока тоже меняется).
+    /// </summary>
+    void PrimeDialogs(WorldSnapshot snapshot)
+    {
+        _seenFor = snapshot.PlayerCountry;
+        if (_seenFor != null && snapshot.Countries[_seenFor].Politics?.Elections is { } elections)
+            foreach (var e in elections)
+                _seenElections.Add(ElectionKey(_seenFor, e));
+        if (!_dialogsPrimed)
+            _seenSummary = snapshot.LastReign;
+        _seenBroadcast = Math.Max(_seenBroadcast, snapshot.News.LastBroadcast(_seenFor)?.Id ?? 0);
+        _dialogsPrimed = true;
+    }
+
+    /// <summary>
+    /// Окна о стране игрока по одному: новые итоги выборов, поражение, переговоры о коалиции, начало кампании, дебаты,
+    /// протест (новый или разгоревшийся, с митингов и выше), событие, предложение мира, итоги правления. Пока окно
+    /// открыто, время стоит.
+    /// </summary>
+    void CheckDialogs(WorldSnapshot snapshot)
+    {
+        if (!_dialogsPrimed || snapshot.PlayerCountry != _seenFor)
+            PrimeDialogs(snapshot);
+        // Телевыпуск «только в ленте» не ждёт, пока закроются окна: о нём сообщает строка ленты.
+        if (!GameSettings.BroadcastWindow && snapshot.News.LastBroadcast(snapshot.PlayerCountry) is { } quiet && quiet.Id > _seenBroadcast)
+        {
+            _seenBroadcast = quiet.Id;
+            _newsTicker.Announce(quiet);
+        }
+        if (DialogOpen)
+            return;
+        var player = snapshot.PlayerCountry;
+        var country = player != null ? snapshot.Countries[player] : null;
+        if (country?.Politics?.Elections?.FirstOrDefault(e => !_seenElections.Contains(ElectionKey(player!, e))) is { } election)
+        {
+            _seenElections.Add(ElectionKey(player!, election));
+            _resultsDialog.Show(CountryName(player!), country, election);
+            PauseForDialog();
+        }
+        else if (snapshot.Defeat is { } defeat && defeat != _seenDefeat)
+        {
+            _seenDefeat = defeat;
+            _defeatDialog.Show(defeat, CountryName(defeat.Country));
+            PauseForDialog();
+        }
+        else if (country?.Politics?.Talks is { } talks && $"{player}/{talks.Date}" != _seenTalks)
+        {
+            _seenTalks = $"{player}/{talks.Date}";
+            _coalitionDialog.Show(player!, CountryName(player!), country);
+            PauseForDialog();
+        }
+        else if (country?.Politics?.Campaign is { } campaign && $"{player}/{campaign.Election}" != _seenCampaign)
+        {
+            _seenCampaign = $"{player}/{campaign.Election}";
+            var id = player!;
+            _confirmDialog.Show("Началась предвыборная кампания",
+                $"Выборы {Fmt.Date(campaign.Election)}. Каждый месяц штаб получает {Fmt.Plural((long)campaign.PointsPerMonth, "очко", "очка", "очков")}: " +
+                "на поездки к классам, агитацию в СМИ и обещания избирателям. За месяц до выборов — дебаты лидеров. " +
+                "Можно и подправить подсчёт голосов, но фальсификации могут раскрыть.",
+                "Открыть штаб", () =>
+                {
+                    OpenPolitics(id);
+                    _politicsScreen.FocusCampaign();
+                }, "Позже");
+            PauseForDialog();
+        }
+        else if (country?.Politics?.Campaign?.Debate is { Answer: null } debate && $"{player}/{debate.Date}" != _seenDebate)
+        {
+            _seenDebate = $"{player}/{debate.Date}";
+            ShowDebate(player!);
+            PauseForDialog();
+        }
+        else if (country?.Politics?.Protests?.FirstOrDefault(x => x is { Stage: >= 1, Answered: false } && !_seenProtests.Contains($"{player}/{x.Id}/{x.Stage}")) is { } protest)
+        {
+            _seenProtests.Add($"{player}/{protest.Id}/{protest.Stage}");
+            ShowProtest(player!, protest.Id);
+            PauseForDialog();
+        }
+        else if (snapshot.Events?.Pending.FirstOrDefault(p => !_seenEvents.Contains($"{player}/{p.Id}")) is { } pending)
+        {
+            _seenEvents.Add($"{player}/{pending.Id}");
+            _eventDialog.Show(pending);
+            PauseForDialog();
+        }
+        else if (snapshot.Wars.Peace.FirstOrDefault(p => p.Offer != null && !_seenPeace.Contains($"{player}/{p.Partner}/{p.Offer}")) is { } peace)
+        {
+            _seenPeace.Add($"{player}/{peace.Partner}/{peace.Offer}");
+            var partner = peace.Partner;
+            _confirmDialog.Show($"{CountryName(partner)} предлагает мир",
+                $"{peace.Offer}. Если подписать, регионы из договора перейдут насовсем вместе с жителями и хозяйством, а войны между нами не будет " +
+                $"{_data.PeaceBalance.PeaceYears} лет. Предложение действует три месяца — решить можно и позже, в «Дипломатии» на вкладке «Войны».",
+                "Подписать", () => PostDiplomacy(partner, "peace_accept"), "Подумать");
+            PauseForDialog();
+        }
+        else if (snapshot.News.LastBroadcast(player) is { } show && show.Id > _seenBroadcast)
+        {
+            // Телевыпуск — последним: важные окна (выборы, события) идут раньше.
+            _seenBroadcast = show.Id;
+            _broadcastDialog.Show(show);
+            if (_smoke)
+                _smokeBroadcast = _broadcastDialog.Visible && _broadcastDialog.Pages == show.Stories.Count + 2;
+            PauseForDialog();
+        }
+        else if (snapshot.LastReign is { } summary && !ReferenceEquals(summary, _seenSummary))
+        {
+            _seenSummary = summary;
+            _summaryDialog.Show(summary, CountryName(summary.Country));
+        }
+    }
+
+    void PauseForDialog()
+    {
+        if (!_smoke)
+            _host?.SetPaused(true);
+    }
+
+    void CloseDialogs()
+    {
+        _resultsDialog.Visible = false;
+        _coalitionDialog.Visible = false;
+        _defeatDialog.Visible = false;
+        _summaryDialog.Visible = false;
+        _confirmDialog.Visible = false;
+        _debateDialog.Visible = false;
+        _protestDialog.Visible = false;
+        _eventDialog.Visible = false;
+        _projectDialog.Visible = false;
+        _broadcastDialog.Visible = false;
+        _newspaper.Visible = false;
+    }
+
+    /// <summary>Открыть газету страны игрока на последнем номере (кнопка «Газета», клавиша K). Сама газета не всплывает.</summary>
+    void ShowNewspaper()
+    {
+        if (DialogOpen || _host == null)
+            return;
+        var papers = _host.Snapshot.News.PapersOf(_host.Snapshot.PlayerCountry);
+        if (papers.Count == 0)
+        {
+            _toasts.Push("Газета выходит 1-го числа каждого месяца — первый номер ещё не вышел.");
+            return;
+        }
+        _readPaper = Math.Max(_readPaper, papers[^1].Id);
+        _newsTicker.SetPaper(true, false);
+        _newspaper.Show(papers, _host.Snapshot.PlayerCountry!);
+        PauseForDialog();
+    }
+
+    /// <summary>Открыть телевыпуск страны игрока (из ленты, списка или сам по себе в понедельник).</summary>
+    void ShowBroadcast(int id)
+    {
+        if (DialogOpen || _host?.Snapshot.News.Broadcasts?.FirstOrDefault(b => b.Id == id) is not { } show)
+            return;
+        _seenBroadcast = Math.Max(_seenBroadcast, id);
+        _broadcastDialog.Show(show);
+        PauseForDialog();
+    }
+
+    /// <summary>Окно новой стройки: что даст, цена, срок и способы оплаты.</summary>
+    void ShowProject(string countryId, string projectId)
+    {
+        if (_host?.Snapshot.Countries.GetValueOrDefault(countryId)?.Infrastructure?.Offers?.FirstOrDefault(o => o.Id == projectId) is not { } offer)
+            return;
+        _projectDialog.Show(countryId, _data.Countries.Countries.First(c => c.Id == countryId).Name, offer);
+    }
+
+    void ShowProtest(string countryId, int protestId)
+    {
+        if (_host?.Snapshot.Countries.GetValueOrDefault(countryId)?.Politics is { } p && p.Protests?.FirstOrDefault(x => x.Id == protestId) is { Answered: false } protest)
+            _protestDialog.Show(countryId, CountryName(countryId), protest, p.Security);
+    }
+
+    void ShowDebate(string countryId)
+    {
+        if (_host?.Snapshot.Countries.GetValueOrDefault(countryId) is { Politics.Campaign.Debate: { Answer: null } debate } country)
+            _debateDialog.Show(countryId, CountryName(countryId), country.Government?.Leader, debate);
+    }
+
+    void ShowLastElection(string countryId)
+    {
+        if (_host?.Snapshot.Countries.GetValueOrDefault(countryId) is { Politics.LastElection: { } last } country)
+            _resultsDialog.Show(CountryName(countryId), country, last);
+    }
+
+    void ShowElectionMap()
+    {
+        CloseScreens();
+        SetMode(_data.MapModes.Modes.First(m => m.Id == "elections"));
+        if (_host?.Snapshot.PlayerCountry is { } id)
+            ShowAt(id, 2.5f);
+    }
+
+    void CloseScreens()
+    {
+        if (ScreenOpen)
+        {
+            _countryPanel.Visible = _dossierBeforeScreen && _selectedCountry != null;
+            _modePanel.Visible = true;
+        }
+        _government.Visible = false;
+        _ministries.Visible = false;
+        _politicsScreen.Visible = false;
+        _society.Visible = false;
+        _laws.Visible = false;
+        _budget.Visible = false;
+        _science.Visible = false;
+        _diplomacy.Visible = false;
+        _rail.SetActive(null);
+    }
+
+    /// <summary>Показать страну в центре экрана с масштабом «во столько-то раз ближе, чем весь мир».</summary>
+    void ShowAt(string countryId, float closer)
+    {
+        var country = _map.Country(countryId)!;
+        _camera.ShowAt(new Vector2(country.LabelX, country.LabelY), closer);
+    }
+
+    void ShowFatal(string message, Theme theme)
+    {
+        if (_smoke)
+        {
+            GD.PrintErr("SMOKE FAIL: " + message);
+            GetTree().Quit(1);
+        }
+        var layer = new CanvasLayer { Layer = 100 };
+        AddChild(layer);
+        var panel = new PanelContainer { Theme = theme };
+        panel.SetAnchorsPreset(Control.LayoutPreset.Center);
+        layer.AddChild(panel);
+        var label = UiTheme.Text(message, 16, null, UiTheme.TextPrimary);
+        label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        label.CustomMinimumSize = new Vector2(560, 0);
+        panel.AddChild(label);
+        panel.GrowHorizontal = Control.GrowDirection.Both;
+        panel.GrowVertical = Control.GrowDirection.Both;
+    }
+
+    public override void _ExitTree() => _host?.Dispose();
+}

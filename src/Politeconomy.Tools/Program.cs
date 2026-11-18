@@ -1,0 +1,1348 @@
+using System.Diagnostics;
+using Politeconomy.Sim;
+using Politeconomy.Sim.Data;
+using Politeconomy.Sim.Economy;
+using Politeconomy.Sim.Engine;
+using Politeconomy.Sim.Government;
+using Politeconomy.Sim.Model;
+using Politeconomy.Sim.Text;
+
+// Консольные инструменты Politeconomy: проверка данных и прогоны мира без графики.
+//   validate            — проверить data/*.json (ссылки, диапазоны, палитры, коэффициенты)
+//   run [--years N]     — прогнать мир N лет без графики и показать время шага
+//   check [--years N] [--random-laws] — прогон и проверки правдоподобия (по умолчанию 50 лет):
+//                         разогрев не уводит показатели от данных, мировой рост 1–5% в год, нет NaN и выходов за диапазоны;
+//                         с --random-laws у каждой страны случайные варианты всех законов (проверка устойчивости модели)
+//   report [--years N] [--country ISO] — таблица показателей стран по годам
+//   classes [--years N] [--country ISO] — классы стран: численность, доходы, уровень жизни, настроение, влияние
+//   government [--country ISO] [--years N] — правительство и парламент страны, журнал отставок
+//   ministry [--country ISO] [--years N] — доклады всех министров страны (как на экране «Ведомства»)
+//   politics [--country ISO] [--years N] — партии, опросы, места в парламенте и взгляды классов
+// Общий ключ: --data <папка> — где лежит data/ (по умолчанию ищется рядом и выше).
+
+var command = args.FirstOrDefault() ?? "help";
+var dataDir = Option("--data") ?? DataDirectory.Find(Environment.CurrentDirectory, AppContext.BaseDirectory);
+var years = int.TryParse(Option("--years"), out var y) ? y : 50;
+
+if (command is "help" or "--help" or "-h")
+{
+    Console.WriteLine("Politeconomy.Tools validate | run [--years N] | check [--years N] | report [--years N] [--country ISO] | classes [--years N] [--country ISO] | government [--country ISO] | ministry [--country ISO] [--years N] | politics [--country ISO] [--years N] | campaign [--country ISO] [--count N] | groups | protests | education | living [--years N] [--country ISO] | energy [--years N] [--country ISO] | infrastructure [--years N] [--country ISO] | science [--years N] [--country ISO] | diplomacy [--country ISO] | ai [--years N] | war [--attacker ISO --defender ISO] | events [--years N] [--country ISO] | news [--years N] [--country ISO|none] [--broadcasts N] [--papers N] [--data <папка>]");
+    return 0;
+}
+if (dataDir is null)
+{
+    Console.Error.WriteLine("Не найдена папка data/ с countries.json. Укажите её ключом --data.");
+    return 2;
+}
+
+GameData data;
+try
+{
+    data = GameData.Load(dataDir);
+}
+catch (DataException e)
+{
+    Console.Error.WriteLine(e.Message);
+    return 1;
+}
+
+switch (command)
+{
+    case "validate":
+    {
+        var problems = DataValidator.Validate(data);
+        foreach (var p in problems)
+            Console.Error.WriteLine("ОШИБКА " + p);
+        var estimates = data.Countries.Countries.Sum(c => c.Stats.Values.Count(s => s.Source is "fill" or "derived"));
+        Console.WriteLine($"Стран: {data.Countries.Countries.Count}, оценок вместо данных: {estimates}, городов: {data.Cities.Cities.Count}");
+        Console.WriteLine(problems.Count == 0 ? "Данные в порядке." : $"Найдено ошибок: {problems.Count}");
+        return problems.Count == 0 ? 0 : 1;
+    }
+    case "run":
+    case "check":
+    case "report":
+        return Run(command);
+    case "trace":
+        return Trace();
+    case "classes":
+        return Classes();
+    case "government":
+        return Government();
+    case "ministry":
+        return Ministry();
+    case "politics":
+        return PoliticsReport();
+    case "campaign":
+        return CampaignReport();
+    case "groups":
+        return GroupsReport();
+    case "protests":
+        return ProtestsReport();
+    case "education":
+        return EducationReport();
+    case "living":
+        return LivingReport();
+    case "energy":
+        return EnergyReport();
+    case "infrastructure":
+        return InfrastructureReport();
+    case "science":
+        return ScienceReport();
+    case "diplomacy":
+        return DiplomacyReport();
+    case "ai":
+        return AiReport();
+    case "war":
+        return WarReport();
+    case "events":
+        return EventsReport();
+    case "news":
+        return NewsReport();
+    default:
+        Console.Error.WriteLine($"Неизвестная команда «{command}». Запустите с help.");
+        return 2;
+}
+
+int Run(string mode)
+{
+    var timer = Stopwatch.StartNew();
+    var start = GameSetup.NewGame(data);
+    var sim = start.Simulation;
+    var world = sim.World;
+    if (args.Contains("--no-war"))
+        sim = new Simulation(world, GameSetup.Systems().Where(s => s is not Politeconomy.Sim.Military.Systems.WarSystem));
+    Console.WriteLine($"Новая партия с разогревом {data.Scenario.WarmupMonths} мес. за {timer.Elapsed.TotalSeconds:F1} с.");
+    if (args.Contains("--random-laws"))
+    {
+        var random = new DeterministicRandom(12345);
+        foreach (var country in world.Countries)
+        {
+            var laws = world.Laws![country.Id];
+            foreach (var law in data.Laws.Laws)
+                laws.Current[law.Id] = law.Variants[random.Next(0, law.Variants.Count)].Id;
+            Politeconomy.Sim.Laws.LawModel.Recompute(data, laws, world.Date);
+        }
+        Console.WriteLine("У всех стран случайные варианты законов.");
+    }
+    var failures = 0;
+    if (start.Warmup is { } warmup)
+        failures += WarmupCheck(warmup, mode == "check");
+
+    var focus = Option("--country");
+    var history = new List<(int Year, double WorldGdp, Dictionary<string, Dictionary<string, double>> Stats)>();
+    void Record()
+    {
+        var snapshot = world.Countries.ToDictionary(c => c.Id, c => c.Stats.ToDictionary(kv => kv.Key, kv => kv.Value.Value));
+        history.Add((world.Date.Year, WorldRealGdp(world), snapshot));
+    }
+    Record();
+
+    // Все выборы за прогон (у страны хранятся только последние, поэтому собираем по ходу).
+    var elections = new List<(string Country, Regime Regime, Politeconomy.Sim.Politics.ElectionResult Result)>();
+    var seen = new HashSet<Politeconomy.Sim.Politics.ElectionResult>(world.Politics!.Countries.Values.SelectMany(p => p.Elections));
+
+    // Строй и режим стран на старте — чтобы увидеть, сколько их сменилось без выборов.
+    var startRegimes = world.Countries.ToDictionary(c => c.Id, c => (c.System, c.Regime));
+    // Протесты по месяцам: сколько стран-месяцев с массовыми протестами и с восстаниями.
+    var unrest = (Months: 0, Any: 0, Mass: 0, Uprising: 0);
+    var end = world.Date.AddYears(years);
+    timer.Restart();
+    var days = 0;
+    var worstDayMs = 0.0;
+    while (world.Date < end)
+    {
+        var t = timer.Elapsed.TotalMilliseconds;
+        sim.StepDay();
+        worstDayMs = Math.Max(worstDayMs, timer.Elapsed.TotalMilliseconds - t);
+        days++;
+        if (world.Date is { Month: 1, Day: 1 })
+            Record();
+        if (world.Date.Day == 1)
+            foreach (var country in world.Countries)
+            {
+                var p = world.Politics!.Countries[country.Id];
+                foreach (var e in p.Elections.Where(seen.Add))
+                    elections.Add((country.Id, country.Regime, e));
+                unrest = (unrest.Months + 1, unrest.Any + (p.Protests.Count > 0 ? 1 : 0), unrest.Mass + (p.Protests.Any(x => x.Stage >= 2) ? 1 : 0),
+                    unrest.Uprising + (p.Protests.Any(x => x.Stage >= 4) ? 1 : 0));
+            }
+    }
+    Console.WriteLine($"Прогон: {years} лет ({days} дней) до {Fmt.Date(world.Date)} за {timer.Elapsed.TotalSeconds:F1} с; самый долгий день {worstDayMs:F2} мс.");
+    if (mode == "run")
+        return 0;
+
+    PrintWorld(history);
+    foreach (var id in (focus is null ? ["USA", "CHN", "DEU", "RUS", "IND", "BRA", "SAU", "TUR", "JPN", "NGA"] : new[] { focus }).Where(id => world.ById(id) is not null))
+        PrintCountry(history, id);
+    if (mode == "report")
+        return 0;
+
+    PrintExtremes(history);
+    PrintSociety(history);
+    failures += PopulationCheck(history, data);
+    failures += GrowthCheck(history);
+    failures += RangeCheck(world);
+    failures += ElectionCheck(elections, years);
+    failures += GroupsCheck(world, data);
+    failures += ProtestsCheck(unrest);
+    failures += PowerCheck(world, startRegimes);
+    failures += LivingCheck(world);
+    failures += EnergyCheck(world);
+    failures += InfrastructureCheck(world);
+    failures += ScienceCheck(world);
+    failures += CollapseCheck(world);
+    failures += AiCheck(world, years);
+    Console.WriteLine(failures == 0 ? "Все проверки пройдены." : $"Нарушений: {failures}");
+    return failures == 0 ? 0 : 1;
+}
+
+// ТЗ, этап 6: без игрока за 50 лет не меньше 90% стран не впадают в коллапс (Politeconomy.Sim.Ai.Collapse).
+static int CollapseCheck(World world)
+{
+    var collapsed = world.Countries.Select(c => (c.Id, Reasons: Politeconomy.Sim.Ai.Collapse.Reasons(world, c))).Where(x => x.Reasons.Count > 0).ToList();
+    var share = 1 - collapsed.Count / (double)world.Countries.Count;
+    Console.WriteLine($"Без коллапса {share:P0} стран (нужно не меньше 90%); в коллапсе {collapsed.Count}: " +
+                      string.Join("; ", collapsed.Select(x => $"{x.Id} ({string.Join(", ", x.Reasons)})")));
+    if (share >= 0.9)
+        return 0;
+    Console.Error.WriteLine("ОШИБКА в коллапсе больше 10% стран");
+    return 1;
+}
+
+// ИИ стран: решения есть у каждой страны и у каждого — причина; законы меняются в меру (в среднем не больше одного
+// в 4 года на страну), санкций не стало вдвое больше или меньше, чем на старте.
+static int AiCheck(World world, int years)
+{
+    var ai = world.Ai!;
+    var silent = ai.Countries.Where(kv => kv.Key != world.PlayerCountry && kv.Value.Decisions.Count == 0).Select(kv => kv.Key).ToList();
+    var unexplained = ai.Countries.Values.SelectMany(c => c.Decisions).Count(d => string.IsNullOrWhiteSpace(d.Why));
+    var laws = ai.Counts.GetValueOrDefault("law");
+    var perCountry = laws / (double)Math.Max(1, ai.Countries.Count) / Math.Max(1, years) * 4;
+    var sanctions = world.Diplomacy!.Sanctions.Count;
+    var start = world.Data.Diplomacy.Sanctions.Sum(s => s.By.Count);
+    Console.WriteLine("ИИ: решений " + string.Join(", ", ai.Counts.Select(kv => $"{kv.Key} {kv.Value}")) +
+                      $"; законов на страну за 4 года {perCountry:F2}; санкций {sanctions} (на старте {start}); договоров {world.Diplomacy.Treaties.Count}; " +
+                      $"резолюций {world.Diplomacy.Resolutions.Count}; без решений {silent.Count}, без причины {unexplained}.");
+    if (silent.Count == 0 && unexplained == 0 && perCountry <= 1 && sanctions >= start / 2 && sanctions <= start * 2)
+        return 0;
+    Console.Error.WriteLine("ОШИБКА ИИ ведёт себя странно: молчит, не объясняет решений или слишком часто меняет законы и санкции");
+    return 1;
+}
+
+// Наука в конце прогона: открыто от 4 до 16 технологий, которых на старте не знал никто; у типичной страны
+// технологический уровень — от 30 до 100%.
+static int ScienceCheck(World world)
+{
+    var discoveries = world.Science!.Discoveries;
+    var levels = world.Countries.Select(c => c.Stat("technology_level_pct")).OrderBy(x => x).ToList();
+    var median = levels[levels.Count / 2];
+    Console.WriteLine($"Наука: открыто нового {discoveries.Count} (" + string.Join(", ", discoveries.OrderBy(kv => kv.Value.Date)
+        .Select(kv => $"{kv.Key} — {kv.Value.Country} {kv.Value.Date.Year}")) + $"); технологический уровень типичной страны {median:F0}%.");
+    if (discoveries.Count is < 4 or > 16 || median is < 30 or > 100)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: наука идёт слишком быстро или слишком медленно");
+        return 1;
+    }
+    return 0;
+}
+
+// Инфраструктура в конце прогона: перегрузка, которая режет выпуск больше чем на 5%, — не больше чем у двадцатой
+// части стран; среднее состояние — от 55 до 95%.
+static int InfrastructureCheck(World world)
+{
+    var all = world.Infrastructure!.Countries;
+    var choked = all.Where(kv => kv.Value.Cut.Max() > 0.05).Select(kv => kv.Key).ToList();
+    var condition = world.Countries.Average(c => c.Stat("infrastructure_condition_pct"));
+    Console.WriteLine($"Инфраструктура: перегрузка режет выпуск больше 5% у {choked.Count} стран{(choked.Count > 0 ? " (" + string.Join(", ", choked.Take(10)) + ")" : "")}, " +
+                      $"состояние в среднем {condition:F0}%.");
+    if (choked.Count > all.Count / 20 || condition is < 55 or > 95)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: инфраструктура ушла слишком далеко от старта");
+        return 1;
+    }
+    return 0;
+}
+
+// Энергетика в конце прогона: отключения (нехватка больше 5%) — не больше чем у двадцатой части стран, цена
+// электричества в среднем — от 50 до 200 к старту.
+static int EnergyCheck(World world)
+{
+    var all = world.Energy!.Countries;
+    var blackouts = all.Where(kv => kv.Value.Shortage > 0.05).Select(kv => kv.Key).ToList();
+    var price = all.Values.Average(c => c.Price);
+    var lowCarbon = world.Countries.Average(c => c.Stat("low_carbon_power_pct"));
+    Console.WriteLine($"Энергетика: отключения (нехватка больше 5%) у {blackouts.Count} стран{(blackouts.Count > 0 ? " (" + string.Join(", ", blackouts.Take(10)) + ")" : "")}, " +
+                      $"цена электричества в среднем {price:F0} к старту, чистое электричество {lowCarbon:F0}% в среднем по странам.");
+    if (blackouts.Count > all.Count / 20 || price is < 50 or > 200)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: энергетика ушла слишком далеко от старта");
+        return 1;
+    }
+    return 0;
+}
+
+// Жильё, преступность, загрязнение в конце прогона: острая нехватка жилья (больше 30%) — не больше чем у десятой части
+// стран, преступность и загрязнение в среднем не уходят от старта дальше чем на 15 пунктов.
+static int LivingCheck(World world)
+{
+    var all = world.Living!.Countries.Values.ToList();
+    var shortage = all.Count(c => c.Housing < c.Desired * 0.7);
+    var crime = all.Average(c => c.Crime - c.Crime0);
+    var pollution = all.Average(c => c.Pollution - c.Pollution0);
+    Console.WriteLine($"Условия жизни: острая нехватка жилья у {shortage} стран из {all.Count}; преступность в среднем {crime:+0.0;-0.0} к старту, " +
+                      $"загрязнение {pollution:+0.0;-0.0}. Больше всего выросла преступность: " +
+                      string.Join(", ", world.Living.Countries.OrderByDescending(kv => kv.Value.Crime - kv.Value.Crime0).Take(5).Select(kv => $"{kv.Key} {kv.Value.Crime0:F0}→{kv.Value.Crime:F0}")) +
+                      "; загрязнение: " +
+                      string.Join(", ", world.Living.Countries.OrderByDescending(kv => kv.Value.Pollution - kv.Value.Pollution0).Take(5).Select(kv => $"{kv.Key} {kv.Value.Pollution0:F0}→{kv.Value.Pollution:F0}")));
+    if (shortage > all.Count / 10 || Math.Abs(crime) > 15 || Math.Abs(pollution) > 15)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: условия жизни ушли слишком далеко от старта");
+        return 1;
+    }
+    return 0;
+}
+
+// Смена власти без выборов за прогон: сколько каких событий; режимы не должны массово рушиться.
+static int PowerCheck(World world, Dictionary<string, (PoliticalSystem System, Regime Regime)> start)
+{
+    var changes = world.Politics!.Countries.SelectMany(kv => kv.Value.Changes.Select(c => (Country: kv.Key, Change: c))).ToList();
+    var kinds = changes.GroupBy(x => x.Change.Kind).ToDictionary(g => g.Key, g => g.Count());
+    string[] order = ["no_confidence", "impeachment", "palace_coup", "military_coup", "handover", "revolution"];
+    string[] names = ["вотумов недоверия", "импичментов", "дворцовых переворотов", "военных переворотов", "передач власти хунтой", "революций"];
+    Console.WriteLine("Смена власти без выборов: " + string.Join(", ", order.Select((k, i) => $"{names[i]} {kinds.GetValueOrDefault(k)}")) + ".");
+    var military = world.Countries.Count(c => c.System == PoliticalSystem.MilitaryRegime);
+    var militaryStart = start.Values.Count(x => x.System == PoliticalSystem.MilitaryRegime);
+    var democracies = world.Countries.Count(c => c.Regime == Regime.Democracy);
+    var democraciesStart = start.Values.Count(x => x.Regime == Regime.Democracy);
+    Console.WriteLine($"  военных режимов: было {militaryStart}, стало {military}; демократий: было {democraciesStart}, стало {democracies}. " +
+                      "Чаще всего: " + string.Join(", ", changes.GroupBy(x => x.Country).OrderByDescending(g => g.Count()).Take(8).Select(g => $"{g.Key} {g.Count()}")));
+    var failures = 0;
+    if (military > militaryStart + 25 || democracies < democraciesStart * 0.8 || kinds.GetValueOrDefault("military_coup") > 150)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: перевороты слишком часты");
+        failures++;
+    }
+    return failures;
+}
+
+// Протесты: массовые идут в 0,1–15% стран-месяцев (в кризисных странах), восстания — не больше 2%.
+static int ProtestsCheck((int Months, int Any, int Mass, int Uprising) u)
+{
+    double Share(int n) => u.Months > 0 ? (double)n / u.Months : 0;
+    Console.WriteLine($"Протесты: хоть какие-то — в {Share(u.Any):P1} стран-месяцев, массовые и сильнее — в {Share(u.Mass):P1}, восстания — в {Share(u.Uprising):P2}.");
+    if (Share(u.Mass) is < 0.001 or > 0.15 || Share(u.Uprising) > 0.02)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: протестов слишком мало или слишком много");
+        return 1;
+    }
+    return 0;
+}
+
+// Группы интересов в конце прогона: одобрение не сваливается в крайности (враждебных — меньше четверти, у групп
+// в среднем 35–65), давление групп на рост и ставки умеренное.
+static int GroupsCheck(World world, GameData data)
+{
+    var approvals = world.Politics!.Countries.Values.SelectMany(p => p.Groups.Select(g => g.Approval)).ToList();
+    var hostile = approvals.Count(a => a < 25) / (double)approvals.Count;
+    var happy = approvals.Count(a => a > 75) / (double)approvals.Count;
+    var growth = world.Politics.Countries.Values.Select(p => p.GroupEffects.GetValueOrDefault("potential_growth")).ToList();
+    var spread = world.Politics.Countries.Values.Select(p => p.GroupEffects.GetValueOrDefault("spread")).ToList();
+    var byGroup = data.InterestGroups.Groups.Select((r, i) => $"{r.Name} {world.Politics.Countries.Values.Where(p => p.Groups.Count > i).Average(p => p.Groups[i].Approval):F0}");
+    Console.WriteLine($"Группы интересов: одобрение в среднем {approvals.Average():F1}, враждебных (<25) {hostile:P0}, восторженных (>75) {happy:P0}; " +
+                      $"давление на рост от {growth.Min():F2} до {growth.Max():F2} п. п., на ставки от {spread.Min():F2} до {spread.Max():F2} п. п.");
+    Console.WriteLine("  по группам: " + string.Join(", ", byGroup));
+    var failures = 0;
+    if (hostile > 0.25 || happy > 0.25)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: слишком много групп в крайностях");
+        failures++;
+    }
+    var means = data.InterestGroups.Groups.Select((_, i) => world.Politics.Countries.Values.Where(p => p.Groups.Count > i).Average(p => p.Groups[i].Approval)).ToList();
+    if (means.Any(m => m is < 35 or > 65))
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: у какой-то группы среднее одобрение по миру вне 35–65");
+        failures++;
+    }
+    if (growth.Min() < -1.5 || spread.Max() > 3)
+    {
+        Console.WriteLine("  НАРУШЕНИЕ: давление групп слишком сильное");
+        failures++;
+    }
+    return failures;
+}
+
+// Выборы правдоподобны (критерий этапа 4): в демократиях власть иногда меняется, но не всегда; явка в разумных
+// пределах; на выборах парламента ни одна партия в демократии не набирает больше 70%.
+static int ElectionCheck(List<(string Country, Regime Regime, Politeconomy.Sim.Politics.ElectionResult Result)> elections, int years)
+{
+    if (elections.Count == 0)
+        return 0;
+    Console.WriteLine();
+    var democratic = elections.Where(e => e.Regime == Regime.Democracy).ToList();
+    var changes = democratic.Count(e => e.Result.PowerChanged);
+    var changeShare = democratic.Count > 0 ? (double)changes / democratic.Count : 0;
+    var turnouts = elections.Select(e => e.Result.Turnout).OrderBy(t => t).ToList();
+    var landslides = democratic.Where(e => e.Result.Kind == "parliament" && e.Result.Votes.Values.DefaultIfEmpty(0).Max() > 0.7).ToList();
+    var dictators = elections.Where(e => e.Regime == Regime.Authoritarian && e.Result.PowerChanged).ToList();
+    Console.WriteLine($"Выборы за {years} лет: {elections.Count}, в демократиях {democratic.Count}; власть сменилась в {changeShare:P0} демократических выборов " +
+                      $"(норма 15–70%); явка от {turnouts[0]:P0} до {turnouts[^1]:P0}, медиана {turnouts[turnouts.Count / 2]:P0}; " +
+                      $"разгромов больше 70% в демократиях: {landslides.Count}; смен власти на выборах при авторитарном режиме: {dictators.Count}.");
+    var failures = 0;
+    void Fail(string text)
+    {
+        Console.Error.WriteLine("ОШИБКА " + text);
+        failures++;
+    }
+    if (democratic.Count > 0 && changeShare is < 0.15 or > 0.7)
+        Fail($"в демократиях власть меняется в {changeShare:P0} выборов — вне 15…70%");
+    if (turnouts[0] < 0.25 || turnouts[^1] > 0.95)
+        Fail($"явка от {turnouts[0]:P0} до {turnouts[^1]:P0} — вне 25…95%");
+    if (landslides.Count > democratic.Count / 50)
+        Fail($"в демократиях слишком много разгромов: {string.Join(", ", landslides.Take(5).Select(e => $"{e.Country} {e.Result.Date:yyyy}"))}");
+    return failures;
+}
+
+// Разогрев не должен уводить показатели далеко от данных: в норме страны с 90% мирового ВВП и 80% стран.
+static int WarmupCheck(WarmupReport report, bool strict)
+{
+    Console.WriteLine($"Разогрев {report.Months} мес.: в пределах 10% от данных — {report.CountryShareWithinTolerance:P0} стран, {report.GdpShareWithinTolerance:P0} мирового ВВП.");
+    foreach (var (id, _, gated) in WarmupReport.Checked)
+    {
+        var items = report.Deviations.Where(d => d.Indicator == id).ToList();
+        var ok = items.Count(d => d.WithinTolerance);
+        var worst = items.OrderByDescending(d => Math.Abs(d.Warmed - d.Start)).Take(3)
+            .Select(d => $"{d.Country} {d.Start:F1}→{d.Warmed:F1}");
+        Console.WriteLine($"  {id,-26} в норме {ok,3} из {items.Count}; сильнее всего: {string.Join(", ", worst)}{(gated ? "" : " (только для сведения)")}");
+    }
+    var failed = report.GdpShareWithinTolerance < 0.9 || report.CountryShareWithinTolerance < 0.8;
+    if (failed && strict)
+        Console.Error.WriteLine("ОШИБКА разогрев уводит показатели от данных больше чем на 10%");
+    return failed && strict ? 1 : 0;
+}
+
+// Население 10 крупнейших стран к 2050 году в пределах ±15% от прогноза ООН (критерий этапа 2).
+static int PopulationCheck(List<(int Year, double WorldGdp, Dictionary<string, Dictionary<string, double>> Stats)> history, GameData data)
+{
+    const int year = 2050;
+    var at = history.FirstOrDefault(h => h.Year == year);
+    if (at.Stats is null || data.Benchmarks is null)
+        return 0;
+    var start = history[0];
+    var top = start.Stats.OrderByDescending(kv => kv.Value["population"]).Take(10).Select(kv => kv.Key).ToList();
+    Console.WriteLine();
+    Console.WriteLine($"Население в {year} году: модель и прогноз ООН, млн человек");
+    var failures = 0;
+    double modelWorld = 0, unWorld = 0;
+    foreach (var (id, years) in data.Benchmarks.Population)
+    {
+        if (!years.TryGetValue(year.ToString(), out var un) || !at.Stats.TryGetValue(id, out var s))
+            continue;
+        modelWorld += s["population"];
+        unWorld += un;
+    }
+    foreach (var id in top)
+    {
+        if (!data.Benchmarks.Population.TryGetValue(id, out var years) || !years.TryGetValue(year.ToString(), out var un))
+            continue;
+        var model = at.Stats[id]["population"];
+        var deviation = model / un - 1;
+        var ok = Math.Abs(deviation) <= 0.15;
+        if (!ok)
+            failures++;
+        Console.WriteLine($"  {id}  модель {model / 1e6,7:F0}  ООН {un / 1e6,7:F0}  отклонение {deviation,6:P1}{(ok ? "" : "  ВНЕ ±15%")}");
+    }
+    Console.WriteLine($"  Мир (страны с прогнозом): модель {modelWorld / 1e9:F2} млрд, ООН {unWorld / 1e9:F2} млрд, отклонение {modelWorld / unWorld - 1:P1}");
+    if (failures > 0)
+        Console.Error.WriteLine($"ОШИБКА население {failures} из 10 крупнейших стран к {year} году отличается от прогноза ООН больше чем на 15%");
+    return failures > 0 ? 1 : 0;
+}
+
+// Мировой рост в среднем 1–5% в год (реальный ВВП в ценах и курсах старта).
+static int GrowthCheck(List<(int Year, double WorldGdp, Dictionary<string, Dictionary<string, double>> Stats)> history)
+{
+    var first = history[0];
+    var last = history[^1];
+    var span = last.Year - first.Year;
+    if (span <= 0)
+        return 0;
+    var average = Math.Pow(last.WorldGdp / first.WorldGdp, 1.0 / span) - 1;
+    Console.WriteLine($"Мировой рост в среднем за {span} лет: {average:P2} в год.");
+    if (average is >= 0.01 and <= 0.05)
+        return 0;
+    Console.Error.WriteLine("ОШИБКА мировой рост вне 1–5% в год");
+    return 1;
+}
+
+// Диапазоны те же, что для входных данных; суммы в долларах сравниваются в ценах старта (без инфляции доллара).
+static int RangeCheck(World world)
+{
+    var failures = 0;
+    var dollar = Politeconomy.Sim.Economy.Systems.EconomySystem.Reference(world.Economy!).Price;
+    string[] money = ["gdp_usd", "gdp_per_capita_usd", "gdp_ppp_per_capita"];
+    foreach (var country in world.Countries)
+    {
+        foreach (var (key, stat) in country.Stats)
+        {
+            var value = money.Contains(key) ? stat.Value / dollar : stat.Value;
+            if (double.IsNaN(value) || double.IsInfinity(value))
+            {
+                Console.Error.WriteLine($"ОШИБКА {country.Id}.{key}: значение не число");
+                failures++;
+            }
+            else if (DataValidator.Ranges.TryGetValue(key, out var r) && (value < r.Min || value > r.Max))
+            {
+                Console.Error.WriteLine($"ОШИБКА {country.Id}.{key} = {value:F2} вне {r.Min}…{r.Max}");
+                failures++;
+            }
+        }
+    }
+    Console.WriteLine(failures == 0 ? "Диапазоны показателей в норме, бесконечностей и NaN нет." : $"Выходов за диапазоны: {failures}");
+    return failures;
+}
+
+static double WorldRealGdp(World world) =>
+    world.Economy!.Countries.Values.Sum(e => e.RealGdp);
+
+// Крайние значения за весь прогон — чтобы сразу видеть страны, где модель уходит в разнос.
+static void PrintExtremes(List<(int Year, double WorldGdp, Dictionary<string, Dictionary<string, double>> Stats)> history)
+{
+    Console.WriteLine();
+    var ids = history[0].Stats.Keys.ToList();
+    void Top(string title, Func<string, double> score, string format, bool ascending = false)
+    {
+        var valid = ids.Select(id => (id, v: score(id))).Where(t => !double.IsNaN(t.v));
+        var top = (ascending ? valid.OrderBy(t => t.v) : valid.OrderByDescending(t => t.v)).Take(6);
+        Console.WriteLine($"{title}: {string.Join(", ", top.Select(t => $"{t.id} {t.v.ToString(format)}"))}");
+    }
+    double Max(string id, string key) => history.Max(h => h.Stats[id].GetValueOrDefault(key, double.NaN));
+    double Min(string id, string key) => history.Min(h => h.Stats[id].GetValueOrDefault(key, double.NaN));
+    double Growth(string id) =>
+        Math.Pow(history[^1].Stats[id]["gdp_ppp_per_capita"] / history[0].Stats[id]["gdp_ppp_per_capita"], 1.0 / (history.Count - 1)) - 1;
+    Top("Наибольший долг, % ВВП", id => Max(id, "gov_debt_pct_gdp"), "F0");
+    Top("Наибольшая инфляция, %", id => Max(id, "inflation_pct"), "F0");
+    Top("Наибольшая безработица, %", id => Max(id, "unemployment_pct"), "F0");
+    Top("Наибольший дефицит, % ВВП", id => -Min(id, "budget_balance_pct_gdp"), "F0");
+    Top("Самый глубокий спад, %", id => -Min(id, "gdp_growth_pct"), "F0");
+    Top("Самая высокая ставка ЦБ, %", id => Max(id, "policy_rate_pct"), "F0");
+    Top("Быстрее всех растёт ВВП на душу по ППС (в текущих долларах), в год", Growth, "P1");
+    Top("Медленнее всех", Growth, "P1", ascending: true);
+    Top("Дефолтов за прогон", id => history[^1].Stats[id].GetValueOrDefault("defaults", 0), "F0");
+}
+
+static void PrintWorld(List<(int Year, double WorldGdp, Dictionary<string, Dictionary<string, double>> Stats)> history)
+{
+    Console.WriteLine();
+    Console.WriteLine("Год   Рост мира  Инфляция(медиана)  Безработица(медиана)  Долг(медиана)  Сальдо(медиана)");
+    for (var i = 0; i < history.Count; i += Math.Max(1, history.Count / 12))
+    {
+        var h = history[i];
+        var growth = i > 0 ? h.WorldGdp / history[i - 1].WorldGdp - 1 : double.NaN;
+        double Median(string key)
+        {
+            var values = h.Stats.Values.Select(s => s.GetValueOrDefault(key, double.NaN)).Where(v => !double.IsNaN(v)).OrderBy(v => v).ToList();
+            return values.Count > 0 ? values[values.Count / 2] : double.NaN;
+        }
+        Console.WriteLine($"{h.Year}  {growth,8:P1}  {Median("inflation_pct"),12:F1}%  {Median("unemployment_pct"),16:F1}%  {Median("gov_debt_pct_gdp"),10:F1}%  {Median("budget_balance_pct_gdp"),12:F1}%");
+    }
+}
+
+static void PrintCountry(List<(int Year, double WorldGdp, Dictionary<string, Dictionary<string, double>> Stats)> history, string id)
+{
+    Console.WriteLine();
+    Console.WriteLine($"{id}: год, рост, инфляция, безработица, ставка ЦБ, долг, сальдо, тек. счёт, курс за год, рейтинг");
+    for (var i = 0; i < history.Count; i += Math.Max(1, history.Count / 12))
+    {
+        var s = history[i].Stats[id];
+        double V(string k) => s.GetValueOrDefault(k, double.NaN);
+        Console.WriteLine($"  {history[i].Year} {V("gdp_growth_pct"),6:F1} {V("inflation_pct"),6:F1} {V("unemployment_pct"),5:F1} {V("policy_rate_pct"),6:F1} {V("gov_debt_pct_gdp"),6:F0} {V("budget_balance_pct_gdp"),6:F1} {V("current_account_pct_gdp"),6:F1} {V("exchange_rate_change_pct"),6:F1} {Fmt.Rating(V("credit_rating")),5}");
+    }
+}
+
+// Настроение мира: средние по населению уровень жизни, удовлетворённость и радикализм; самые недовольные страны.
+static void PrintSociety(List<(int Year, double WorldGdp, Dictionary<string, Dictionary<string, double>> Stats)> history)
+{
+    Console.WriteLine();
+    Console.WriteLine("Год   Уровень жизни  Удовлетворённость  Радикализм  (средние по населению мира)");
+    for (var i = 0; i < history.Count; i += Math.Max(1, history.Count / 12))
+    {
+        var h = history[i];
+        double Mean(string key)
+        {
+            var weight = h.Stats.Values.Sum(s => s.GetValueOrDefault("population"));
+            return h.Stats.Values.Sum(s => s.GetValueOrDefault(key) * s.GetValueOrDefault("population")) / weight;
+        }
+        Console.WriteLine($"{h.Year}  {Mean("standard_of_living"),12:F1}  {Mean("satisfaction"),16:F1}  {Mean("radicalism"),10:F1}");
+    }
+    var ids = history[0].Stats.Keys.ToList();
+    var lowest = ids.Select(id => (id, v: history.Min(h => h.Stats[id].GetValueOrDefault("satisfaction", double.NaN)))).OrderBy(t => t.v).Take(6);
+    var radical = ids.Select(id => (id, v: history.Max(h => h.Stats[id].GetValueOrDefault("radicalism", double.NaN)))).OrderByDescending(t => t.v).Take(6);
+    Console.WriteLine($"Самая низкая удовлетворённость: {string.Join(", ", lowest.Select(t => $"{t.id} {t.v:F0}"))}");
+    Console.WriteLine($"Самый высокий радикализм: {string.Join(", ", radical.Select(t => $"{t.id} {t.v:F0}"))}");
+}
+
+// Классы стран на старте и (с --years N) через N лет.
+int Classes()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var focus = Option("--country");
+    string[] ids = focus is null ? ["USA", "DEU", "RUS", "CHN", "IND", "NGA", "BRA", "SAU", "JPN", "ETH"] : [focus];
+    void Print()
+    {
+        foreach (var id in ids.Where(id => world.ById(id) is not null))
+        {
+            var s = world.Society![id];
+            var c = world[id];
+            Console.WriteLine();
+            Console.WriteLine($"{id} {Fmt.Date(world.Date)}: ВВП на душу по ППС {c.Stat("gdp_ppp_per_capita"):F0}, уровень жизни {c.Stat("standard_of_living"):F0}, " +
+                $"удовлетворённость {c.Stat("satisfaction"):F0}, радикализм {c.Stat("radicalism"):F0}, поправка доходов {s.Scale:F2}");
+            Console.WriteLine("  класс                             доля%   доход   потр.  сбереж.  ур.жизни ожид. удовл. радик. влиян.%");
+            for (var k = 0; k < s.Size.Length; k++)
+                Console.WriteLine($"  {data.Classes.Classes[k].Name,-32} {s.Size[k] / s.Total * 100,6:F1} {s.Income[k],7:F0} {s.Consumption[k],7:F0} {s.Savings[k],8:F0} {s.StandardOfLiving[k],7:F1} {s.Expectations[k],6:F1} {s.Satisfaction[k],6:F1} {s.Radicalism[k],6:F1} {s.Influence[k],6:F1}");
+        }
+    }
+    if (args.Contains("--scan"))
+    {
+        // Все страны: поправка доходов и разброс уровня жизни между классами.
+        foreach (var country in world.Countries.OrderBy(c => world.Society![c.Id].Scale))
+        {
+            var s = world.Society![country.Id];
+            var min = Enumerable.Range(0, s.Size.Length).Where(k => s.Size[k] > 0).Min(k => s.StandardOfLiving[k]);
+            var max = Enumerable.Range(0, s.Size.Length).Where(k => s.Size[k] > 0).Max(k => s.StandardOfLiving[k]);
+            Console.WriteLine($"{country.Id} поправка {s.Scale:F2} ур.жизни {country.Stat("standard_of_living"):F0} ({min:F0}…{max:F0}) удовл. {country.Stat("satisfaction"):F0} радик. {country.Stat("radicalism"):F0}");
+        }
+        return 0;
+    }
+    Print();
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 0;
+    if (runYears > 0)
+    {
+        sim.RunUntil(world.Date.AddYears(runYears));
+        Print();
+    }
+    return 0;
+}
+
+// Правительство страны: глава, министры с качествами и чертами, парламент; с --years N — журнал за эти годы.
+int Government()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 0;
+    if (runYears > 0)
+        sim.RunUntil(world.Date.AddYears(runYears));
+    string[] ids = Option("--country") is { } one ? [one] : ["RUS", "USA", "CHN", "DEU", "IND", "BRA", "NGA", "SAU", "JPN", "VNM"];
+    var traits = data.Government.Traits.ToDictionary(t => t.Id, t => t.Name);
+    foreach (var id in ids)
+    {
+        var country = world[id];
+        var g = world.Government![id];
+        var p = g.Parliament;
+        string Line(Character c) =>
+            $"{c.Name} ({(c.Female ? "ж" : "м")}, {c.Age(world.Date)}) комп {c.Competence:F0} лоял {c.Loyalty:F0} корр {c.Corruption:F0} поп {c.Popularity:F0}" +
+            (c.Traits.Count > 0 ? " — " + string.Join(", ", c.Traits.Select(t => traits[t])) : "");
+        Console.WriteLine();
+        Console.WriteLine($"{country.Name} ({WorldFactory.RegimeId(country.Regime)}): {Politeconomy.Sim.Government.GovernmentModel.LeaderTitle(data, country)} {Line(g.Leader)}");
+        Console.WriteLine($"  {p.Name}: {p.Kind}, мест {p.Seats}, правящий блок {p.RulingSeats}, дисциплина {p.Discipline:F2}");
+        foreach (var post in data.Government.Posts)
+            Console.WriteLine($"  {post.Name,-36} {Line(g.Ministers[post.Id])}");
+    }
+    if (runYears > 0)
+        foreach (var e in world.Journal.Where(e => ids.Contains(e.Country)).TakeLast(20))
+            Console.WriteLine($"{e.Date:yyyy-MM-dd} {e.Country} {e.Text}");
+    return 0;
+}
+
+int Ministry()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 0;
+    if (runYears > 0)
+        sim.RunUntil(sim.World.Date.AddYears(runYears));
+    var id = Option("--country") ?? "BRA";
+    var snapshot = WorldSnapshot.Capture(sim.World, 1, true, 1);
+    var country = snapshot.Countries[id];
+    Console.WriteLine($"{sim.World[id].Name}, {snapshot.Date:yyyy-MM-dd}");
+    foreach (var post in data.Government.Posts)
+    {
+        var minister = country.Government?.Minister(post.Id);
+        Console.WriteLine();
+        Console.WriteLine($"{post.Ministry} — {minister?.Name}");
+        foreach (var line in MinistryReport.Lines(data, post, country, snapshot, minister))
+            Console.WriteLine("  • " + line);
+        foreach (var stat in post.Stats ?? [])
+        {
+            var series = country.History?.Series(stat) ?? [];
+            Console.WriteLine($"    {stat}: " + string.Join(" ", series.TakeLast(10).Select(p => $"{p.Year % 100:D2}:{p.Value:G4}")));
+        }
+    }
+    return 0;
+}
+
+// Образование: охват, выпуск, запас в рабочей силе, качество и человеческий капитал по годам в нескольких странах.
+int EducationReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 30;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "DEU", "KOR", "CHN", "IND", "BRA", "NGA", "ETH"];
+    for (var year = 0; year <= runYears; year += 10)
+    {
+        if (year > 0)
+            sim.RunUntil(world.Date.AddYears(10));
+        Console.WriteLine($"{world.Date.Year}:");
+        foreach (var id in ids)
+        {
+            var e = world.Education![id];
+            Console.WriteLine($"  {world[id].Name,-16} высшее: охват {e.Tertiary,5:F1}%, выпуск {e.TertiaryGraduates,5:F1}, в рабочей силе {e.TertiaryStock,5:F1}; " +
+                              $"проф. {e.VocationalStock,4:F2}; грамотность {e.Literacy,4:F0}%; качество {e.Quality,3:F0}; финансирование {e.Funding,4:F2}; " +
+                              $"капитал {e.HumanCapital * 100,5:F1}; к росту {e.Effects.GetValueOrDefault("potential_growth"),5:F2} п. п.");
+        }
+    }
+    return 0;
+}
+
+// Дипломатия: главные торговые партнёры, лучшие и худшие отношения нескольких стран.
+int DiplomacyReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "RUS", "CHN", "DEU", "IND", "BRA", "UKR", "IRN", "CAN", "NGA"];
+    foreach (var id in ids)
+    {
+        var others = world.Countries.Where(c => c.Id != id).ToList();
+        string Show(IEnumerable<Country> list, Func<Country, double> value, string format) =>
+            string.Join(", ", list.Select(c => $"{c.Id} {value(c).ToString(format)}"));
+        Console.WriteLine($"{world[id].Name}:");
+        Console.WriteLine("  торговля: " + Show(others.OrderByDescending(c => Politeconomy.Sim.Diplomacy.DiplomacyModel.TradeShare(world, id, c.Id)).Take(6),
+            c => Politeconomy.Sim.Diplomacy.DiplomacyModel.TradeShare(world, id, c.Id) * 100, "F1") + " %");
+        Console.WriteLine("  друзья: " + Show(others.OrderByDescending(c => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, id, c.Id)).Take(6),
+            c => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, id, c.Id), "F0"));
+        Console.WriteLine("  недруги: " + Show(others.OrderBy(c => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, id, c.Id)).Take(6),
+            c => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, id, c.Id), "F0"));
+    }
+    var all = world.Countries.SelectMany(a => world.Countries.Where(b => string.CompareOrdinal(a.Id, b.Id) < 0)
+        .Select(b => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, a.Id, b.Id))).ToList();
+    Console.WriteLine($"Все пары: в среднем {all.Average():F1}, враждебных (< −30) {all.Count(x => x < -30)}, дружеских (> 30) {all.Count(x => x > 30)} из {all.Count}");
+    var d = world.Diplomacy!;
+    Console.WriteLine("Мощь: " + string.Join(", ", d.Power.OrderBy(kv => kv.Value.Rank).Take(20)
+        .Select(kv => $"{kv.Value.Rank}. {kv.Key} {kv.Value.Index:F0} (э{kv.Value.Economy:F0} а{kv.Value.Military:F0} т{kv.Value.Technology:F0} в{kv.Value.Influence:F0})")));
+    Console.WriteLine("Под санкциями: " + string.Join(", ", world.Countries.Where(c => c.Stat("sanctions_against") > 0)
+        .OrderByDescending(c => c.Stat("sanctions_against")).Select(c => $"{c.Id} {c.Stat("sanctions_against"):F0} (давление {d.Pressure[d.Index[c.Id]]:F2})")));
+    Console.WriteLine("Совет безопасности: " + string.Join(", ", Politeconomy.Sim.Diplomacy.DiplomacyModel.Security(world)));
+    if (args.Contains("--pairs"))
+        foreach (var h in data.Diplomacy.History)
+            Console.WriteLine($"  {h.A}–{h.B} {Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, h.A, h.B),4:F0}: " +
+                              string.Join(", ", Politeconomy.Sim.Diplomacy.DiplomacyModel.Breakdown(world, h.A, h.B).Select(f => $"{f.Label} {f.Value:F0}")));
+    return 0;
+}
+
+// Война: одна страна нападает на другую, помесячно — фронт, взятые регионы, потери, усталость; в конце — итог.
+int WarReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var attacker = Option("--attacker") ?? "RUS";
+    var defender = Option("--defender") ?? "UKR";
+    var months = int.TryParse(Option("--months"), out var m) ? m : 24;
+    Console.WriteLine($"Сила: {attacker} {Politeconomy.Sim.Military.WarModel.Strength(world, attacker):F0}, {defender} {Politeconomy.Sim.Military.WarModel.Strength(world, defender):F0}");
+    Console.WriteLine("Мощь (армия): " + string.Join(", ", world.Countries.OrderByDescending(c => c.Stat("military_strength")).Take(15).Select(c => $"{c.Id} {c.Stat("military_strength"):F0}")));
+    var war = Politeconomy.Sim.Military.WarModel.Declare(world, attacker, defender);
+    if (war == null)
+    {
+        Console.WriteLine("Войну объявить нельзя: " + Politeconomy.Sim.Military.WarModel.CanDeclare(world, attacker, defender).Reason);
+        return 1;
+    }
+    Console.WriteLine($"Стороны: {string.Join(", ", war.Attackers)} против {string.Join(", ", war.Defenders)}; цель: {string.Join(", ", war.Goal)}");
+    for (var i = 0; i < months && world.War!.Wars.Contains(war); i++)
+    {
+        sim.RunUntil(world.Date.AddMonths(1));
+        var a = world.War!.Armies;
+        Console.WriteLine($"{world.Date:yyyy-MM}: фронт {war.Front.Count} (" + string.Join(", ", war.Front.OrderByDescending(kv => kv.Value).Take(4).Select(kv => $"{kv.Key} {kv.Value:F0}")) +
+                          $"); потери {war.AttackerLosses:F0}/{war.DefenderLosses:F0}; усталость {a[attacker].Exhaustion:F0}/{a[defender].Exhaustion:F0}; " +
+                          $"выпуск {a[attacker].Output:F3}/{a[defender].Output:F3}; рост {world[attacker].Stat("gdp_growth_pct"):F1}/{world[defender].Stat("gdp_growth_pct"):F1}");
+    }
+    foreach (var n in war.News)
+        Console.WriteLine($"  {n.Date:yyyy-MM} {n.Text}");
+    Console.WriteLine($"Занято у {defender}: {Politeconomy.Sim.Military.WarFront.OccupiedShare(world, defender):P0}, у {attacker}: {Politeconomy.Sim.Military.WarFront.OccupiedShare(world, attacker):P0}; " +
+                      $"перемирия: {string.Join(", ", world.War!.Ceasefires.Select(c => $"{c.A}–{c.B} с {c.Since}"))}");
+    // После войны — переговоры о мире (идут сами раз в полгода), ещё год.
+    double Pop(string id) => world.Demography!.Countries[id].Total;
+    double Gdp(string id) => world.Economy![id].GdpUsd;
+    var (pa, pd, ga, gd) = (Pop(attacker), Pop(defender), Gdp(attacker), Gdp(defender));
+    var peaceMonths = int.TryParse(Option("--peace"), out var pm) ? pm : 12;
+    for (var i = 0; i < peaceMonths; i++)
+    {
+        sim.RunUntil(world.Date.AddMonths(1));
+        if (i == 0 || world.War!.Treaties.Any(t => t.Date == world.Date.AddMonths(-1)))
+            Console.WriteLine($"{world.Date:yyyy-MM}: население {Pop(attacker) / 1e6:F2}/{Pop(defender) / 1e6:F2} млн, ВВП {Gdp(attacker) / 1e9:F1}/{Gdp(defender) / 1e9:F1} млрд, " +
+                              $"инфляция {world[attacker].Stat("inflation_pct"):F1}/{world[defender].Stat("inflation_pct"):F1}, выпуск {world.War!.Armies[attacker].Output:F3}/{world.War.Armies[defender].Output:F3}");
+    }
+    Console.WriteLine($"Население: {attacker} {pa / 1e6:F2}→{Pop(attacker) / 1e6:F2} млн, {defender} {pd / 1e6:F2}→{Pop(defender) / 1e6:F2}; " +
+                      $"ВВП: {ga / 1e9:F1}→{Gdp(attacker) / 1e9:F1}, {gd / 1e9:F1}→{Gdp(defender) / 1e9:F1} млрд");
+    foreach (var t in world.War!.Treaties)
+        Console.WriteLine($"  Мир {t.Date:yyyy-MM}: {t.Text}; выплачено {t.Paid / 1e9:F2} млрд");
+    foreach (var (id, ai) in world.Ai!.Countries.Where(kv => kv.Key == attacker || kv.Key == defender))
+        foreach (var d in ai.Decisions.Where(x => x.Kind == "peace"))
+            Console.WriteLine($"  {id} {d.Date:yyyy-MM}: {d.Text} — {d.Why}");
+    Console.WriteLine("Сменили владельца: " + string.Join(", ", world.Regions.Where(r => r.Owner != r.Info.Country).Select(r => $"{r.Name} ({r.Info.Country}→{r.Owner})")));
+    Console.WriteLine("Перемирия: " + string.Join(", ", world.War.Ceasefires.Select(c => $"{c.A}–{c.B} с {c.Since} {c.Capitulated}")));
+    return 0;
+}
+
+// События: игрок за страну --country (решения — по умолчанию, сразу), --years лет. Сколько событий в год видит игрок и
+// другие страны, какие события случаются чаще всего, какие не случились ни разу, лента событий игрока с причинами.
+int EventsReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var player = Option("--country") ?? "BRA";
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 10;
+    Politeconomy.Sim.Politics.PoliticsActions.PlayAs(world, player);
+    var mine = new List<string>();
+    var perYear = new SortedDictionary<int, HashSet<string>>();
+    var byCountry = new Dictionary<string, int>(StringComparer.Ordinal);
+    var seen = 0;
+    var end = world.Date.AddYears(runYears);
+    var timer = Stopwatch.StartNew();
+    while (world.Date < end)
+    {
+        sim.RunUntil(world.Date.AddDays(1));
+        var events = world.Events!;
+        foreach (var pending in events[player].Pending.ToList())
+        {
+            var record = data.Events.Event(pending.Event)!;
+            var option = Politeconomy.Sim.Events.EventModel.DefaultOption(world, world[player], record);
+            var title = Politeconomy.Sim.Text.EventText.Fill(world, world[player], record, pending, record.Title);
+            mine.Add($"  {world.Date:yyyy-MM-dd} [{record.Category}] {title} → {option.Name}. Почему: {string.Join("; ", pending.Why)}");
+            if (!perYear.TryGetValue(world.Date.Year, out var set))
+                perYear[world.Date.Year] = set = [];
+            set.Add(record.Id);
+            Politeconomy.Sim.Events.EventModel.Decide(world, player, pending.Id, option.Id);
+        }
+        var total = events.Counts.Values.Sum();
+        if (total > seen)
+        {
+            foreach (var news in events.Recent.TakeLast(Math.Min(events.Recent.Count, total - seen)))
+                byCountry[news.Country] = byCountry.GetValueOrDefault(news.Country) + 1;
+            seen = total;
+        }
+    }
+    Console.WriteLine($"События за {runYears} лет, игрок — {world[player].Name}; прогон {timer.Elapsed.TotalSeconds:F0} с.");
+    Console.WriteLine("Игрок видит разных событий в год: " + string.Join(", ", perYear.Select(kv => $"{kv.Key}: {kv.Value.Count}")) +
+                      $"; в среднем {(double)mine.Count / runYears:F1}");
+    var rates = world.Countries.Select(c => byCountry.GetValueOrDefault(c.Id) / (double)runYears).OrderBy(x => x).ToList();
+    Console.WriteLine($"Все страны, событий в год: в среднем {rates.Average():F1}, у десятой части меньше {rates[rates.Count / 10]:F1}, у десятой части больше {rates[rates.Count * 9 / 10]:F1}, больше всего {rates[^1]:F1}");
+    Console.WriteLine("Чаще всего: " + string.Join(", ", world.Events!.Counts.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key} {kv.Value}")));
+    var never = data.Events.Events.Where(e => !world.Events.Counts.ContainsKey(e.Id)).Select(e => e.Id).ToList();
+    Console.WriteLine("Ни разу: " + (never.Count == 0 ? "нет таких" : string.Join(", ", never)));
+    var choices = world.Events.Recent.GroupBy(n => n.Event + "/" + n.Option).OrderBy(g => g.Key, StringComparer.Ordinal).Select(g => $"{g.Key} {g.Count()}");
+    Console.WriteLine($"Решения в последних {world.Events.Recent.Count} событиях мира: " + string.Join(", ", choices));
+    Console.WriteLine($"Лента игрока ({mine.Count}):");
+    foreach (var line in mine)
+        Console.WriteLine(line);
+    var active = world.Events[player];
+    Console.WriteLine("Действующие поправки: " + string.Join(", ", active.Effects.OrderBy(kv => kv.Key, StringComparer.Ordinal).Select(kv => $"{kv.Key} {kv.Value:+0.##;-0.##}")));
+    return 0;
+}
+
+// Новости: сколько новостей в год видит игрок дома и в мире, сколько не прошло отбор, из каких источников, и сама лента.
+// --country none — без игрока (наблюдатель): в ленте только мировые новости.
+int NewsReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var player = Option("--country") ?? "BRA";
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 5;
+    if (player != "none")
+        Politeconomy.Sim.Politics.PoliticsActions.PlayAs(world, player);
+    var all = new List<Politeconomy.Sim.News.NewsItem>();
+    var broadcasts = new List<Politeconomy.Sim.News.Broadcast>();
+    var lastId = 0;
+    var lastBroadcast = 0;
+    var papers = new List<Politeconomy.Sim.News.Newspaper>();
+    var lastPaper = 0;
+    var end = world.Date.AddYears(runYears);
+    var timer = Stopwatch.StartNew();
+    while (world.Date < end)
+    {
+        sim.RunUntil(world.Date.AddDays(1));
+        if (player != "none")
+            foreach (var pending in world.Events![player].Pending.ToList())
+                Politeconomy.Sim.Events.EventModel.Decide(world, player, pending.Id,
+                    Politeconomy.Sim.Events.EventModel.DefaultOption(world, world[player], data.Events.Event(pending.Event)!).Id);
+        foreach (var item in world.News!.Items.Where(i => i.Id > lastId))
+            all.Add(item);
+        lastId = world.News.NextId - 1;
+        if (world.News.Papers.Count > 0 && world.News.Papers[^1].Id > lastPaper)
+        {
+            papers.Add(world.News.Papers[^1]);
+            lastPaper = world.News.Papers[^1].Id;
+        }
+        if (world.News.Broadcasts.Count > 0 && world.News.Broadcasts[^1].Id > lastBroadcast)
+        {
+            broadcasts.Add(world.News.Broadcasts[^1]);
+            lastBroadcast = world.News.Broadcasts[^1].Id;
+        }
+    }
+    var counts = world.News!.Counts;
+    Console.WriteLine($"Новости за {runYears} лет, игрок — {(player == "none" ? "нет (наблюдатель)" : world[player].Name)}; прогон {timer.Elapsed.TotalSeconds:F0} с.");
+    Console.WriteLine($"В год: дома {counts.GetValueOrDefault("home") / (double)runYears:F0}, в мире {counts.GetValueOrDefault("world") / (double)runYears:F0}, " +
+                      $"не прошло отбор {counts.GetValueOrDefault("skipped") / (double)runYears:F0}. В ленте хранится {world.News.Items.Count}.");
+    Console.WriteLine("По годам (дома / в мире): " + string.Join(", ", all.GroupBy(i => i.Date.Year).OrderBy(g => g.Key)
+        .Select(g => $"{g.Key}: {g.Count(i => i.Home)} / {g.Count(i => !i.Home)}")));
+    foreach (var home in new[] { true, false })
+    {
+        Console.WriteLine(home ? "Источники дома:" : "Источники в мире:");
+        Console.WriteLine("  " + string.Join(", ", all.Where(i => i.Home == home).GroupBy(i => i.Source.StartsWith("event:") ? "event" : i.Source)
+            .OrderByDescending(g => g.Count()).Select(g => $"{g.Key} {g.Count()}")));
+    }
+    Console.WriteLine("Страны в мировой ленте: " + string.Join(", ", all.Where(i => !i.Home).GroupBy(i => i.Country ?? "мир")
+        .OrderByDescending(g => g.Count()).Take(25).Select(g => $"{g.Key} {g.Count()}")));
+    string Line(Politeconomy.Sim.News.NewsItem i) =>
+        $"  {i.Date:yyyy-MM-dd} {i.Weight,3} [{i.Topic}] {(i.Country == null ? "Мир" : world[i.Country].Name)}: {i.Text}";
+    var firstYears = all.Where(i => i.Date < world.Data.Scenario.StartDate.AddYears(2)).ToList();
+    Console.WriteLine($"Дома, первые два года ({firstYears.Count(i => i.Home)}):");
+    foreach (var i in firstYears.Where(i => i.Home))
+        Console.WriteLine(Line(i));
+    Console.WriteLine($"В мире, первые два года ({firstYears.Count(i => !i.Home)}):");
+    foreach (var i in firstYears.Where(i => !i.Home))
+        Console.WriteLine(Line(i));
+    if (player != "none")
+    {
+        Console.WriteLine($"Телевыпуски: {broadcasts.Count} за {runYears} лет, сюжетов в выпуске: " + string.Join(", ",
+            broadcasts.GroupBy(b => b.Stories.Count).OrderBy(g => g.Key).Select(g => $"{g.Key} — {g.Count()}")) +
+            $"; со своими сюжетами {broadcasts.Count(b => b.Stories.Any(s => s.Home))}, ведущих {broadcasts.Select(b => b.Anchor.Number).Distinct().Count()}.");
+        Console.WriteLine($"Газета: {papers.Count} номеров, тон: " + string.Join(", ", papers.GroupBy(p => p.Press).Select(g => $"{g.Key} {g.Count()}")) +
+            $"; разоблачений {papers.Count(p => p.Lead.Kind == "expose" || p.Stories.Any(s => s.Kind == "expose"))}, похвал {papers.Count(p => p.Lead.Kind == "praise")}, " +
+            $"тихих месяцев {papers.Count(p => p.Lead.Kind == "quiet")}.");
+        var tones = world.Countries.GroupBy(c => Politeconomy.Sim.News.NewspaperModel.Press(world, c.Id)).ToDictionary(g => g.Key, g => g.Select(c => c.Id).ToList());
+        Console.WriteLine("Тон газет в мире: " + string.Join("; ", tones.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key} {kv.Value.Count} ({string.Join(" ", kv.Value.Take(12))}…)")));
+        foreach (var p in papers.Take(int.TryParse(Option("--papers"), out var shownPapers) ? shownPapers : 3))
+        {
+            Console.WriteLine($"  {p.Date:yyyy-MM-dd} «{p.Name}» №{p.Id} ({p.Motto}):");
+            foreach (var story in new[] { p.Lead }.Concat(p.Stories))
+                Console.WriteLine($"    [{story.Kind}{(story == p.Lead ? ", заголовок" : "")}] {(story.Country == null ? "" : world[story.Country].Name + ": ")}{story.Headline}. {story.Body}");
+        }
+        foreach (var b in broadcasts.Take(int.TryParse(Option("--broadcasts"), out var shown) ? shown : 4))
+        {
+            Console.WriteLine($"  {b.Date:yyyy-MM-dd} №{b.Id}, ведёт {b.Anchor.Name} ({b.Anchor.Age(b.Date)}):");
+            foreach (var line in b.Script())
+                Console.WriteLine("    " + line);
+        }
+    }
+    return 0;
+}
+
+// ИИ стран: сколько решений каждого вида, что изменилось в мире (законы, договоры, санкции, блоки), журналы решений
+// нескольких стран и страны в коллапсе.
+int AiReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    if (args.Contains("--no-ai"))
+        sim = new Simulation(world, GameSetup.Systems().Where(s => s is not Politeconomy.Sim.Ai.Systems.AiSystem));
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 10;
+    var startLaws = world.Countries.ToDictionary(c => c.Id, c => new Dictionary<string, string>(world.Laws![c.Id].Current), StringComparer.Ordinal);
+    var startSanctions = world.Diplomacy!.Sanctions.Count;
+    var startBlocs = world.Diplomacy.Blocs.ToDictionary(kv => kv.Key, kv => kv.Value.ToList());
+    var startGdp = WorldRealGdp(world);
+    var timer = Stopwatch.StartNew();
+    var worst = 0.0;
+    var end = world.Date.AddYears(runYears);
+    while (world.Date < end)
+    {
+        var t = timer.Elapsed.TotalMilliseconds;
+        sim.StepDay();
+        worst = Math.Max(worst, timer.Elapsed.TotalMilliseconds - t);
+    }
+    Console.WriteLine($"Прогон {runYears} лет за {timer.Elapsed.TotalSeconds:F1} с (самый долгий день {worst:F0} мс), мировой рост {(Math.Pow(WorldRealGdp(world) / startGdp, 1.0 / runYears) - 1) * 100:F2}% в год.");
+    Console.WriteLine("Решений ИИ: " + string.Join(", ", world.Ai!.Counts.Select(kv => $"{kv.Key} {kv.Value}")));
+    var changed = world.Countries.SelectMany(c => world.Laws![c.Id].Current.Where(kv => startLaws[c.Id][kv.Key] != kv.Value).Select(kv => (c.Id, Law: kv.Key, Variant: kv.Value))).ToList();
+    Console.WriteLine($"Законов изменено: {changed.Count} у {changed.Select(x => x.Id).Distinct().Count()} стран; чаще всего: " +
+                      string.Join(", ", changed.GroupBy(x => $"{x.Law}→{x.Variant}").OrderByDescending(g => g.Count()).Take(10).Select(g => $"{g.Key} {g.Count()}")));
+    var d = world.Diplomacy;
+    Console.WriteLine($"Договоров: {d.Treaties.Count} (" + string.Join(", ", d.Treaties.GroupBy(t => t.Type).Select(g => $"{g.Key} {g.Count()}")) + $"); санкций: было {startSanctions}, стало {d.Sanctions.Count}; " +
+                      $"санкции Совета: {string.Join(", ", d.CouncilSanctions)}; резолюций {d.Resolutions.Count}; программ Валютного совета {d.Programs.Count} (" +
+                      string.Join(", ", d.Programs.Select(kv => $"{kv.Key} {kv.Value.Status}")) + ")");
+    foreach (var (bloc, members) in d.Blocs)
+    {
+        var joined = members.Except(startBlocs.GetValueOrDefault(bloc) ?? []).ToList();
+        var left = (startBlocs.GetValueOrDefault(bloc) ?? []).Except(members).ToList();
+        if (joined.Count + left.Count > 0)
+            Console.WriteLine($"  {bloc}: вступили {string.Join(", ", joined)}; вышли {string.Join(", ", left)}");
+    }
+    var all = world.Countries.SelectMany(a => world.Countries.Where(b => string.CompareOrdinal(a.Id, b.Id) < 0)
+        .Select(b => Politeconomy.Sim.Diplomacy.DiplomacyModel.Relations(world, a.Id, b.Id))).ToList();
+    Console.WriteLine($"Отношения: в среднем {all.Average():F1}, враждебных (< −30) {all.Count(x => x < -30)}, дружеских (> 30) {all.Count(x => x > 30)}");
+    var wars = world.Ai.Countries.SelectMany(kv => kv.Value.Decisions.Where(x => x.Kind == "war").Select(x => $"{x.Date:yyyy-MM} {kv.Key}: {x.Text}")).OrderBy(x => x).ToList();
+    Console.WriteLine($"Войн начато ИИ: {world.Ai.Counts.GetValueOrDefault("war")}; идут: " + string.Join("; ", world.War!.Wars.Select(x => $"{string.Join("+", x.Attackers)} против {string.Join("+", x.Defenders)} с {x.Start:yyyy-MM}")) +
+                      "; перемирия: " + string.Join(", ", world.War.Ceasefires.Select(c => $"{c.A}–{c.B} {c.Since:yyyy-MM}")));
+    foreach (var h in world.War.History)
+        Console.WriteLine($"  {h.Start:yyyy-MM}–{h.End:yyyy-MM} {h.Attacker}→{h.Defender}: регионов {h.Regions}, потери {h.AttackerLosses:F0}/{h.DefenderLosses:F0}; {h.Result}");
+    foreach (var t in world.War.Treaties)
+        Console.WriteLine($"  Мир {t.Date:yyyy-MM}: {t.Text}; выплачено {t.Paid / 1e9:F2} млрд долл.");
+    var occupied = world.Regions.Where(r => r.Owner != r.Controller).ToList();
+    Console.WriteLine($"Занято регионов: {occupied.Count}: " + string.Join(", ", occupied.GroupBy(r => (r.Owner, r.Controller)).Select(g => $"{g.Key.Owner}→{g.Key.Controller} {g.Count()}")));
+    var annexed = world.Regions.Where(r => r.Owner != r.Info.Country).ToList();
+    Console.WriteLine($"Передано по договорам: {annexed.Count}: " + string.Join(", ", annexed.GroupBy(r => (r.Info.Country, r.Owner)).Select(g => $"{g.Key.Country}→{g.Key.Owner} {g.Count()}")));
+    var collapsed = world.Countries.Select(c => (c.Id, Reasons: Politeconomy.Sim.Ai.Collapse.Reasons(world, c))).Where(x => x.Reasons.Count > 0).ToList();
+    Console.WriteLine($"В коллапсе {collapsed.Count} из {world.Countries.Count}: " + string.Join("; ", collapsed.Select(x => $"{x.Id} ({string.Join(", ", x.Reasons)})")));
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "RUS", "CHN", "DEU", "VEN", "IRN"];
+    foreach (var id in ids)
+    {
+        var ai = world.Ai[id];
+        Console.WriteLine($"{world[id].Name}: приоритеты {Politeconomy.Sim.Ai.AiModel.Describe(ai)} ({string.Join("; ", ai.Why)})");
+        foreach (var decision in ai.Decisions.TakeLast(int.TryParse(Option("--last"), out var last) ? last : 8))
+            Console.WriteLine($"  {decision.Date:yyyy-MM} [{decision.Kind}] {decision.Text} — {decision.Why}");
+    }
+    return 0;
+}
+
+// Наука: очки, освоенные технологии, производительность в нескольких странах; кто и когда открыл новое.
+int ScienceReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 50;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "CHN", "DEU", "JPN", "KOR", "IND", "BRA", "RUS", "NGA", "ETH"];
+    for (var year = 0; year <= runYears; year += 10)
+    {
+        if (year > 0)
+            sim.RunUntil(world.Date.AddYears(10));
+        Console.WriteLine($"{world.Date.Year}:");
+        foreach (var id in ids)
+        {
+            var c = world.Science![id];
+            var country = world[id];
+            Console.WriteLine($"  {country.Name,-16} очки {c.Points,5:F2}% ВВП (эфф. {c.Efficiency,4:F2}, утечка {c.Drain * 100,4:F1}%), технологий {c.Researched.Count,2} " +
+                              $"({country.Stat("technology_level_pct"),3:F0}%), производительность " +
+                              string.Join("/", new[] { "agriculture", "industry", "services" }.Select(s => c.Productivity.GetValueOrDefault(s, 1).ToString("F3"))) +
+                              $", к росту {c.Effects.GetValueOrDefault("potential_growth"),5:F2} п. п., к жизни {c.Effects.GetValueOrDefault("life_expectancy"),5:F2}");
+        }
+        var known = world.Science!.Adoption.Count(kv => kv.Value > 0);
+        Console.WriteLine($"  Мир: известно технологий {known} из {data.Science.Technologies.Count}; открыто нового: " +
+                          string.Join(", ", world.Science.Discoveries.OrderBy(kv => kv.Value.Date).Select(kv => $"{kv.Key} ({kv.Value.Country} {kv.Value.Date.Year})")));
+    }
+    return 0;
+}
+
+// Инфраструктура: нагрузка, состояние, деньги и перегрузка по видам в нескольких странах и в мире.
+int InfrastructureReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 30;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "DEU", "CHN", "IND", "BRA", "RUS", "NGA", "ETH", "SAU", "VNM"];
+    var types = data.Infrastructure.Types;
+    var tight = new Dictionary<string, int>();
+    for (var year = 0; year <= runYears; year++)
+    {
+        if (year > 0)
+            sim.RunUntil(world.Date.AddYears(1));
+        foreach (var (id, c) in world.Infrastructure!.Countries)
+            if (c.Coverage.Any(x => x < 0.99))
+                tight[id] = tight.GetValueOrDefault(id) + 1;
+        if (year % 10 != 0)
+            continue;
+        Console.WriteLine($"{world.Date.Year}:");
+        foreach (var id in ids)
+        {
+            var c = world.Infrastructure![id];
+            var country = world[id];
+            Console.WriteLine($"  {country.Name,-16} индекс {country.Stat("infrastructure_index"),4:F0}, состояние {country.Stat("infrastructure_condition_pct"),3:F0}%, " +
+                              $"потери выпуска {c.Cut.Max() * 100,4:F1}%; " +
+                              string.Join(" ", types.Select((t, k) => $"{t.Id} {c.Capacity[k] * c.Condition[k] / Math.Max(1e-9, c.Need[k]) * 100,3:F0}/{c.Condition[k] * 100,2:F0}/{c.Funding[k],4:F2}")));
+        }
+        var all = world.Infrastructure!.Countries.Values.ToList();
+        Console.WriteLine($"  Мир: с перегрузкой {all.Count(c => c.Coverage.Any(x => x < 0.99))} стран, потери выпуска больше 2% — {all.Count(c => c.Cut.Max() > 0.02)}; " +
+                          $"состояние в среднем {world.Countries.Average(c => c.Stat("infrastructure_condition_pct")):F0}%");
+    }
+    Console.WriteLine("Дольше всех с перегрузкой (лет): " + string.Join(", ", tight.OrderByDescending(kv => kv.Value).Take(15).Select(kv => $"{kv.Key} {kv.Value}")));
+    return 0;
+}
+
+// Энергетика: спрос, мощность по типам, стройка, нехватка, цена в нескольких странах и в мире.
+int EnergyReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 30;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "DEU", "FRA", "CHN", "IND", "BRA", "RUS", "NGA", "ZAF", "SAU", "PAK", "ZMB"];
+    var plants = data.Energy.Plants;
+    var shortageYears = new Dictionary<string, int>();
+    for (var year = 0; year <= runYears; year++)
+    {
+        if (year > 0)
+            sim.RunUntil(world.Date.AddYears(1));
+        foreach (var (id, c) in world.Energy!.Countries)
+            if (c.Shortage > 0.01)
+                shortageYears[id] = shortageYears.GetValueOrDefault(id) + 1;
+        if (year % 10 != 0)
+            continue;
+        Console.WriteLine($"{world.Date.Year}:");
+        foreach (var id in ids)
+        {
+            var c = world.Energy![id];
+            var country = world[id];
+            var total = c.Generation.Sum();
+            Console.WriteLine($"  {country.Name,-16} спрос {c.Demand,7:F0} ТВт·ч, запас {country.Stat("power_reserve_pct"),5:F0}%, нехватка {c.Shortage * 100,4:F1}%, " +
+                              $"цена {c.Price,4:F0}, деньги {c.Funding,4:F2}, доступ {c.Access,3:F0}%, рост спроса {c.Growth * 100,4:F1}%; " +
+                              string.Join(" ", plants.Select((p, t) => $"{p.Id} {(total > 0 ? c.Generation[t] / total * 100 : 0),3:F0}%/{c.Capacity[t],5:F0}+{c.Building[t],4:F0}")));
+        }
+        var all = world.Energy!.Countries.Values.ToList();
+        Console.WriteLine($"  Мир: с нехваткой больше 1% — {all.Count(c => c.Shortage > 0.01)} стран, больше 5% — {all.Count(c => c.Shortage > 0.05)}; " +
+                          $"чистое электричество {world.Countries.Average(c => c.Stat("low_carbon_power_pct")):F0}% (в среднем по странам), " +
+                          $"цена в среднем {all.Average(c => c.Price):F0}");
+    }
+    Console.WriteLine("Дольше всех с нехваткой (лет): " + string.Join(", ", shortageYears.OrderByDescending(kv => kv.Value).Take(15).Select(kv => $"{kv.Key} {kv.Value}")));
+    return 0;
+}
+
+// Жильё, преступность, коррупция, загрязнение: как меняются за десятилетия в нескольких странах и в мире.
+int LivingReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 30;
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "DEU", "JPN", "CHN", "IND", "BRA", "RUS", "NGA", "ZAF", "MEX"];
+    for (var year = 0; year <= runYears; year += 10)
+    {
+        if (year > 0)
+            sim.RunUntil(world.Date.AddYears(10));
+        Console.WriteLine($"{world.Date.Year}:");
+        foreach (var id in ids)
+        {
+            var c = world.Living![id];
+            var country = world[id];
+            Console.WriteLine($"  {country.Name,-16} жильё {c.Housing,5:F1} м² (хотят {c.Desired,5:F1}, цены {country.Stat("housing_price_index"),4:F0}); " +
+                              $"преступность {c.Crime,4:F0} (старт {c.Crime0,3:F0}); коррупция {country.Stat("corruption_index"),3:F0} (старт {c.Corruption0,3:F0}); " +
+                              $"загрязнение {c.Pollution,4:F0} (старт {c.Pollution0,3:F0}); настроение {c.Mood.Average(),5:F1}; " +
+                              $"к росту {c.Effects.GetValueOrDefault("potential_growth"),5:F2} п. п., к жизни {c.Effects.GetValueOrDefault("life_expectancy"),5:F2} лет");
+            if (year > 0 && country.Stats["crime_index"].Factors is { } causes)
+                Console.WriteLine("      преступность: " + string.Join(", ", causes.Select(f => $"{f.Label} {f.Value:+0.0;-0.0}")));
+        }
+        var all = world.Living!.Countries.Values.ToList();
+        Console.WriteLine($"  Мир: нехватка жилья у {all.Count(c => c.Housing < c.Desired * 0.9)} стран из {all.Count}, " +
+                          $"преступность выросла больше чем на 10 у {all.Count(c => c.Crime > c.Crime0 + 10)}, " +
+                          $"загрязнение выросло больше чем на 10 у {all.Count(c => c.Pollution > c.Pollution0 + 10)}, " +
+                          $"средние: преступность {all.Average(c => c.Crime):F0}, загрязнение {all.Average(c => c.Pollution):F0}");
+    }
+    return 0;
+}
+
+// Протесты: сколько их по стадиям каждый год, где беспокойнее всего, как отвечали власти.
+int ProtestsReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 10;
+    var months = new Dictionary<string, int>();
+    var mass = new Dictionary<string, int>();
+    for (var year = 0; year < runYears; year++)
+    {
+        var stages = new int[5];
+        for (var m = 0; m < 12; m++)
+        {
+            sim.RunUntil(world.Date.AddMonths(1));
+            foreach (var (id, p) in world.Politics!.Countries)
+            {
+                foreach (var x in p.Protests)
+                    stages[Math.Clamp(x.Stage, 0, 4)]++;
+                if (p.Protests.Count > 0)
+                    months[id] = months.GetValueOrDefault(id) + 1;
+                if (p.Protests.Any(x => x.Stage >= 2))
+                    mass[id] = mass.GetValueOrDefault(id) + 1;
+            }
+        }
+        Console.WriteLine($"{world.Date.Year - 1}: протестов в среднем за месяц — забастовки {stages[0] / 12.0:F1}, митинги {stages[1] / 12.0:F1}, " +
+                          $"массовые {stages[2] / 12.0:F1}, беспорядки {stages[3] / 12.0:F1}, восстания {stages[4] / 12.0:F1}");
+    }
+    Console.WriteLine("Дольше всех протестуют (месяцев с протестом, из них с массовыми): " +
+                      string.Join(", ", months.OrderByDescending(kv => kv.Value).Take(15).Select(kv => $"{kv.Key} {kv.Value}/{mass.GetValueOrDefault(kv.Key)}")));
+    foreach (var id in new[] { "DEU", "USA", "FRA", "BRA", "RUS", "IRN", "VEN", "SDN" })
+        Console.WriteLine($"  {world[id].Name}: протестов {months.GetValueOrDefault(id)} мес., массовых {mass.GetValueOrDefault(id)} мес.; " +
+                          $"радикализм {world[id].Stat("radicalism"):F0}, лояльность полиции {world.Politics![id].Security.PoliceLoyalty:F0}, " +
+                          $"репрессии {world.Politics![id].Security.Repression:F0}");
+    return 0;
+}
+
+// Группы интересов: влияние, одобрение и его составляющие, давление и требования в нескольких странах.
+int GroupsReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 0;
+    if (runYears > 0)
+        sim.RunUntil(world.Date.AddYears(runYears));
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "GBR", "DEU", "FRA", "BRA", "IND", "RUS", "CHN", "SAU", "NGA", "IRN", "MMR"];
+    var records = data.InterestGroups.Groups;
+    foreach (var id in ids)
+    {
+        var p = world.Politics![id];
+        Console.WriteLine();
+        Console.WriteLine($"{world[id].Name} ({world[id].Regime}, {world[id].System}), религиозность {Politeconomy.Sim.Politics.InterestGroupsModel.Religiosity(data, world[id]):F2}");
+        for (var i = 0; i < p.Groups.Count; i++)
+        {
+            var g = p.Groups[i];
+            Console.WriteLine($"  {records[i].Name,-24} влияние {g.Influence * 100,5:F1}%  одобрение {g.Approval,5:F1}  " +
+                              $"[классы {g.FromClasses,5:F1} законы {g.FromLaws,5:F1} бюджет {g.FromBudget,5:F1} власть {g.FromGovernment,5:F1} требования {g.Memory,4:F1}]  " +
+                              string.Join("; ", g.Demands.Select(d => Politeconomy.Sim.Politics.InterestGroupsModel.Describe(data, d))));
+        }
+        if (p.GroupEffects.Count > 0)
+            Console.WriteLine("  Давление: " + string.Join(", ", p.GroupEffects.Select(kv => $"{kv.Key} {kv.Value:+0.00;-0.00}")));
+        if (p.Parties.Count > 0)
+            Console.WriteLine("  Деньги партиям: " + string.Join(", ", p.Parties.Where(x => Math.Abs(x.Backing) > 0.001).Select(x => $"{x.Short} {x.Backing:+0.000}")));
+    }
+    return 0;
+}
+
+// Кампания в цифрах: в демократиях с выборами в первый год игры — доля партии главы без кампании, с активной кампанией
+// (все очки на поездки и агитацию) и с фальсификациями; раскрыты ли они.
+int CampaignReport()
+{
+    var start = GameSetup.NewGame(data).Simulation.World;
+    var ids = Option("--country") is { } one ? [one] : start.Countries
+        .Where(c => c.Regime == Regime.Democracy && start.Politics![c.Id].NextElection is { } d && d < start.Date.AddYears(1) && d > start.Date.AddMonths(3)
+                    && start.Government![c.Id].Parliament.Exists)
+        .Take(int.TryParse(Option("--count"), out var n) ? n : 10).Select(c => c.Id).ToList();
+    Console.WriteLine($"{"Страна",-22} {"выборы",-10} {"пассивно",9} {"кампания",9} {"вбросы",9} {"массовые",9}  разоблачение");
+    var gains = new List<double>();
+    foreach (var id in ids)
+    {
+        var election = start.Politics![id].NextElection!.Value;
+        double Votes(int mode, out bool exposed)
+        {
+            var sim = GameSetup.NewGame(data).Simulation;
+            var world = sim.World;
+            Politeconomy.Sim.Politics.PoliticsActions.PlayAs(world, id);
+            var party = Politeconomy.Sim.Politics.PoliticsModel.HeadParty(world, id)!.Id;
+            for (var date = world.Date.AddMonths(1); date <= election.AddDays(1); date = date.AddMonths(1))
+            {
+                sim.RunUntil(date);
+                if (mode == 1 && Politeconomy.Sim.Politics.CampaignModel.Estimate(world, world[id]) is { } shown)
+                    Console.WriteLine($"  {date:yyyy-MM}: обещания " + string.Join(", ", shown.Options.Take(3).Select(o => $"{o.Law}={o.Variant} {o.Gain * 100:+0.0;-0.0}"))
+                                      + (shown.DebateGain.Length == 3 ? "; дебаты " + string.Join(" ", shown.DebateGain.Select(g => (g * 100).ToString("+0.0;-0.0"))) : ""));
+                if (mode == 1)
+                    while (Politeconomy.Sim.Politics.CampaignModel.Estimate(world, world[id]) is { } o)
+                    {
+                        var best = Array.IndexOf(o.TripGain, o.TripGain.Max());
+                        if (!(o.TripGain[best] > 0 && Politeconomy.Sim.Politics.PoliticsActions.CampaignTrip(world, id, best))
+                            && !Politeconomy.Sim.Politics.PoliticsActions.CampaignMedia(world, id))
+                            break;
+                    }
+                if (mode >= 2)
+                    Politeconomy.Sim.Politics.PoliticsActions.SetFraud(world, id, mode - 1);
+            }
+            sim.RunUntil(election.AddDays(1));
+            exposed = world.Politics![id].Scandal > 0;
+            return world.Politics![id].Elections.Last(e => e.Kind == "parliament").Votes.GetValueOrDefault(party);
+        }
+        var passive = Votes(0, out _);
+        var active = Votes(1, out _);
+        var light = Votes(2, out var lightExposed);
+        var mass = Votes(3, out var massExposed);
+        gains.Add(active - passive);
+        Console.WriteLine($"{start[id].Name,-22} {election:yyyy-MM}    {passive * 100,8:F1}% {active * 100,8:F1}% {light * 100,8:F1}% {mass * 100,8:F1}%  " +
+                          $"{(lightExposed ? "вбросы" : "")} {(massExposed ? "массовые" : "")}");
+    }
+    Console.WriteLine($"Кампания прибавляет в среднем {gains.Average() * 100:F1} п. п. (от {gains.Min() * 100:F1} до {gains.Max() * 100:F1})");
+    return 0;
+}
+
+int PoliticsReport()
+{
+    var sim = GameSetup.NewGame(data).Simulation;
+    var world = sim.World;
+    var runYears = int.TryParse(Option("--years"), out var ry) ? ry : 0;
+    if (runYears > 0)
+        sim.RunUntil(world.Date.AddYears(runYears));
+    string[] ids = Option("--country") is { } one ? [one] : ["USA", "GBR", "DEU", "FRA", "BRA", "IND", "JPN", "RUS", "CHN", "ZAF", "MEX", "SWE"];
+    var classes = data.Classes.Classes;
+    foreach (var id in ids)
+    {
+        var p = world.Politics![id];
+        var g = world.Government![id];
+        var record = data.PoliticsOf(id);
+        Console.WriteLine();
+        Console.WriteLine($"{world[id].Name}: {record.Electoral}, барьер {record.Threshold}%, {g.Parliament.Name} {g.Parliament.Seats} мест, " +
+                          $"правящие {g.Parliament.RulingSeats}; глава {g.Leader.Name} ({p.Party(g.Leader.Party)?.Short ?? "—"})");
+        foreach (var party in p.Parties.OrderByDescending(x => x.Poll))
+        {
+            var seats = g.Parliament.Factions.FirstOrDefault(f => f.Party == party.Id)?.Seats ?? 0;
+            var top = Enumerable.Range(0, party.Voters.Length).OrderByDescending(k => party.Voters[k]).Take(3)
+                .Select(k => $"{classes[k].ShortName ?? classes[k].Name} {party.Voters[k] * 100:F0}%");
+            Console.WriteLine($"  {(party.Ruling ? "*" : " ")} {party.Name,-44} {party.Short,-14} {party.Family,-15} " +
+                              $"[{party.Position[0],4:F0} {party.Position[1],4:F0} {party.Position[2],4:F0}] опрос {party.Poll * 100,5:F1}% мест {seats,4}  " +
+                              string.Join(", ", top));
+        }
+        var ministers = g.Ministers.Values.GroupBy(m => p.Party(m.Party)?.Short ?? "беспарт.").Select(x => $"{x.Key} {x.Count()}");
+        Console.WriteLine("  министры: " + string.Join(", ", ministers));
+        Console.WriteLine("  взгляды классов: " + string.Join("; ", p.Views.Select((v, k) =>
+            $"{classes[k].ShortName ?? classes[k].Name} [{v[0]:F0} {v[1]:F0} {v[2]:F0}]")));
+        Console.WriteLine($"  выборы: парламент {p.NextElection:yyyy-MM}" + (p.NextPresident is { } next ? $", президент {next:yyyy-MM}" : "") +
+                          $"; сроков у главы {g.Leader.Terms}");
+    }
+    if (runYears > 0)
+        foreach (var e in world.Journal.Where(e => ids.Contains(e.Country) && e.Kind is "election" or "coalition" or "leader"))
+            Console.WriteLine($"{e.Date:yyyy-MM-dd} {e.Country} {e.Text}");
+    return 0;
+}
+
+// Трассировка одной страны: по умолчанию разогрев по месяцам (без толчков), с --years N — игра после разогрева.
+int Trace()
+{
+    var id = Option("--country") ?? "USA";
+    var months = int.TryParse(Option("--months"), out var m) ? m : 24;
+    var gameYears = int.TryParse(Option("--years"), out var gy) ? gy : 0;
+    World world;
+    Simulation? sim = null;
+    if (gameYears > 0)
+    {
+        sim = GameSetup.NewGame(data).Simulation;
+        world = sim.World;
+    }
+    else
+    {
+        world = WorldFactory.Create(data);
+        EconomyModel.Setup(world);
+    }
+    Console.WriteLine("мес   ВВПреал  ВВПном   разрыв  потенц  безраб  инфл   ожид   ставка  курс   долг%  доходы% расходы% проц%  сальдо%  тек.сч% r_eff  r_новые рейт");
+    void Line(int month)
+    {
+        var e = world.Economy![id];
+        var y = e.NominalGdp;
+        Console.WriteLine($"{month,3} {e.RealGdp / e.RealGdp0,8:F3} {y / e.RealGdp0,7:F3} {e.Gap * 100,7:F2} {e.PotentialGrowth * 100,6:F2} {e.Unemployment * 100,6:F1} {e.Inflation * 100,6:F1} {e.Expectations * 100,6:F1} {e.PolicyRate * 100,6:F1} {e.ExchangeRate,6:F3} {e.DebtRatio * 100,6:F1} {e.TotalRevenue / y * 100,7:F1} {e.TotalSpending / y * 100,7:F1} {e.Interest / y * 100,5:F1} {e.BalanceRatio * 100,7:F1} {e.CurrentAccount * 100,7:F1} {e.EffectiveRate * 100,5:F1} {e.MarketRate * 100,6:F1} {Fmt.Rating(e.Rating),5}");
+        if (args.Contains("--detail"))
+            Console.WriteLine($"     q={e.RealExchangeRate:F3} нефть={world.Economy!.OilPrice:F2} добыча/ВВП={e.ResourceGdp / y * 100:F1}% " +
+                string.Join(" ", data.Budget.Revenues.Select((r, k) => $"{r.Id}={e.Revenue[k] / y * 100:F1}")) +
+                $" население={e.Population / 1e6:F1}млн РС={e.LaborForce / 1e6:F1}млн");
+    }
+    Line(0);
+    if (sim is not null)
+    {
+        for (var month = 1; month <= gameYears * 12; month++)
+        {
+            sim.RunUntil(world.Date.AddMonths(1));
+            if (month % 6 == 0)
+                Line(month);
+        }
+        return 0;
+    }
+    world.Economy!.Warmup = true;
+    var systems = EconomyModel.Systems().Where(s => s.Frequency == SimFrequency.Monthly).ToList();
+    for (var month = 1; month <= months; month++)
+    {
+        foreach (var system in systems)
+            system.Run(world);
+        if (month <= 3 || month % 3 == 0)
+            Line(month);
+    }
+    return 0;
+}
+
+string? Option(string name)
+{
+    var i = Array.IndexOf(args, name);
+    return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
+}

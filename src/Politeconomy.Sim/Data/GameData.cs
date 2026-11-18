@@ -1,0 +1,281 @@
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
+
+namespace Politeconomy.Sim.Data;
+
+/// <summary>Всё содержимое папки data/, прочитанное с диска. Не меняется во время партии.</summary>
+public sealed class GameData
+{
+    public required string Directory { get; init; }
+    public required CountriesFile Countries { get; init; }
+    public required RegionsFile Regions { get; init; }
+    public required ControlFile Control { get; init; }
+    public required PoliticsFile Politics { get; init; }
+    public required ScenarioFile Scenario { get; init; }
+    public required BalanceFile Balance { get; init; }
+    public required IndicatorsFile Indicators { get; init; }
+    public required MapModesFile MapModes { get; init; }
+    public required WorldMapFile Map { get; init; }
+    public required CitiesFile Cities { get; init; }
+    public required CurrenciesFile Currencies { get; init; }
+    public required IndustriesFile Industries { get; init; }
+    public required BudgetFile Budget { get; init; }
+    public required PopulationFile Population { get; init; }
+    public required ClassesFile Classes { get; init; }
+    public required GovernmentFile Government { get; init; }
+    public required LawsFile Laws { get; init; }
+    public required PartiesFile Parties { get; init; }
+    public required InterestGroupsFile InterestGroups { get; init; }
+    public required ProgramsFile Programs { get; init; }
+    public required EnergyFile Energy { get; init; }
+    public required InfrastructureFile Infrastructure { get; init; }
+    public required ScienceFile Science { get; init; }
+    public required DiplomacyFile Diplomacy { get; init; }
+    public required MilitaryFile Military { get; init; }
+    public required TerrainFile Terrain { get; init; }
+    public required EventsFile Events { get; init; }
+    public required NewsFile News { get; init; }
+    /// <summary>История показателей за 10 лет до старта (для графиков ведомств).</summary>
+    public required HistoryFile History { get; init; }
+    /// <summary>Культуры имён из папки data/names/, по одной на файл.</summary>
+    public required IReadOnlyList<CultureRecord> Cultures { get; init; }
+    /// <summary>Ориентиры для проверок правдоподобия (прогноз ООН); в игре не используются.</summary>
+    public BenchmarksFile? Benchmarks { get; init; }
+
+    /// <summary>Коэффициенты модели экономики; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public EconomyBalance Economy => Balance.Economy ?? DefaultEconomy;
+
+    static readonly EconomyBalance DefaultEconomy = new();
+
+    /// <summary>Коэффициенты демографии; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public DemographyBalance Demography => Balance.Demography ?? DefaultDemography;
+
+    static readonly DemographyBalance DefaultDemography = new();
+
+    /// <summary>Коэффициенты классов; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public SocietyBalance Society => Balance.Society ?? DefaultSociety;
+
+    static readonly SocietyBalance DefaultSociety = new();
+
+    /// <summary>Коэффициенты правительства и парламента; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public GovernmentBalance GovernmentBalance => Balance.Government ?? DefaultGovernment;
+
+    static readonly GovernmentBalance DefaultGovernment = new();
+
+    /// <summary>Коэффициенты законов и институтов; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public LawsBalance LawsBalance => Balance.Laws ?? DefaultLaws;
+
+    static readonly LawsBalance DefaultLaws = new();
+
+    /// <summary>Коэффициенты бюджетного процесса; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public BudgetCycleBalance BudgetCycleBalance => Balance.BudgetCycle ?? DefaultBudgetCycle;
+
+    static readonly BudgetCycleBalance DefaultBudgetCycle = new();
+
+    /// <summary>Коэффициенты взглядов, партий и опросов; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public PoliticsBalance PoliticsBalance => Balance.Politics ?? DefaultPolitics;
+
+    static readonly PoliticsBalance DefaultPolitics = new();
+
+    /// <summary>Коэффициенты групп интересов; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public InterestGroupsBalance GroupsBalance => Balance.InterestGroups ?? DefaultGroups;
+
+    static readonly InterestGroupsBalance DefaultGroups = new();
+
+    /// <summary>Коэффициенты протестов и силовиков; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public UnrestBalance UnrestBalance => Balance.Unrest ?? DefaultUnrest;
+
+    static readonly UnrestBalance DefaultUnrest = new();
+
+    /// <summary>Коэффициенты смены власти без выборов; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public PowerBalance PowerBalance => Balance.Power ?? DefaultPower;
+
+    static readonly PowerBalance DefaultPower = new();
+
+    /// <summary>Коэффициенты образования; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public EducationBalance EducationBalance => Balance.Education ?? DefaultEducation;
+
+    static readonly EducationBalance DefaultEducation = new();
+
+    /// <summary>Коэффициенты здравоохранения; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public HealthBalance HealthBalance => Balance.Health ?? DefaultHealth;
+
+    static readonly HealthBalance DefaultHealth = new();
+
+    /// <summary>Коэффициенты жилья, преступности, коррупции и экологии; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public LivingBalance LivingBalance => Balance.Living ?? DefaultLiving;
+
+    static readonly LivingBalance DefaultLiving = new();
+
+    /// <summary>Коэффициенты энергетики; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public EnergyBalance EnergyBalance => Balance.Energy ?? DefaultEnergy;
+
+    static readonly EnergyBalance DefaultEnergy = new();
+
+    /// <summary>Коэффициенты инфраструктуры и строек; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public InfrastructureBalance InfrastructureBalance => Balance.Infrastructure ?? DefaultInfrastructure;
+
+    static readonly InfrastructureBalance DefaultInfrastructure = new();
+
+    /// <summary>Коэффициенты науки; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public ScienceBalance ScienceBalance => Balance.Science ?? DefaultScience;
+
+    static readonly ScienceBalance DefaultScience = new();
+
+    /// <summary>Коэффициенты дипломатии; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public DiplomacyBalance DiplomacyBalance => Balance.Diplomacy ?? DefaultDiplomacy;
+
+    static readonly DiplomacyBalance DefaultDiplomacy = new();
+
+    /// <summary>Коэффициенты войны; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public WarBalance WarBalance => Balance.War ?? DefaultWar;
+
+    static readonly WarBalance DefaultWar = new();
+
+    /// <summary>Коэффициенты мирных договоров; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public PeaceBalance PeaceBalance => Balance.Peace ?? DefaultPeace;
+
+    static readonly PeaceBalance DefaultPeace = new();
+
+    /// <summary>Коэффициенты событий; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public EventsBalance EventsBalance => Balance.Events ?? DefaultEvents;
+
+    static readonly EventsBalance DefaultEvents = new();
+
+    /// <summary>Коэффициенты новостей; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public NewsBalance NewsBalance => Balance.News ?? DefaultNews;
+
+    static readonly NewsBalance DefaultNews = new();
+
+    /// <summary>Коэффициенты телевыпуска; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public BroadcastBalance BroadcastBalance => Balance.Broadcast ?? DefaultBroadcast;
+
+    static readonly BroadcastBalance DefaultBroadcast = new();
+
+    /// <summary>Коэффициенты газеты; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public NewspaperBalance NewspaperBalance => Balance.Newspaper ?? DefaultNewspaper;
+
+    static readonly NewspaperBalance DefaultNewspaper = new();
+
+    /// <summary>Честность докладов министров; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public ReportsBalance ReportsBalance => Balance.Reports ?? DefaultReports;
+
+    static readonly ReportsBalance DefaultReports = new();
+
+    /// <summary>Коэффициенты ИИ стран; если раздела нет в balance.json — значения по умолчанию.</summary>
+    public AiBalance AiBalance => Balance.Ai ?? DefaultAi;
+
+    static readonly AiBalance DefaultAi = new();
+
+    /// <summary>Политика страны из data/politics.json.</summary>
+    public PoliticsRecord PoliticsOf(string country) =>
+        Politics.Countries.FirstOrDefault(c => c.Id == country) ?? throw new KeyNotFoundException($"Нет страны «{country}» в data/politics.json");
+
+    public PartyFamilyRecord Family(string id) =>
+        id == Parties.Power.Id ? Parties.Power
+        : Parties.Families.FirstOrDefault(f => f.Id == id) ?? throw new KeyNotFoundException($"Нет семейства партий «{id}» в data/parties.json");
+
+    public LawRecord Law(string id) =>
+        Laws.Laws.FirstOrDefault(l => l.Id == id) ?? throw new KeyNotFoundException($"Нет закона «{id}» в data/laws.json");
+
+    public IndicatorDef Indicator(string id) =>
+        Indicators.Indicators.FirstOrDefault(i => i.Id == id)
+        ?? throw new KeyNotFoundException($"Нет показателя «{id}» в data/indicators.json");
+
+    /// <summary>Читает все файлы. Бросает <see cref="DataException"/> с понятным текстом, если файл не читается.</summary>
+    public static GameData Load(string directory)
+    {
+        var ctx = DataJsonContext.Default;
+        return new GameData
+        {
+            Directory = directory,
+            Countries = Read(directory, "countries.json", ctx.CountriesFile),
+            Regions = Read(directory, "regions.json", ctx.RegionsFile),
+            Control = Read(directory, "control.json", ctx.ControlFile),
+            Politics = Read(directory, "politics.json", ctx.PoliticsFile),
+            Scenario = Read(directory, "scenario.json", ctx.ScenarioFile),
+            Balance = Read(directory, "balance.json", ctx.BalanceFile),
+            Indicators = Read(directory, "indicators.json", ctx.IndicatorsFile),
+            MapModes = Read(directory, "map_modes.json", ctx.MapModesFile),
+            Map = Read(directory, Path.Combine("map", "world.json"), ctx.WorldMapFile),
+            Cities = Read(directory, Path.Combine("map", "cities.json"), ctx.CitiesFile),
+            Currencies = Read(directory, "currencies.json", ctx.CurrenciesFile),
+            Industries = Read(directory, "industries.json", ctx.IndustriesFile),
+            Budget = Read(directory, "budget.json", ctx.BudgetFile),
+            Population = Read(directory, "population.json", ctx.PopulationFile),
+            Classes = Read(directory, "classes.json", ctx.ClassesFile),
+            Government = Read(directory, "government.json", ctx.GovernmentFile),
+            Laws = Read(directory, "laws.json", ctx.LawsFile),
+            Parties = Read(directory, "parties.json", ctx.PartiesFile),
+            InterestGroups = Read(directory, "interest_groups.json", ctx.InterestGroupsFile),
+            Programs = Read(directory, "programs.json", ctx.ProgramsFile),
+            Energy = Read(directory, "energy.json", ctx.EnergyFile),
+            Infrastructure = Read(directory, "infrastructure.json", ctx.InfrastructureFile),
+            Science = Read(directory, "technologies.json", ctx.ScienceFile),
+            Diplomacy = Read(directory, "diplomacy.json", ctx.DiplomacyFile),
+            Military = Read(directory, "military.json", ctx.MilitaryFile),
+            Terrain = Read(directory, "terrain.json", ctx.TerrainFile),
+            Events = Read(directory, "events.json", ctx.EventsFile),
+            News = Read(directory, "news.json", ctx.NewsFile),
+            History = Read(directory, "history.json", ctx.HistoryFile),
+            Cultures = ReadCultures(directory),
+            Benchmarks = File.Exists(Path.Combine(directory, "benchmarks", "population.json"))
+                ? Read(directory, Path.Combine("benchmarks", "population.json"), ctx.BenchmarksFile)
+                : null,
+        };
+    }
+
+    static IReadOnlyList<CultureRecord> ReadCultures(string directory)
+    {
+        var folder = Path.Combine(directory, "names");
+        if (!System.IO.Directory.Exists(folder))
+            throw new DataException($"Не найдена папка с именами {folder}");
+        return System.IO.Directory.GetFiles(folder, "*.json")
+            .OrderBy(f => f, StringComparer.Ordinal)
+            .Select(f => Read(directory, Path.Combine("names", Path.GetFileName(f)), DataJsonContext.Default.CultureRecord))
+            .ToList();
+    }
+
+    static T Read<T>(string directory, string file, JsonTypeInfo<T> type)
+    {
+        var path = Path.Combine(directory, file);
+        if (!File.Exists(path))
+            throw new DataException($"Не найден файл данных {path}");
+        try
+        {
+            using var stream = File.OpenRead(path);
+            return JsonSerializer.Deserialize(stream, type)
+                ?? throw new DataException($"Файл {file} пустой");
+        }
+        catch (JsonException e)
+        {
+            throw new DataException($"Ошибка в файле {file}: {e.Message}", e);
+        }
+    }
+}
+
+public sealed class DataException(string message, Exception? inner = null) : Exception(message, inner);
+
+/// <summary>Поиск папки data/ рядом с программой или выше по дереву каталогов.</summary>
+public static class DataDirectory
+{
+    public const string MarkerFile = "countries.json";
+
+    public static string? Find(params string[] startPoints)
+    {
+        foreach (var start in startPoints)
+        {
+            if (string.IsNullOrWhiteSpace(start))
+                continue;
+            var dir = new DirectoryInfo(start);
+            while (dir != null)
+            {
+                var candidate = Path.Combine(dir.FullName, "data");
+                if (File.Exists(Path.Combine(candidate, MarkerFile)))
+                    return candidate;
+                dir = dir.Parent;
+            }
+        }
+        return null;
+    }
+}
