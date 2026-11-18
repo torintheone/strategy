@@ -1,0 +1,301 @@
+{
+ "_comment": "Регионы внешности для портретов (PORTRAITS.md, DECISIONS D-220): по ним персонаж получает портрет — по стране, а не по культуре имён (в «англоязычной» культуре есть и Ямайка, в «португалоязычной» — Ангола). id, name — по-русски, prompt — как регион назван в промпте, countries — коды стран.",
+ "regions": [
+  {
+   "id": "nw_europe",
+   "name": "Северо-Западная Европа",
+   "prompt": "Northwestern Europe",
+   "countries": [
+    "BEL",
+    "CHE",
+    "DEU",
+    "FRA",
+    "LIE",
+    "LUX",
+    "MCO",
+    "NLD",
+    "AUT",
+    "DNK",
+    "FIN",
+    "GBR",
+    "IRL",
+    "ISL",
+    "NOR",
+    "SWE"
+   ]
+  },
+  {
+   "id": "south_europe",
+   "name": "Южная Европа",
+   "prompt": "Southern Europe (Mediterranean)",
+   "countries": [
+    "AND",
+    "CYP",
+    "ESP",
+    "GRC",
+    "ITA",
+    "MLT",
+    "PRT",
+    "SMR"
+   ]
+  },
+  {
+   "id": "east_europe",
+   "name": "Восточная Европа и Балканы",
+   "prompt": "Eastern Europe or the Balkans",
+   "countries": [
+    "BLR",
+    "MDA",
+    "RUS",
+    "UKR",
+    "CZE",
+    "HUN",
+    "POL",
+    "SVK",
+    "SVN",
+    "ALB",
+    "BGR",
+    "BIH",
+    "HRV",
+    "MKD",
+    "MNE",
+    "ROU",
+    "SRB",
+    "XKX",
+    "EST",
+    "LTU",
+    "LVA"
+   ]
+  },
+  {
+   "id": "caucasus_turkey",
+   "name": "Кавказ и Турция",
+   "prompt": "Turkey or the Caucasus",
+   "countries": [
+    "ARM",
+    "AZE",
+    "GEO",
+    "TUR",
+    "CYN"
+   ]
+  },
+  {
+   "id": "middle_east",
+   "name": "Ближний Восток и Северная Африка",
+   "prompt": "the Arab world, Iran or North Africa",
+   "countries": [
+    "ARE",
+    "BHR",
+    "IRQ",
+    "ISR",
+    "JOR",
+    "KWT",
+    "LBN",
+    "OMN",
+    "QAT",
+    "SAU",
+    "SYR",
+    "YEM",
+    "PSE",
+    "DZA",
+    "EGY",
+    "LBY",
+    "MAR",
+    "TUN",
+    "SDN",
+    "MRT",
+    "IRN",
+    "AFG"
+   ]
+  },
+  {
+   "id": "central_asia",
+   "name": "Центральная Азия и Монголия",
+   "prompt": "Central Asia or Mongolia",
+   "countries": [
+    "KAZ",
+    "KGZ",
+    "TJK",
+    "TKM",
+    "UZB",
+    "MNG"
+   ]
+  },
+  {
+   "id": "south_asia",
+   "name": "Южная Азия",
+   "prompt": "South Asia",
+   "countries": [
+    "BGD",
+    "BTN",
+    "IND",
+    "LKA",
+    "MDV",
+    "NPL",
+    "PAK",
+    "MUS"
+   ]
+  },
+  {
+   "id": "east_asia",
+   "name": "Восточная Азия",
+   "prompt": "East Asia",
+   "countries": [
+    "CHN",
+    "JPN",
+    "KOR",
+    "PRK",
+    "TWN",
+    "SGP"
+   ]
+  },
+  {
+   "id": "southeast_asia",
+   "name": "Юго-Восточная Азия",
+   "prompt": "Southeast Asia",
+   "countries": [
+    "BRN",
+    "IDN",
+    "KHM",
+    "LAO",
+    "MMR",
+    "MYS",
+    "PHL",
+    "THA",
+    "TLS",
+    "VNM"
+   ]
+  },
+  {
+   "id": "africa_west",
+   "name": "Западная и Центральная Африка",
+   "prompt": "West or Central Africa",
+   "countries": [
+    "BEN",
+    "BFA",
+    "CIV",
+    "CPV",
+    "GHA",
+    "GIN",
+    "GMB",
+    "GNB",
+    "LBR",
+    "MLI",
+    "NER",
+    "NGA",
+    "SEN",
+    "SLE",
+    "TGO",
+    "AGO",
+    "CAF",
+    "CMR",
+    "COD",
+    "COG",
+    "GAB",
+    "GNQ",
+    "SSD",
+    "STP",
+    "TCD"
+   ]
+  },
+  {
+   "id": "africa_east",
+   "name": "Восточная и Южная Африка",
+   "prompt": "East or Southern Africa",
+   "countries": [
+    "BDI",
+    "COM",
+    "DJI",
+    "ERI",
+    "ETH",
+    "KEN",
+    "MDG",
+    "MOZ",
+    "MWI",
+    "RWA",
+    "SOM",
+    "SYC",
+    "TZA",
+    "UGA",
+    "ZMB",
+    "ZWE",
+    "SOL",
+    "BWA",
+    "LSO",
+    "NAM",
+    "SWZ",
+    "ZAF"
+   ]
+  },
+  {
+   "id": "latin_america",
+   "name": "Латинская Америка и Карибы",
+   "prompt": "Latin America or the Caribbean",
+   "countries": [
+    "MEX",
+    "BLZ",
+    "CRI",
+    "GTM",
+    "HND",
+    "NIC",
+    "PAN",
+    "SLV",
+    "ARG",
+    "BOL",
+    "BRA",
+    "CHL",
+    "COL",
+    "ECU",
+    "GUY",
+    "PER",
+    "PRY",
+    "SUR",
+    "URY",
+    "VEN",
+    "ATG",
+    "BHS",
+    "BRB",
+    "CUB",
+    "DMA",
+    "DOM",
+    "GRD",
+    "HTI",
+    "JAM",
+    "KNA",
+    "LCA",
+    "TTO",
+    "VCT"
+   ]
+  },
+  {
+   "id": "north_america_oceania",
+   "name": "США, Канада, Австралия, Новая Зеландия",
+   "prompt": "North America or Australia",
+   "countries": [
+    "USA",
+    "CAN",
+    "AUS",
+    "NZL"
+   ]
+  },
+  {
+   "id": "pacific",
+   "name": "Острова Тихого океана",
+   "prompt": "the Pacific Islands",
+   "countries": [
+    "FJI",
+    "PNG",
+    "SLB",
+    "VUT",
+    "FSM",
+    "KIR",
+    "MHL",
+    "NRU",
+    "PLW",
+    "TON",
+    "TUV",
+    "WSM"
+   ]
+  }
+ ]
+}

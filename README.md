@@ -61,3 +61,4 @@
 - Прогон мира: `dotnet run --project src/Politeconomy.Tools -- check` (50 лет), `-- trace --country RUS --years 5` (одна страна по месяцам).
 - Свежие данные МВФ, Всемирного банка, BIS и GeoNames: workflow «Источники данных» в GitHub Actions (запускается при изменении `tools/fetch_sources.py`) сохраняет их в `tools/sources/`.
 - Пересборка данных мира: `pip install -r tools/requirements.txt`, `npm install --prefix tools`, затем `python tools/build_world.py`.
+- Портреты и иллюстрации событий: список с промптами — [PORTRAITS.md](PORTRAITS.md) (собирает `python tools/portraits_list.py`), обработка загруженных в `art/incoming` картинок — `python tools/process_art.py` (`--check` — только отчёт).
